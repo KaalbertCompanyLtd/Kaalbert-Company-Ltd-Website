@@ -25,7 +25,7 @@ entire existing docs/ui/memory tree with Prettier (cosmetic only — emphasis-ma
 blank-line-after-heading normalization) since this is the task that makes the format gate
 real for the first time. Created a Railway project (`kaalbert-web`, under a newly created
 kaalbert.company@gmail.com account) and deployed the app via `railway up`; live at
-https://kaalbert-web-production.up.railway.app (confirmed 200 via curl). Added `origin`
+https://kaalbert.up.railway.app (confirmed 200 via curl). Added `origin`
 (https://github.com/KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website.git, authoritative) and
 `personal` (https://github.com/cosbyDeveloper/Kaalbert-Company-Ltd-Website.git, for
 contribution-graph pushes only) git remotes, and added the `github` MCP server block to

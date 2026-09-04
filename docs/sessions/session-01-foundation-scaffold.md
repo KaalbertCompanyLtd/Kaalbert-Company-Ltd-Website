@@ -12,7 +12,7 @@ docs/config scaffolding without clobbering the project's custom ESLint rule or P
 config, and made `npm run lint` / `npm run typecheck` / `npm run format:check` real, passing
 gates wired into a new GitHub Actions CI workflow. Provisioned a new Railway project under a
 newly created company account and deployed the app (live at
-https://kaalbert-web-production.up.railway.app); added `origin` (company GitHub repo,
+https://kaalbert.up.railway.app); added `origin` (company GitHub repo,
 authoritative) and `personal` (contribution-graph-only) git remotes and the `github` MCP
 server block.
 
@@ -74,7 +74,7 @@ server block.
 ## Current State
 
 The app is scaffolded, all quality gates pass locally, and it's live on Railway at
-https://kaalbert-web-production.up.railway.app — but T1.1's two Cloudflare/auto-deploy
+https://kaalbert.up.railway.app — but T1.1's two Cloudflare/auto-deploy
 acceptance criteria are not yet met (see `memory/technical-debt.md`); this commit has not
 been pushed to GitHub yet (that's a manual, human step per protocol).
 

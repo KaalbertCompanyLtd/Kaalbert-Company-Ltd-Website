@@ -24,7 +24,7 @@ Reason: T1.1's acceptance criterion "the live URL resolves through Cloudflare, n
 raw domain" can't be met — WHOIS confirms `kaalbert.com` isn't registered, and Cloudflare has
 no zone to front without a real domain. User chose to finish the rest of T1.1 and defer this
 rather than register a placeholder domain. The live app is currently only reachable at
-`https://kaalbert-web-production.up.railway.app` (Railway's raw domain).
+`https://kaalbert.up.railway.app` (Railway's raw domain).
 Impact: T1.1's Cloudflare acceptance criterion is not satisfied. No functional impact yet —
 purely a domain-registration/DNS step, not a code change.
 Recommended Resolution: Once `kaalbert.com` (or a decided interim domain) is registered, add
