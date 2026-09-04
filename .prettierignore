@@ -4,3 +4,5 @@ public/
 ui/mockups/
 coverage/
 playwright-report/
+generated/
+.claude/skills/prisma-*/

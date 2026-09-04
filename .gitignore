@@ -15,6 +15,7 @@ CLAUDE.local.md
 
 # Prisma
 prisma/*.db
+/generated/prisma
 
 # test / coverage
 coverage/
@@ -26,3 +27,5 @@ test-results/
 *.log
 *.tsbuildinfo
 npm-debug.log*
+
+/lib/generated/prisma

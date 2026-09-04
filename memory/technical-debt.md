@@ -4,7 +4,7 @@ Newest entry at the top. Entries below follow this format, one per debt item —
 CLAUDE.md's "Memory file format and ordering" section for the exact field rules and the
 sequencing requirement:
 
-## <Title>
+## Title
 
 **Status:** Open | Resolved
 **Date raised:** YYYY-MM-DD
@@ -15,6 +15,35 @@ sequencing requirement:
 **Possible Fix/Fixes:**
 **Trigger type:** Task-sequenced | User-triggered
 **Sequenced into:** T##-## (task name)
+
+---
+
+## 4 high-severity npm audit vulnerabilities in Prisma CLI's dev-tooling tree
+
+**Status:** Open
+**Date raised:** 2026-09-04
+**Reason:** `npm audit` (after T1.2's `prisma@7.10.0`/`@prisma/client@7.10.0` install)
+reports 4 high-severity advisories, all transitive: `mysql2` (auth-plugin credential leak,
+decompression-bomb DoS) and `deepmerge-ts` (stack exhaustion), both pulled in by
+`@prisma/config` inside the `prisma` CLI package's own dependency tree — not by this
+project's runtime code (`mysql2` exists for Prisma's optional MySQL support; this project
+only ever uses `postgresql`).
+**Impact:** Low in practice — `prisma` is a dev-only CLI tool, never bundled into the
+deployed Next.js app, and the vulnerable code paths (MySQL auth, `@prisma/config`'s merge
+logic under attacker-controlled input) aren't reachable from anything this project actually
+runs. Kept open rather than dismissed because `npm audit`/CI dependency scanners will keep
+flagging it.
+**Priority:** Low
+**Possible Fix/Fixes:** `npm audit fix --force` "fixes" it by downgrading `prisma` to
+`6.19.3` — rejected, since 7.10.0 was deliberately chosen over npm's `latest` tag
+(`8.0.0-rc.13`, a pre-release — see `memory/decision-log.md`) specifically to be current and
+stable, and downgrading to 6.x is a step backward on both counts. Real fix is a future
+Prisma 7.x patch release (or a stabilized 8.0) that bumps `mysql2`/`deepmerge-ts` — revisit
+next time `package.json` dependencies are touched.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T1.4 (shadcn/ui + Base UI component scaffold) — see that task's
+addendum in `docs/tasks/01-foundation.md`, which already re-checks a dependency version
+while touching `package.json` for that task's own reason (the ESLint 9→10 debt item below).
 
 ---
 

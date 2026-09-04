@@ -16,6 +16,63 @@ Protocol):
 
 ## 2026-09-04
 
+**Task:** T1.2 — Postgres schema baseline + migration tooling
+**Summary:** Provisioned Railway's bundled Postgres plugin onto the existing `kaalbert-web`
+project (user-confirmed first, since it's a real billed resource), wired both a public TCP
+proxy (local dev) and a private-network service variable (production) so `DATABASE_URL`
+never needs to be the same value in both places. Installed Prisma 7.10.0 (pinned — npm's
+`latest` tag is currently a pre-release) with the `@prisma/adapter-pg` driver adapter Prisma
+7 now requires, established `prisma/schema.prisma` as a deliberately-empty baseline (no
+models — entities arrive incrementally, epic by epic, per the task's own scope), and proved
+the migration mechanism end-to-end with an isolated, fully-cleaned-up smoke test (real
+migration created and applied against the real Railway Postgres instance, verified via
+`psql`, then removed — the committed schema/migration history is untouched by it). Wired
+`npm run migrate` / `migrate:deploy` / `db:seed` conventions, a `lib/prisma.ts` client
+singleton, an extensible `prisma/seed.ts` (documented `seed<Area>()`/idempotent-upsert/
+`is_placeholder` convention), a `railway.json` deploy hook that runs `prisma migrate deploy`
+before every production start, and a `.env.example` covering every var `CLAUDE.local.md`
+lists. Documented the whole convention in README's new "Database & Migrations" section.
+**Files Changed:**
+
+- prisma/schema.prisma, prisma/seed.ts, prisma7.config.ts — new: baseline schema (zero
+  models), seed script, Prisma 7 config (datasource URL + migrations path + seed command)
+- lib/prisma.ts — new: PrismaClient singleton, driver-adapter-based (Prisma 7 requirement),
+  hot-reload-safe via `globalThis` caching
+- package.json, package-lock.json — added `@prisma/client`, `@prisma/adapter-pg`, `pg`
+  (deps); `prisma`, `dotenv`, `tsx`, `@types/pg` (devDeps, all `--save-exact` pinned);
+  `postinstall`/`migrate`/`migrate:deploy`/`db:seed` scripts
+- railway.json — new: `deploy.startCommand` runs `prisma migrate deploy` before `npm start`
+- .env.example — new: every var `CLAUDE.local.md` lists, placeholder values only
+- .gitignore — added `/generated/prisma` (generated client output)
+- .prettierignore, eslint.config.mjs — added `generated/` to both ignore lists
+- README.md — new "Database & Migrations" section documenting the migrate/seed convention
+  for later epics to extend (the acceptance criterion's explicit requirement)
+- CLAUDE.local.md (not committed — gitignored) — DATABASE_URL note updated to point at
+  `.env`/Railway rather than "fill in once provisioned"
+- docs/tasks/01-foundation.md — addendum added to T1.4 (re-check the Prisma CLI audit
+  vulnerabilities next time `package.json` deps are touched)
+- memory/decision-log.md, memory/technical-debt.md — this session's entries
+- `.claude/skills/prisma-*`, `skills-lock.json` — added by `prisma init` itself (official
+  Prisma 7 tooling, not authored this session); near-duplicate `.windsurf/skills/` and
+  `.agents/skills/` copies it also created were deleted (unused in this project)
+- Railway project `kaalbert-web` (outside the repo) — added a `Postgres` service (plugin)
+  and a TCP proxy on it; set `DATABASE_URL` on the `kaalbert-web` service as a
+  `${{Postgres.DATABASE_URL}}` reference
+  **Related Feature:** No single feature spec — infrastructure/scaffolding task, per T1.2's
+  own description.
+  **Notes:** No UI surface (task prompt states this explicitly), so no Playwright MCP
+  verification applied; instead exercised for real via the equivalent for a backend task —
+  live `psql` connection, a real (isolated, cleaned-up) `prisma migrate dev` run, `prisma
+migrate deploy` and `npm run db:seed` both run for real against the live Railway Postgres
+  instance. No automated tests added — no application logic exists yet to test, same
+  reasoning T1.1 used. `npm audit` flags 4 high-severity vulnerabilities, all transitive
+  inside Prisma CLI's own dev-tooling tree, not reachable from this project's runtime code —
+  see `memory/technical-debt.md`.
+
+---
+
+## 2026-09-04
+
 **Task:** T1.1 — Repo, Next.js app, and deploy pipeline
 **Summary:** Initialized the git repo at `Website Build/` (the actual repo root — the
 sibling `Company Docs`/`Planning framework and trigger`/`Vendor Response` folders stay out of

@@ -30,6 +30,7 @@ const eslintConfig = defineConfig([
     "public/**",
     "ui/mockups/**",
     "next-env.d.ts",
+    "generated/**",
   ]),
 ]);
 

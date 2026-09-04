@@ -1,0 +1,14 @@
+// Prisma schema baseline (T1.2). No models yet — this is deliberate: entities are added
+// incrementally, epic by epic, as each docs/features/*.md's "Data requirements" section is
+// built against (see CLAUDE.md's "Every entity field named in a docs/features/*.md ...
+// maps to a Prisma schema field" rule). The migration tooling and conventions here are what
+// every later epic's tasks build on.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

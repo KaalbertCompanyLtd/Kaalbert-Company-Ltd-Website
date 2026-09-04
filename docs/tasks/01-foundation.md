@@ -75,6 +75,15 @@ peer range cleanly includes ESLint 10 (it produced `ERESOLVE` warnings against
 to the EOL 9.x line." Low priority — skip without blocking this task if the peer range still
 doesn't support it; just don't forget to check.
 
+**Addendum (session 02, 2026-09-04):** Also, while touching `package.json`, run `npm audit`
+and check whether a newer `prisma`/`@prisma/client`/`@prisma/adapter-pg` patch release has
+fixed the 4 high-severity transitive vulnerabilities (`mysql2`, `deepmerge-ts`, both inside
+Prisma CLI's own dependency tree) noted in `memory/technical-debt.md` → "4 high-severity npm
+audit vulnerabilities in Prisma CLI's dev-tooling tree." If a patched `7.x` (or stable `8.0`)
+is out, bump to it with `--save-exact`, keeping `prisma` and `@prisma/client` in lockstep.
+Low priority — skip without blocking this task if nothing's changed; just don't forget to
+check.
+
 ### T1.5 — Shared layout shell: SiteHeader, SiteFooter, admin shell skeleton
 
 **Build:** `SiteHeader` and `SiteFooter` (per `ui/components.md`, built to the mockups'

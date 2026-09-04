@@ -34,6 +34,40 @@ npm run test         # unit/component tests (Vitest)
 npm run test:e2e      # end-to-end flows (Playwright Test)
 ```
 
+## Database & Migrations
+
+Postgres schema baseline, established in T1.2 (`docs/tasks/01-foundation.md`). Entities are
+added incrementally — each epic's tasks add the tables its own `docs/features/*.md` "Data
+requirements" section calls for, not modeled upfront.
+
+```bash
+npm run migrate         # prisma migrate dev — create + apply a migration in development
+npm run migrate:deploy  # prisma migrate deploy — apply pending migrations, no dev prompts
+                         # (this is what Railway runs automatically before every deploy —
+                         # see railway.json)
+npm run db:seed         # prisma db seed — run prisma/seed.ts
+```
+
+**Convention every later epic's tasks follow when adding models or seed data:**
+
+- Add the new model(s) to `prisma/schema.prisma`, field names matching the relevant
+  `docs/features/*.md` "Data requirements" section exactly, then run `npm run migrate` and
+  give the migration a descriptive `--name`.
+- Add a `seed<Area>()` function to `prisma/seed.ts` (e.g. `seedOffers()`), called from
+  `main()` in dependency order. Every seed write is an idempotent `upsert` keyed on a
+  stable natural key — never a bare `create` — so re-running the seed script against a
+  database that already has data never throws or duplicates rows.
+- Firm-supplied content that doesn't exist yet at seed-authoring time is seeded as
+  placeholder text with the entity's `is_placeholder` field set `true` (see
+  `docs/tasks/02-public-presentation.md` T2.9) — never fabricated as if it were final copy.
+- `npx prisma generate` regenerates the client into `generated/prisma/` (gitignored) — run
+  it any time the schema changes; it also runs automatically via `postinstall`.
+
+Local development connects to Railway's Postgres over its public TCP proxy (`DATABASE_URL`
+in `.env`); the deployed app connects over Railway's private network instead (`DATABASE_URL`
+set on the `kaalbert-web` service as a reference to the `Postgres` service's own
+`DATABASE_URL` — no public exposure needed in production).
+
 ## Documentation
 
 - [Vision & Requirements](docs/vision.md)

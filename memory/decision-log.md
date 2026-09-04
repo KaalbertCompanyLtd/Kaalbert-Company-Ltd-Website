@@ -2,6 +2,57 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-04 (T1.2)
+
+**Summary:**
+
+- **Postgres provisioned via Railway's own bundled plugin** (`railway add --database
+postgres`), attached to the existing `kaalbert-web` project — per ADR 0003, confirmed with
+  the user first since this is a real, billed resource (Railway Hobby plan $5/mo base +
+  usage; small Postgres instances typically run $5–15/mo on top). User explicitly said "go
+  ahead, provision it" before this ran.
+- **Network topology: public TCP proxy for local dev, private network for production.**
+  Railway's Postgres template only generates a private-network `DATABASE_URL`
+  (`RAILWAY_PRIVATE_DOMAIN`-based, unreachable outside Railway). Created a public TCP proxy
+  (`railway tcp-proxy create --port 5432 --service Postgres`) and built a public
+  `DATABASE_URL` from `PGUSER`/`PGPASSWORD`/`PGDATABASE` + the proxy host:port for local
+  `.env`. Separately set `DATABASE_URL=${{Postgres.DATABASE_URL}}` on the `kaalbert-web`
+  service itself, so the deployed app connects over Railway's private network (no public
+  exposure needed for production traffic). Real credentials were never printed into the
+  conversation — fetched via `railway variables --json` into scratch files, read with `jq`,
+  written straight to `.env`, then the scratch files were deleted immediately.
+- **Prisma pinned to 7.10.0, not npm's `latest` tag** — `prisma`'s `latest` dist-tag
+  currently points to a pre-release (`8.0.0-rc.13`) while `@prisma/client`'s `latest` is the
+  stable `7.10.0`; installed both pinned to `7.10.0` (prisma's own `prev` tag) to avoid
+  shipping an RC and to keep the CLI and client in lockstep.
+- **Prisma 7 requires an explicit driver adapter** (`@prisma/adapter-pg` + `pg`) — the
+  generated `PrismaClient` constructor no longer reads `DATABASE_URL` itself. Wired in both
+  `lib/prisma.ts` (the app's singleton) and `prisma/seed.ts`.
+- **Prisma's per-project AI-agent skill scaffold** (`.claude/skills/prisma-*`,
+  `skills-lock.json`, `prisma7.config.ts`) is installed automatically by `prisma init` in
+  Prisma 7 — this is official Prisma tooling, not something this session added deliberately.
+  Also auto-installed near-duplicate copies under `.windsurf/skills/` and `.agents/skills/`;
+  deleted both since this project only uses Claude Code (`AGENTS.md` already covers "any
+  other agent" as a single doc, not a skills directory) and keeping three copies of the same
+  content was pure repo bloat.
+- **Baseline schema has zero models, deliberately** — per the task's explicit scope note
+  ("not every epic's entities yet"). To still prove "a migration applies cleanly on a fresh
+  database" without inventing a fake permanent entity or a fake permanent migration, ran a
+  fully isolated smoke test (its own scratch `schema.prisma`/`prisma7.config.ts`/migrations
+  folder, one throwaway model, against the same real Postgres instance): migration created
+  and applied successfully, table confirmed via `psql`, then dropped and the scratch files
+  deleted. The committed `prisma/schema.prisma` and `prisma/migrations/` are unaffected —
+  zero models, zero migrations, exactly matching the task's stated scope.
+- **Generated Prisma client output moved from Prisma's own default** (`app/generated/prisma`,
+  inside the Next.js App Router tree) **to repo-root `generated/prisma`** — keeps generated
+  code out of `app/` entirely; `lib/prisma.ts` (CLAUDE.md's designated home for the client
+  singleton) imports from it instead.
+- **`npm audit` flags 4 high-severity vulnerabilities, left unfixed** — both are transitive
+  dependencies inside Prisma CLI's own dev-tooling tree (`mysql2`, `deepmerge-ts`), not
+  reachable from this project's runtime code (we don't use MySQL). `npm audit fix --force`
+  would downgrade `prisma` to `6.19.3`, the opposite of the RC-avoidance decision above. See
+  `memory/technical-debt.md`.
+
 ## 2026-09-04
 
 Multi-account git credential workflow established; GitHub-connected Railway auto-deploy
