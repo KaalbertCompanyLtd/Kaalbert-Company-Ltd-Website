@@ -297,6 +297,8 @@ Fixed rules, followed exactly by every session, no exceptions:
   **Impact:**
   **Priority:** High | Medium | Low
   **Possible Fix/Fixes:**
+  **Trigger type:** Task-sequenced | User-triggered (see the sequencing rule below —
+  required whenever the fix depends on an action only the user can take)
   **Sequenced into:** T##-## (task name), or "None — see below" only ever as a temporary
   state, never a final one (see the sequencing rule below)
   ```
@@ -326,6 +328,19 @@ written, not left floating in memory alone:
 - Either way, set the debt/bug entry's `Sequenced into:` field to the task ID it now lives
   under. An entry with a real fix and no `Sequenced into:` target is a bug in the memory
   system itself — fix it before ending the session, not next time someone happens to notice.
+
+**Task-sequenced vs. user-triggered — set `Trigger type:` correctly, don't default to
+task-sequenced.** A task ID in `Sequenced into:` normally means "whichever session reaches
+this task in the normal course of work should just do the fix" — that's the
+**task-sequenced** case, and it's the default. But some fixes depend on an action only the
+user can take first (registering a domain, creating an account, approving a purchase — the
+same category of action this project already treats specially for Phase 2 capabilities via
+`docs/scope.md`'s evidence triggers, and the same one CLAUDE.md's own operating rules block
+an agent from ever initiating unilaterally). For those, mark `Trigger type: User-triggered`
+and say so explicitly in the task addendum too (`Do not attempt X or treat reaching this
+task as a cue to act — wait for the user to say Y and ask for this explicitly`). Getting this
+wrong in the task-sequenced direction risks an agent attempting something — a purchase, an
+account, an irreversible external action — that was never authorized for that session.
 
 ### Capture durable rules the moment you meet them (prevent knowledge loss)
 

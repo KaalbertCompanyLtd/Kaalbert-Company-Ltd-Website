@@ -13,6 +13,7 @@ sequencing requirement:
 **Impact:**
 **Priority:** High | Medium | Low
 **Possible Fix/Fixes:**
+**Trigger type:** Task-sequenced | User-triggered
 **Sequenced into:** T##-## (task name)
 
 ---
@@ -36,6 +37,7 @@ build (deployment `3e469209...`), which reached `SUCCESS`, and the live URL
 (https://kaalbert.up.railway.app) was confirmed 200 afterward — end-to-end proof the
 push-triggered path works, not just that the connection command succeeded. Kept here (rather
 than deleted) as a record that this was verified, not assumed.
+**Trigger type:** N/A — resolved
 **Sequenced into:** T1.1 (already complete — this closes its last open acceptance criterion
 alongside the Cloudflare item below, which remains open)
 
@@ -54,8 +56,12 @@ reachable at `https://kaalbert.up.railway.app` (Railway's raw domain).
 **Possible Fix/Fixes:** Once `kaalbert.com` (or a decided interim domain) is registered: add
 it to Cloudflare, point DNS at the Railway service, add it as a custom domain via `railway
 domain kaalbert.com`.
+**Trigger type:** User-triggered, not task-sequenced — domain registration is a real-world
+purchase only the user can make (an agent can't initiate it). Do not treat reaching T1.1 (or
+any task) as a cue to act; wait for the user to say the domain is registered and ask for this
+explicitly.
 **Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum added session 01,
-2026-09-04: "pick this up the moment the domain is registered")
+2026-09-04, explicitly marked user-triggered)
 
 ## ESLint pinned to the EOL 9.x line
 
@@ -72,6 +78,8 @@ rules/fixes and eventually losing security patches on the 9.x line.
 **Possible Fix/Fixes:** Re-attempt the `eslint@^10` bump once `eslint-config-next` publishes
 a release with a peer range that includes ESLint 10 cleanly (check `npm info
 eslint-config-next peerDependencies` before retrying).
+**Trigger type:** Task-sequenced — whichever session works T1.4 should just check this in
+passing, no separate user go-ahead needed.
 **Sequenced into:** T1.4 (docs/tasks/01-foundation.md — addendum added session 01,
 2026-09-04: T1.4 already touches `package.json`'s dependencies, natural moment to re-check)
 

@@ -22,10 +22,16 @@ working end to end). The Cloudflare acceptance criterion specifically is still o
 `kaalbert.com` is not registered (verified via WHOIS), so Cloudflare has no zone to front and
 the live URL currently resolves through Railway's raw domain
 (`https://kaalbert.up.railway.app`). See `memory/technical-debt.md` → "kaalbert.com not
-registered." **Pick this up the moment the domain is registered** — add it to Cloudflare,
-point DNS at the Railway service, add it as a custom domain via `railway domain
-kaalbert.com`. Small enough to finish in the same sitting as whatever task is active when the
-domain becomes available; does not need its own task ID.
+registered."
+
+**User-triggered, not task-sequenced** — this is not a "whichever session reaches this task
+picks it up" item. Domain registration is a real-world purchase the user has to make
+themselves (an agent can't initiate it — same class of action as the Railway/GitHub account
+creation earlier in session 01). **Do not attempt to register a domain, or treat reaching
+this task as a cue to act.** Wait for the user to say the domain is registered and ask for
+this explicitly; only then: add it to Cloudflare, point DNS at the Railway service, add it as
+a custom domain via `railway domain kaalbert.com`. Small enough to finish in one sitting once
+triggered; does not need its own task ID.
 
 ### T1.2 — Postgres schema baseline + migration tooling
 
