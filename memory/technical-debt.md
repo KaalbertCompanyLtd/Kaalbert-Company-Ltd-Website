@@ -32,22 +32,17 @@ it to Cloudflare, point DNS at the Railway service, and add it as a custom domai
 `railway domain kaalbert.com`.
 Priority: Medium — blocks a T1.1 acceptance criterion but not any other task's start.
 
-## GitHub-connected Railway auto-deploy not yet wired (ADR 0003/0008)
+## GitHub-connected Railway auto-deploy — RESOLVED 2026-09-04
 
-Date: 2026-09-04
-Reason: T1.1's "main deploys automatically on push" acceptance criterion needs
-`railway service source connect --repo KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website
---branch main`, which requires the `main` branch to already exist on GitHub. The repo exists
-(Railway's GitHub App is already authorized against it — the connect command got past auth
-and failed only on "branch does not exist") but nothing has been pushed yet, since agents
-never push directly (CLAUDE.md Git Commit Protocol). Currently, the only working deploy path
-is a manual `railway up` CLI upload, not push-triggered.
-Impact: T1.1's auto-deploy acceptance criterion is not satisfied yet. `railway up` remains
-available as a manual fallback in the meantime.
-Recommended Resolution: After the human pushes this task's commit to `origin main`, run
-`railway service source connect --repo KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website
---branch main` (or via the Railway dashboard) to complete the wiring.
-Priority: High — this is T1.1's own acceptance criterion, not a future task's concern.
+Date opened: 2026-09-04. Date resolved: 2026-09-04 (same session, after the human pushed
+`main` to `origin`).
+Resolution: `railway service source connect --repo KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website
+--branch main` run successfully once `main` existed on GitHub. Connecting the source
+triggered an immediate GitHub-sourced build (deployment `3e469209...`), which reached
+`SUCCESS`, and the live URL (https://kaalbert.up.railway.app) was confirmed 200 afterward —
+end-to-end proof the push-triggered path works, not just that the connection command
+succeeded. T1.1's "main deploys automatically on push" acceptance criterion is now
+satisfied. Kept here (rather than deleted) as a record that this was verified, not assumed.
 
 ## ESLint pinned to the EOL 9.x line
 
