@@ -273,6 +273,60 @@ Documentation and memory updates are part of task completion.
 
 A task is not considered complete until required documentation updates have been made.
 
+### Memory file format and ordering (all files under memory/)
+
+Fixed rules, followed exactly by every session, no exceptions:
+
+- **Newest entry at the top.** Every `memory/*.md` file is append-to-top, not
+  append-to-bottom — a new entry goes immediately under the file's `#` title (and above any
+  standing "how to format an entry" note), never at the end of the file. When retrofitting
+  an existing file to this rule, reorder its existing entries newest-first too; don't leave
+  old entries in original order below a newest-first section.
+- **Every field is a bolded label on its own line** — `**Field:** value`, not a bare label.
+  This applies to every file, including ones without a fully worked example below — follow
+  the same shape (bolded labels, one field per line, a `Status` field where the entry can be
+  open/resolved) even where the exact field set isn't spelled out.
+- **`memory/technical-debt.md`** entry shape:
+  ```
+  ## <Title>
+
+  **Status:** Open | Resolved
+  **Date raised:** YYYY-MM-DD
+  **Date resolved:** YYYY-MM-DD (omit if still Open)
+  **Reason:**
+  **Impact:**
+  **Priority:** High | Medium | Low
+  **Possible Fix/Fixes:**
+  **Sequenced into:** T##-## (task name), or "None — see below" only ever as a temporary
+  state, never a final one (see the sequencing rule below)
+  ```
+- **`memory/known-bugs.md`** entry shape: same bolded-field pattern —
+  `**Status:** Open | Fixed`, `**Severity:**`, `**Date found:**`, `**Description:**`,
+  `**Workaround:**`, `**Planned Fix:**`, `**Sequenced into:**` (same sequencing rule as
+  technical debt, when a planned fix exists).
+- **`memory/completed-work.md`** entry shape: `**Task:**`, `**Summary:**`,
+  `**Files Changed:**`, `**Related Feature:**`, `**Notes:**`.
+- **`memory/decision-log.md`** entry shape: `**Summary:**`, `**Related Documents:**`.
+
+### Debt/bug fixes must be sequenced into a task, never left orphaned
+
+When a `memory/technical-debt.md` or `memory/known-bugs.md` entry has a concrete possible
+fix — not just "someone should look at this someday," but an actual next action — that fix
+must be attached to a real place in `docs/tasks/*.md` in the same session the entry is
+written, not left floating in memory alone:
+
+- If an existing task is the natural home (the debt is a loose end from that task, or the
+  fix is small enough to piggyback on work that task already touches), add an
+  **`**Addendum (session NN, YYYY-MM-DD):**`** block to that task's entry in its epic file,
+  immediately after its `Size:`/`Dependencies:` line. Name the debt/bug entry it corresponds
+  to so the link is traceable in both directions.
+- If no existing task fits, create a new task entry in the right epic file, correctly
+  ordered by dependency like any other task (not appended out of sequence at the end),
+  sized, and with real acceptance criteria — never just a bullet point with no task shape.
+- Either way, set the debt/bug entry's `Sequenced into:` field to the task ID it now lives
+  under. An entry with a real fix and no `Sequenced into:` target is a bug in the memory
+  system itself — fix it before ending the session, not next time someone happens to notice.
+
 ### Capture durable rules the moment you meet them (prevent knowledge loss)
 
 As the project grows, hard-won facts get forgotten between sessions and the same

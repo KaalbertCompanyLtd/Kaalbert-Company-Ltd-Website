@@ -16,6 +16,17 @@ Cloudflare (not Railway's raw domain); `npm run typecheck` and `npm run lint` bo
 and fail the build on error.
 **Size:** M **Dependencies:** none
 
+**Addendum (session 01, 2026-09-04):** Everything else in this task is done and verified
+(Next.js scaffold, CI, Railway deploy, GitHub-connected auto-deploy on push — all confirmed
+working end to end). The Cloudflare acceptance criterion specifically is still open:
+`kaalbert.com` is not registered (verified via WHOIS), so Cloudflare has no zone to front and
+the live URL currently resolves through Railway's raw domain
+(`https://kaalbert.up.railway.app`). See `memory/technical-debt.md` → "kaalbert.com not
+registered." **Pick this up the moment the domain is registered** — add it to Cloudflare,
+point DNS at the Railway service, add it as a custom domain via `railway domain
+kaalbert.com`. Small enough to finish in the same sitting as whatever task is active when the
+domain becomes available; does not need its own task ID.
+
 ### T1.2 — Postgres schema baseline + migration tooling
 
 **Build:** Prisma schema (or equivalent) against Railway's bundled Postgres; migration
@@ -49,6 +60,14 @@ etc.) themed to match, ready for feature epics to consume without re-theming per
 **Acceptance criteria:** At least one instance of each primitive listed in `ui/components.md`
 renders themed correctly on a scratch test page.
 **Size:** S **Dependencies:** T1.3
+
+**Addendum (session 01, 2026-09-04):** While touching `package.json`'s dependencies for
+this task, also re-check whether `eslint@^10` can replace the currently-pinned `eslint@^9`
+(EOL per npm) — run `npm info eslint-config-next peerDependencies` first; only bump if the
+peer range cleanly includes ESLint 10 (it produced `ERESOLVE` warnings against
+`eslint-config-next@16.3.4` at T1.1 time). See `memory/technical-debt.md` → "ESLint pinned
+to the EOL 9.x line." Low priority — skip without blocking this task if the peer range still
+doesn't support it; just don't forget to check.
 
 ### T1.5 — Shared layout shell: SiteHeader, SiteFooter, admin shell skeleton
 
