@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { padding: 20px; }
+  .stat-card .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-foreground); margin-bottom: 6px; display: block; }
+  .stat-card .stat-num { font-family: var(--font-display); font-size: 1.75rem; color: var(--primary); }
+
+  .dash-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
+  .dash-panel { padding: 24px; }
+  .dash-panel h2 { font-size: 1.0625rem; margin: 0 0 16px; }
+  .dash-panel table { font-size: 0.875rem; }
+
+  .action-list { display: flex; flex-direction: column; gap: 10px; }
+  .action-list a { display: block; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 600; color: var(--primary); text-decoration: none; }
+  .action-list a:hover { background: var(--muted); }
+
+  @media (max-width: 980px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .dash-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html" class="active">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Good morning, Evans</h1>
+        <div class="subtitle">Here's what's happening across the site.</div>
+      </div>
+      <a href="admin-articles-list.html" class="btn btn-primary">New Article</a>
+    </div>
+
+    <div class="stat-grid">
+      <div class="card stat-card"><span class="stat-label">New Enquiries</span><span class="stat-num">7</span></div>
+      <div class="card stat-card"><span class="stat-label">Triage-flagged</span><span class="stat-num">2</span></div>
+      <div class="card stat-card"><span class="stat-label">Diagnostics This Month</span><span class="stat-num">34</span></div>
+      <div class="card stat-card"><span class="stat-label">Published Articles</span><span class="stat-num">8</span></div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card dash-panel">
+        <h2>Recent enquiries</h2>
+        <table>
+          <thead><tr><th>Name</th><th>Source</th><th>Triage</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Kwesi Owusu</td><td>Business Health Check</td><td><span class="badge badge-triage-high">High</span></td><td><span class="badge badge-new">New</span></td></tr>
+            <tr><td>Abena Frimpong</td><td>Contact form</td><td><span class="badge badge-triage-low">Low</span></td><td><span class="badge badge-contacted">Contacted</span></td></tr>
+            <tr><td>Yaw Mensah</td><td>Funding-Readiness LP</td><td><span class="badge badge-triage-medium">Medium</span></td><td><span class="badge badge-new">New</span></td></tr>
+            <tr><td>Efua Asante</td><td>Business Health Check</td><td><span class="badge badge-triage-high">High</span></td><td><span class="badge badge-new">New</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card dash-panel">
+        <h2>Quick actions</h2>
+        <div class="action-list">
+          <a href="admin-articles-list.html">Publish a new Insights article</a>
+          <a href="admin-offer-editor.html">Update a core offer's fee band</a>
+          <a href="../h-admin-enquiries/admin-enquiry-detail.html">Review flagged enquiries</a>
+          <a href="../f-admin-auth/admin-2fa-setup.html">Manage my account &amp; 2FA</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,410 @@
+/* Shared design tokens and base component styles for all kaalbert.com mockups.
+   Mirrors ui/design-system.md exactly — do not introduce colors/fonts outside this file. */
+
+:root {
+  --radius: 0.75rem;
+  --background: #FCFAF5;
+  --foreground: #121317;
+  --card: #FFFFFF;
+  --card-foreground: #121317;
+  --popover: #FFFFFF;
+  --popover-foreground: #121317;
+  --primary: #0E2A22;
+  --primary-foreground: #FCFAF5;
+  --secondary: #EEF2F0;
+  --secondary-foreground: #121317;
+  --muted: #F4F1E8;
+  --muted-foreground: #3C414A;
+  --accent: #8C6E33;
+  --accent-foreground: #FCFAF5;
+  --destructive: #B3261E;
+  --border: #C9C1AE;
+  --input: #C9C1AE;
+  --ring: #A9853F;
+  --pine-700: #1C4234;
+  --pine-500: #356B55;
+  --brass-500: #A9853F;
+  --brass-300: #CBB074;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-body: Calibri, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --shadow-sm: 0 1px 2px 0 rgb(18 19 23 / 0.06);
+  --shadow-md: 0 4px 12px 0 rgb(18 19 23 / 0.10);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  color: var(--primary);
+  margin: 0 0 0.5em 0;
+  font-weight: 700;
+}
+.display { font-size: 3rem; line-height: 1.15; }
+h1 { font-size: 2.25rem; line-height: 1.2; }
+h2 { font-size: 1.75rem; line-height: 1.25; }
+h3 { font-size: 1.375rem; line-height: 1.3; }
+.lead { font-family: var(--font-body); font-size: 1.1875rem; font-weight: 300; line-height: 1.5; color: var(--muted-foreground); }
+p { margin: 0 0 1em 0; }
+.caption { font-size: 0.8125rem; font-style: italic; color: var(--muted-foreground); line-height: 1.4; }
+.kicker {
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 0.5em 0; display: block;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.container-narrow { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+/* The header is fixed/floating (see below), so page content needs top clearance equal to
+   its height by default. A page with a full-bleed dark hero (body.has-hero) removes that
+   clearance from <main> and lets the hero itself provide it internally, so its background
+   can flow behind the transparent header seamlessly. */
+main { padding-top: 76px; }
+body.has-hero main { padding-top: 0; }
+
+/* Shared interior-page hero (dark-section + page-hero together) — every page that isn't
+   Home uses this rather than a bespoke per-file version. It intentionally does NOT use
+   Home's min-height:100vh + flex-centering: on a short, non-centered hero, content sits at
+   a flat top-padding distance from the top rather than being pulled toward vertical middle,
+   so the padding value itself has to do all the work of clearing the fixed 76px header with
+   real breathing room — 96px looked fine on paper but left only ~20px of actual clear space
+   once the header's own height was accounted for, which read as cramped. 156px leaves ~80px. */
+.page-hero { padding: 156px 0 64px; }
+.page-hero .kicker { color: var(--brass-300); margin-bottom: 12px; }
+.page-hero h1 { color: #FCFAF5; }
+.page-hero .lead { color: #C9D3CD; }
+@media (max-width: 720px) { .page-hero { padding: 132px 0 48px; } }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-body); font-size: 1rem; font-weight: 600;
+  padding: 12px 24px; border-radius: var(--radius-sm); border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; transition: background-color .15s ease, border-color .15s ease;
+}
+.btn-primary { background: var(--primary); color: var(--primary-foreground); }
+.btn-primary:hover { background: var(--pine-700); }
+.btn-secondary { background: var(--secondary); color: var(--secondary-foreground); border-color: var(--border); }
+.btn-secondary:hover { background: var(--muted); }
+.btn-accent { background: var(--accent); color: var(--accent-foreground); }
+.btn-accent:hover { background: var(--brass-500); }
+.btn-ghost { background: transparent; color: var(--primary); border-color: var(--border); }
+.btn-ghost:hover { background: var(--muted); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Card */
+.card {
+  background: var(--card); color: var(--card-foreground);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 24px; box-shadow: var(--shadow-sm);
+}
+.card:hover { box-shadow: var(--shadow-md); }
+
+/* Badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  background: var(--muted); color: var(--muted-foreground);
+}
+.badge-accent { background: var(--accent); color: var(--accent-foreground); }
+.badge-destructive { background: var(--destructive); color: #FCFAF5; }
+.badge-outline { background: transparent; border: 1px solid var(--border); color: var(--foreground); }
+
+/* Form fields */
+label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; color: var(--foreground); }
+input[type=text], input[type=email], input[type=tel], input[type=password], textarea, select {
+  width: 100%; font-family: var(--font-body); font-size: 1rem;
+  padding: 10px 12px; border: 1px solid var(--input); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--foreground);
+}
+input:focus, textarea:focus, select:focus, button:focus, a:focus {
+  outline: 2px solid var(--ring); outline-offset: 2px;
+}
+.field { margin-bottom: 20px; }
+.field-hint { font-size: 0.8125rem; color: var(--muted-foreground); margin-top: 4px; }
+.checkbox-row { display: flex; align-items: flex-start; gap: 10px; }
+.checkbox-row input { width: auto; margin-top: 4px; }
+
+/* Header / Footer
+   Every page opens on a dark hero, so the header always starts transparent over it and
+   picks up a solid Ivory background once the page scrolls past that opening section — no
+   flat white seam at the top, and it stays legible once real content sits behind it.
+
+   Back to a binary state (.is-scrolled, toggled once by _header-scroll.js when the hero
+   scrolls out of view) rather than interpolating continuously against scroll position — the
+   continuous version left a stretch of scroll where the background was still faint and the
+   nav-text colour was still mid-blend at the same time, which read as an unreadable smear no
+   matter how the curve was eased. A time-based transition with a real easing curve crosses
+   that same distance in a fixed ~0.4s once triggered, so a reader passes through it quickly
+   regardless of scroll speed, instead of dwelling in it for the length of the hero. */
+.site-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+  transition: background-color .4s ease-in-out, border-color .4s ease-in-out,
+    box-shadow .4s ease-in-out, backdrop-filter .4s ease-in-out;
+}
+/* A page with no dark hero behind it (body without .has-hero) has nothing for a transparent
+   header to sit legibly over, so it gets the solid/scrolled treatment unconditionally, from
+   the first frame — not just after the visitor scrolls. Grouped onto the same selectors as
+   .is-scrolled so the two states can never drift apart. */
+.site-header.is-scrolled,
+body:not(.has-hero) .site-header {
+  background: rgba(252, 250, 245, 0.86);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.site-header .container { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+/* Real logo assets (Company Docs/Brand assets) — logo-primary.png (Pine/Brass, for light
+   backgrounds) and logo-dark-bg.png (Ivory/Brass, for dark/Pine backgrounds). Never a text
+   wordmark substitute now that the real files exist. Both variants sit stacked; opacity
+   crossfades between them on the same .is-scrolled toggle and transition timing as the
+   background. */
+.logo { height: 35px; width: auto; display: block; }
+.logo-lg { height: 48px; width: auto; display: block; }
+.logo-onDark, .logo-onLight { grid-area: 1 / 1; transition: opacity .4s ease-in-out; }
+a[aria-label*="Home"] { display: inline-grid; }
+.logo-onLight { opacity: 0; }
+.site-header.is-scrolled .logo-onDark,
+body:not(.has-hero) .logo-onDark { opacity: 0; }
+.site-header.is-scrolled .logo-onLight,
+body:not(.has-hero) .logo-onLight { opacity: 1; }
+
+.nav { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; }
+.nav a {
+  text-decoration: none; font-size: 0.9375rem; font-weight: 600; color: #FCFAF5;
+  transition: color .4s ease-in-out;
+}
+.site-header.is-scrolled .nav a,
+body:not(.has-hero) .nav a { color: var(--foreground); }
+.nav a:hover { color: var(--brass-300); }
+.site-header.is-scrolled .nav a:hover,
+body:not(.has-hero) .nav a:hover { color: var(--accent); }
+.site-header .btn-primary { background: var(--accent); color: var(--accent-foreground); border-color: transparent; }
+.site-header .btn-primary:hover { background: var(--brass-500); }
+
+/* Core Offers dropdown — per SM/2026-09's Navigation Structure ("a grouped 'Core Offers'
+   menu"): three real offer pages, not one page a click lands on directly. The menu itself
+   always renders on a solid Paper surface regardless of the header's own transparency
+   state, since a popover needs to be legible on its own. */
+.nav-dropdown { position: relative; }
+.nav-dropdown > a { display: inline-flex; align-items: center; gap: 5px; }
+.nav-dropdown > a::after {
+  content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px); transition: transform .2s ease;
+}
+.nav-dropdown:hover > a::after, .nav-dropdown:focus-within > a::after { transform: rotate(225deg) translateY(2px); }
+/* top:100% (flush with the trigger — no gap) rather than the earlier calc(100% + 14px):
+   an empty gap between the trigger and the menu is a dead zone with no hoverable element in
+   it, so crossing it on the way down breaks the :hover chain and the menu vanishes before
+   the cursor arrives. The visual gap is recreated with top padding on this same box instead
+   (14px top vs 8px on the other sides), which stays part of the hoverable area since padding
+   is inside the box, not outside it. */
+.nav-dropdown-menu {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); min-width: 240px; padding: 14px 8px 8px; list-style: none; margin: 0;
+  opacity: 0; visibility: hidden; transition: opacity .2s ease, transform .2s ease;
+  transform: translateX(-50%) translateY(-4px);
+}
+.nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown:focus-within .nav-dropdown-menu {
+  opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+}
+.nav-dropdown-menu a {
+  display: block; padding: 10px 12px; border-radius: var(--radius-sm);
+  color: var(--foreground) !important; font-size: 0.9375rem;
+}
+.nav-dropdown-menu a:hover { background: var(--muted); color: var(--primary) !important; }
+.nav-dropdown-menu .fee-hint { display: block; font-size: 0.75rem; color: var(--muted-foreground); margin-top: 2px; }
+
+/* No margin-top here deliberately — a hardcoded gap previously showed the page's base
+   background as an unwanted seam whenever a dark full-bleed section (like the diagnostic
+   band) sat directly above the equally-dark footer. Separation between two dark sections is
+   handled by tone + a rule (Pine 700 + a brass top border), not by inserting page-background
+   space between them. */
+/* Darkest tone in the palette (same as --primary) — safe now that the trust band sits
+   between the footer and the diagnostic band, so two dark sections are never adjacent. */
+.site-footer { background: var(--primary); color: var(--primary-foreground); padding: 56px 0 24px; border-top: 1px solid var(--accent); }
+.site-footer a { color: var(--brass-300); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.scope-note { font-size: 0.8125rem; line-height: 1.6; color: #C9D3CD; border-top: 1px solid var(--pine-500); margin-top: 32px; padding-top: 24px; }
+
+/* Dark-section overlay — adopted from an earlier design exploration
+   (Kaalbert Design System/kaalbert-website-kit/sections/KBHero.jsx): a soft warm glow from
+   the top-right corner plus a gentle bottom vignette, so a dark section reads as lit rather
+   than flat. Not a palette gradient (no new colour is introduced) — a lighting overlay using
+   tones already in the system, at low opacity. Applied to every dark section (hero,
+   diagnostic band, trust-adjacent dark bands) via .dark-section. */
+.dark-section { position: relative; overflow: hidden; background: var(--primary); color: #FCFAF5; }
+.dark-section::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(120% 80% at 88% -10%, rgba(169, 133, 63, 0.18), transparent 58%);
+}
+.dark-section::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(14, 42, 34, 0.55));
+}
+.dark-section > * { position: relative; z-index: 1; }
+
+/* Trust band — a light, restrained section stating the firm's professional boundary
+   plainly (Document 13.03, Section 1, Job 3: "withstand scrutiny"), placed between a dark
+   CTA band and the footer so two dark sections don't sit flush with nothing between them —
+   real content that happens to solve a rhythm problem, not filler for its own sake. */
+.trust-band { background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 48px 0; }
+.trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.trust-item { display: flex; gap: 14px; align-items: flex-start; }
+.trust-item .mark { color: var(--accent); font-size: 1.25rem; line-height: 1.4; font-family: var(--font-display); }
+.trust-item p { margin: 0; font-size: 0.9375rem; color: var(--muted-foreground); }
+.trust-item strong { display: block; color: var(--foreground); font-size: 0.9375rem; margin-bottom: 2px; }
+
+/* Admin shell — the sidebar-plus-content-area shape every admin screen inherits
+   (screen-inventory.md #25). Reuses the site's own Pine/Brass tokens rather than a generic
+   dashboard-template look, per 09.01's palette-restraint rule applying everywhere, not just
+   the public site. */
+/* Fixed-height shell, not min-height: the sidebar and main content are independent
+   scroll regions (each scrolls within its own pane), not siblings in normal document flow —
+   so a long article list never drags the sidebar out of view, and there is exactly one
+   scrollbar active at a time (whichever pane's content overflows), never a page-level
+   scrollbar stacked on top of an inner one. */
+.admin-shell { display: flex; height: 100vh; overflow: hidden; }
+/* The logo and account block are fixed within the sidebar — only the nav link list between
+   them scrolls, so a long nav never carries the brand mark or the signed-in partner's name
+   out of view (the same independent-scroll-region principle as the shell itself, nested one
+   level deeper). */
+.admin-sidebar { width: 240px; flex-shrink: 0; background: var(--primary); color: var(--primary-foreground); padding: 24px 0; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.admin-sidebar .admin-logo { padding: 0 24px 6px; flex-shrink: 0; border-bottom: 1px solid var(--pine-500); }
+.admin-sidebar .admin-logo img { height: 31px; }
+.admin-sidebar nav { flex: 1; overflow-y: auto; }
+.admin-sidebar .nav-group-label { padding: 18px 24px 6px; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pine-500); }
+.admin-sidebar nav a {
+  display: block; padding: 10px 24px; color: #C9D3CD; text-decoration: none; font-size: 0.9375rem; font-weight: 600;
+  border-left: 3px solid transparent;
+}
+.admin-sidebar nav a.active { color: #FCFAF5; background: var(--pine-700); border-left-color: var(--accent); }
+.admin-sidebar nav a:hover { color: #FCFAF5; }
+.admin-sidebar .admin-account { padding: 16px 24px; border-top: 1px solid var(--pine-500); font-size: 0.8125rem; color: #C9D3CD; flex-shrink: 0; }
+.admin-sidebar .admin-account strong { display: block; color: #FCFAF5; font-size: 0.875rem; }
+.admin-main { flex: 1; padding: 32px 40px; background: var(--background); min-width: 0; height: 100%; overflow-y: auto; }
+
+.admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+.admin-topbar h1 { font-size: 1.5rem; margin: 0; }
+.admin-topbar .subtitle { font-size: 0.875rem; color: var(--muted-foreground); margin-top: 4px; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+th { text-align: left; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-foreground); padding: 10px 12px; border-bottom: 1px solid var(--border); }
+td { padding: 14px 12px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--muted); }
+.table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.table-wrap table { min-width: 640px; }
+.table-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.table-toolbar .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+.table-toolbar select, .table-toolbar input[type="search"] {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.8125rem; background: var(--card); color: var(--foreground);
+}
+
+/* Status/triage badges — small, on-brand, no new colours introduced (09.01). */
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.badge-new { background: var(--muted); color: var(--foreground); border: 1px solid var(--border); }
+.badge-contacted { background: rgba(53, 107, 85, 0.12); color: var(--pine-700); }
+.badge-converted { background: var(--pine-500); color: #FCFAF5; }
+.badge-closed { background: var(--border); color: var(--muted-foreground); }
+.badge-not-a-fit { background: transparent; color: var(--muted-foreground); border: 1px solid var(--border); }
+.badge-triage-high { background: var(--accent); color: var(--accent-foreground); }
+.badge-triage-medium { background: rgba(169, 133, 63, 0.15); color: var(--brass-500); border: 1px solid var(--brass-300); }
+.badge-triage-low { background: transparent; color: var(--muted-foreground); border: 1px solid var(--border); }
+
+/* Admin auth screens (login, 2FA setup) — a centred card, distinct from every dashboard
+   screen since a partner isn't authenticated yet. */
+.admin-auth-shell { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--muted); padding: 24px; }
+.auth-card { width: 100%; max-width: 400px; padding: 40px; }
+.auth-card .admin-logo { text-align: center; margin-bottom: 24px; }
+.auth-card .admin-logo img { height: 34px; margin: 0 auto; }
+.auth-card h1 { font-size: 1.25rem; text-align: center; margin: 0 0 6px; }
+.auth-card .sub { font-size: 0.8125rem; color: var(--muted-foreground); text-align: center; margin-bottom: 28px; }
+
+.qr-placeholder {
+  width: 168px; height: 168px; margin: 0 auto 20px; background: repeating-conic-gradient(var(--foreground) 0% 25%, var(--card) 0% 50%) 0 0/16px 16px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.backup-codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin: 16px 0; }
+.backup-codes span { font-family: var(--font-mono); font-size: 0.875rem; }
+
+/* Admin forms — reused across Article/Offer/Page editors. */
+.admin-field { margin-bottom: 18px; }
+.admin-field label { display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+.admin-field .hint { font-size: 0.75rem; color: var(--muted-foreground); font-weight: 400; margin-left: 6px; }
+.admin-field input, .admin-field select, .admin-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.9375rem; background: var(--card); color: var(--foreground);
+}
+.admin-field textarea { min-height: 90px; resize: vertical; }
+.admin-field-row { display: grid; gap: 16px; }
+
+.rte-toolbar { display: flex; gap: 4px; padding: 8px; border: 1px solid var(--border); border-bottom: none; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: var(--muted); }
+.rte-toolbar button { width: 30px; height: 30px; border: none; background: transparent; border-radius: 4px; font-size: 0.8125rem; font-weight: 700; color: var(--foreground); cursor: pointer; }
+.rte-toolbar button:hover { background: var(--border); }
+.rte-body { border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); padding: 16px; min-height: 260px; font-size: 0.9375rem; line-height: 1.7; background: var(--card); }
+
+.preview-image-picker {
+  border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 24px; text-align: center;
+  color: var(--muted-foreground); font-size: 0.875rem;
+}
+.preview-image-picker.required-missing { border-color: var(--accent); background: rgba(169, 133, 63, 0.06); }
+
+.fee-field-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 18px; background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.fee-field-editor .full-row { grid-column: 1 / -1; }
+
+.admin-actions-bar { display: flex; justify-content: flex-end; gap: 10px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+.pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
+.pagination[hidden] { display: none; }
+.page-btn {
+  min-width: 36px; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--foreground); font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--accent); }
+.page-btn.active { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Phase 2 gating banners — every gated-feature mockup carries one so it's never mistaken
+   for a built, live screen. .gated-banner-high is for the highest-risk items (the Client
+   Portal, explicitly named as such in Document 13.03) — a stronger visual weight than the
+   standard notice used for ordinary Phase 2 items or the bonus Performance dashboards. */
+.gated-banner {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; margin-bottom: 24px;
+  border-radius: var(--radius-sm); font-size: 0.8125rem; border: 1px solid var(--brass-300);
+  background: rgba(169, 133, 63, 0.08); color: var(--brass-500);
+}
+.gated-banner-high {
+  border-color: var(--accent); background: rgba(169, 133, 63, 0.14); color: var(--brass-500);
+  font-weight: 600;
+}
+.gated-banner strong { font-weight: 700; }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; background: var(--accent); color: var(--accent-foreground);
+  padding: 10px 16px; z-index: 100;
+}
+.skip-link:focus { left: 12px; top: 12px; }

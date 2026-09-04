@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Business Health Check Result — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .result-shell { padding: 48px 0 64px; }
+
+  .demo-banner {
+    max-width: 720px; margin: 0 auto 28px; padding: 12px 18px; background: var(--muted);
+    border: 1px dashed var(--border); border-radius: var(--radius-sm); font-size: 0.8125rem;
+    color: var(--muted-foreground); text-align: center;
+  }
+  .demo-banner[hidden] { display: none; }
+  .demo-banner a { color: var(--primary); font-weight: 700; }
+
+  .score-hero { max-width: 720px; margin: 0 auto 36px; text-align: center; }
+  .score-hero .kicker { justify-content: center; display: flex; }
+  .score-number { font-family: var(--font-display); font-size: 4rem; color: var(--primary); line-height: 1; margin: 12px 0 4px; }
+  .score-band { font-size: 1.125rem; font-weight: 700; color: var(--accent); margin-bottom: 14px; }
+  .score-statement { font-size: 0.9375rem; max-width: 560px; margin: 0 auto; color: var(--muted-foreground); }
+
+  .dimension-panel { max-width: 720px; margin: 0 auto 32px; padding: 32px; }
+  .dim-row { margin-bottom: 18px; }
+  .dim-row:last-child { margin-bottom: 0; }
+  .dim-row-head { display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 6px; }
+  .dim-row-head .name { font-weight: 700; }
+  .dim-row-head .name.weak::after { content: " — weakest"; font-weight: 400; color: var(--accent); font-size: 0.75rem; }
+  .dim-track { height: 8px; background: var(--muted); border-radius: 999px; overflow: hidden; }
+  .dim-fill { height: 100%; background: var(--pine-500); border-radius: 999px; }
+  .dim-fill.weak { background: var(--accent); }
+
+  .disclaimer-box {
+    max-width: 720px; margin: 0 auto 40px; padding: 18px 20px; background: var(--muted);
+    border-left: 3px solid var(--accent); border-radius: var(--radius-sm); font-size: 0.8125rem;
+    color: var(--muted-foreground);
+  }
+
+  .summary-panel { max-width: 560px; margin: 0 auto 40px; padding: 36px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.9375rem; background: var(--card); color: var(--foreground);
+  }
+  .consent-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; font-size: 0.8125rem; }
+  .consent-row input { margin-top: 3px; flex-shrink: 0; }
+  .consent-row.required label::after { content: " (required)"; color: var(--muted-foreground); font-weight: 400; }
+
+  .next-step-panel { max-width: 560px; margin: 0 auto; text-align: center; }
+  .next-step-panel .btn { margin: 6px; }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../a-public-site/home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="../a-public-site/offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="../a-public-site/offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="../a-public-site/offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="../a-public-site/offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="../a-public-site/capabilities.html">Capabilities</a></li>
+        <li><a href="../a-public-site/our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="../a-public-site/about.html">About</a></li>
+        <li><a href="../a-public-site/contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../a-public-site/contact.html" class="btn btn-primary">Talk to a partner</a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="result-shell">
+
+    <div class="demo-banner" id="demoBanner" hidden>
+      You're viewing example results. <a href="diagnostic-flow.html">Take the free Business Health Check →</a>
+    </div>
+
+    <div class="score-hero">
+      <span class="kicker">Your result</span>
+      <div class="score-number" id="scoreNumber">—</div>
+      <div class="score-band" id="scoreBand"></div>
+      <p class="score-statement" id="scoreStatement"></p>
+    </div>
+
+    <div class="card dimension-panel" id="dimensionPanel">
+      <!-- dimension rows rendered by JS -->
+    </div>
+
+    <div class="disclaimer-box">
+      This is an indicative self-assessment based on information supplied by the user. It is
+      not a professional opinion, and should not be relied upon by any third party.
+    </div>
+
+    <div class="card summary-panel">
+      <h2 style="margin-top:0; font-size:1.25rem;">Get the full written summary by email</h2>
+      <p style="font-size:0.875rem; color:var(--muted-foreground); margin-bottom:20px;">A
+      partner reads every response personally — you'll hear from someone who already
+      understands your numbers, not a generic reply.</p>
+      <form>
+        <div class="field"><label for="rName">Name</label><input type="text" id="rName" required></div>
+        <div class="field"><label for="rEmail">Email</label><input type="email" id="rEmail" required></div>
+        <div class="field"><label for="rPhone">Phone (optional)</label><input type="tel" id="rPhone"></div>
+        <div class="consent-row required">
+          <input type="checkbox" id="rContactConsent" required>
+          <label for="rContactConsent">I agree to be contacted about this result.</label>
+        </div>
+        <div class="consent-row">
+          <input type="checkbox" id="rMarketingConsent">
+          <label for="rMarketingConsent">I'd also like occasional Insights articles and updates — separate from the above, and unticked by default.</label>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Email my full summary</button>
+      </form>
+    </div>
+
+    <div class="next-step-panel">
+      <p style="font-size:0.875rem; color:var(--muted-foreground); margin-bottom:14px;">Not
+      ready for that yet? Both routes stay open.</p>
+      <a href="../a-public-site/contact.html" class="btn btn-secondary">Talk to a partner directly</a>
+      <a href="../a-public-site/our-method.html" class="btn btn-secondary">See how the firm works</a>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+<script>
+  // Result copy (band labels, indicative statements) is illustrative placeholder — reserved
+  // to firm authorship per Document 13.03, Section 13, same as the question set.
+  var BANDS = [
+    { min: 80, label: 'Strong Foundation', statement: "This is a business whose numbers could support a serious conversation with a lender or investor today. The firm's attention here would sharpen the edges, not rebuild the foundation." },
+    { min: 60, label: 'Developing, With Real Gaps', statement: "The basics are mostly in place, but at least one area — often exactly the one flagged below — is the kind of gap a lender or credit committee tests first." },
+    { min: 40, label: 'Workable, Not Yet Provable', statement: "The business runs day to day, but several of the things a lender, investor or serious buyer would ask for aren't yet in a form you could hand over." },
+    { min: 0, label: 'Running on Memory', statement: "Common, and fixable — but right now, much of what keeps this business running exists in memory rather than in a record anyone else could pick up." }
+  ];
+
+  var DEMO = {
+    overall: 54,
+    dimensions: [
+      { name: 'Structure', score: 67 },
+      { name: 'Records', score: 44 },
+      { name: 'Cash Control', score: 38 },
+      { name: 'Funding Readiness', score: 58 },
+      { name: 'Owner Dependence', score: 61 }
+    ],
+    weakest: ['Cash Control', 'Records']
+  };
+
+  var stored = null;
+  try { stored = JSON.parse(sessionStorage.getItem('bhc_result')); } catch (e) {}
+  var isDemo = !stored;
+  var data = stored || DEMO;
+
+  document.getElementById('demoBanner').hidden = !isDemo;
+
+  var band = BANDS.find(function (b) { return data.overall >= b.min; });
+  document.getElementById('scoreNumber').textContent = data.overall + '%';
+  document.getElementById('scoreBand').textContent = band.label;
+  document.getElementById('scoreStatement').textContent = band.statement;
+
+  var panel = document.getElementById('dimensionPanel');
+  panel.innerHTML = data.dimensions.map(function (d) {
+    var isWeak = data.weakest.indexOf(d.name) !== -1;
+    return '<div class="dim-row">' +
+      '<div class="dim-row-head"><span class="name' + (isWeak ? ' weak' : '') + '">' + d.name + '</span><span>' + d.score + '%</span></div>' +
+      '<div class="dim-track"><div class="dim-fill' + (isWeak ? ' weak' : '') + '" style="width:' + d.score + '%;"></div></div>' +
+      '</div>';
+  }).join('');
+</script>
+</body>
+</html>

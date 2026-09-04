@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Article — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .editor-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+  .editor-panel { padding: 28px; }
+  .side-panel { padding: 24px; margin-bottom: 20px; }
+  .side-panel h3 { font-size: 0.9375rem; margin: 0 0 16px; }
+
+  .validation-note { display: flex; gap: 8px; align-items: flex-start; padding: 12px 14px; background: rgba(169, 133, 63, 0.08); border: 1px solid var(--brass-300); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--brass-500); margin-bottom: 20px; }
+
+  @media (max-width: 980px) { .editor-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html" class="active">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Edit Article</h1>
+        <div class="subtitle"><a href="admin-articles-list.html" style="color:var(--muted-foreground);">← Back to Articles</a></div>
+      </div>
+    </div>
+
+    <div class="validation-note">
+      ⚠ A preview image is required before this article can be published — it's currently
+      missing (see the panel on the right).
+    </div>
+
+    <div class="editor-grid">
+      <div class="card editor-panel">
+        <div class="admin-field">
+          <label for="title">Title</label>
+          <input type="text" id="title" value="Owner Drawings: The Habit That Quietly Sinks SMEs">
+        </div>
+
+        <div class="admin-field-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="admin-field">
+            <label for="category">Category</label>
+            <select id="category">
+              <option>Financial Control</option>
+              <option>Growth &amp; Funding</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label for="author">Author</label>
+            <select id="author">
+              <option>Evans Agyemang</option>
+              <option>Albert Kwakye Amponsah</option>
+              <option>Ama Wiafe</option>
+              <option>Joseph Bordoh</option>
+              <option>John Dogbey</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label for="metaDesc">Meta description <span class="hint">for search results</span></label>
+          <input type="text" id="metaDesc" value="Mixing personal spending with business cash is normal in an SME — until it's the reason nobody can tell you if the business made money this year.">
+        </div>
+
+        <div class="admin-field">
+          <label>Body <span class="hint">tables, pull-quotes, figures and downloadable resources supported</span></label>
+          <div class="rte-toolbar">
+            <button type="button" title="Bold"><b>B</b></button>
+            <button type="button" title="Italic"><i>I</i></button>
+            <button type="button" title="Heading">H2</button>
+            <button type="button" title="Quote">"</button>
+            <button type="button" title="Link">🔗</button>
+            <button type="button" title="Table">▦</button>
+            <button type="button" title="Image">🖼</button>
+            <button type="button" title="Attach file">📎</button>
+          </div>
+          <div class="rte-body" contenteditable="true">Mixing personal spending with business cash is one of the most normal things in an SME — and one of the most quietly expensive...</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card side-panel">
+          <h3>Preview image <span class="hint" style="color:var(--accent);">required</span></h3>
+          <div class="preview-image-picker required-missing">
+            No image set<br><a href="#" style="color:var(--primary); font-weight:700;">Upload an image</a>
+          </div>
+        </div>
+
+        <div class="card side-panel">
+          <h3>Publishing</h3>
+          <div class="admin-field" style="margin-bottom:12px;">
+            <label>Status</label>
+            <select><option>Draft</option><option selected>Published</option></select>
+          </div>
+          <div style="font-size:0.8125rem; color:var(--muted-foreground); margin-bottom:14px;">Published 3 Aug 2026 · Last revised 3 Aug 2026</div>
+          <div style="display:flex; gap:8px; align-items:flex-start; font-size:0.8125rem;">
+            <input type="checkbox" id="claimsCheck" style="margin-top:3px;">
+            <label for="claimsCheck">This complies with 10.05 Positioning and Claims Guidance Note</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-actions-bar">
+      <button type="button" class="btn btn-secondary">Save draft</button>
+      <button type="button" class="btn btn-primary" disabled title="Add a preview image, and confirm 10.05 compliance, first">Publish</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

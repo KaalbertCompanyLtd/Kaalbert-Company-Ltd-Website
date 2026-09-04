@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Articles — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .status-pill { font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .status-published { background: var(--pine-500); color: #FCFAF5; }
+  .status-draft { background: var(--muted); color: var(--muted-foreground); border: 1px solid var(--border); }
+  td.title-cell { font-weight: 600; color: var(--foreground); }
+  td.actions-cell { text-align: right; }
+  td.actions-cell a { font-size: 0.8125rem; font-weight: 600; color: var(--primary); text-decoration: none; margin-left: 14px; }
+  td.actions-cell a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html" class="active">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Articles</h1>
+        <div class="subtitle">8 published, 1 draft · <a href="admin-categories-list.html" style="color:var(--primary); font-weight:600;">Manage categories →</a></div>
+      </div>
+      <a href="admin-article-editor.html" class="btn btn-primary">New Article</a>
+    </div>
+
+    <div class="table-toolbar">
+      <input type="search" placeholder="Search articles…" id="searchInput">
+      <div class="filters">
+        <select id="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+        <select id="catFilter">
+          <option value="all">All categories</option>
+          <option value="Financial Control">Financial Control</option>
+          <option value="Growth & Funding">Growth &amp; Funding</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Title</th><th>Author</th><th>Category</th><th>Status</th><th>Published</th><th></th></tr>
+        </thead>
+        <tbody id="articlesBody">
+          <tr data-status="published" data-cat="Financial Control" data-title="Owner Drawings: The Habit That Quietly Sinks SMEs">
+            <td class="title-cell">Owner Drawings: The Habit That Quietly Sinks SMEs</td>
+            <td>Evans Agyemang</td><td>Financial Control</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>3 Aug 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Financial Control" data-title="Why 'I'll Sort the Books Later' Is the Most Expensive Sentence in Business">
+            <td class="title-cell">Why "I'll Sort the Books Later" Is the Most Expensive Sentence in Business</td>
+            <td>John Dogbey</td><td>Financial Control</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>28 Jul 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Financial Control" data-title="The Difference Between Your Bank Balance and Your Actual Profit">
+            <td class="title-cell">The Difference Between Your Bank Balance and Your Actual Profit</td>
+            <td>Evans Agyemang</td><td>Financial Control</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>21 Jul 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Financial Control" data-title="Five Questions to Ask Before You Register Your Business">
+            <td class="title-cell">Five Questions to Ask Before You Register Your Business</td>
+            <td>John Dogbey</td><td>Financial Control</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>14 Jul 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Growth & Funding" data-title="What a Lender Actually Reads Before They Read Your Numbers">
+            <td class="title-cell">What a Lender Actually Reads Before They Read Your Numbers</td>
+            <td>Albert Kwakye Amponsah</td><td>Growth &amp; Funding</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>7 Jul 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Growth & Funding" data-title="What Investors Look For That Founders Don't Expect">
+            <td class="title-cell">What Investors Look For That Founders Don't Expect</td>
+            <td>Albert Kwakye Amponsah</td><td>Growth &amp; Funding</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>30 Jun 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Growth & Funding" data-title="Pricing for Profit, Not Just for Sales">
+            <td class="title-cell">Pricing for Profit, Not Just for Sales</td>
+            <td>Ama Wiafe</td><td>Growth &amp; Funding</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>23 Jun 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="published" data-cat="Growth & Funding" data-title="How Much Does an Untracked Process Actually Cost You?">
+            <td class="title-cell">How Much Does an Untracked Process Actually Cost You?</td>
+            <td>Joseph Bordoh</td><td>Growth &amp; Funding</td>
+            <td><span class="status-pill status-published">Published</span></td>
+            <td>16 Jun 2026</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+          <tr data-status="draft" data-cat="Financial Control" data-title="What Changes Once You Register for VAT">
+            <td class="title-cell">What Changes Once You Register for VAT</td>
+            <td>John Dogbey</td><td>Financial Control</td>
+            <td><span class="status-pill status-draft">Draft</span></td>
+            <td>—</td>
+            <td class="actions-cell"><a href="admin-article-editor.html">Edit</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="pagination" id="pagination" aria-label="Articles pagination"></nav>
+  </div>
+
+</div>
+
+<script>
+  var PAGE_SIZE = 6;
+  var currentPage = 1;
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#articlesBody tr'));
+  var search = document.getElementById('searchInput');
+  var statusFilter = document.getElementById('statusFilter');
+  var catFilter = document.getElementById('catFilter');
+  var pagination = document.getElementById('pagination');
+
+  function getMatches() {
+    var q = search.value.trim().toLowerCase();
+    return rows.filter(function (row) {
+      var matchesStatus = statusFilter.value === 'all' || row.dataset.status === statusFilter.value;
+      var matchesCat = catFilter.value === 'all' || row.dataset.cat === catFilter.value;
+      var matchesSearch = !q || row.dataset.title.toLowerCase().indexOf(q) !== -1;
+      return matchesStatus && matchesCat && matchesSearch;
+    });
+  }
+
+  function render() {
+    var matches = getMatches();
+    var totalPages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    rows.forEach(function (r) { r.hidden = true; });
+    var start = (currentPage - 1) * PAGE_SIZE;
+    matches.slice(start, start + PAGE_SIZE).forEach(function (r) { r.hidden = false; });
+    renderPagination(totalPages, matches.length);
+  }
+
+  function renderPagination(totalPages, matchCount) {
+    pagination.hidden = matchCount === 0 || totalPages <= 1;
+    if (pagination.hidden) { pagination.innerHTML = ''; return; }
+    var html = '<button type="button" class="page-btn" data-page="' + (currentPage - 1) + '"' + (currentPage === 1 ? ' disabled' : '') + '>Prev</button>';
+    for (var p = 1; p <= totalPages; p++) {
+      html += '<button type="button" class="page-btn' + (p === currentPage ? ' active' : '') + '" data-page="' + p + '">' + p + '</button>';
+    }
+    html += '<button type="button" class="page-btn" data-page="' + (currentPage + 1) + '"' + (currentPage === totalPages ? ' disabled' : '') + '>Next</button>';
+    pagination.innerHTML = html;
+    pagination.querySelectorAll('.page-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { currentPage = parseInt(btn.dataset.page, 10); render(); });
+    });
+  }
+
+  search.addEventListener('input', function () { currentPage = 1; render(); });
+  statusFilter.addEventListener('change', function () { currentPage = 1; render(); });
+  catFilter.addEventListener('change', function () { currentPage = 1; render(); });
+  render();
+</script>
+</body>
+</html>

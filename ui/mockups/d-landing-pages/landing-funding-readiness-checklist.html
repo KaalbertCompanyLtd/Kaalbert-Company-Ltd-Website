@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Funding-Readiness Checklist — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .lp-header .container { justify-content: center; }
+
+  .lp-hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+  .lp-hero h1 { margin-bottom: 20px; }
+  .lp-hero .lead { max-width: 480px; margin-bottom: 0; }
+
+  .checklist-card { padding: 32px; }
+  .checklist-card h2 { font-size: 1.125rem; margin: 0 0 6px; }
+  .checklist-card .sub { font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.9375rem; background: var(--card); color: var(--foreground);
+  }
+  .consent-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; font-size: 0.75rem; }
+  .consent-row input { margin-top: 3px; flex-shrink: 0; }
+
+  .whats-inside { padding: 56px 0; }
+  .whats-inside .container-narrow { max-width: 640px; }
+  .whats-inside ul { list-style: none; padding: 0; margin: 20px 0 0; }
+  .whats-inside li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9375rem; }
+  .whats-inside li:last-child { border-bottom: none; }
+  .whats-inside li .check { color: var(--pine-500); font-weight: 700; flex-shrink: 0; }
+
+  .lp-footer { background: var(--primary); color: #C9D3CD; padding: 40px 0 28px; }
+  .lp-footer .logo-lg { margin: 0 auto 20px; }
+  .lp-footer .container { text-align: center; max-width: 640px; }
+
+  @media (max-width: 860px) { .lp-hero-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header lp-header">
+  <div class="container">
+    <a href="../a-public-site/home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-hero lp-hero dark-section">
+    <div class="container lp-hero-grid">
+      <div>
+        <span class="kicker">Free Download</span>
+        <h1>What a lender actually asks for, before you apply</h1>
+        <p class="lead">A practical checklist of the records, statements and documents
+        lenders and funders request first — so you find the gaps before a credit committee
+        does, not after.</p>
+      </div>
+      <div class="card checklist-card">
+        <h2>Get the checklist</h2>
+        <p class="sub">Sent straight to your inbox — no cost, no obligation.</p>
+        <form>
+          <div class="field"><label for="cName">Name</label><input type="text" id="cName" required></div>
+          <div class="field"><label for="cEmail">Email</label><input type="email" id="cEmail" required></div>
+          <div class="consent-row">
+            <input type="checkbox" id="cConsent" required>
+            <label for="cConsent">I agree to be contacted about this download. (required)</label>
+          </div>
+          <div class="consent-row">
+            <input type="checkbox" id="cMarketing">
+            <label for="cMarketing">I'd also like occasional Insights articles and updates — separate from the above.</label>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Send me the checklist</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="whats-inside">
+    <div class="container-narrow">
+      <span class="kicker">What's inside</span>
+      <h2 style="margin:8px 0 0;">Drawn from what the firm actually asks every funding-readiness client for</h2>
+      <ul>
+        <li><span class="check">✓</span>Twelve months of bank and mobile money statements — what "complete" actually means to a lender</li>
+        <li><span class="check">✓</span>Sales, purchase and expense records — and what to do if yours aren't in that form yet</li>
+        <li><span class="check">✓</span>Receivables and payables — why an approximate list beats no list</li>
+        <li><span class="check">✓</span>Owner drawings — the single item most funding applications trip over</li>
+        <li><span class="check">✓</span>What's optional versus what actually blocks an application from moving</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer class="lp-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd">
+    <div class="scope-note" style="margin-top:0; border-top:none; padding-top:0;">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+</body>
+</html>

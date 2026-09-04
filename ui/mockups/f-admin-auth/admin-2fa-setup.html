@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set Up Two-Factor Authentication — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .auth-card { max-width: 440px; }
+  .setup-step { display: none; }
+  .setup-step.active { display: block; }
+  .step-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); text-align: center; margin-bottom: 8px; }
+  .code-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 1.25rem; text-align: center; letter-spacing: 0.3em; margin-bottom: 16px; }
+  .backup-note { font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 8px; }
+  .confirm-row { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; font-size: 0.8125rem; }
+  .confirm-row input { margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="admin-auth-shell">
+  <div class="card auth-card">
+    <div class="admin-logo"><img src="../assets/logo-primary.png" alt="Kaalbert & Company Ltd"></div>
+
+    <div class="setup-step active" id="step1">
+      <span class="step-label">Step 1 of 2</span>
+      <h1>Scan with your authenticator app</h1>
+      <p class="sub">Google Authenticator, Authy, or your password manager's built-in TOTP support all work.</p>
+      <div class="qr-placeholder" role="img" aria-label="QR code for authenticator app setup"></div>
+      <p style="font-size:0.75rem; text-align:center; color:var(--muted-foreground); margin-bottom:20px;">
+        Can't scan? <a href="#" style="color:var(--primary); font-weight:600;">Enter the setup key manually</a>
+      </p>
+      <label for="confirmCode" style="display:block; font-size:0.8125rem; font-weight:600; margin-bottom:8px;">Enter the 6-digit code from your app</label>
+      <input type="text" id="confirmCode" class="code-input" maxlength="6" placeholder="000000">
+      <button type="button" class="btn btn-primary" style="width:100%;" onclick="showStep(2)">Confirm and continue</button>
+    </div>
+
+    <div class="setup-step" id="step2">
+      <span class="step-label">Step 2 of 2</span>
+      <h1>Save your backup codes</h1>
+      <p class="sub">Each code works once. Store them somewhere safe — if you lose your
+      device and these codes, another partner will need to reset your 2FA enrolment.</p>
+      <div class="backup-codes">
+        <span>7K2M-9QXR</span><span>4TVB-1LWC</span>
+        <span>8NFZ-3RGH</span><span>2XYP-6MKD</span>
+        <span>5QAS-8JBN</span><span>1WLE-7TCF</span>
+        <span>9DHV-2SPK</span><span>6RMU-4XQZ</span>
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="savedCodes" required>
+        <label for="savedCodes">I've saved these backup codes somewhere secure.</label>
+      </div>
+      <a href="../g-admin-content/admin-dashboard.html" class="btn btn-primary" style="width:100%; display:block; text-align:center;">Finish setup</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showStep(n) {
+    document.querySelectorAll('.setup-step').forEach(function (s) { s.classList.remove('active'); });
+    document.getElementById('step' + n).classList.add('active');
+  }
+</script>
+</body>
+</html>

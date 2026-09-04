@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insights — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  section.insights-section { padding: 48px 0 64px; }
+
+  .insights-controls { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 32px; }
+  .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-pill {
+    padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: var(--card);
+    font-size: 0.8125rem; font-weight: 600; cursor: pointer; color: var(--foreground);
+  }
+  .filter-pill.active { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+  .search-input {
+    padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.875rem; min-width: 240px; background: var(--card); color: var(--foreground);
+  }
+
+  .article-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .article-card { display: flex; flex-direction: column; overflow: hidden; }
+  .article-thumb {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 2rem; color: rgba(255,255,255,0.85);
+  }
+  .article-thumb.cat-financial-control { background: linear-gradient(135deg, var(--pine-700), var(--pine-500)); }
+  .article-thumb.cat-growth-funding { background: linear-gradient(135deg, var(--brass-500), var(--brass-300)); }
+  .article-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+  .article-cat-tag { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .article-card h3 { font-size: 1.0625rem; margin: 0 0 8px; line-height: 1.3; }
+  .article-card p.excerpt { font-size: 0.875rem; color: var(--muted-foreground); margin: 0 0 16px; flex: 1; }
+  .article-byline { font-size: 0.75rem; color: var(--muted-foreground); display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 12px; }
+  .article-byline strong { color: var(--foreground); }
+  .article-card[hidden] { display: none; }
+
+  .no-results { text-align: center; padding: 48px 0; color: var(--muted-foreground); font-size: 0.9375rem; }
+  .no-results[hidden] { display: none; }
+
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 40px; }
+  .pagination[hidden] { display: none; }
+  .page-btn {
+    min-width: 38px; height: 38px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--card); color: var(--foreground); font-size: 0.875rem; font-weight: 600; cursor: pointer;
+  }
+  .page-btn:hover:not(:disabled) { border-color: var(--accent); }
+  .page-btn.active { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .page-btn.prev-next { padding: 0 16px; }
+
+  @media (max-width: 980px) { .article-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .article-grid { grid-template-columns: 1fr; } .insights-controls { flex-direction: column; align-items: stretch; } }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../a-public-site/home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="../a-public-site/offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="../a-public-site/offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="../a-public-site/offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="../a-public-site/offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="../a-public-site/capabilities.html">Capabilities</a></li>
+        <li><a href="../a-public-site/our-method.html">Our Method</a></li>
+        <li><a href="insights-index.html">Insights</a></li>
+        <li><a href="../a-public-site/about.html">About</a></li>
+        <li><a href="../a-public-site/contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-hero dark-section">
+    <div class="container-narrow">
+      <span class="kicker">Insights</span>
+      <h1>What we'd tell you in a first meeting — written down</h1>
+      <p class="lead">Analysis from the partners themselves, on the specific problems that
+      bring a founder to us in the first place. Not generic advice — the questions this
+      market actually asks.</p>
+    </div>
+  </section>
+
+  <section class="insights-section">
+    <div class="container">
+
+      <div class="insights-controls">
+        <div class="filter-pills" id="filterPills">
+          <button type="button" class="filter-pill active" data-cat="all">All</button>
+          <button type="button" class="filter-pill" data-cat="financial-control">Financial Control</button>
+          <button type="button" class="filter-pill" data-cat="growth-funding">Growth &amp; Funding</button>
+        </div>
+        <input type="search" class="search-input" id="searchInput" placeholder="Search articles…">
+      </div>
+
+      <div class="article-grid" id="articleGrid">
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="financial-control" data-title="Owner Drawings: The Habit That Quietly Sinks SMEs">
+          <div class="article-thumb cat-financial-control">FC</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Financial Control</span>
+            <h3>Owner Drawings: The Habit That Quietly Sinks SMEs</h3>
+            <p class="excerpt">Mixing personal spending with business cash is normal in an SME — until it's the reason nobody can tell you if the business actually made money this year.</p>
+            <div class="article-byline"><span><strong>Evans Agyemang</strong> · Financial Control &amp; Compliance</span><span>6 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="financial-control" data-title="Why &#39;I&#39;ll Sort the Books Later&#39; Is the Most Expensive Sentence in Business">
+          <div class="article-thumb cat-financial-control">FC</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Financial Control</span>
+            <h3>Why "I'll Sort the Books Later" Is the Most Expensive Sentence in Business</h3>
+            <p class="excerpt">The cost of late record-keeping isn't the record-keeping — it's every decision made without the numbers in the meantime.</p>
+            <div class="article-byline"><span><strong>John Dogbey</strong> · Financial Reporting &amp; Tax</span><span>5 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="financial-control" data-title="The Difference Between Your Bank Balance and Your Actual Profit">
+          <div class="article-thumb cat-financial-control">FC</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Financial Control</span>
+            <h3>The Difference Between Your Bank Balance and Your Actual Profit</h3>
+            <p class="excerpt">A healthy-looking account balance and a profitable business are not the same claim. Confusing them is how growing businesses run out of cash.</p>
+            <div class="article-byline"><span><strong>Evans Agyemang</strong> · Financial Control &amp; Compliance</span><span>7 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="financial-control" data-title="Five Questions to Ask Before You Register Your Business">
+          <div class="article-thumb cat-financial-control">FC</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Financial Control</span>
+            <h3>Five Questions to Ask Before You Register Your Business</h3>
+            <p class="excerpt">Formalising a business changes what you owe, what you can prove, and who will lend to you. Worth deciding on purpose, not by default.</p>
+            <div class="article-byline"><span><strong>John Dogbey</strong> · Financial Reporting &amp; Tax</span><span>5 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="growth-funding" data-title="What a Lender Actually Reads Before They Read Your Numbers">
+          <div class="article-thumb cat-growth-funding">GF</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Growth &amp; Funding</span>
+            <h3>What a Lender Actually Reads Before They Read Your Numbers</h3>
+            <p class="excerpt">Credit committees test the story around the spreadsheet before they test the spreadsheet itself. Most declined applications fail here first.</p>
+            <div class="article-byline"><span><strong>Albert Kwakye Amponsah</strong> · Lead Consultant</span><span>8 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="growth-funding" data-title="What Investors Look For That Founders Don&#39;t Expect">
+          <div class="article-thumb cat-growth-funding">GF</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Growth &amp; Funding</span>
+            <h3>What Investors Look For That Founders Don't Expect</h3>
+            <p class="excerpt">It's rarely the growth story that stalls a raise. It's governance, cap table clarity, and whether the numbers survive being questioned.</p>
+            <div class="article-byline"><span><strong>Albert Kwakye Amponsah</strong> · Lead Consultant</span><span>7 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="growth-funding" data-title="Pricing for Profit, Not Just for Sales">
+          <div class="article-thumb cat-growth-funding">GF</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Growth &amp; Funding</span>
+            <h3>Pricing for Profit, Not Just for Sales</h3>
+            <p class="excerpt">Winning more customers at a price that doesn't cover your real costs isn't growth — it's a faster route to the same problem.</p>
+            <div class="article-byline"><span><strong>Ama Wiafe</strong> · Growth, Markets &amp; Clients</span><span>6 min read</span></div>
+          </div>
+        </a>
+
+        <a class="card article-card" href="insight-owner-drawings.html" data-cat="growth-funding" data-title="How Much Does an Untracked Process Actually Cost You?">
+          <div class="article-thumb cat-growth-funding">GF</div>
+          <div class="article-body">
+            <span class="article-cat-tag">Growth &amp; Funding</span>
+            <h3>How Much Does an Untracked Process Actually Cost You?</h3>
+            <p class="excerpt">A process that only lives in someone's head isn't free — it's a cost the business hasn't measured yet.</p>
+            <div class="article-byline"><span><strong>Joseph Bordoh</strong> · Technology &amp; Operations</span><span>5 min read</span></div>
+          </div>
+        </a>
+
+      </div>
+
+      <div class="no-results" id="noResults" hidden>No articles match that search. <a href="insights-index.html" style="color:var(--primary); font-weight:700;">Clear filters</a></div>
+
+      <nav class="pagination" id="pagination" aria-label="Insights pagination"></nav>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:24px; font-size:0.9375rem;">
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Core Offers</strong>
+        <a href="../a-public-site/offer-business-health-check.html" style="display:block; margin-bottom:6px;">Business Health Check</a>
+        <a href="../a-public-site/offer-financial-clarity-pack.html" style="display:block; margin-bottom:6px;">Financial Clarity Pack</a>
+        <a href="../a-public-site/offer-funding-readiness-pack.html" style="display:block;">Funding-Readiness Pack</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Firm</strong>
+        <a href="../a-public-site/our-method.html" style="display:block; margin-bottom:6px;">Our Method</a>
+        <a href="../a-public-site/about.html" style="display:block; margin-bottom:6px;">About &amp; Partners</a>
+        <a href="../a-public-site/capabilities.html" style="display:block;">Capabilities</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Insights</strong>
+        <a href="insights-index.html" style="display:block; margin-bottom:6px;">All articles</a>
+        <a href="../a-public-site/contact.html" style="display:block;">Contact</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">House No. 13 Gbenjin Gbe Avenue</strong>
+        <span style="color:#C9D3CD;">East Legon-ARS, Accra</span><br>
+        <span style="color:#C9D3CD;">0558 480 001</span>
+      </div>
+    </div>
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+<script>
+  var PAGE_SIZE = 6;
+  var activeCat = 'all';
+  var currentPage = 1;
+  var pills = document.querySelectorAll('.filter-pill');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.article-card'));
+  var search = document.getElementById('searchInput');
+  var noResults = document.getElementById('noResults');
+  var grid = document.getElementById('articleGrid');
+  var pagination = document.getElementById('pagination');
+
+  function getMatches() {
+    var query = search.value.trim().toLowerCase();
+    return cards.filter(function (card) {
+      var matchesCat = activeCat === 'all' || card.dataset.cat === activeCat;
+      var matchesSearch = !query || card.dataset.title.toLowerCase().indexOf(query) !== -1;
+      return matchesCat && matchesSearch;
+    });
+  }
+
+  function render() {
+    var matches = getMatches();
+    var totalPages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    // Hide everything, then show only the current page's slice of matches, in document order.
+    cards.forEach(function (card) { card.hidden = true; });
+    var start = (currentPage - 1) * PAGE_SIZE;
+    matches.slice(start, start + PAGE_SIZE).forEach(function (card) { card.hidden = false; });
+
+    noResults.hidden = matches.length > 0;
+    grid.hidden = matches.length === 0;
+    renderPagination(totalPages, matches.length);
+  }
+
+  function renderPagination(totalPages, matchCount) {
+    pagination.hidden = matchCount === 0 || totalPages <= 1;
+    if (pagination.hidden) { pagination.innerHTML = ''; return; }
+
+    var html = '<button type="button" class="page-btn prev-next" data-page="' + (currentPage - 1) + '"' +
+      (currentPage === 1 ? ' disabled' : '') + '>Prev</button>';
+    for (var p = 1; p <= totalPages; p++) {
+      html += '<button type="button" class="page-btn' + (p === currentPage ? ' active' : '') +
+        '" data-page="' + p + '">' + p + '</button>';
+    }
+    html += '<button type="button" class="page-btn prev-next" data-page="' + (currentPage + 1) + '"' +
+      (currentPage === totalPages ? ' disabled' : '') + '>Next</button>';
+    pagination.innerHTML = html;
+
+    pagination.querySelectorAll('.page-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        currentPage = parseInt(btn.dataset.page, 10);
+        render();
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
+
+  pills.forEach(function (pill) {
+    pill.addEventListener('click', function () {
+      pills.forEach(function (p) { p.classList.remove('active'); });
+      pill.classList.add('active');
+      activeCat = pill.dataset.cat;
+      currentPage = 1;
+      render();
+    });
+  });
+  search.addEventListener('input', function () { currentPage = 1; render(); });
+
+  render();
+</script>
+</body>
+</html>

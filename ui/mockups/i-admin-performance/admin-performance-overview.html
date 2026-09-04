@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .bonus-note {
+    display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; background: rgba(169, 133, 63, 0.08);
+    border: 1px solid var(--brass-300); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--brass-500);
+    margin-bottom: 28px;
+  }
+
+  .platform-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .platform-card { padding: 22px; display: flex; flex-direction: column; }
+  .platform-card .platform-name { font-family: var(--font-display); font-size: 1.0625rem; margin-bottom: 10px; }
+  .platform-card .headline-num { font-size: 1.75rem; font-family: var(--font-display); color: var(--primary); margin: 8px 0 2px; }
+  .platform-card .headline-label { font-size: 0.75rem; color: var(--muted-foreground); margin-bottom: 14px; }
+  .platform-card .sync-note { font-size: 0.75rem; color: var(--muted-foreground); margin: 10px 0 14px; }
+  .platform-card .btn { margin-top: auto; }
+
+  .state-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
+  .state-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .state-healthy { background: rgba(53, 107, 85, 0.12); color: var(--pine-700); }
+  .state-healthy .dot { background: var(--pine-500); }
+  .state-error { background: rgba(169, 133, 63, 0.12); color: var(--brass-500); }
+  .state-error .dot { background: var(--accent); }
+  .state-notconnected { background: var(--muted); color: var(--muted-foreground); }
+  .state-notconnected .dot { background: var(--muted-foreground); }
+
+  .error-note { font-size: 0.75rem; color: var(--accent); margin: 4px 0 14px; }
+
+  @media (max-width: 980px) { .platform-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="../g-admin-content/admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="../g-admin-content/admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="../g-admin-content/admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="../g-admin-content/admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="admin-performance-overview.html" class="active">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Performance</h1>
+        <div class="subtitle">One place to check each platform's key numbers</div>
+      </div>
+    </div>
+
+    <div class="bonus-note">
+      ⓘ This section is a convenience beyond what the firm asked for — never something the
+      rest of the admin depends on. If a platform below is disconnected or erroring, nothing
+      else in the admin is affected.
+    </div>
+
+    <div class="platform-grid">
+
+      <div class="card platform-card">
+        <span class="platform-name">GA4</span>
+        <span class="state-badge state-healthy"><span class="dot"></span>Connected</span>
+        <div class="headline-num">2,140</div>
+        <div class="headline-label">Sessions, last 30 days</div>
+        <div class="sync-note">Last synced today, 6:00am</div>
+        <a href="admin-performance-ga4.html" class="btn btn-secondary">View details</a>
+      </div>
+
+      <div class="card platform-card">
+        <span class="platform-name">Meta</span>
+        <span class="state-badge state-healthy"><span class="dot"></span>Connected</span>
+        <div class="headline-num">18,760</div>
+        <div class="headline-label">Reach, last 30 days</div>
+        <div class="sync-note">Last synced today, 6:00am</div>
+        <a href="#" class="btn btn-secondary">View details</a>
+      </div>
+
+      <div class="card platform-card">
+        <span class="platform-name">Google Ads</span>
+        <span class="state-badge state-error"><span class="dot"></span>Needs reconnecting</span>
+        <div class="error-note">Access token expired 2 Sep 2026</div>
+        <div class="sync-note">Showing last known data — may be out of date, last updated 1 Sep 2026</div>
+        <a href="#" class="btn btn-primary">Reconnect</a>
+      </div>
+
+      <div class="card platform-card">
+        <span class="platform-name">LinkedIn</span>
+        <span class="state-badge state-notconnected"><span class="dot"></span>Not connected</span>
+        <div class="sync-note">Marketing API access pending approval from LinkedIn — this is expected, not a fault to fix.</div>
+        <a href="#" class="btn btn-secondary" disabled style="opacity:0.5; pointer-events:none;">Connect</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

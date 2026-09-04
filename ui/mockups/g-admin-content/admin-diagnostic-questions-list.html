@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic Questions — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .reorder-cell { display: flex; flex-direction: column; gap: 2px; }
+  .reorder-btn { width: 22px; height: 18px; border: 1px solid var(--border); border-radius: 3px; background: var(--card); cursor: pointer; font-size: 0.625rem; line-height: 1; color: var(--muted-foreground); }
+  .reorder-btn:hover:not(:disabled) { background: var(--muted); }
+  .reorder-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .toggle { position: relative; display: inline-block; width: 36px; height: 20px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; cursor: pointer; transition: background .15s; }
+  .toggle .track::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: transform .15s; }
+  .toggle input:checked + .track { background: var(--pine-500); }
+  .toggle input:checked + .track::before { transform: translateX(16px); }
+
+  td.dim-cell { font-size: 0.8125rem; color: var(--muted-foreground); }
+  td.type-cell { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted-foreground); }
+  tr.inactive-row td { opacity: 0.5; }
+
+  .validation-toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--primary); color: #FCFAF5;
+    padding: 14px 18px; border-radius: var(--radius-sm); font-size: 0.8125rem; max-width: 340px;
+    box-shadow: var(--shadow-sm); border-left: 3px solid var(--accent); display: none; z-index: 100;
+  }
+  .validation-toast.show { display: block; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html" class="active">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Diagnostic Questions</h1>
+        <div class="subtitle">15 questions across 5 dimensions · <a href="admin-diagnostic-configuration.html" style="color:var(--primary); font-weight:600;">Edit dimension weights &amp; thresholds →</a></div>
+      </div>
+      <button type="button" class="btn btn-primary">New Question</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th style="width:50px;">Order</th><th>Prompt</th><th>Dimension</th><th>Type</th><th>Active</th><th></th></tr>
+        </thead>
+        <tbody id="qBody">
+          <tr data-dim="Structure"><td class="reorder-cell"><button class="reorder-btn" disabled>▲</button><button class="reorder-btn">▼</button></td><td>Is the business formally registered — incorporated, or a registered business name?</td><td class="dim-cell">Structure</td><td class="type-cell">Choice</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Structure"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Do the people working in the business have clearly defined roles?</td><td class="dim-cell">Structure</td><td class="type-cell">Scale</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Structure"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Is there a written plan the business is working from, even a simple one?</td><td class="dim-cell">Structure</td><td class="type-cell">Boolean</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+
+          <tr data-dim="Records"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Do you keep a record of sales — even a notebook or a spreadsheet?</td><td class="dim-cell">Records</td><td class="type-cell">Choice</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Records"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Are business costs and expenses tracked separately from personal spending?</td><td class="dim-cell">Records</td><td class="type-cell">Scale</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Records"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>How many months back could you produce a reasonably complete financial picture?</td><td class="dim-cell">Records</td><td class="type-cell">Choice</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+
+          <tr data-dim="Cash Control"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Is money moving between you and the business tracked separately from business cash?</td><td class="dim-cell">Cash Control</td><td class="type-cell">Scale</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Cash Control"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Do you know, roughly, how much customers currently owe the business?</td><td class="dim-cell">Cash Control</td><td class="type-cell">Boolean</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Cash Control"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Do you know, roughly, what the business owes suppliers or lenders?</td><td class="dim-cell">Cash Control</td><td class="type-cell">Boolean</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Cash Control"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Does the business use a bank or mobile money account separate from your personal one?</td><td class="dim-cell">Cash Control</td><td class="type-cell">Boolean</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+
+          <tr data-dim="Funding Readiness"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Has the business applied for a loan, grant or investment before?</td><td class="dim-cell">Funding Readiness</td><td class="type-cell">Choice</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Funding Readiness"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>If a lender asked for twelve months of financial statements today, could you produce them?</td><td class="dim-cell">Funding Readiness</td><td class="type-cell">Scale</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Funding Readiness"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Do you have a clear, specific reason you'd want funding — equipment, stock, expansion?</td><td class="dim-cell">Funding Readiness</td><td class="type-cell">Boolean</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+
+          <tr data-dim="Owner Dependence"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn">▼</button></td><td>Could the business run for two weeks without you being reachable?</td><td class="dim-cell">Owner Dependence</td><td class="type-cell">Scale</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+          <tr data-dim="Owner Dependence"><td class="reorder-cell"><button class="reorder-btn">▲</button><button class="reorder-btn" disabled>▼</button></td><td>Is there anyone besides you who could make a significant business decision if needed?</td><td class="dim-cell">Owner Dependence</td><td class="type-cell">Boolean</td><td><label class="toggle"><input type="checkbox" checked><span class="track"></span></label></td><td class="actions-cell"><a href="#">Edit</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="validation-toast" id="toast"></div>
+
+<script>
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#qBody tr'));
+
+  function activeCountFor(dim) {
+    return rows.filter(function (r) { return r.dataset.dim === dim; })
+      .filter(function (r) { return r.querySelector('input[type="checkbox"]').checked; }).length;
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 3200);
+  }
+
+  rows.forEach(function (row) {
+    var checkbox = row.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', function () {
+      var dim = row.dataset.dim;
+      if (!checkbox.checked && activeCountFor(dim) === 0) {
+        checkbox.checked = true;
+        showToast('Can\'t deactivate the last active question in "' + dim + '" — every active dimension needs at least one active question.');
+        return;
+      }
+      row.classList.toggle('inactive-row', !checkbox.checked);
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Drawings: The Habit That Quietly Sinks SMEs — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .article-header { padding: 48px 0 32px; border-bottom: 1px solid var(--border); }
+  .article-header .cat-tag { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 12px; }
+  .article-header h1 { font-size: 2.25rem; margin: 0 0 24px; max-width: 780px; }
+  .byline-row { display: flex; align-items: center; gap: 14px; }
+  .byline-avatar {
+    width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--primary);
+    color: var(--brass-300); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 1rem; flex-shrink: 0;
+  }
+  .byline-meta { font-size: 0.8125rem; color: var(--muted-foreground); }
+  .byline-meta strong { color: var(--foreground); display: block; font-size: 0.9375rem; }
+
+  .article-body-section { padding: 40px 0; }
+  .article-body-section .container-narrow { max-width: 680px; }
+  .article-prose p { font-size: 1rem; line-height: 1.75; margin-bottom: 22px; }
+  .article-prose h2 { font-size: 1.375rem; margin: 40px 0 16px; }
+  .article-prose ul { margin: 0 0 22px; padding-left: 22px; }
+  .article-prose li { font-size: 1rem; line-height: 1.7; margin-bottom: 8px; }
+
+  .pull-quote {
+    border-left: 3px solid var(--accent); padding: 4px 0 4px 24px; margin: 32px 0;
+    font-family: var(--font-display); font-size: 1.375rem; line-height: 1.4; color: var(--primary);
+  }
+
+  .data-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; font-size: 0.9375rem; }
+  .data-table th, .data-table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .data-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; }
+
+  .resource-callout {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 22px; margin: 32px 0; flex-wrap: wrap;
+  }
+
+  .share-row { display: flex; gap: 10px; align-items: center; margin: 32px 0; }
+  .share-row .label { font-size: 0.8125rem; font-weight: 600; color: var(--muted-foreground); margin-right: 4px; }
+  .share-btn {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 0.8125rem;
+    font-weight: 700; color: var(--primary); text-decoration: none; background: var(--card);
+  }
+  .share-btn:hover { background: var(--muted); }
+
+  .author-bio-panel { display: flex; gap: 20px; padding: 28px; margin: 40px 0; }
+  .author-bio-panel .byline-avatar { width: 64px; height: 64px; font-size: 1.375rem; }
+  .author-bio-panel h3 { margin: 0 0 2px; font-size: 1.0625rem; }
+  .author-bio-panel .role { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 8px; }
+  .author-bio-panel p { margin: 0; font-size: 0.9375rem; }
+
+  .next-step-panel { background: var(--primary); color: var(--primary-foreground); border-radius: var(--radius-md); padding: 32px; margin: 40px 0; }
+  .next-step-panel p { color: #C9D3CD; font-size: 0.9375rem; margin: 8px 0 18px; }
+
+  .related-section { padding: 40px 0 64px; }
+  .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+  .related-card { display: block; padding: 20px; font-size: 0.9375rem; font-weight: 700; color: var(--primary); text-decoration: none; }
+  .related-card .cat { display: block; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 8px; }
+
+  @media (max-width: 720px) { .related-grid { grid-template-columns: 1fr; } .author-bio-panel { flex-direction: column; } }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../a-public-site/home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="../a-public-site/offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="../a-public-site/offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="../a-public-site/offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="../a-public-site/offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="../a-public-site/capabilities.html">Capabilities</a></li>
+        <li><a href="../a-public-site/our-method.html">Our Method</a></li>
+        <li><a href="insights-index.html">Insights</a></li>
+        <li><a href="../a-public-site/about.html">About</a></li>
+        <li><a href="../a-public-site/contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="article-header">
+    <div class="container-narrow" style="max-width:780px;">
+      <span class="cat-tag">Financial Control</span>
+      <h1>Owner Drawings: The Habit That Quietly Sinks SMEs</h1>
+      <div class="byline-row">
+        <div class="byline-avatar">EA</div>
+        <div class="byline-meta">
+          <strong>Evans Agyemang</strong>
+          Financial Control &amp; Compliance · Published 3 August 2026 · 6 min read
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="article-body-section">
+    <div class="container-narrow article-prose">
+
+      <p>Mixing personal spending with business cash is one of the most normal things in an
+      SME — and one of the most quietly expensive. Money moves from the business to the
+      owner and back so often that, after a while, nobody could tell you with confidence
+      whether the business actually made money this year. Not because anyone did anything
+      wrong. Because nothing was ever separated in the first place.</p>
+
+      <p>This isn't a judgement. It's the usual starting point for almost every business we
+      see, and it's one of the fastest things to fix once it's named clearly.</p>
+
+      <div class="pull-quote">"Owner drawings mixed with business cash are normal in an SME
+      — separating them is often the single most useful thing an engagement does."</div>
+
+      <h2>What it actually looks like</h2>
+      <p>It rarely looks like one big withdrawal. It looks like a fuel purchase paid from the
+      business account, a supplier paid with personal mobile money because the business
+      account was low that week, a family expense covered "just this once" from the till. Each
+      one is small. None of them is dishonest. Together, they make the business's real
+      performance unreadable.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Signal</th><th>What it usually means</th></tr></thead>
+        <tbody>
+          <tr><td>Bank balance looks fine, but you can't say if you made a profit</td><td>Drawings and business costs are mixed in the same account</td></tr>
+          <tr><td>Sales are up, but there's never more cash than last year</td><td>Growth is being absorbed by untracked personal spending</td></tr>
+          <tr><td>You can't answer "what do I actually pay myself?"</td><td>There's no defined owner's salary — just ad hoc withdrawals</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Why it matters more than it seems to</h2>
+      <p>Every one of the firm's core offers eventually runs into this. A funding application
+      stalls because the numbers a lender is asked to trust include unexplained personal
+      transactions. A health check flags "cash control" as a weak dimension for exactly this
+      reason. It's rarely the headline problem a founder walks in with — but it's very often
+      the first thing that has to be fixed before anything else can be trusted.</p>
+
+      <ul>
+        <li>Open a separate account for the business, even a basic one — this alone does most of the work.</li>
+        <li>Decide on a fixed, regular amount you pay yourself, and treat anything beyond it as a deliberate decision, not a habit.</li>
+        <li>Record every transfer between you and the business, even informally — a notebook entry beats no record at all.</li>
+      </ul>
+
+      <div class="resource-callout">
+        <div>
+          <strong style="display:block; margin-bottom:4px;">Not sure where your own business stands?</strong>
+          <span style="font-size:0.875rem; color:var(--muted-foreground);">The free Business Health Check scores this specifically, in under six minutes.</span>
+        </div>
+        <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-secondary">Take the Health Check</a>
+      </div>
+
+      <p>None of this requires an accounting background to start fixing. It requires a
+      decision to separate the two things — and, usually, someone outside the business
+      willing to say plainly that it's happening, since it's hard to see clearly from inside
+      it.</p>
+
+      <div class="share-row">
+        <span class="label">Share</span>
+        <a class="share-btn" target="_blank" rel="noopener" href="https://wa.me/?text=Owner%20Drawings%3A%20The%20Habit%20That%20Quietly%20Sinks%20SMEs%20%E2%80%94%20a%20Kaalbert%20%26%20Company%20Insight" aria-label="Share on WhatsApp">W</a>
+        <a class="share-btn" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url=https://kaalbert.com/insights/owner-drawings" aria-label="Share on LinkedIn">in</a>
+        <a class="share-btn" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=https://kaalbert.com/insights/owner-drawings" aria-label="Share on Facebook">f</a>
+      </div>
+
+      <div class="card author-bio-panel">
+        <div class="byline-avatar">EA</div>
+        <div>
+          <h3>Evans Agyemang</h3>
+          <span class="role">Co-Founder · Financial Control &amp; Compliance</span>
+          <p>A chartered accountant with more than seven years of experience delivering
+          financial and reporting solutions across corporate, regulatory and public-sector
+          environments, with a proven record on complex multi-entity operations.</p>
+        </div>
+      </div>
+
+      <div class="next-step-panel">
+        <span class="kicker" style="color:var(--brass-300); margin-bottom:6px;">Where this usually goes next</span>
+        <h3 style="margin:0;">If this sounds familiar, the Financial Clarity Pack is built for exactly this</h3>
+        <p>Up to twelve months of records reconstructed on one consistent basis, drawings
+        separated from business cash, and a monthly accounts pack you can run yourself
+        afterwards.</p>
+        <a href="../a-public-site/offer-financial-clarity-pack.html" class="btn btn-accent">See the Financial Clarity Pack</a>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="related-section">
+    <div class="container-narrow" style="max-width:900px;">
+      <h2 style="margin-top:0;">Related</h2>
+      <div class="related-grid">
+        <a class="card related-card" href="insight-owner-drawings.html"><span class="cat">Financial Control</span>The Difference Between Your Bank Balance and Your Actual Profit</a>
+        <a class="card related-card" href="insight-owner-drawings.html"><span class="cat">Financial Control</span>Why "I'll Sort the Books Later" Is the Most Expensive Sentence in Business</a>
+        <a class="card related-card" href="insight-owner-drawings.html"><span class="cat">Growth &amp; Funding</span>What a Lender Actually Reads Before They Read Your Numbers</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:24px; font-size:0.9375rem;">
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Core Offers</strong>
+        <a href="../a-public-site/offer-business-health-check.html" style="display:block; margin-bottom:6px;">Business Health Check</a>
+        <a href="../a-public-site/offer-financial-clarity-pack.html" style="display:block; margin-bottom:6px;">Financial Clarity Pack</a>
+        <a href="../a-public-site/offer-funding-readiness-pack.html" style="display:block;">Funding-Readiness Pack</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Firm</strong>
+        <a href="../a-public-site/our-method.html" style="display:block; margin-bottom:6px;">Our Method</a>
+        <a href="../a-public-site/about.html" style="display:block; margin-bottom:6px;">About &amp; Partners</a>
+        <a href="../a-public-site/capabilities.html" style="display:block;">Capabilities</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Insights</strong>
+        <a href="insights-index.html" style="display:block; margin-bottom:6px;">All articles</a>
+        <a href="../a-public-site/contact.html" style="display:block;">Contact</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">House No. 13 Gbenjin Gbe Avenue</strong>
+        <span style="color:#C9D3CD;">East Legon-ARS, Accra</span><br>
+        <span style="color:#C9D3CD;">0558 480 001</span>
+      </div>
+    </div>
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Owner Drawings: The Habit That Quietly Sinks SMEs",
+  "author": { "@type": "Person", "name": "Evans Agyemang", "jobTitle": "Financial Control & Compliance" },
+  "publisher": { "@type": "Organization", "name": "Kaalbert & Company Ltd" },
+  "datePublished": "2026-08-03"
+}
+</script>
+</body>
+</html>

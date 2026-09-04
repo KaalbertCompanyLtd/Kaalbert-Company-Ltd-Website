@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal — Messages — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .thread-panel { display: flex; flex-direction: column; height: calc(100vh - 220px); max-width: 720px; }
+  .thread-messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .msg { max-width: 75%; }
+  .msg .msg-meta { font-size: 0.75rem; color: var(--muted-foreground); margin-bottom: 4px; }
+  .msg .msg-bubble { padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9375rem; line-height: 1.5; }
+  .msg.from-client { align-self: flex-end; }
+  .msg.from-client .msg-bubble { background: var(--primary); color: var(--primary-foreground); }
+  .msg.from-partner .msg-bubble { background: var(--muted); color: var(--foreground); }
+
+  .thread-composer { display: flex; gap: 10px; padding: 16px; border-top: 1px solid var(--border); }
+  .thread-composer input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.9375rem; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Portal">
+      <a href="portal-engagement-overview.html">Overview</a>
+      <a href="portal-information-requests.html">Information Requests</a>
+      <a href="#">Documents</a>
+      <a href="#">Deliverables</a>
+      <a href="portal-messages.html" class="active">Messages</a>
+      <a href="#">Account</a>
+      <a href="#">Team</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Kwesi Owusu</strong>
+      Primary contact
+    </div>
+  </aside>
+
+  <div class="admin-main">
+
+    <div class="gated-banner gated-banner-high">
+      ⚠ <div><strong>Phase 2 — gated, not yet built.</strong> Shown here for shape only —
+      see the Overview page for the full gating note.</div>
+    </div>
+
+    <div class="admin-topbar">
+      <div>
+        <h1>Messages</h1>
+        <div class="subtitle">Financial Clarity Pack · with Evans Agyemang</div>
+      </div>
+    </div>
+
+    <div class="card thread-panel">
+      <div class="thread-messages">
+        <div class="msg from-partner">
+          <div class="msg-meta">Evans Agyemang · 2 Sep, 9:14am</div>
+          <div class="msg-bubble">Morning Kwesi — thanks for the bank statements and sales records, those are exactly what we needed. Two items left on the checklist when you get a chance.</div>
+        </div>
+        <div class="msg from-client">
+          <div class="msg-meta">You · 2 Sep, 11:02am</div>
+          <div class="msg-bubble">Will get the receivables list to you by Thursday. The owner drawings one might take a bit longer to pull together.</div>
+        </div>
+        <div class="msg from-partner">
+          <div class="msg-meta">Evans Agyemang · 2 Sep, 11:20am</div>
+          <div class="msg-bubble">No problem at all — Thursday works, and take whatever time you need on the drawings one. Even a rough list to start from is genuinely useful.</div>
+        </div>
+      </div>
+      <div class="thread-composer">
+        <input type="text" placeholder="Write a message…">
+        <button type="button" class="btn btn-primary">Send</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

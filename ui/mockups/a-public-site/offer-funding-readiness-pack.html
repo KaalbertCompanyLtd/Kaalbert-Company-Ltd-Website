@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funding-Readiness Pack — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  section.offer-section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+  section.offer-section:last-of-type { border-bottom: none; }
+  .who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .who-grid .card h4 { margin-top: 0; }
+  .who-for { border-left: 3px solid var(--pine-500); }
+  .who-not { border-left: 3px solid var(--brass-300); }
+
+  .stage-list { display: flex; flex-direction: column; gap: 0; }
+  .stage-row { display: grid; grid-template-columns: 60px 1fr; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+  .stage-row:last-child { border-bottom: none; }
+  .stage-row .num { font-family: var(--font-display); font-size: 1.75rem; color: var(--brass-500); }
+
+  .deliverables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .deliverable-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .deliverable-item .check { color: var(--pine-500); font-weight: 700; }
+
+  .fee-panel { background: var(--primary); color: var(--primary-foreground); padding: 32px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+  .fee-panel .amount { font-family: var(--font-display); font-size: 2.25rem; }
+  .fee-panel .scope-cap { font-size: 0.875rem; color: #C9D3CD; margin-top: 4px; }
+
+  .out-of-scope { background: var(--muted); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+  .checklist-panel {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    flex-wrap: wrap; padding: 24px;
+  }
+  .checklist-panel strong { display: block; margin-bottom: 4px; }
+  .checklist-panel span { font-size: 0.9375rem; color: var(--muted-foreground); }
+
+  .faq-item { border-bottom: 1px solid var(--border); padding: 18px 0; }
+  .faq-item summary { cursor: pointer; font-weight: 700; color: var(--primary); font-family: var(--font-display); font-size: 1.0625rem; list-style: none; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before { content: "+ "; color: var(--accent); }
+  .faq-item[open] summary::before { content: "− "; }
+  .faq-item p { margin-top: 10px; font-size: 0.9375rem; }
+
+  .final-cta { text-align: center; padding: 56px 0; }
+
+  @media (max-width: 720px) { .who-grid, .deliverables-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="capabilities.html">Capabilities</a></li>
+        <li><a href="our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-hero dark-section">
+    <div class="container-narrow">
+      <span class="kicker">Core Offer</span>
+      <h1>Funding-Readiness Pack</h1>
+      <p class="lead">You need a facility, and you know your business is stronger than your
+      paperwork makes it look. This turns your numbers into a case a credit committee can
+      actually test.</p>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow who-grid">
+      <div class="card who-for">
+        <h4>Who it's for</h4>
+        <p style="font-size:0.9375rem;">A business seeking a specific facility, with
+        reasonably current records, ready to approach a lender or funder within the next few
+        months.</p>
+      </div>
+      <div class="card who-not">
+        <h4>Who it's not for</h4>
+        <p style="font-size:0.9375rem;">A business whose records aren't under control yet —
+        start with the Financial Clarity Pack first. Facilities above GHS 1,000,000 and
+        multi-entity groups are scoped separately, not covered by this published band.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">The method, stage by stage</span>
+      <div class="stage-list">
+        <div class="stage-row"><span class="num">01</span><div><h4 style="margin:0 0 4px;">Discover</h4><p style="margin:0; font-size:0.9375rem;">We map your current financial position and what the target facility actually requires.</p></div></div>
+        <div class="stage-row"><span class="num">02</span><div><h4 style="margin:0 0 4px;">Diagnose</h4><p style="margin:0; font-size:0.9375rem;">We identify the gaps between what you can show today and what a credit committee will test.</p></div></div>
+        <div class="stage-row"><span class="num">03</span><div><h4 style="margin:0 0 4px;">Design</h4><p style="margin:0; font-size:0.9375rem;">We build the business case, forecasts and sensitivity analysis to close those gaps.</p></div></div>
+        <div class="stage-row"><span class="num">04</span><div><h4 style="margin:0 0 4px;">Deliver</h4><p style="margin:0; font-size:0.9375rem;">The complete document pack, ready for the lenders or funders you've identified.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">What you receive</span>
+      <div class="deliverables-grid">
+        <div class="deliverable-item"><span class="check">✓</span><span>A defensible business case</span></div>
+        <div class="deliverable-item"><span class="check">✓</span><span>Three-year forecasts a credit committee can test</span></div>
+        <div class="deliverable-item"><span class="check">✓</span><span>Sensitivity analysis</span></div>
+        <div class="deliverable-item"><span class="check">✓</span><span>The complete document pack, for up to three lenders or funders</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">Required from you</span>
+      <p style="font-size:0.9375rem;">Your current financial records, details of the
+      facility you're seeking, and time with management to build the business case and test
+      the forecasts together.</p>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <div class="fee-panel">
+        <div>
+          <span class="kicker" style="color:var(--brass-300);">Published fee band</span>
+          <div class="amount">GHS 9,000 – 19,000</div>
+          <div class="scope-cap">Scope cap: one facility, up to 3 lenders or funders approached</div>
+        </div>
+        <a href="contact.html?service=funding-readiness-pack" class="btn btn-accent">Start a conversation</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <div class="card checklist-panel">
+        <div>
+          <strong>Not ready to talk yet?</strong>
+          <span>Download the free Funding-Readiness Checklist — what a lender actually asks
+          for, before you apply.</span>
+        </div>
+        <a href="../d-landing-pages/landing-funding-readiness-checklist.html" class="btn btn-secondary">Get the checklist</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <div class="out-of-scope">
+        <h4 style="margin-top:0;">What sits outside this offer</h4>
+        <p style="font-size:0.9375rem; margin-bottom:0;">Statutory audit, tax filing, and
+        legal advice are not part of this engagement. Kaalbert &amp; Company Ltd is a
+        business advisory firm, not a licensed audit, tax or legal practice — where any of
+        these is required, we connect you to a licensed practitioner. We do not guarantee
+        approval by any lender or funder.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">Real questions</span>
+      <details class="faq-item" open>
+        <summary>Can you guarantee my facility will be approved?</summary>
+        <p>No — no adviser honestly can, and we'd tell you not to trust anyone who does. What
+        we can do is make sure your case is one a credit committee can actually test, which is
+        the single biggest reason strong businesses get declined.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What if my facility is larger than GHS 1,000,000?</summary>
+        <p>The published band assumes a facility at or below that size and a single entity.
+        Larger facilities and multi-entity groups are scoped and quoted individually, since
+        the work involved genuinely differs.</p>
+      </details>
+      <details class="faq-item">
+        <summary>My records aren't in great shape yet — can I still start here?</summary>
+        <p>You can, but we'll likely recommend the Financial Clarity Pack first. A funding
+        case built on records that don't hold up under questioning does more harm than good
+        in front of a lender.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="container-narrow">
+      <h2>Not sure your records are ready for this yet?</h2>
+      <p class="lead">The free Business Health Check will tell you honestly, in under six
+      minutes.</p>
+      <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the free Business Health Check</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:24px; font-size:0.9375rem;">
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Core Offers</strong>
+        <a href="offer-business-health-check.html" style="display:block; margin-bottom:6px;">Business Health Check</a>
+        <a href="offer-financial-clarity-pack.html" style="display:block; margin-bottom:6px;">Financial Clarity Pack</a>
+        <a href="offer-funding-readiness-pack.html" style="display:block;">Funding-Readiness Pack</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Firm</strong>
+        <a href="our-method.html" style="display:block; margin-bottom:6px;">Our Method</a>
+        <a href="about.html" style="display:block; margin-bottom:6px;">About &amp; Partners</a>
+        <a href="capabilities.html" style="display:block;">Capabilities</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Insights</strong>
+        <a href="../b-insights/insights-index.html" style="display:block; margin-bottom:6px;">All articles</a>
+        <a href="contact.html" style="display:block;">Contact</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">House No. 13 Gbenjin Gbe Avenue</strong>
+        <span style="color:#C9D3CD;">East Legon-ARS, Accra</span><br>
+        <span style="color:#C9D3CD;">0558 480 001</span>
+      </div>
+    </div>
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+</body>
+</html>

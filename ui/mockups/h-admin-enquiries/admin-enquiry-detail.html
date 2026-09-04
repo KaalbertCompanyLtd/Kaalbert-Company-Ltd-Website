@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enquiry Detail — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .enquiry-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
+  .panel { padding: 24px; margin-bottom: 20px; }
+  .panel h3 { font-size: 0.9375rem; margin: 0 0 16px; }
+
+  .dimension-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+  .dimension-row:last-child { border-bottom: none; }
+  .dimension-row .score { font-weight: 700; color: var(--primary); }
+  .dimension-row.weak .score { color: var(--accent); }
+
+  .response-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .response-item:last-child { border-bottom: none; }
+  .response-item .q { font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 4px; }
+  .response-item .a { font-size: 0.9375rem; font-weight: 600; }
+
+  .consent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .consent-box { padding: 12px; border-radius: var(--radius-sm); font-size: 0.8125rem; text-align: center; font-weight: 600; }
+  .consent-yes { background: rgba(53, 107, 85, 0.12); color: var(--pine-700); }
+  .consent-no { background: var(--muted); color: var(--muted-foreground); }
+
+  .attribution-list dt { font-size: 0.75rem; color: var(--muted-foreground); margin-top: 10px; }
+  .attribution-list dd { margin: 2px 0 0; font-size: 0.9375rem; font-weight: 600; }
+
+  .notes-textarea { width: 100%; min-height: 90px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.875rem; resize: vertical; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="../g-admin-content/admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="../g-admin-content/admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="../g-admin-content/admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="admin-enquiry-detail.html" class="active">Enquiries</a>
+      <a href="../g-admin-content/admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Kwesi Owusu</h1>
+        <div class="subtitle"><a href="#" style="color:var(--muted-foreground);">← Back to Enquiries</a> · Submitted 2 Sep 2026, 10:14am</div>
+      </div>
+      <span class="badge badge-triage-high">High priority</span>
+    </div>
+
+    <div class="enquiry-grid">
+      <div>
+        <div class="card panel">
+          <h3>Business Health Check — score summary</h3>
+          <div class="dimension-row"><span>Structure</span><span class="score">67%</span></div>
+          <div class="dimension-row weak"><span>Records — weakest</span><span class="score">44%</span></div>
+          <div class="dimension-row weak"><span>Cash Control — weakest</span><span class="score">38%</span></div>
+          <div class="dimension-row"><span>Funding Readiness</span><span class="score">58%</span></div>
+          <div class="dimension-row"><span>Owner Dependence</span><span class="score">61%</span></div>
+        </div>
+
+        <div class="card panel">
+          <h3>Full diagnostic responses</h3>
+          <div class="response-item"><div class="q">Is the business formally registered — incorporated, or a registered business name?</div><div class="a">Yes</div></div>
+          <div class="response-item"><div class="q">Do you keep a record of sales — even a notebook or a spreadsheet?</div><div class="a">Rough notes</div></div>
+          <div class="response-item"><div class="q">Is money moving between you and the business tracked separately from business cash?</div><div class="a">2 / 5</div></div>
+          <div class="response-item"><div class="q">Do you know, roughly, how much customers currently owe the business?</div><div class="a">No</div></div>
+          <div class="response-item"><div class="q">Has the business applied for a loan, grant or investment before?</div><div class="a">Never applied</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card panel">
+          <h3>Contact details</h3>
+          <div style="font-size:0.9375rem; margin-bottom:4px;"><strong>Kwesi Owusu</strong></div>
+          <div style="font-size:0.875rem; color:var(--muted-foreground);">kwesi.owusu@example.com</div>
+          <div style="font-size:0.875rem; color:var(--muted-foreground);">024 XXX XXXX</div>
+        </div>
+
+        <div class="card panel">
+          <h3>Consent</h3>
+          <div class="consent-grid">
+            <div class="consent-box consent-yes">Contact consent<br>Given</div>
+            <div class="consent-box consent-no">Marketing consent<br>Not given</div>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <h3>Attribution</h3>
+          <dl class="attribution-list">
+            <dt>Source</dt><dd>Meta — Instagram Feed</dd>
+            <dt>Campaign</dt><dd>bhc-launch-accra</dd>
+            <dt>Landing page</dt><dd>/lp/business-health-check</dd>
+          </dl>
+        </div>
+
+        <div class="card panel">
+          <h3>Status &amp; notes</h3>
+          <div class="admin-field" style="margin-bottom:14px;">
+            <label>Status</label>
+            <select style="width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+              <option>New</option><option>Contacted</option><option>Closed</option><option>Converted</option><option>Not a fit</option>
+            </select>
+          </div>
+          <div class="admin-field" style="margin-bottom:14px;">
+            <label>Assigned to</label>
+            <select style="width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+              <option>Unassigned</option><option selected>Evans Agyemang</option><option>Albert Kwakye Amponsah</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label>Internal notes <span class="hint">never visitor-facing</span></label>
+            <textarea class="notes-textarea">Records and cash control both weak — good fit to open with Financial Clarity Pack, not straight to funding.</textarea>
+          </div>
+          <button type="button" class="btn btn-primary" style="width:100%; margin-top:8px;">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

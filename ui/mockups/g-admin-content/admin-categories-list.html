@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Categories — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .add-row { display: flex; gap: 10px; padding: 18px 24px; border-bottom: 1px solid var(--border); align-items: flex-end; }
+  .add-row .field { flex: 1; }
+  .add-row label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; color: var(--muted-foreground); }
+  .add-row input { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.875rem; }
+  .add-row input.error { border-color: var(--accent); }
+  .add-row .error-msg { font-size: 0.75rem; color: var(--accent); margin-top: 4px; display: none; }
+  .add-row .error-msg.show { display: block; }
+
+  td.slug-cell { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }
+  td.count-cell { color: var(--muted-foreground); }
+  td.actions-cell a { font-size: 0.8125rem; font-weight: 600; color: var(--primary); text-decoration: none; margin-left: 14px; }
+  td.actions-cell a.retire-link { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html" class="active">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Categories</h1>
+        <div class="subtitle"><a href="admin-articles-list.html" style="color:var(--muted-foreground);">← Back to Articles</a></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+
+      <div class="add-row">
+        <div class="field">
+          <label for="newCatName">New category name</label>
+          <input type="text" id="newCatName" placeholder="e.g. Regulatory &amp; Compliance">
+          <div class="error-msg" id="slugError">That name produces a slug already in use — try a different name.</div>
+        </div>
+        <button type="button" class="btn btn-primary" id="addCatBtn">Add category</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Slug</th><th>Articles</th><th></th></tr>
+        </thead>
+        <tbody id="catBody">
+          <tr data-slug="financial-control">
+            <td class="title-cell" style="font-weight:600;">Financial Control</td>
+            <td class="slug-cell">financial-control</td>
+            <td class="count-cell">4</td>
+            <td class="actions-cell"><a href="#">Rename</a><a href="#" class="retire-link">Retire</a></td>
+          </tr>
+          <tr data-slug="growth-funding">
+            <td class="title-cell" style="font-weight:600;">Growth &amp; Funding</td>
+            <td class="slug-cell">growth-funding</td>
+            <td class="count-cell">4</td>
+            <td class="actions-cell"><a href="#">Rename</a><a href="#" class="retire-link">Retire</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:0.8125rem; color:var(--muted-foreground); margin-top:16px; max-width:600px;">
+      Retiring a category doesn't delete its articles — they fall back to "no category,"
+      still listed on the index, just excluded from category-filtered views.
+    </p>
+  </div>
+
+</div>
+
+<script>
+  var existingSlugs = Array.prototype.slice.call(document.querySelectorAll('#catBody tr')).map(function (r) { return r.dataset.slug; });
+  var input = document.getElementById('newCatName');
+  var errorMsg = document.getElementById('slugError');
+  var addBtn = document.getElementById('addCatBtn');
+
+  function slugify(name) {
+    return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  addBtn.addEventListener('click', function () {
+    var slug = slugify(input.value);
+    if (!slug) return;
+    if (existingSlugs.indexOf(slug) !== -1) {
+      input.classList.add('error');
+      errorMsg.classList.add('show');
+      return;
+    }
+    input.classList.remove('error');
+    errorMsg.classList.remove('show');
+    var tbody = document.getElementById('catBody');
+    var row = document.createElement('tr');
+    row.dataset.slug = slug;
+    row.innerHTML = '<td class="title-cell" style="font-weight:600;">' + input.value + '</td>' +
+      '<td class="slug-cell">' + slug + '</td><td class="count-cell">0</td>' +
+      '<td class="actions-cell"><a href="#">Rename</a><a href="#" class="retire-link">Retire</a></td>';
+    tbody.appendChild(row);
+    existingSlugs.push(slug);
+    input.value = '';
+  });
+
+  input.addEventListener('input', function () {
+    input.classList.remove('error');
+    errorMsg.classList.remove('show');
+  });
+</script>
+</body>
+</html>

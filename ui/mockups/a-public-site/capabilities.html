@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capabilities — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  section.cap-section { padding: 56px 0; }
+  .cap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .cap-card { display: flex; flex-direction: column; gap: 10px; }
+  .cap-card h3 { font-size: 1.125rem; margin-bottom: 2px; }
+  .cap-card p { font-size: 0.9375rem; margin-bottom: 0; }
+  .cap-card a.card-link { font-weight: 700; color: var(--primary); text-decoration: none; margin-top: auto; }
+  .cap-card a.card-link:hover { text-decoration: underline; }
+
+  .retainer-panel {
+    background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 32px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .retainer-panel .fee { display: block; font-family: var(--font-mono); font-size: 0.9375rem; color: var(--accent); font-weight: 700; margin-top: 8px; }
+  @media (max-width: 720px) { .cap-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="capabilities.html">Capabilities</a></li>
+        <li><a href="our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-hero dark-section">
+    <div class="container-narrow">
+      <span class="kicker">Capabilities</span>
+      <h1>The wider service line, in summary</h1>
+      <p class="lead">Three offers get the firm's senior attention this year — the eight
+      capabilities below cover everything else we do, so an adjacent need doesn't go
+      unanswered. Each one routes straight to a partner, not to a thin page of its own.</p>
+    </div>
+  </section>
+
+  <section class="cap-section">
+    <div class="container">
+      <div class="cap-grid">
+        <div class="card cap-card">
+          <h3>Financial Advisory, Tax and Audit Support</h3>
+          <p>Structured financial advisory, with tax and audit needs referred to a licensed
+          practitioner where that's what's required.</p>
+          <a href="contact.html?service=financial-advisory-tax-audit" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>Grants, Funding and Investment Readiness</h3>
+          <p>Grant and investment-readiness work, built on the same preparation that
+          underpins our Funding-Readiness Pack.</p>
+          <a href="contact.html?service=grants-funding-investment" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>SME Growth and Business Development</h3>
+          <p>Positioning, pricing and growth planning for a business ready to move past its
+          first structure.</p>
+          <a href="contact.html?service=sme-growth-development" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>Regulatory, Compliance and Registration</h3>
+          <p>Business formalisation, registration support, and a compliance calendar you can
+          actually run.</p>
+          <a href="contact.html?service=regulatory-compliance-registration" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>Strategy and Corporate Advisory</h3>
+          <p>Strategic and corporate advisory work, taken on where the mandate is well
+          defined.</p>
+          <a href="contact.html?service=strategy-corporate-advisory" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>Market Research and Feasibility</h3>
+          <p>Market research and feasibility studies, scoped tightly and priced for the
+          research effort involved.</p>
+          <a href="contact.html?service=market-research-feasibility" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>HR, Recruitment and Training</h3>
+          <p>HR foundations, training and recruitment support, delivered where an existing
+          client's team needs it.</p>
+          <a href="contact.html?service=hr-recruitment-training" class="card-link">Enquire →</a>
+        </div>
+        <div class="card cap-card">
+          <h3>Digital Transformation and Operations</h3>
+          <p>Process and operations work, including our Applied Intelligence practice for
+          clients ready for it.</p>
+          <a href="contact.html?service=digital-transformation-operations" class="card-link">Enquire →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cap-section">
+    <div class="container-narrow">
+      <div class="retainer-panel">
+        <div>
+          <span class="kicker" style="margin-bottom:6px;">Continuing arrangement</span>
+          <h3 style="margin:0 0 6px;">The Advisory Retainer</h3>
+          <p style="margin:0; font-size:0.9375rem; max-width:480px;">For a business that wants
+          ongoing partner access rather than a single engagement — monthly review, a standing
+          call, and hands-on support as needed.</p>
+          <span class="fee">From GHS 1,500 / month</span>
+        </div>
+        <a href="contact.html?service=advisory-retainer" class="btn btn-secondary">Ask about the retainer</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:24px; font-size:0.9375rem;">
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Core Offers</strong>
+        <a href="offer-business-health-check.html" style="display:block; margin-bottom:6px;">Business Health Check</a>
+        <a href="offer-financial-clarity-pack.html" style="display:block; margin-bottom:6px;">Financial Clarity Pack</a>
+        <a href="offer-funding-readiness-pack.html" style="display:block;">Funding-Readiness Pack</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Firm</strong>
+        <a href="our-method.html" style="display:block; margin-bottom:6px;">Our Method</a>
+        <a href="about.html" style="display:block; margin-bottom:6px;">About &amp; Partners</a>
+        <a href="capabilities.html" style="display:block;">Capabilities</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Insights</strong>
+        <a href="../b-insights/insights-index.html" style="display:block; margin-bottom:6px;">All articles</a>
+        <a href="contact.html" style="display:block;">Contact</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">House No. 13 Gbenjin Gbe Avenue</strong>
+        <span style="color:#C9D3CD;">East Legon-ARS, Accra</span><br>
+        <span style="color:#C9D3CD;">0558 480 001</span>
+      </div>
+    </div>
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+</body>
+</html>

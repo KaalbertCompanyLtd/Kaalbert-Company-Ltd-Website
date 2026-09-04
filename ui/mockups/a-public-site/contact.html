@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  section.contact-section { padding: 56px 0; }
+
+  .contact-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: start; }
+
+  .service-context {
+    display: inline-block; background: var(--muted); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 14px; font-size: 0.8125rem; font-weight: 600;
+    color: var(--primary); margin-bottom: 20px;
+  }
+  .service-context[hidden] { display: none; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.9375rem; background: var(--card); color: var(--foreground);
+  }
+  .field textarea { min-height: 110px; resize: vertical; }
+  .consent-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; font-size: 0.8125rem; }
+  .consent-row input { margin-top: 3px; flex-shrink: 0; }
+  .consent-row.required label::after { content: " (required)"; color: var(--muted-foreground); font-weight: 400; }
+
+  .channel-card { display: flex; flex-direction: column; gap: 4px; padding: 20px; margin-bottom: 14px; }
+  .channel-card .channel-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  .channel-card .channel-value { font-size: 1.0625rem; font-weight: 700; color: var(--primary); }
+  .channel-card .channel-value a { color: inherit; text-decoration: none; }
+  .channel-card .channel-value a:hover { text-decoration: underline; }
+
+  .response-note { background: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 0.8125rem; color: var(--muted-foreground); font-style: italic; }
+
+  .diagnostic-callout { background: var(--primary); color: var(--primary-foreground); border-radius: var(--radius-md); padding: 22px; margin-top: 8px; }
+  .diagnostic-callout p { font-size: 0.875rem; margin: 0 0 12px; color: #C9D3CD; }
+
+  @media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="capabilities.html">Capabilities</a></li>
+        <li><a href="our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-hero dark-section">
+    <div class="container-narrow">
+      <span class="kicker">Contact</span>
+      <h1>Tell us where the business is, and where you want it to be</h1>
+      <p class="lead">A short form, or WhatsApp, phone and email if you'd rather talk directly.
+      No fee, no obligation, for a first conversation.</p>
+    </div>
+  </section>
+
+  <section class="contact-section">
+    <div class="container contact-grid">
+
+      <div>
+        <span class="service-context" id="serviceContext" hidden></span>
+        <h2 style="margin-top:0;">Send a message</h2>
+        <form>
+          <div class="field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div class="field">
+            <label for="phone">Phone (optional)</label>
+            <input type="tel" id="phone" name="phone">
+          </div>
+          <div class="field">
+            <label for="message">What's going on with the business?</label>
+            <textarea id="message" name="message" required></textarea>
+          </div>
+          <div class="consent-row required">
+            <input type="checkbox" id="contactConsent" name="contact_consent" required>
+            <label for="contactConsent">I agree to be contacted about this enquiry.</label>
+          </div>
+          <div class="consent-row">
+            <input type="checkbox" id="marketingConsent" name="marketing_consent">
+            <label for="marketingConsent">I'd also like occasional Insights articles and updates from Kaalbert &amp; Company — separate from the above, and unticked by default.</label>
+          </div>
+          <button type="submit" class="btn btn-primary">Send message</button>
+        </form>
+
+        <div class="diagnostic-callout">
+          <span class="kicker" style="color:var(--brass-300); margin-bottom:6px;">Not ready for a conversation yet?</span>
+          <p>The free Business Health Check gives you an honest first read in under six
+          minutes — no contact details needed to see your result.</p>
+          <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-accent">Take the free Business Health Check</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="card channel-card">
+          <span class="channel-label">WhatsApp</span>
+          <span class="channel-value"><a href="https://wa.me/233558480001?text=Hello%20Kaalbert%20%26%20Company%2C%20I%27m%20reaching%20out%20from%20your%20website%20Contact%20page." target="_blank" rel="noopener">Message us directly →</a></span>
+        </div>
+        <div class="card channel-card">
+          <span class="channel-label">Phone</span>
+          <span class="channel-value"><a href="tel:+233558480001">0558 480 001</a></span>
+          <span class="channel-value" style="font-size:0.9375rem; font-weight:400;"><a href="tel:+233257784686">0257 784 686</a></span>
+        </div>
+        <div class="card channel-card">
+          <span class="channel-label">Email</span>
+          <span class="channel-value"><a href="mailto:kaalberto777@gmail.com">kaalberto777@gmail.com</a></span>
+        </div>
+        <div class="card channel-card">
+          <span class="channel-label">Office</span>
+          <span class="channel-value" style="font-size:0.9375rem;">House No. 13 Gbenjin Gbe Avenue</span>
+          <span style="font-size:0.9375rem; color:var(--muted-foreground);">East Legon-ARS, Accra, Ghana</span>
+        </div>
+        <div class="response-note">
+          Response-time commitment: pending. Reads from Site Settings in admin (Document
+          13.03, Section 5) — a one-time content edit once the firm confirms a number, no
+          rebuild required.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:24px; font-size:0.9375rem;">
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Core Offers</strong>
+        <a href="offer-business-health-check.html" style="display:block; margin-bottom:6px;">Business Health Check</a>
+        <a href="offer-financial-clarity-pack.html" style="display:block; margin-bottom:6px;">Financial Clarity Pack</a>
+        <a href="offer-funding-readiness-pack.html" style="display:block;">Funding-Readiness Pack</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Firm</strong>
+        <a href="our-method.html" style="display:block; margin-bottom:6px;">Our Method</a>
+        <a href="about.html" style="display:block; margin-bottom:6px;">About &amp; Partners</a>
+        <a href="capabilities.html" style="display:block;">Capabilities</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Insights</strong>
+        <a href="../b-insights/insights-index.html" style="display:block; margin-bottom:6px;">All articles</a>
+        <a href="contact.html" style="display:block;">Contact</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">House No. 13 Gbenjin Gbe Avenue</strong>
+        <span style="color:#C9D3CD;">East Legon-ARS, Accra</span><br>
+        <span style="color:#C9D3CD;">0558 480 001</span>
+      </div>
+    </div>
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+<script>
+  (function () {
+    var labels = {
+      'financial-clarity-pack': 'Financial Clarity Pack',
+      'funding-readiness-pack': 'Funding-Readiness Pack',
+      'financial-advisory-tax-audit': 'Financial Advisory, Tax and Audit Support',
+      'grants-funding-investment': 'Grants, Funding and Investment Readiness',
+      'sme-growth-development': 'SME Growth and Business Development',
+      'regulatory-compliance-registration': 'Regulatory, Compliance and Registration',
+      'strategy-corporate-advisory': 'Strategy and Corporate Advisory',
+      'market-research-feasibility': 'Market Research and Feasibility',
+      'hr-recruitment-training': 'HR, Recruitment and Training',
+      'digital-transformation-operations': 'Digital Transformation and Operations',
+      'advisory-retainer': 'The Advisory Retainer'
+    };
+    var params = new URLSearchParams(window.location.search);
+    var service = params.get('service');
+    if (service && labels[service]) {
+      var el = document.getElementById('serviceContext');
+      el.textContent = "You're asking about: " + labels[service];
+      el.hidden = false;
+    }
+  })();
+</script>
+</body>
+</html>

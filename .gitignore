@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# environment / secrets
+.env
+.env.local
+.env.*.local
+CLAUDE.local.md
+
+# Prisma
+prisma/*.db
+
+# test / coverage
+coverage/
+playwright-report/
+test-results/
+
+# misc
+.DS_Store
+*.log
+*.tsbuildinfo
+npm-debug.log*

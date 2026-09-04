@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance — GA4 — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .state-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .state-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .state-healthy { background: rgba(53, 107, 85, 0.12); color: var(--pine-700); }
+  .state-healthy .dot { background: var(--pine-500); }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .metric-card { padding: 18px; }
+  .metric-card .label { font-size: 0.75rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block; }
+  .metric-card .val { font-family: var(--font-display); font-size: 1.5rem; color: var(--primary); }
+  .metric-card .delta { font-size: 0.75rem; color: var(--pine-500); font-weight: 600; margin-left: 6px; }
+
+  .chart-panel { padding: 24px; margin-bottom: 24px; }
+  .chart-panel h3 { font-size: 0.9375rem; margin: 0 0 20px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; }
+  .bar-chart .bar { flex: 1; background: var(--pine-500); border-radius: 3px 3px 0 0; opacity: 0.85; }
+  .bar-chart .bar:hover { opacity: 1; }
+  .chart-axis { display: flex; justify-content: space-between; font-size: 0.6875rem; color: var(--muted-foreground); margin-top: 8px; }
+
+  .events-panel { padding: 24px; }
+  .events-panel h3 { font-size: 0.9375rem; margin: 0 0 16px; }
+  .event-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+  .event-row:last-child { border-bottom: none; }
+  .event-row .count { font-weight: 700; color: var(--primary); }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="../g-admin-content/admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="../g-admin-content/admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="../g-admin-content/admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="../g-admin-content/admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="admin-performance-overview.html" class="active">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>GA4</h1>
+        <div class="subtitle"><a href="admin-performance-overview.html" style="color:var(--muted-foreground);">← Back to Performance</a></div>
+      </div>
+      <div style="text-align:right;">
+        <span class="state-badge state-healthy"><span class="dot"></span>Connected</span>
+        <div style="font-size:0.75rem; color:var(--muted-foreground); margin-top:6px;">Last synced today, 6:00am</div>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="card metric-card"><span class="label">Sessions</span><span class="val">2,140</span><span class="delta">↑ 12%</span></div>
+      <div class="card metric-card"><span class="label">Users</span><span class="val">1,586</span><span class="delta">↑ 9%</span></div>
+      <div class="card metric-card"><span class="label">Avg. session</span><span class="val">2m 14s</span></div>
+      <div class="card metric-card"><span class="label">Bounce rate</span><span class="val">41%</span></div>
+    </div>
+
+    <div class="card chart-panel">
+      <h3>Sessions, last 14 days</h3>
+      <div class="bar-chart">
+        <div class="bar" style="height:45%;"></div>
+        <div class="bar" style="height:52%;"></div>
+        <div class="bar" style="height:38%;"></div>
+        <div class="bar" style="height:61%;"></div>
+        <div class="bar" style="height:58%;"></div>
+        <div class="bar" style="height:70%;"></div>
+        <div class="bar" style="height:65%;"></div>
+        <div class="bar" style="height:55%;"></div>
+        <div class="bar" style="height:72%;"></div>
+        <div class="bar" style="height:80%;"></div>
+        <div class="bar" style="height:68%;"></div>
+        <div class="bar" style="height:90%;"></div>
+        <div class="bar" style="height:84%;"></div>
+        <div class="bar" style="height:100%;"></div>
+      </div>
+      <div class="chart-axis"><span>14 days ago</span><span>Today</span></div>
+    </div>
+
+    <div class="card events-panel">
+      <h3>Conversion events, last 30 days</h3>
+      <div class="event-row"><span>Diagnostic started</span><span class="count">312</span></div>
+      <div class="event-row"><span>Diagnostic completed</span><span class="count">198</span></div>
+      <div class="event-row"><span>Summary requested</span><span class="count">64</span></div>
+      <div class="event-row"><span>Checklist downloaded</span><span class="count">41</span></div>
+      <div class="event-row"><span>Enquiry submitted</span><span class="count">37</span></div>
+      <div class="event-row"><span>WhatsApp opened</span><span class="count">89</span></div>
+    </div>
+
+    <div class="admin-actions-bar" style="justify-content:space-between;">
+      <button type="button" class="btn btn-ghost" style="color:var(--accent); border-color:var(--brass-300);">Disconnect GA4</button>
+      <a href="admin-performance-overview.html" class="btn btn-secondary">Back to Performance</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

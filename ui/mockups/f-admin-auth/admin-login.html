@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.9375rem; background: var(--card); color: var(--foreground);
+  }
+  .field-note { text-align: right; margin: -8px 0 16px; }
+  .field-note a { font-size: 0.8125rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+  .field-note a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="admin-auth-shell">
+  <div class="card auth-card">
+    <div class="admin-logo"><img src="../assets/logo-primary.png" alt="Kaalbert & Company Ltd"></div>
+    <h1>Partner Login</h1>
+    <p class="sub">Sign in to manage site content and enquiries.</p>
+
+    <form>
+      <div class="field"><label for="email">Email</label><input type="email" id="email" required></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" required></div>
+      <div class="field-note"><a href="#">Forgot password?</a></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Continue</button>
+    </form>
+
+    <p style="font-size:0.75rem; color:var(--muted-foreground); text-align:center; margin:24px 0 0;">
+      You'll be asked for your authenticator code next. Two-factor authentication is required
+      for every admin account and cannot be skipped.
+    </p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Offer — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .editor-panel { padding: 28px; max-width: 780px; }
+  .fee-field-editor label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; color: var(--muted-foreground); }
+  .fee-field-editor input, .fee-field-editor select {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.9375rem; background: var(--card); color: var(--foreground);
+  }
+  .fee-field-note { font-size: 0.75rem; color: var(--accent); margin-top: 10px; grid-column: 1 / -1; }
+  .list-editor { display: flex; flex-direction: column; gap: 8px; }
+  .list-editor-row { display: flex; gap: 8px; }
+  .list-editor-row input { flex: 1; }
+  .list-editor-row button { flex-shrink: 0; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); cursor: pointer; color: var(--muted-foreground); }
+  .add-row-btn { align-self: flex-start; font-size: 0.8125rem; font-weight: 600; color: var(--primary); background: none; border: none; cursor: pointer; padding: 4px 0; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html" class="active">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Edit Offer</h1>
+        <div class="subtitle">Funding-Readiness Pack</div>
+      </div>
+    </div>
+
+    <div class="card editor-panel">
+
+      <div class="admin-field">
+        <label for="name">Offer name</label>
+        <input type="text" id="name" value="Funding-Readiness Pack">
+      </div>
+
+      <div class="admin-field">
+        <label for="problem">Problem statement <span class="hint">the client's own language</span></label>
+        <textarea id="problem">You need a facility, and you know your business is stronger than your paperwork makes it look. This turns your numbers into a case a credit committee can actually test.</textarea>
+      </div>
+
+      <div class="admin-field-row" style="grid-template-columns: 1fr 1fr;">
+        <div class="admin-field">
+          <label for="whoFor">Who it's for</label>
+          <textarea id="whoFor">A business seeking a specific facility, with reasonably current records, ready to approach a lender or funder within the next few months.</textarea>
+        </div>
+        <div class="admin-field">
+          <label for="whoNotFor">Who it's not for</label>
+          <textarea id="whoNotFor">A business whose records aren't under control yet — start with the Financial Clarity Pack first. Facilities above GHS 1,000,000 and multi-entity groups are scoped separately, not covered by this published band.</textarea>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label>Method stages <span class="hint">ordered — Discover, Diagnose, Design, Deliver</span></label>
+        <div class="list-editor">
+          <div class="list-editor-row"><input type="text" value="Discover — We map your current financial position and what the target facility actually requires."><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="Diagnose — We identify the gaps between what you can show today and what a credit committee will test."><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="Design — We build the business case, forecasts and sensitivity analysis to close those gaps."><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="Deliver — The complete document pack, ready for the lenders or funders you've identified."><button type="button" title="Remove">×</button></div>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label>Deliverables</label>
+        <div class="list-editor">
+          <div class="list-editor-row"><input type="text" value="A defensible business case"><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="Three-year forecasts a credit committee can test"><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="Sensitivity analysis"><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="The complete document pack, for up to three lenders or funders"><button type="button" title="Remove">×</button></div>
+          <button type="button" class="add-row-btn">+ Add deliverable</button>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="clientInputs">Required from you <span class="hint">client_inputs</span></label>
+        <textarea id="clientInputs">Your current financial records, details of the facility you're seeking, and time with management to build the business case and test the forecasts together.</textarea>
+      </div>
+
+      <div class="admin-field">
+        <label for="timeline">Indicative timeline</label>
+        <input type="text" id="timeline" value="3–6 weeks">
+      </div>
+
+      <div class="admin-field">
+        <label>Published fee band <span class="hint">structured fields, never free text — a fee cannot be saved without its scope cap</span></label>
+        <div class="fee-field-editor">
+          <div>
+            <label for="feeMin">Amount from</label>
+            <input type="number" id="feeMin" value="9000">
+          </div>
+          <div>
+            <label for="feeMax">Amount to</label>
+            <input type="number" id="feeMax" value="19000">
+          </div>
+          <div>
+            <label for="currency">Currency</label>
+            <select id="currency"><option>GHS</option></select>
+          </div>
+          <div>
+            <label for="scopeCap">Scope cap <span class="hint">required</span></label>
+            <input type="text" id="scopeCap" value="One facility, up to 3 lenders or funders approached">
+          </div>
+          <div class="fee-field-note">This fee band cannot be saved without a scope cap — the two fields are linked and save together (Document 13.03, Section 13).</div>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="outOfScope">Out of scope</label>
+        <textarea id="outOfScope">Statutory audit, tax filing, and legal advice are not part of this engagement. We do not guarantee approval by any lender or funder.</textarea>
+      </div>
+
+      <div class="admin-field">
+        <label>Real questions <span class="hint">faqs — three to five real Q&amp;As</span></label>
+        <div class="list-editor">
+          <div class="list-editor-row"><input type="text" value="Q: Can you guarantee my facility will be approved?"><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="A: No — no adviser honestly can, and we'd tell you not to trust anyone who does."><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="Q: What if my facility is larger than GHS 1,000,000?"><button type="button" title="Remove">×</button></div>
+          <div class="list-editor-row"><input type="text" value="A: The published band assumes a facility at or below that size. Larger facilities are scoped and quoted individually."><button type="button" title="Remove">×</button></div>
+          <button type="button" class="add-row-btn">+ Add Q&amp;A</button>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="cta">Call-to-action label</label>
+        <input type="text" id="cta" value="Start a conversation">
+      </div>
+    </div>
+
+    <div class="admin-actions-bar">
+      <button type="button" class="btn btn-secondary">Discard changes</button>
+      <button type="button" class="btn btn-primary">Save and publish</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

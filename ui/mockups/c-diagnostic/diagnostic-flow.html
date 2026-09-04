@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Health Check — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .diag-shell { padding: 48px 0 64px; }
+  .diag-head { text-align: center; margin-bottom: 32px; }
+  .diag-head .kicker { justify-content: center; display: flex; }
+
+  .diag-progress-wrap { max-width: 640px; margin: 0 auto 40px; }
+  .diag-progress-track { height: 6px; background: var(--muted); border-radius: 999px; overflow: hidden; }
+  .diag-progress-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.3s ease-in-out; width: 0%; }
+  .diag-progress-label { font-size: 0.75rem; color: var(--muted-foreground); margin-top: 8px; text-align: center; font-weight: 600; }
+
+  .diag-card { max-width: 640px; margin: 0 auto; padding: 40px; }
+  .diag-card .dimension-tag { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 10px; }
+  .diag-card h2 { font-size: 1.375rem; margin: 0 0 28px; }
+
+  .diag-options { display: flex; flex-direction: column; gap: 10px; }
+  .diag-options.row { flex-direction: row; gap: 10px; }
+  .diag-option { position: relative; }
+  .diag-option input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+  .diag-option .opt-label {
+    display: block; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 0.9375rem; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    background: var(--card);
+  }
+  .diag-option input:checked + .opt-label { border-color: var(--accent); background: var(--muted); font-weight: 700; color: var(--primary); }
+  .diag-options.row .diag-option { flex: 1; }
+  .diag-options.row .opt-label { text-align: center; }
+
+  .diag-scale { display: flex; gap: 8px; justify-content: space-between; }
+  .diag-scale .diag-option { flex: 1; }
+  .diag-scale .opt-label { text-align: center; padding: 14px 6px; font-weight: 700; font-size: 1rem; }
+  .diag-scale-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted-foreground); margin-top: 8px; }
+
+  .diag-nav { max-width: 640px; margin: 32px auto 0; display: flex; justify-content: space-between; align-items: center; }
+  .diag-nav .btn[disabled] { opacity: 0.4; pointer-events: none; }
+
+  .diag-intent-note { max-width: 640px; margin: 0 auto 28px; font-size: 0.8125rem; color: var(--muted-foreground); text-align: center; }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../a-public-site/home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="../a-public-site/offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="../a-public-site/offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="../a-public-site/offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="../a-public-site/offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="../a-public-site/capabilities.html">Capabilities</a></li>
+        <li><a href="../a-public-site/our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="../a-public-site/about.html">About</a></li>
+        <li><a href="../a-public-site/contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../a-public-site/contact.html" class="btn btn-primary">Talk to a partner</a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="diag-shell">
+    <div class="diag-head">
+      <span class="kicker">Business Health Check</span>
+      <h1 style="font-size:1.75rem; margin:8px 0 4px;">15 questions, plain language, under six minutes</h1>
+    </div>
+
+    <p class="diag-intent-note">No contact details needed to see your result — you'll get an
+    honest read on the business first, and can decide afterwards whether to take anything
+    further.</p>
+
+    <div class="diag-progress-wrap">
+      <div class="diag-progress-track"><div class="diag-progress-fill" id="progressFill"></div></div>
+      <div class="diag-progress-label" id="progressLabel">Question 1 of 15</div>
+    </div>
+
+    <div class="card diag-card" id="diagCard">
+      <!-- Steps rendered by JS from the QUESTIONS array below -->
+    </div>
+
+    <div class="diag-nav">
+      <button type="button" class="btn btn-secondary" id="backBtn" disabled>Back</button>
+      <button type="button" class="btn btn-primary" id="nextBtn" disabled>Next</button>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+<script>
+  // Illustrative question set — real wording, scoring and result copy are reserved to firm
+  // authorship (Document 13.03, Section 13: Evans Agyemang with Albert Kwakye Amponsah,
+  // derived from the firm's own business and financial diagnostic tools). Structure below
+  // (dimensions, question count, response types) follows business-health-check-diagnostic.md.
+  var QUESTIONS = [
+    // Dimension: Structure
+    { id: 'q1', dimension: 'Structure', prompt: "Is the business formally registered — incorporated, or a registered business name?", type: 'choice', options: [
+      { label: 'Yes', value: 1 }, { label: 'In progress', value: 0.5 }, { label: 'Not yet', value: 0 }
+    ]},
+    { id: 'q2', dimension: 'Structure', prompt: "Do the people working in the business have clearly defined roles?", type: 'scale' },
+    { id: 'q3', dimension: 'Structure', prompt: "Is there a written plan the business is working from, even a simple one?", type: 'boolean' },
+
+    // Dimension: Records
+    { id: 'q4', dimension: 'Records', prompt: "Do you keep a record of sales — even a notebook or a spreadsheet?", type: 'choice', options: [
+      { label: 'Regular record-keeping', value: 1 }, { label: 'Rough notes', value: 0.5 }, { label: 'No record', value: 0 }
+    ]},
+    { id: 'q5', dimension: 'Records', prompt: "Are business costs and expenses tracked separately from personal spending?", type: 'scale' },
+    { id: 'q6', dimension: 'Records', prompt: "How many months back could you produce a reasonably complete financial picture?", type: 'choice', options: [
+      { label: '12 months or more', value: 1 }, { label: '3–12 months', value: 0.66 }, { label: '1–3 months', value: 0.33 }, { label: 'Less than 1 month', value: 0 }
+    ]},
+
+    // Dimension: Cash Control
+    { id: 'q7', dimension: 'Cash Control', prompt: "Is money moving between you and the business tracked separately from business cash?", type: 'scale' },
+    { id: 'q8', dimension: 'Cash Control', prompt: "Do you know, roughly, how much customers currently owe the business?", type: 'boolean' },
+    { id: 'q9', dimension: 'Cash Control', prompt: "Do you know, roughly, what the business owes suppliers or lenders?", type: 'boolean' },
+    { id: 'q10', dimension: 'Cash Control', prompt: "Does the business use a bank or mobile money account separate from your personal one?", type: 'boolean' },
+
+    // Dimension: Funding Readiness
+    { id: 'q11', dimension: 'Funding Readiness', prompt: "Has the business applied for a loan, grant or investment before?", type: 'choice', options: [
+      { label: 'Applied, successful', value: 1 }, { label: 'Applied, not successful', value: 0.5 }, { label: 'Never applied', value: 0 }
+    ]},
+    { id: 'q12', dimension: 'Funding Readiness', prompt: "If a lender asked for twelve months of financial statements today, could you produce them?", type: 'scale' },
+    { id: 'q13', dimension: 'Funding Readiness', prompt: "Do you have a clear, specific reason you'd want funding — equipment, stock, expansion?", type: 'boolean' },
+
+    // Dimension: Owner Dependence
+    { id: 'q14', dimension: 'Owner Dependence', prompt: "Could the business run for two weeks without you being reachable?", type: 'scale' },
+    { id: 'q15', dimension: 'Owner Dependence', prompt: "Is there anyone besides you who could make a significant business decision if needed?", type: 'boolean' }
+  ];
+
+  var current = 0;
+  var answers = {};
+  var card = document.getElementById('diagCard');
+  var backBtn = document.getElementById('backBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var fill = document.getElementById('progressFill');
+  var label = document.getElementById('progressLabel');
+
+  function renderStep(i) {
+    var q = QUESTIONS[i];
+    var html = '<span class="dimension-tag">' + q.dimension + '</span><h2>' + q.prompt + '</h2>';
+
+    if (q.type === 'boolean') {
+      html += '<div class="diag-options row">' +
+        option(q.id, 'yes', 'Yes', 1) + option(q.id, 'no', 'No', 0) +
+        '</div>';
+    } else if (q.type === 'choice') {
+      html += '<div class="diag-options">';
+      q.options.forEach(function (opt, idx) { html += option(q.id, 'c' + idx, opt.label, opt.value); });
+      html += '</div>';
+    } else if (q.type === 'scale') {
+      html += '<div class="diag-scale">';
+      for (var v = 1; v <= 5; v++) { html += option(q.id, 's' + v, String(v), v / 5); }
+      html += '</div><div class="diag-scale-labels"><span>Not at all</span><span>Completely</span></div>';
+    }
+
+    card.innerHTML = html;
+
+    var inputs = card.querySelectorAll('input[type="radio"]');
+    inputs.forEach(function (inp) {
+      if (answers[q.id] !== undefined && parseFloat(inp.value) === answers[q.id]) inp.checked = true;
+      inp.addEventListener('change', function () {
+        answers[q.id] = parseFloat(inp.value);
+        nextBtn.disabled = false;
+      });
+    });
+
+    backBtn.disabled = (i === 0);
+    nextBtn.disabled = (answers[q.id] === undefined);
+    nextBtn.textContent = (i === QUESTIONS.length - 1) ? 'See your result' : 'Next';
+
+    fill.style.width = (((i) / QUESTIONS.length) * 100) + '%';
+    label.textContent = 'Question ' + (i + 1) + ' of ' + QUESTIONS.length;
+  }
+
+  function option(qid, key, text, value) {
+    return '<label class="diag-option">' +
+      '<input type="radio" name="' + qid + '" id="' + qid + '_' + key + '" value="' + value + '">' +
+      '<span class="opt-label">' + text + '</span></label>';
+  }
+
+  function scoreAndFinish() {
+    var byDimension = {};
+    QUESTIONS.forEach(function (q) {
+      if (!byDimension[q.dimension]) byDimension[q.dimension] = [];
+      byDimension[q.dimension].push(answers[q.id]);
+    });
+    var dimensions = Object.keys(byDimension).map(function (name) {
+      var vals = byDimension[name];
+      var pct = Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 100);
+      return { name: name, score: pct };
+    });
+    var overall = Math.round(dimensions.reduce(function (a, d) { return a + d.score; }, 0) / dimensions.length);
+    var sorted = dimensions.slice().sort(function (a, b) { return a.score - b.score; });
+    var weakestNames = sorted.slice(0, 3).filter(function (d) { return d.score < 75; }).map(function (d) { return d.name; });
+    if (weakestNames.length < 2) weakestNames = sorted.slice(0, 2).map(function (d) { return d.name; });
+
+    var result = { overall: overall, dimensions: dimensions, weakest: weakestNames, completedAt: new Date().toISOString() };
+    sessionStorage.setItem('bhc_result', JSON.stringify(result));
+    window.location.href = 'diagnostic-results.html';
+  }
+
+  backBtn.addEventListener('click', function () { if (current > 0) { current--; renderStep(current); } });
+  nextBtn.addEventListener('click', function () {
+    if (current < QUESTIONS.length - 1) { current++; renderStep(current); }
+    else { scoreAndFinish(); }
+  });
+
+  renderStep(current);
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal — Information Requests — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .request-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); gap: 20px; }
+  .request-item:last-child { border-bottom: none; }
+  .request-item .req-name { font-weight: 600; font-size: 0.9375rem; margin-bottom: 4px; }
+  .request-item .req-meta { font-size: 0.8125rem; color: var(--muted-foreground); }
+  .request-item .req-action { flex-shrink: 0; }
+
+  .status-pill { font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; display: inline-block; margin-bottom: 6px; }
+  .status-fulfilled { background: var(--pine-500); color: #fff; }
+  .status-outstanding { background: var(--muted); color: var(--muted-foreground); border: 1px solid var(--border); }
+
+  .upload-btn { font-size: 0.8125rem; font-weight: 600; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); cursor: pointer; color: var(--primary); }
+  .fulfilled-link { font-size: 0.8125rem; color: var(--primary); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Portal">
+      <a href="portal-engagement-overview.html">Overview</a>
+      <a href="portal-information-requests.html" class="active">Information Requests</a>
+      <a href="#">Documents</a>
+      <a href="#">Deliverables</a>
+      <a href="portal-messages.html">Messages</a>
+      <a href="#">Account</a>
+      <a href="#">Team</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Kwesi Owusu</strong>
+      Primary contact
+    </div>
+  </aside>
+
+  <div class="admin-main">
+
+    <div class="gated-banner gated-banner-high">
+      ⚠ <div><strong>Phase 2 — gated, not yet built.</strong> Shown here for shape only —
+      see the Overview page for the full gating note.</div>
+    </div>
+
+    <div class="admin-topbar">
+      <div>
+        <h1>Information Requests</h1>
+        <div class="subtitle">Financial Clarity Pack · 3 of 5 fulfilled</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0 24px;">
+
+      <div class="request-item">
+        <div>
+          <span class="status-pill status-fulfilled">Fulfilled</span>
+          <div class="req-name">Twelve months of statements for every bank and mobile money account</div>
+          <div class="req-meta">Up to three accounts, complete months</div>
+        </div>
+        <div class="req-action"><a href="#" class="fulfilled-link">bank_statements_2026.pdf</a></div>
+      </div>
+
+      <div class="request-item">
+        <div>
+          <span class="status-pill status-fulfilled">Fulfilled</span>
+          <div class="req-name">Sales records: invoices, receipt books, till records or the sales book</div>
+          <div class="req-meta">In whatever form they're kept</div>
+        </div>
+        <div class="req-action"><a href="#" class="fulfilled-link">sales_records.xlsx</a></div>
+      </div>
+
+      <div class="request-item">
+        <div>
+          <span class="status-pill status-fulfilled">Fulfilled</span>
+          <div class="req-name">Purchase and expense records: supplier invoices, receipts, the cash book</div>
+          <div class="req-meta">—</div>
+        </div>
+        <div class="req-action"><a href="#" class="fulfilled-link">expenses_2026.pdf</a></div>
+      </div>
+
+      <div class="request-item">
+        <div>
+          <span class="status-pill status-outstanding">Outstanding</span>
+          <div class="req-name">List of amounts owed to the business, with ages</div>
+          <div class="req-meta">Due 10 Sep 2026 · Even an approximate list from memory is a starting point</div>
+        </div>
+        <div class="req-action"><button type="button" class="upload-btn">Upload</button></div>
+      </div>
+
+      <div class="request-item">
+        <div>
+          <span class="status-pill status-outstanding">Outstanding</span>
+          <div class="req-name">Details of money moving between the business and the owner</div>
+          <div class="req-meta">Due 10 Sep 2026 · Asked without judgement</div>
+        </div>
+        <div class="req-action"><button type="button" class="upload-btn">Upload</button></div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

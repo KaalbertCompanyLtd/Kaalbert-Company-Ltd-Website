@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic Configuration — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .config-panel { padding: 26px; margin-bottom: 24px; max-width: 780px; }
+  .config-panel h2 { font-size: 1.0625rem; margin: 0 0 4px; }
+  .config-panel .desc { font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 20px; }
+
+  .weight-row { display: grid; grid-template-columns: 1fr 100px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .weight-row:last-of-type { border-bottom: none; }
+  .weight-row input {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align: right;
+    font-family: var(--font-mono); font-size: 0.9375rem; width: 100%;
+  }
+  .weight-total { display: flex; justify-content: space-between; padding: 14px 0 0; margin-top: 8px; border-top: 2px solid var(--border); font-weight: 700; }
+  .weight-total.balanced { color: var(--pine-500); }
+  .weight-total.unbalanced { color: var(--accent); }
+  .weight-total .note { font-size: 0.75rem; font-weight: 400; color: var(--accent); margin-left: 8px; }
+
+  .threshold-band { display: grid; grid-template-columns: 140px 1fr 90px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .threshold-band:last-child { border-bottom: none; }
+  .threshold-band input { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); width: 100%; text-align: right; font-family: var(--font-mono); }
+
+  .override-row { display: grid; grid-template-columns: 1fr 140px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9375rem; }
+  .override-row:last-child { border-bottom: none; }
+  .override-row input { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align: right; font-family: var(--font-mono); width: 100%; }
+
+  .scope-note-inline { font-size: 0.75rem; color: var(--muted-foreground); font-style: italic; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo"><img src="../assets/logo-dark-bg.png" alt="Kaalbert & Company Ltd"></div>
+    <nav aria-label="Admin">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <span class="nav-group-label">Content</span>
+      <a href="admin-articles-list.html">Articles</a>
+      <a href="#">Pages</a>
+      <a href="admin-offer-editor.html">Offers</a>
+      <a href="#">Landing Pages</a>
+      <a href="#">Team</a>
+      <span class="nav-group-label">Operations</span>
+      <a href="../h-admin-enquiries/admin-enquiry-detail.html">Enquiries</a>
+      <a href="admin-diagnostic-questions-list.html" class="active">Diagnostic Configuration</a>
+      <a href="#">Site Settings</a>
+      <span class="nav-group-label">Bonus</span>
+      <a href="../i-admin-performance/admin-performance-overview.html">Performance</a>
+    </nav>
+    <div class="admin-account">
+      <strong>Evans Agyemang</strong>
+      Financial Control &amp; Compliance
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Diagnostic Configuration</h1>
+        <div class="subtitle"><a href="admin-diagnostic-questions-list.html" style="color:var(--muted-foreground);">← Back to Questions</a></div>
+      </div>
+    </div>
+
+    <div class="card config-panel">
+      <h2>Dimension weights</h2>
+      <div class="desc">How much each dimension counts toward the overall score. Must total 100% before this can be saved.</div>
+
+      <div class="weight-row"><span>Structure</span><input type="number" class="weight-input" value="20" min="0" max="100"></div>
+      <div class="weight-row"><span>Records</span><input type="number" class="weight-input" value="20" min="0" max="100"></div>
+      <div class="weight-row"><span>Cash Control</span><input type="number" class="weight-input" value="20" min="0" max="100"></div>
+      <div class="weight-row"><span>Funding Readiness</span><input type="number" class="weight-input" value="20" min="0" max="100"></div>
+      <div class="weight-row"><span>Owner Dependence</span><input type="number" class="weight-input" value="20" min="0" max="100"></div>
+
+      <div class="weight-total balanced" id="weightTotal">
+        <span>Total</span>
+        <span id="weightTotalVal">100%</span>
+      </div>
+    </div>
+
+    <div class="card config-panel">
+      <h2>Triage priority — overall score</h2>
+      <div class="desc">A completed diagnostic is flagged by how much attention it needs — a lower score means more urgency, not less (Document 13.03, Section 6).</div>
+
+      <div class="threshold-band">
+        <span class="badge badge-triage-high">High priority</span>
+        <span>Overall score below</span>
+        <input type="number" value="40" min="0" max="100">
+      </div>
+      <div class="threshold-band">
+        <span class="badge badge-triage-medium">Medium priority</span>
+        <span>Overall score below</span>
+        <input type="number" value="65" min="0" max="100">
+      </div>
+      <div class="threshold-band">
+        <span class="badge badge-triage-low">Low priority</span>
+        <span>Overall score 65 and above</span>
+        <input type="text" value="—" disabled style="background:var(--muted); color:var(--muted-foreground);">
+      </div>
+    </div>
+
+    <div class="card config-panel">
+      <h2>Per-dimension override</h2>
+      <div class="desc">Flag High priority regardless of overall score, if any one dimension falls below its own threshold — a business can look fine overall and still have one critical gap.</div>
+
+      <div class="override-row"><span>Structure</span><input type="number" value="25" min="0" max="100"></div>
+      <div class="override-row"><span>Records</span><input type="number" value="25" min="0" max="100"></div>
+      <div class="override-row"><span>Cash Control</span><input type="number" value="25" min="0" max="100"></div>
+      <div class="override-row"><span>Funding Readiness</span><input type="number" value="25" min="0" max="100"></div>
+      <div class="override-row"><span>Owner Dependence</span><input type="number" value="25" min="0" max="100"></div>
+      <div class="scope-note-inline">Values below the dimension's own name are the "flag if below" threshold, in percent.</div>
+    </div>
+
+    <div class="admin-actions-bar" style="max-width:780px;">
+      <button type="button" class="btn btn-secondary">Discard changes</button>
+      <button type="button" class="btn btn-primary" id="saveBtn">Save configuration</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var weightInputs = Array.prototype.slice.call(document.querySelectorAll('.weight-input'));
+  var totalEl = document.getElementById('weightTotalVal');
+  var totalWrap = document.getElementById('weightTotal');
+  var saveBtn = document.getElementById('saveBtn');
+
+  function recalc() {
+    var total = weightInputs.reduce(function (sum, inp) { return sum + (parseFloat(inp.value) || 0); }, 0);
+    totalEl.textContent = total + '%';
+    var balanced = total === 100;
+    totalWrap.classList.toggle('balanced', balanced);
+    totalWrap.classList.toggle('unbalanced', !balanced);
+    saveBtn.disabled = !balanced;
+    saveBtn.title = balanced ? '' : 'Dimension weights must total 100% before saving';
+  }
+
+  weightInputs.forEach(function (inp) { inp.addEventListener('input', recalc); });
+  recalc();
+</script>
+</body>
+</html>

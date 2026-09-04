@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  .checkout-shell { padding: 48px 0 64px; }
+  .checkout-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; max-width: 880px; margin: 0 auto; align-items: start; }
+
+  .method-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .method-tab {
+    flex: 1; padding: 12px; text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--card); cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: var(--muted-foreground);
+  }
+  .method-tab.active { border-color: var(--primary); background: var(--muted); color: var(--primary); }
+
+  .momo-providers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .momo-provider {
+    padding: 12px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align: center;
+    font-size: 0.75rem; font-weight: 700; cursor: pointer; background: var(--card);
+  }
+  .momo-provider.selected { border-color: var(--pine-500); background: rgba(53,107,85,0.08); color: var(--pine-700); }
+
+  .pay-field { margin-bottom: 16px; }
+  .pay-field label { display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+  .pay-field input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.9375rem; }
+  .pay-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .method-panel { display: none; }
+  .method-panel.active { display: block; }
+
+  .summary-panel { padding: 24px; }
+  .summary-panel h3 { font-size: 0.9375rem; margin: 0 0 16px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 0.875rem; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .summary-row:last-of-type { border-bottom: none; }
+  .summary-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.0625rem; padding-top: 14px; margin-top: 6px; border-top: 2px solid var(--border); color: var(--primary); }
+  .scope-cap-note { font-size: 0.75rem; color: var(--muted-foreground); margin-top: 12px; }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../a-public-site/home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="../a-public-site/offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="../a-public-site/offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="../a-public-site/offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="../a-public-site/offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="../a-public-site/capabilities.html">Capabilities</a></li>
+        <li><a href="../a-public-site/our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="../a-public-site/about.html">About</a></li>
+        <li><a href="../a-public-site/contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page-hero dark-section">
+    <div class="container-narrow">
+      <span class="kicker">Checkout</span>
+      <h1>Complete your payment</h1>
+      <p class="lead">Mobile Money or card — handled on this site, not handed off to a
+      third-party checkout page.</p>
+    </div>
+  </section>
+
+  <div class="checkout-shell">
+    <div class="container">
+
+      <div class="gated-banner" style="max-width:880px; margin:0 auto 24px;">
+        ⚠ <div><strong>Phase 2 — gated, not yet built.</strong> Only built once the firm
+        sells a productised, fixed-fee offer without negotiation (Document 13.03;
+        `scope.md`, P2-4) — advisory fees settled by invoice, as the firm operates today,
+        don't need this. This mockup shows the intended shape only.</div>
+      </div>
+
+      <div class="checkout-grid">
+        <div class="card" style="padding:28px;">
+
+          <div class="method-tabs">
+            <button type="button" class="method-tab active" data-method="momo">Mobile Money</button>
+            <button type="button" class="method-tab" data-method="card">Card</button>
+          </div>
+
+          <div class="method-panel active" id="momoPanel">
+            <div class="momo-providers">
+              <div class="momo-provider selected" data-provider="mtn">MTN MoMo</div>
+              <div class="momo-provider" data-provider="vodafone">Vodafone Cash</div>
+              <div class="momo-provider" data-provider="airteltigo">AirtelTigo Money</div>
+            </div>
+            <div class="pay-field">
+              <label for="momoPhone">Mobile Money number</label>
+              <input type="tel" id="momoPhone" placeholder="024 XXX XXXX">
+            </div>
+            <button type="button" class="btn btn-primary" style="width:100%;">Pay GHS 1,500 with Mobile Money</button>
+            <p style="font-size:0.75rem; color:var(--muted-foreground); margin-top:10px;">You'll get a prompt on your phone to approve the payment.</p>
+          </div>
+
+          <div class="method-panel" id="cardPanel">
+            <div class="pay-field"><label for="cardNum">Card number</label><input type="text" id="cardNum" placeholder="0000 0000 0000 0000"></div>
+            <div class="pay-field-row">
+              <div class="pay-field"><label for="cardExp">Expiry</label><input type="text" id="cardExp" placeholder="MM/YY"></div>
+              <div class="pay-field"><label for="cardCvv">CVV</label><input type="text" id="cardCvv" placeholder="123"></div>
+            </div>
+            <button type="button" class="btn btn-primary" style="width:100%;">Pay GHS 1,500 with card</button>
+          </div>
+
+        </div>
+
+        <div class="card summary-panel">
+          <h3>Order summary</h3>
+          <div class="summary-row"><span>Business Health Check</span><span>Express tier</span></div>
+          <div class="summary-row"><span>Scope</span><span>5-day turnaround</span></div>
+          <div class="summary-total"><span>Total due</span><span>GHS 1,500</span></div>
+          <div class="scope-cap-note">Fixed fee agreed against the Express tier's published band (GHS 1,000–2,000). An invoice referencing this exact fee is issued on successful payment.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+<script>
+  var tabs = document.querySelectorAll('.method-tab');
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      document.querySelectorAll('.method-panel').forEach(function (p) { p.classList.remove('active'); });
+      document.getElementById(tab.dataset.method + 'Panel').classList.add('active');
+    });
+  });
+  var providers = document.querySelectorAll('.momo-provider');
+  providers.forEach(function (p) {
+    p.addEventListener('click', function () {
+      providers.forEach(function (x) { x.classList.remove('selected'); });
+      p.classList.add('selected');
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Core Offer Page — kaalbert.com mockup</title>
+<link rel="stylesheet" href="../_shared.css">
+<style>
+  section.offer-section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+  section.offer-section:last-of-type { border-bottom: none; }
+  .who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .who-grid .card h4 { margin-top: 0; }
+  .who-for { border-left: 3px solid var(--pine-500); }
+  .who-not { border-left: 3px solid var(--brass-300); }
+
+  .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .tier-card { display: flex; flex-direction: column; gap: 10px; }
+  .tier-card .tier-name { font-family: var(--font-display); color: var(--primary); font-size: 1.25rem; margin: 0; }
+  .tier-card .tier-meta { font-size: 0.8125rem; color: var(--muted-foreground); }
+  .tier-card .tier-fee { font-family: var(--font-mono); font-size: 1.375rem; color: var(--accent); font-weight: 700; margin: 4px 0; }
+  .tier-card ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.9375rem; }
+  .tier-card li { margin-bottom: 4px; }
+  .tier-card.featured { border: 2px solid var(--accent); }
+
+  .stage-list { display: flex; flex-direction: column; gap: 0; }
+  .stage-row { display: grid; grid-template-columns: 60px 1fr; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+  .stage-row:last-child { border-bottom: none; }
+  .stage-row .num { font-family: var(--font-display); font-size: 1.75rem; color: var(--brass-500); }
+
+  .fee-panel { background: var(--primary); color: var(--primary-foreground); padding: 32px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+  .fee-panel .amount { font-family: var(--font-display); font-size: 2.25rem; }
+  .fee-panel .scope-cap { font-size: 0.875rem; color: #C9D3CD; margin-top: 4px; }
+  .fee-panel .alt-note { font-size: 0.8125rem; color: var(--brass-300); margin-top: 10px; }
+
+  .out-of-scope { background: var(--muted); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+  .faq-item { border-bottom: 1px solid var(--border); padding: 18px 0; }
+  .faq-item summary { cursor: pointer; font-weight: 700; color: var(--primary); font-family: var(--font-display); font-size: 1.0625rem; list-style: none; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before { content: "+ "; color: var(--accent); }
+  .faq-item[open] summary::before { content: "− "; }
+  .faq-item p { margin-top: 10px; font-size: 0.9375rem; }
+
+  .final-cta { text-align: center; padding: 56px 0; }
+
+  @media (max-width: 720px) { .tier-grid, .who-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="has-hero">
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="home.html" aria-label="Kaalbert & Company Ltd — Home">
+      <img src="../assets/logo-dark-bg.png" class="logo logo-onDark" alt="Kaalbert & Company Ltd">
+      <img src="../assets/logo-primary.png" class="logo logo-onLight" alt="Kaalbert & Company Ltd">
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li class="nav-dropdown">
+          <a href="offer-business-health-check.html">Core Offers</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="offer-business-health-check.html">Business Health Check<span class="fee-hint">From GHS 1,000</span></a></li>
+            <li><a href="offer-financial-clarity-pack.html">Financial Clarity Pack<span class="fee-hint">From GHS 4,500</span></a></li>
+            <li><a href="offer-funding-readiness-pack.html">Funding-Readiness Pack<span class="fee-hint">From GHS 9,000</span></a></li>
+          </ul>
+        </li>
+        <li><a href="capabilities.html">Capabilities</a></li>
+        <li><a href="our-method.html">Our Method</a></li>
+        <li><a href="../b-insights/insights-index.html">Insights</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the Health Check</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-hero dark-section">
+    <div class="container-narrow">
+      <span class="kicker">Core Offer</span>
+      <h1>Business Health Check</h1>
+      <p class="lead">You know something isn't quite right — the numbers, the controls, or
+      how dependent the business is on you personally — but not exactly what, or what it's
+      costing you. This gives you a partner-led answer, at a level sized to your business.</p>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow who-grid">
+      <div class="card who-for">
+        <h4>Who it's for</h4>
+        <p style="font-size:0.9375rem;">Founder-led businesses turning over roughly GHS
+        500,000–20 million, preparing for a bank conversation, a board, or simply tired of
+        not trusting their own numbers.</p>
+      </div>
+      <div class="card who-not">
+        <h4>Who it's not for</h4>
+        <p style="font-size:0.9375rem;">A business that already has clear, current
+        management accounts and needs deeper financial control specifically — the Financial
+        Clarity Pack is the more targeted next step.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">The method, stage by stage</span>
+      <div class="stage-list">
+        <div class="stage-row"><span class="num">01</span><div><h4 style="margin:0 0 4px;">Discover</h4><p style="margin:0; font-size:0.9375rem;">A structured walkthrough of your records, controls and reporting as they actually run today.</p></div></div>
+        <div class="stage-row"><span class="num">02</span><div><h4 style="margin:0 0 4px;">Diagnose</h4><p style="margin:0; font-size:0.9375rem;">We name the constraints actually limiting growth or funding readiness.</p></div></div>
+        <div class="stage-row"><span class="num">03</span><div><h4 style="margin:0 0 4px;">Design</h4><p style="margin:0; font-size:0.9375rem;">A ranked, costed action plan, sized to what your team can realistically run.</p></div></div>
+        <div class="stage-row"><span class="num">04</span><div><h4 style="margin:0 0 4px;">Deliver</h4><p style="margin:0; font-size:0.9375rem;">The written assessment and a presentation — not a document that sits unread.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">Two levels, sized to your business — what you receive</span>
+      <div class="tier-grid">
+        <div class="card tier-card">
+          <h4 class="tier-name">Express</h4>
+          <span class="tier-meta">5 working days · single-location business</span>
+          <div class="tier-fee">GHS 1,000 – 2,000</div>
+          <ul>
+            <li>Structured diagnostic questionnaire</li>
+            <li>One working session, up to two hours</li>
+            <li>A written assessment naming what's holding the business back and the three actions that matter most</li>
+          </ul>
+        </div>
+        <div class="card tier-card featured">
+          <h4 class="tier-name">Full</h4>
+          <span class="tier-meta">2 weeks · up to three locations or business lines</span>
+          <div class="tier-fee">GHS 3,000 – 6,500</div>
+          <ul>
+            <li>All four diagnostic instruments</li>
+            <li>Review of the last twelve months of available records</li>
+            <li>Two working sessions</li>
+            <li>A full written assessment with a ranked and costed action plan</li>
+            <li>A presentation to the owner or board</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">Required from you</span>
+      <div class="tier-grid">
+        <div>
+          <h4 class="tier-name" style="font-size:1rem;">Express</h4>
+          <p style="font-size:0.9375rem;">One working session, up to two hours, and whatever
+          records you already have on hand for that session.</p>
+        </div>
+        <div>
+          <h4 class="tier-name" style="font-size:1rem;">Full</h4>
+          <p style="font-size:0.9375rem;">Your last twelve months of available records, and
+          two working sessions with the team.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <div class="fee-panel">
+        <div>
+          <span class="kicker" style="color:var(--brass-300);">Full — published fee band</span>
+          <div class="amount">GHS 3,000 – 6,500</div>
+          <div class="scope-cap">Scope cap: up to 3 locations or business lines, 12 months of available records</div>
+          <div class="alt-note">Not ready for the full engagement? Express starts at GHS 1,000, five working days.</div>
+        </div>
+        <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-accent">Start with the free Health Check</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <div class="out-of-scope">
+        <h4 style="margin-top:0;">What sits outside this offer</h4>
+        <p style="font-size:0.9375rem; margin-bottom:0;">Statutory audit, tax filing, and
+        legal advice are not part of this engagement. Kaalbert &amp; Company Ltd is a
+        business advisory firm, not a licensed audit, tax or legal practice — where any of
+        these is required, we connect you to a licensed practitioner.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-section">
+    <div class="container-narrow">
+      <span class="kicker">Real questions</span>
+      <details class="faq-item" open>
+        <summary>How is this different from an audit?</summary>
+        <p>An audit gives an opinion on historical financial statements. This gives you a
+        forward-looking, practical read on structure, controls and readiness — it is not an
+        assurance engagement and doesn't carry audit-level assurance.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Which level should I start with?</summary>
+        <p>If you're deciding whether to engage the firm at all, Express is built for exactly
+        that — a real result, a small commitment. Businesses that already know they need a
+        fuller picture, or that operate across more than one location, go straight to Full.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Is the fee negotiable?</summary>
+        <p>The published bands reflect the standard scope. Above GHS 5,000, engagements can be
+        spread across up to four monthly instalments — the deposit still applies, but the fee
+        itself isn't discounted. A materially smaller scope is a different conversation, and
+        never the same scope at a lower rate.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="container-narrow">
+      <h2>Not sure this is the right starting point?</h2>
+      <p class="lead">Take the free six-minute Business Health Check first — a lighter,
+      no-cost preview of this same assessment.</p>
+      <a href="../c-diagnostic/diagnostic-flow.html" class="btn btn-primary">Take the free Business Health Check</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="../assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd" style="margin-bottom:24px;">
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:24px; font-size:0.9375rem;">
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Core Offers</strong>
+        <a href="offer-business-health-check.html" style="display:block; margin-bottom:6px;">Business Health Check</a>
+        <a href="offer-financial-clarity-pack.html" style="display:block; margin-bottom:6px;">Financial Clarity Pack</a>
+        <a href="offer-funding-readiness-pack.html" style="display:block;">Funding-Readiness Pack</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Firm</strong>
+        <a href="our-method.html" style="display:block; margin-bottom:6px;">Our Method</a>
+        <a href="about.html" style="display:block; margin-bottom:6px;">About &amp; Partners</a>
+        <a href="capabilities.html" style="display:block;">Capabilities</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">Insights</strong>
+        <a href="../b-insights/insights-index.html" style="display:block; margin-bottom:6px;">All articles</a>
+        <a href="contact.html" style="display:block;">Contact</a>
+      </div>
+      <div>
+        <strong style="display:block; margin-bottom:10px; color:#FCFAF5;">House No. 13 Gbenjin Gbe Avenue</strong>
+        <span style="color:#C9D3CD;">East Legon-ARS, Accra</span><br>
+        <span style="color:#C9D3CD;">0558 480 001</span>
+      </div>
+    </div>
+    <div class="scope-note">
+      Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax
+      or legal practice, and connects clients to licensed practitioners where such work is
+      required. &nbsp;·&nbsp;
+      <a href="../e-legal/privacy-notice.html">Privacy</a> · <a href="../e-legal/cookie-notice.html">Cookies</a> ·
+      <a href="../e-legal/terms-of-use.html">Terms</a> · <a href="../e-legal/scope-of-practice.html">Scope of Practice</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../_header-scroll.js"></script>
+</body>
+</html>

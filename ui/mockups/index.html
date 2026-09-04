@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Mockups — Review Index</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  body { background: var(--background); }
+
+  .idx-header { background: var(--primary); color: #FCFAF5; padding: 48px 0 40px; }
+  .idx-header .logo-lg { margin-bottom: 24px; }
+  .idx-header h1 { color: #FCFAF5; font-size: 2rem; margin-bottom: 12px; }
+  .idx-header .lead { color: #C9D3CD; max-width: 680px; margin-bottom: 0; }
+
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #C9D3CD; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .legend-swatch.phase1 { background: var(--pine-500); }
+  .legend-swatch.phase2 { background: var(--accent); }
+  .legend-swatch.bonus { background: var(--brass-300); }
+
+  .idx-body { padding: 48px 0 80px; }
+  .idx-section { margin-bottom: 48px; }
+  .idx-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+  .idx-section-head h2 { margin: 0; font-size: 1.25rem; }
+  .idx-section-head .count { font-size: 0.8125rem; color: var(--muted-foreground); }
+
+  .idx-section.gated .idx-section-head { border-bottom-color: var(--accent); }
+  .idx-section.gated h2 { color: var(--brass-500); }
+
+  .gated-section-note {
+    background: rgba(169, 133, 63, 0.1); border: 1px solid var(--brass-300); border-radius: var(--radius-sm);
+    padding: 14px 18px; margin-bottom: 20px; font-size: 0.875rem; color: var(--brass-500);
+  }
+  .gated-section-note strong { color: var(--accent); }
+
+  .idx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .idx-card {
+    display: block; padding: 18px; text-decoration: none; border-left: 3px solid var(--pine-500);
+  }
+  .idx-card .idx-name { font-weight: 700; color: var(--primary); margin-bottom: 4px; display: block; font-size: 0.9375rem; }
+  .idx-card .idx-desc { font-size: 0.8125rem; color: var(--muted-foreground); }
+  .idx-card:hover { border-left-color: var(--accent); }
+
+  .idx-card.bonus { border-left-color: var(--brass-300); }
+  .idx-card.gated { border-left-color: var(--accent); background: rgba(169, 133, 63, 0.04); }
+  .idx-card.gated .idx-name::after {
+    content: "GATED — NOT BUILT"; display: inline-block; margin-left: 8px; font-size: 0.625rem; font-weight: 700;
+    letter-spacing: 0.04em; color: #fff; background: var(--accent); padding: 2px 7px; border-radius: 999px; vertical-align: middle;
+  }
+  .idx-card.bonus .idx-name::after {
+    content: "BONUS"; display: inline-block; margin-left: 8px; font-size: 0.625rem; font-weight: 700;
+    letter-spacing: 0.04em; color: var(--brass-500); background: rgba(169,133,63,0.15); padding: 2px 7px; border-radius: 999px; vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<header class="idx-header">
+  <div class="container">
+    <img src="assets/logo-dark-bg.png" class="logo-lg" alt="Kaalbert & Company Ltd">
+    <h1>Website Mockups — For Review</h1>
+    <p class="lead">Working HTML wireframes for kaalbert.com, presented in fulfillment of
+    Document 13.03, Section 18's request for wireframes ahead of build. Every screen below is
+    fully interactive in the browser — click through, resize, scroll — not a static image.</p>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch phase1"></span>Phase 1 — in scope, built now</div>
+      <div class="legend-item"><span class="legend-swatch bonus"></span>Bonus — offered beyond what was asked, never blocking</div>
+      <div class="legend-item"><span class="legend-swatch phase2"></span>Phase 2 — gated on a future trigger, not being built now</div>
+    </div>
+  </div>
+</header>
+
+<div class="idx-body">
+  <div class="container">
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Public Site</h2><span class="count">8 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="a-public-site/home.html"><span class="idx-name">Home</span><span class="idx-desc">Hero, three core offers, method, senior attention, Insights teaser</span></a>
+        <a class="idx-card" href="a-public-site/offer-business-health-check.html"><span class="idx-name">Core Offer — Business Health Check</span><span class="idx-desc">The free diagnostic offer page, GHS 1,000–2,000</span></a>
+        <a class="idx-card" href="a-public-site/offer-financial-clarity-pack.html"><span class="idx-name">Core Offer — Financial Clarity Pack</span><span class="idx-desc">GHS 4,500–9,500</span></a>
+        <a class="idx-card" href="a-public-site/offer-funding-readiness-pack.html"><span class="idx-name">Core Offer — Funding-Readiness Pack</span><span class="idx-desc">GHS 9,000–19,000, with the checklist capture route</span></a>
+        <a class="idx-card" href="a-public-site/capabilities.html"><span class="idx-name">Capabilities</span><span class="idx-desc">The eight wider service lines, plus the Advisory Retainer</span></a>
+        <a class="idx-card" href="a-public-site/our-method.html"><span class="idx-name">Our Method</span><span class="idx-desc">Discover, Diagnose, Design, Deliver in depth</span></a>
+        <a class="idx-card" href="a-public-site/about.html"><span class="idx-name">About &amp; Partners</span><span class="idx-desc">Firm statement, values, all five partners</span></a>
+        <a class="idx-card" href="a-public-site/contact.html"><span class="idx-name">Contact</span><span class="idx-desc">Form, WhatsApp, phone, email, office</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Insights</h2><span class="count">2 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="b-insights/insights-index.html"><span class="idx-name">Insights Index</span><span class="idx-desc">Filterable, searchable, paginated article grid</span></a>
+        <a class="idx-card" href="b-insights/insight-owner-drawings.html"><span class="idx-name">Insights Article</span><span class="idx-desc">Rich content template: table, pull-quote, author bio, next-step CTA</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Business Health Check Diagnostic</h2><span class="count">2 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="c-diagnostic/diagnostic-flow.html"><span class="idx-name">Diagnostic — Question Flow</span><span class="idx-desc">Real, working 15-question multi-step flow</span></a>
+        <a class="idx-card" href="c-diagnostic/diagnostic-results.html"><span class="idx-name">Diagnostic — Results</span><span class="idx-desc">Score, dimension breakdown, summary-request form</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Landing Pages</h2><span class="count">3 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="d-landing-pages/landing-business-health-check.html"><span class="idx-name">Landing — Business Health Check</span><span class="idx-desc">No-nav campaign page, single CTA</span></a>
+        <a class="idx-card" href="d-landing-pages/landing-funding-readiness-checklist.html"><span class="idx-name">Landing — Funding-Readiness Checklist</span><span class="idx-desc">Gated PDF download capture</span></a>
+        <a class="idx-card" href="d-landing-pages/landing-financial-clarity-pack.html"><span class="idx-name">Landing — Financial Clarity Pack</span><span class="idx-desc">Campaign page for the paid offer</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Legal</h2><span class="count">4 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="e-legal/scope-of-practice.html"><span class="idx-name">Scope of Practice</span><span class="idx-desc">Real content — the firm's actual boundary statement</span></a>
+        <a class="idx-card" href="e-legal/privacy-notice.html"><span class="idx-name">Privacy Notice</span><span class="idx-desc">Structural shell, pending counsel-drafted text</span></a>
+        <a class="idx-card" href="e-legal/cookie-notice.html"><span class="idx-name">Cookie Notice</span><span class="idx-desc">Structural shell, pending counsel-drafted text</span></a>
+        <a class="idx-card" href="e-legal/terms-of-use.html"><span class="idx-name">Terms of Use</span><span class="idx-desc">Structural shell, pending counsel-drafted text</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Admin — Authentication</h2><span class="count">2 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="f-admin-auth/admin-login.html"><span class="idx-name">Admin Login</span><span class="idx-desc">Password step, TOTP required next</span></a>
+        <a class="idx-card" href="f-admin-auth/admin-2fa-setup.html"><span class="idx-name">Admin 2FA Setup</span><span class="idx-desc">QR code, confirmation, backup codes</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Admin — Content Management</h2><span class="count">7 screens</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="g-admin-content/admin-dashboard.html"><span class="idx-name">Admin Dashboard</span><span class="idx-desc">The shell every admin screen inherits</span></a>
+        <a class="idx-card" href="g-admin-content/admin-articles-list.html"><span class="idx-name">Articles List</span><span class="idx-desc">Search, filter, paginate</span></a>
+        <a class="idx-card" href="g-admin-content/admin-article-editor.html"><span class="idx-name">Article Editor</span><span class="idx-desc">Rich text, required preview image</span></a>
+        <a class="idx-card" href="g-admin-content/admin-categories-list.html"><span class="idx-name">Categories</span><span class="idx-desc">Add/rename/retire, with slug-collision handling</span></a>
+        <a class="idx-card" href="g-admin-content/admin-offer-editor.html"><span class="idx-name">Offer Editor</span><span class="idx-desc">Structured fee band, linked to its scope cap</span></a>
+        <a class="idx-card" href="g-admin-content/admin-diagnostic-questions-list.html"><span class="idx-name">Diagnostic Questions</span><span class="idx-desc">Reorder, active toggle, with real validation</span></a>
+        <a class="idx-card" href="g-admin-content/admin-diagnostic-configuration.html"><span class="idx-name">Diagnostic Configuration</span><span class="idx-desc">Dimension weights, triage thresholds</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Admin — Enquiries</h2><span class="count">1 screen</span></div>
+      <div class="idx-grid">
+        <a class="idx-card" href="h-admin-enquiries/admin-enquiry-detail.html"><span class="idx-name">Enquiry Detail</span><span class="idx-desc">Full diagnostic responses, consent, attribution, triage</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section">
+      <div class="idx-section-head"><h2>Admin — Performance</h2><span class="count">2 screens</span></div>
+      <div class="gated-section-note">
+        <strong>Bonus, not requested.</strong> Offered beyond Document 13.03's scope — never
+        something the rest of the admin depends on. Can be skipped without affecting anything
+        else below.
+      </div>
+      <div class="idx-grid">
+        <a class="idx-card bonus" href="i-admin-performance/admin-performance-overview.html"><span class="idx-name">Performance Overview</span><span class="idx-desc">Four platforms, all three connection states shown</span></a>
+        <a class="idx-card bonus" href="i-admin-performance/admin-performance-ga4.html"><span class="idx-name">Performance — GA4</span><span class="idx-desc">Per-platform detail, the pattern the other three reuse</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section gated">
+      <div class="idx-section-head"><h2>⚠ Phase 2 — Client Portal</h2><span class="count">3 screens</span></div>
+      <div class="gated-section-note">
+        <strong>Not being built now.</strong> Document 13.03 names this "the highest-risk item
+        on the list." Gated on enough concurrent engagements to justify it, and a documented
+        confidentiality/security review that hasn't happened yet. Shown here for shape and
+        planning visibility only.
+      </div>
+      <div class="idx-grid">
+        <a class="idx-card gated" href="j-client-portal/portal-engagement-overview.html"><span class="idx-name">Engagement Overview</span><span class="idx-desc">Method-stage tracker for an active client</span></a>
+        <a class="idx-card gated" href="j-client-portal/portal-information-requests.html"><span class="idx-name">Information Requests</span><span class="idx-desc">Fulfilled/outstanding checklist with uploads</span></a>
+        <a class="idx-card gated" href="j-client-portal/portal-messages.html"><span class="idx-name">Messages</span><span class="idx-desc">Engagement-scoped thread with the assigned partner</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section gated">
+      <div class="idx-section-head"><h2>⚠ Phase 2 — Booking &amp; Scheduling</h2><span class="count">1 screen</span></div>
+      <div class="gated-section-note">
+        <strong>Not being built now.</strong> Gated on sustained enquiry volume making
+        scheduling by message a genuine cost of partner time.
+      </div>
+      <div class="idx-grid">
+        <a class="idx-card gated" href="k-booking/booking-slot-picker.html"><span class="idx-name">Book a Call</span><span class="idx-desc">Real, limited partner availability — not an open calendar</span></a>
+      </div>
+    </div>
+
+    <div class="idx-section gated">
+      <div class="idx-section-head"><h2>⚠ Phase 2 — Online Payment</h2><span class="count">1 screen</span></div>
+      <div class="gated-section-note">
+        <strong>Not being built now.</strong> Gated on the firm selling a productised,
+        fixed-fee offer without negotiation — advisory fees settled by invoice, as the firm
+        operates today, don't need this.
+      </div>
+      <div class="idx-grid">
+        <a class="idx-card gated" href="m-payment/payment-checkout.html"><span class="idx-name">Checkout</span><span class="idx-desc">Mobile Money first, card second, hand-built (no third-party checkout page)</span></a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
