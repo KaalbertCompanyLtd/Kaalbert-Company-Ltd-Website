@@ -12,9 +12,18 @@ docs/config scaffolding without clobbering the project's custom ESLint rule or P
 config, and made `npm run lint` / `npm run typecheck` / `npm run format:check` real, passing
 gates wired into a new GitHub Actions CI workflow. Provisioned a new Railway project under a
 newly created company account and deployed the app (live at
-https://kaalbert.up.railway.app); added `origin` (company GitHub repo,
-authoritative) and `personal` (contribution-graph-only) git remotes and the `github` MCP
-server block.
+https://kaalbert.up.railway.app, later renamed from the auto-generated
+`kaalbert-web-production.up.railway.app`); added `origin` (company GitHub repo, authoritative)
+and `personal` (contribution-graph-only) git remotes and the `github` MCP server block.
+
+**Session continued past initial completion** to close out the two acceptance criteria that
+were still open: pushed to both remotes (after resolving a git-credential dead end — see
+Decisions Made), then wired and verified GitHub-connected Railway auto-deploy end to end.
+Also built a durable multi-account git credential workflow (prompted by a real token-exposure
+incident) and, at the user's explicit request, established durable memory-file
+format/ordering/sequencing rules in CLAUDE.md, retrofitting all four `memory/*.md` files to
+match. T1.1 is now complete except the Cloudflare/domain acceptance criterion, which is
+explicitly user-triggered (blocked on domain registration) — see Current State.
 
 ## Files Changed
 
@@ -35,8 +44,19 @@ server block.
   `next typegen` typecheck requirement), Essential Commands updated to `npm run typecheck`
 - Every pre-existing docs/ui/memory markdown file — Prettier reformatting only (cosmetic:
   emphasis-marker style, blank-line-after-heading), no content changes
-- memory/completed-work.md, memory/decision-log.md, memory/technical-debt.md — this
-  session's entries
+- memory/completed-work.md, memory/decision-log.md, memory/technical-debt.md,
+  memory/known-bugs.md — this session's entries, later retrofitted to the new newest-first,
+  bolded-field format (see Decisions Made)
+- docs/tasks/01-foundation.md — addenda added to T1.1 (Cloudflare/domain follow-up, marked
+  user-triggered) and T1.4 (ESLint version-bump re-check, task-sequenced)
+- CLAUDE.md — further edits past the initial two Next.js 16 notes: new "Memory file format
+  and ordering" and "Debt/bug fixes must be sequenced into a task" subsections under
+  Knowledge Management Responsibilities, plus this "session file is a living document" rule
+  under Session Management
+- `~/.gitconfig`, `~/.git-credential-helpers/kaalbert-company.sh` (outside the repo) — new
+  company-account git credential helper
+- `~/Dev_Workspace/git-multi-account-workflow.md` (outside the repo, outside this project
+  entirely) — generalized write-up of the credential workflow for reuse on other repos
 
 ## Decisions Made
 
@@ -60,37 +80,76 @@ server block.
   placeholder domain.
 - Railway provisioned under a newly created company account
   (kaalbert.company@gmail.com), not the developer's personal account. Initial deploy done
-  via `railway up` (CLI upload) to prove the pipeline works end-to-end; GitHub-connected
-  auto-deploy (`railway service source connect`) is configured against the right repo but
-  requires the `main` branch to exist on GitHub first — blocked on the human's first push
-  (agents never push directly, per CLAUDE.md's Git Commit Protocol).
+  via `railway up` (CLI upload) to prove the pipeline works end-to-end.
 - Playwright MCP (the project's designated verification tool) and the Claude-in-Chrome
   browser extension were both unusable this session (server needs a restart + approval;
   extension isn't connected) — verification fell back to `npm run build` (production build
   succeeded) and `curl` against the local dev server and the live Railway URL (both returned
   200 with correct HTML). Stated explicitly per CLAUDE.md's fallback instruction, not
   silently skipped.
+- **Railway domain renamed** from the auto-generated `kaalbert-web-production.up.railway.app`
+  to `kaalbert.up.railway.app` via `railway domain update --domain kaalbert`, at the user's
+  request.
+- **Git push authentication dead end, then a durable fix.** Plain `git push` failed
+  non-interactively (Claude Code's `!`-prefixed commands run in a non-interactive shell,
+  which can't respond to a credential prompt). Embedding a token directly in a remote URL
+  worked as an interim fix, but a routine `git remote -v` run afterward printed that token in
+  cleartext into the conversation — a real exposure incident; the token was revoked and
+  regenerated. Root-caused properly instead of just rotating and moving on: built a
+  non-interactive, per-account credential-helper script
+  (`~/.git-credential-helpers/kaalbert-company.sh`, reads the token fresh from `~/.secrets`
+  on every push, never caches or embeds it in a URL) wired via `~/.gitconfig`'s
+  `[credential "https://github.com/KaalbertCompanyLtd"]` block — mirroring the user's
+  existing `git-credential-libsecret` pattern for their other 4 GitHub accounts, adapted
+  because libsecret needs one interactive prompt to seed the OS keyring (not available from a
+  `!`-prefixed command). Generalized into `~/Dev_Workspace/git-multi-account-workflow.md` so
+  the user can apply the same pattern to any future foreign-account repo without re-deriving
+  it — the user has since already extended it to more of their own accounts
+  (`evershieldsupplies`, etc.) outside this project.
+- A PAT without the `workflow` scope can't push changes to `.github/workflows/*.yml` — GitHub
+  rejects it with a specific error naming the missing scope. Hit on both the company and
+  personal tokens; fixed by adding the scope. Worth remembering for any future repo that ships
+  a GitHub Actions workflow.
+- **GitHub-connected Railway auto-deploy wired and verified end-to-end**, not just that the
+  connect command succeeded: `railway service source connect --repo
+KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website --branch main` triggered an immediate
+  GitHub-sourced build, which reached `SUCCESS`, and the live URL was confirmed 200
+  afterward. T1.1's "main deploys automatically on push" acceptance criterion is genuinely
+  satisfied now.
+- **Memory-file format/ordering/sequencing rules established**, at the user's explicit
+  request (a recurring pain point across their other projects, not just this one): newest
+  entry at the top in every `memory/*.md` file, bolded-field entry shapes per file type, and
+  a hard rule that any debt/bug entry with a real possible fix must be threaded into
+  `docs/tasks/*.md` as an addendum or new task (`Sequenced into:` field) rather than left
+  floating. A further refinement added a `Trigger type: Task-sequenced | User-triggered`
+  field after the first pass wrongly implied the Cloudflare/domain item could just be picked
+  up by whichever session reached it — domain registration is a real-world purchase only the
+  user can make, so that item (and any future one like it) is now explicitly marked
+  user-triggered with instructions not to act without an explicit go-ahead.
+- **This rule — session files must stay current, not just be written once** — was likewise
+  made durable in CLAUDE.md's Session Management section, prompted directly by this session
+  file itself having gone stale after several rounds of follow-up work.
 
 ## Current State
 
-The app is scaffolded, all quality gates pass locally, and it's live on Railway at
-https://kaalbert.up.railway.app — but T1.1's two Cloudflare/auto-deploy
-acceptance criteria are not yet met (see `memory/technical-debt.md`); this commit has not
-been pushed to GitHub yet (that's a manual, human step per protocol).
+T1.1 is complete and verified except one acceptance criterion. Both remotes are pushed
+(`origin` → KaalbertCompanyLtd, `personal` → cosbyDeveloper), all quality gates pass, the app
+is live at https://kaalbert.up.railway.app, and GitHub-connected auto-deploy is confirmed
+working (a real push-triggered build succeeded). Local commits sit ahead of what was pushed
+mid-session (`af0a9f0`, `d39c7dd` — the memory-format-rule and trigger-type commits) and
+still need a manual push, per protocol.
 
 ## Blockers
 
 1. `kaalbert.com` is not registered — Cloudflare has no zone to front, so the live URL
-   currently resolves through Railway's raw domain, not Cloudflare. See
-   `memory/technical-debt.md`.
-2. GitHub-connected Railway auto-deploy needs a `main` branch on
-   `KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website`, which needs this session's commit
-   pushed first. After pushing, run:
-   `railway service source connect --repo KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website --branch main`
-   (or connect via the Railway dashboard) to complete T1.1's auto-deploy acceptance
-   criterion.
-3. The `github` MCP server just added to `.mcp.json` needs a session restart and explicit
-   approval at the startup prompt before it's usable.
+   currently resolves through Railway's raw domain, not Cloudflare. **User-triggered, not
+   task-sequenced**: do not attempt domain registration or treat reaching a task as a cue to
+   act — wait for the user to say the domain is registered and ask for this explicitly. See
+   `memory/technical-debt.md` and `docs/tasks/01-foundation.md`'s T1.1 addendum.
+2. The `github` MCP server added to `.mcp.json` still needs a session restart and explicit
+   approval at the startup prompt before it's usable (not yet confirmed done).
+3. The two most recent commits (`af0a9f0`, `d39c7dd`) have not been pushed yet — manual,
+   human step per protocol.
 
 ## Next Task
 

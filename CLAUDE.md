@@ -708,4 +708,13 @@ not a bare instruction. Run /task [NEXT_TASK_ID] and paste its entire output her
 - A new Claude Code session pasting the block gets full task context, architecture constraints, acceptance criteria, coding standards, and documentation requirements — everything needed to begin immediately without reading additional files first.
 - Never rely on the conversation history to carry context between sessions; the session file is the handoff
 - If multiple tasks were completed in one session, list all of them under "Tasks completed" and summarize all files changed
+- **The session file is a living document for the rest of that session, not a one-time
+  write.** Once it exists, re-sync it — in the same turn, without being asked — every time
+  something happens that would make it stale: a new commit, a resolved or newly-discovered
+  blocker, a decision made, a file touched that isn't yet listed, a `memory/*.md` update.
+  Concretely: after every commit past the first one in a session, check whether "What Was
+  Built," "Files Changed," "Decisions Made," "Current State," and "Blockers" still match
+  reality, and fix whichever don't — don't let the file freeze at whatever the state was
+  when it was first written. A session file that only reflects the session's opening state
+  is functionally the same as not having one, for anything that happened after.
 ````
