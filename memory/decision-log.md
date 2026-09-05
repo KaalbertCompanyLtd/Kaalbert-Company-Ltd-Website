@@ -2,6 +2,28 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.4) — `MethodStage.whatHappens` added beyond the feature doc's original field list; intro-copy paragraph seeded as plain text without its mockup's inline offer links
+
+**Summary:** `our-method-page.md`'s original Data requirements named only
+description/client_sees/decision_point as `method_stage`'s content fields, but
+`ui/mockups/a-public-site/our-method.html`'s `.stage-detail-grid` has three cells ("What
+happens", "What the client sees", "Decision point") distinct from each stage's own longer
+paragraph — three real, separately-editable pieces of content, not two. Added
+`MethodStage.whatHappens` and updated the feature doc to name it, rather than either dropping
+real mockup content or cramming two ideas into one field — same precedent as T2.2 adding
+`Offer.ctaLabel`/`tiers` beyond their feature doc's original list.
+Separately, the mockup's "One journey, not three separate products" intro paragraph links two
+offer names inline (`<a href="offer-*.html">`). No plain-text content field anywhere else in
+this project embeds markup (`heroLead`, `Offer.problemStatement`, `Capability.shortDescription`
+all render as plain strings) — introducing a one-off token-substitution scheme for a single
+paragraph was judged not worth the complexity, especially since the same three offers are
+already one click away via the primary nav and footer on this same page. Seeded `Page.introCopy`
+as the paragraph's plain text, offer names un-linked. If a future task needs rich/linked text
+in a `page`/`method_stage` field, that's a real schema decision to make then (e.g. a
+`{text, links}[]` shape or markdown), not one to retrofit silently here.
+**Related Documents:** `prisma/schema.prisma` (`MethodStage`), `docs/features/our-method-page.md`,
+`prisma/seed.ts` (`seedOurMethodPage`, `seedMethodStages`), `app/our-method/page.tsx`.
+
 ## 2026-09-05 (T2.3) — Shared `Page` model designed with T2.4's `intro_copy` field from the start; Advisory Retainer modelled as a true singleton, not a third fee shape bolted onto `Offer`
 
 **Summary:** `capabilities-page.md` and `our-method-page.md` both point at the same generic

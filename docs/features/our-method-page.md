@@ -29,8 +29,12 @@ trusting or joining (`user-stories.md`, Story 9).
 
 ## Data requirements
 
-- `method_stage` — id, name, order, description, client_sees, decision_point,
-  capability_transfer_note (only populated for the final stage).
+- `method_stage` — id, name, order, description, what_happens, client_sees, decision_point,
+  capability_transfer_note (only populated for the final stage). `what_happens` was added
+  during T2.4's implementation, beyond this doc's original three-field list — the accepted
+  mockup's `.stage-detail-grid` has a dedicated "What happens" cell per stage distinct from
+  the longer `description` paragraph, so both are real, separately-editable content (see
+  `memory/decision-log.md`, T2.4).
 - `page` (shared with `capabilities-page.md`) — id, slug, hero_kicker, hero_heading,
   hero_lead, intro_copy, meta_title, meta_description. Holds this page's own hero and intro
   text — the content that isn't one of the repeating `method_stage` rows. Edited via

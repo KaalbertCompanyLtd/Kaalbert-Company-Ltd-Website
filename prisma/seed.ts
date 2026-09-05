@@ -534,6 +534,115 @@ async function seedAdvisoryRetainer() {
   });
 }
 
+/**
+ * T2.4 (docs/tasks/02-public-presentation.md) — the our-method page's own hero + intro copy,
+ * via the shared `page` entity. Hero copy sourced verbatim from
+ * ui/mockups/a-public-site/our-method.html's `<section class="page-hero">`. `introCopy` is
+ * the mockup's "One journey, not three separate products" paragraph, sourced verbatim except
+ * for its two inline `<a>` links to offer pages — this project's plain-text content fields
+ * carry no embedded markup anywhere else (`heroLead`, `Offer.problemStatement`, etc.), so the
+ * two offer names are kept as plain text here rather than introducing a one-off
+ * token-substitution scheme for a single paragraph (see memory/decision-log.md, T2.4); the
+ * same three offers are already one click away via the primary nav and footer on this same
+ * page. The section's own kicker ("One journey, not three separate products") is rendered as
+ * fixed chrome by app/our-method/page.tsx, same treatment as capabilities.html's "Continuing
+ * arrangement" kicker in seedCapabilitiesPage above — not part of this doc's named fields.
+ */
+async function seedOurMethodPage() {
+  await prisma.page.upsert({
+    where: { slug: "our-method" },
+    update: {},
+    create: {
+      slug: "our-method",
+      heroKicker: "Our Method",
+      heroHeading: "Discover, Diagnose, Design, Deliver",
+      heroLead:
+        "Four stages, each with a defined input, output and decision point — not a slogan. This is the firm's strongest differentiator.",
+      introCopy:
+        "The three core offers — Business Health Check, Financial Clarity Pack, and Funding-Readiness Pack — are one sequence the firm sells, not three separate products. Every stage below runs inside each of them.",
+      metaTitle: "Our Method — Kaalbert & Company Ltd",
+      metaDescription:
+        "The four-stage method behind every Kaalbert & Company engagement — Discover, Diagnose, Design, Deliver — including how capability transfers back to the client at the end.",
+      isPlaceholder: false,
+    },
+  });
+}
+
+/**
+ * T2.4 — the 4 `method_stage` rows. Sourced verbatim from
+ * ui/mockups/a-public-site/our-method.html's four `.stage-block` entries, which the epic's own
+ * opening paragraph treats as a real content source, same as capabilities.html at T2.3.
+ * `capabilityTransferNote` is populated only for Deliver (order 4), per our-method-page.md's
+ * business rule — null for the other three.
+ */
+async function seedMethodStages() {
+  const stages: Array<{
+    name: string;
+    order: number;
+    description: string;
+    whatHappens: string;
+    clientSees: string;
+    decisionPoint: string;
+    capabilityTransferNote: string | null;
+  }> = [
+    {
+      name: "Discover",
+      order: 1,
+      description:
+        "We map the business as it actually runs today — records, controls, reporting, decisions — rather than as the org chart or the founder's own account of it claims. This stage is deliberately evidence-first.",
+      whatHappens:
+        "A structured review of records and a working session with the owner or finance lead.",
+      clientSees: "Direct questions, grounded in their own numbers — not a generic checklist.",
+      decisionPoint: "Agreement on what the diagnosis actually needs to cover.",
+      capabilityTransferNote: null,
+    },
+    {
+      name: "Diagnose",
+      order: 2,
+      description:
+        "We name the two or three constraints actually limiting growth or funding readiness — not a long list that overwhelms rather than directs.",
+      whatHappens:
+        "Analysis against the specific offer's method — scoring, reconciliation, or case-testing.",
+      clientSees: "A ranked, specific set of findings, not a generic report.",
+      decisionPoint:
+        "The client sees clearly what the real constraint is, and agrees the priority.",
+      capabilityTransferNote: null,
+    },
+    {
+      name: "Design",
+      order: 3,
+      description:
+        "We build the specific structure that closes the gap — an action plan, a monthly accounts format, a funding case — sized to what the team can realistically run, not an idealised version nobody will maintain.",
+      whatHappens: "The firm builds the deliverable named on the relevant offer page.",
+      clientSees: "Drafts reviewed together, not delivered cold at the end.",
+      decisionPoint: "Sign-off on the design before it's finalised.",
+      capabilityTransferNote: null,
+    },
+    {
+      name: "Deliver",
+      order: 4,
+      description:
+        "The finished deliverable, handed over properly — and, critically, the capability to keep running it without the firm.",
+      whatHappens:
+        "A closing session walking the client through the deliverable and how to maintain it.",
+      clientSees:
+        "The named documents from the offer, plus a working process they can run themselves.",
+      decisionPoint:
+        "What comes next — the following offer in the sequence, a retainer, or nothing further.",
+      capabilityTransferNote:
+        "Every engagement ends with the client able to run what we built without us — a monthly accounts process they can maintain, a scoring framework they understand, a document pack they could update themselves. The firm advises clients to own their own systems, and holds itself to the same standard in how it hands work back.",
+    },
+  ];
+
+  for (const stage of stages) {
+    await prisma.methodStage.upsert({
+      where: { order: stage.order },
+      update: { ...stage, isPlaceholder: false },
+      create: { ...stage, isPlaceholder: false },
+    });
+  }
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -543,6 +652,8 @@ async function main() {
   await seedCapabilitiesPage();
   await seedCapabilities();
   await seedAdvisoryRetainer();
+  await seedOurMethodPage();
+  await seedMethodStages();
 }
 
 main()

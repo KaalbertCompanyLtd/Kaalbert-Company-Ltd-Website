@@ -190,3 +190,30 @@ model AdvisoryRetainer {
 
   @@map("advisory_retainer")
 }
+
+/// docs/features/our-method-page.md "Data requirements" — one of the 4 stages of the firm's
+/// method (Discover, Diagnose, Design, Deliver), rendered on /our-method in fixed order.
+/// `order` follows `Capability.order`'s naming precedent (the feature doc's own field name,
+/// not `sortOrder`). `whatHappens` is an added field beyond the feature doc's original
+/// description/client_sees/decision_point list — needed once the page was built against
+/// ui/mockups/a-public-site/our-method.html, whose `.stage-detail-grid` has three cells
+/// ("What happens", "What the client sees", "Decision point") in addition to each stage's own
+/// longer descriptive paragraph (`description`) — same precedent as T2.2 adding
+/// `Offer.ctaLabel`/`tiers` beyond their feature doc's original field list (see
+/// memory/decision-log.md). `capabilityTransferNote` is populated only for the final
+/// (Deliver) stage per the feature doc's business rule — null for the other three.
+model MethodStage {
+  id                     Int      @id @default(autoincrement())
+  name                   String
+  order                  Int      @unique
+  description            String
+  whatHappens            String   @map("what_happens")
+  clientSees             String   @map("client_sees")
+  decisionPoint          String   @map("decision_point")
+  capabilityTransferNote String?  @map("capability_transfer_note")
+  isPlaceholder          Boolean  @default(false) @map("is_placeholder")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("method_stage")
+}

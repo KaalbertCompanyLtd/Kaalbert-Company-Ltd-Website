@@ -16,6 +16,43 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.4 — Our Method page
+**Summary:** Built `/our-method` to `ui/mockups/a-public-site/our-method.html`, reusing T2.3's
+shared `Page` model (`getPageBySlug("our-method")`, `lib/pages.ts`, no changes needed) and
+adding a new `MethodStage` model + `lib/our-method.ts`'s `getMethodStages()` for the 4
+Discover/Diagnose/Design/Deliver rows. Added one field beyond `our-method-page.md`'s original
+Data requirements list — `whatHappens` — because the mockup's `.stage-detail-grid` has a
+dedicated "What happens" cell per stage distinct from the longer descriptive paragraph
+(`description`); updated the feature doc to name it, same precedent as T2.2 adding
+`Offer.ctaLabel`/`tiers`. The mockup's "One journey, not three separate products" intro
+paragraph has two inline links to offer pages that a plain-text `introCopy` field can't carry
+(no content field anywhere else in this project embeds markup) — seeded the paragraph as plain
+text instead, offer names un-linked; the same three offers are already reachable from the
+primary nav and footer on this page. All four stages seeded with equal structural depth per
+the feature doc's business rule; `capabilityTransferNote` populated only for Deliver (order 4),
+null for the other three. Verified for real via Playwright MCP at mobile (390px), tablet
+(768px) and desktop (1280px) — all four stages render in order with correct copy, the
+capability-transfer panel appears only under Deliver, meta tags populate from the `page` row,
+no console errors. Hit and fixed a stale-Prisma-client issue: the already-running dev server
+had the pre-migration client loaded in memory, so `prisma.methodStage` was `undefined` until
+the dev server was restarted after `prisma generate` — worth remembering for any future
+mid-session schema change.
+**Files Changed:**
+- `prisma/schema.prisma` — added `MethodStage` model.
+- `prisma/migrations/20260905131349_add_method_stage/` — new migration.
+- `prisma/seed.ts` — added `seedOurMethodPage()`, `seedMethodStages()`, wired into `main()`.
+- `lib/our-method.ts` — new, `getMethodStages()`.
+- `app/our-method/page.tsx` — new route.
+- `docs/features/our-method-page.md` — added `what_happens` to the `method_stage` Data
+  requirements list.
+**Related Feature:** `docs/features/our-method-page.md`
+**Notes:** No admin editor exists yet for `page`/`method_stage` (Milestone 7) — this task only
+builds the read side, per this epic's own opening note.
+
+---
+
+## 2026-09-05
+
 **Task:** T2.3 — Capabilities page
 **Summary:** Built `/capabilities` to `ui/mockups/a-public-site/capabilities.html`. Introduced
 the shared generic `Page` model (`prisma/schema.prisma`) as the first task to create it, per
