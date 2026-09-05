@@ -8,6 +8,8 @@ export default defineRailway(() => {
   const kaalbert_web = service("kaalbert-web", {
     // Must be declared explicitly — an IaC file that omits `source` treats it as
     // "should not exist" and disconnects the GitHub App integration on apply.
+    // (2026-09-05: the GitHub App had lost/never had repo access, breaking both this
+    // and push-triggered auto-deploy — reinstalled via GitHub's app settings.)
     source: github("KaalbertCompanyLtd/Kaalbert-Company-Ltd-Website", { branch: "main" }),
     start: "npx prisma migrate deploy && npm start",
     variables: {
