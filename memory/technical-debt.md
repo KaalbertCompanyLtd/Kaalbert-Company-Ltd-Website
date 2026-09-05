@@ -20,22 +20,30 @@ sequencing requirement:
 
 ## railway.json (Config as Code) is deprecated in favour of .railway/railway.ts
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
-**Reason:** `railway status` now prints: "Config as Code (railway.json / railway.toml) is
+**Date resolved:** 2026-09-05 (same session — turned out to be more urgent than "Low
+priority": `railway.json`'s `deploy.startCommand` had never actually applied to the live
+service at all, unrelated to the deprecation itself; see `memory/decision-log.md`'s
+"railway.json never applied; migrated to Infrastructure as Code" entry for the full
+investigation)
+**Reason:** `railway status` printed: "Config as Code (railway.json / railway.toml) is
 deprecated. Prefer Infrastructure as Code (.railway/railway.ts)." T1.2 added `railway.json`
 (for the `deploy.startCommand` that runs `prisma migrate deploy && npm start`) before
 noticing this warning on a later `railway status` check.
-**Impact:** None yet — Railway's own message says existing `railway.json`/`railway.toml`
-files "keep working until 2026-12-01." No functional problem today.
-**Priority:** Low
-**Possible Fix/Fixes:** Run `railway config migrate` (per the CLI's own suggested command)
-to convert `railway.json` to `.railway/railway.ts` before the 2026-12-01 cutover, then
-verify the migrated file still produces the same `deploy.startCommand` behaviour.
-**Trigger type:** Task-sequenced
-**Sequenced into:** T1.6 (Environment/secrets and GTM container stub) — see that task's
-addendum in `docs/tasks/01-foundation.md`, which already touches Railway env/deploy config
-for its own reason.
+**Impact:** Turned out to be more than the deprecation warning alone — `railway.json` was
+never actually being read by Railway at all (`serviceManifest.deploy.startCommand` stayed
+`null` on every deployment), so `prisma migrate deploy` had never run in production.
+**Priority:** Low → became urgent once discovered the config wasn't applying at all
+**Possible Fix/Fixes:** ~~Run `railway config migrate`~~ Done: migrated to
+`.railway/railway.ts` via `railway config migrate --service kaalbert-web --apply
+--delete-files`, then hand-fixed the auto-generated file (it omitted `source`/`variables`,
+which would have deleted `DATABASE_URL` and disconnected the GitHub source on apply) before
+running `railway config apply --yes`. Verified via deployment logs: `prisma migrate deploy`
+now runs before `next start` in production.
+**Trigger type:** N/A — resolved
+**Sequenced into:** T1.2 (this session, follow-up work) — closes out what was originally
+sequenced into T1.6; no further action needed there.
 
 ---
 

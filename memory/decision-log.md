@@ -2,6 +2,50 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.2 follow-up) — railway.json never applied; migrated to Infrastructure as Code
+
+**Summary:**
+
+- **Root cause found for "push doesn't deploy" (user-reported)**: `railway.json`'s
+  `deploy.startCommand` had never actually applied to the `kaalbert-web` service — its
+  `serviceManifest.deploy.startCommand` was `null` on every deployment, including ones
+  Railway's own docs implied Config as Code should have configured. Separately (and this is
+  what the user actually hit): GitHub's own webhook/Actions delivery was confirmed working
+  (`GET /repos/.../actions/runs` showed CI succeeding on the latest push within a minute),
+  which rules out GitHub/this repo as the cause — the break is specifically in Railway's
+  side of the GitHub-App-triggered auto-deploy, which isn't inspectable via the CLI or a
+  repo-scoped PAT (would need GitHub App installation state or Railway's own dashboard/
+  support). Not fully root-caused; worked around instead (see below), which also happens to
+  fix the unrelated `railway.json`-never-applied issue in the process.
+- **Immediate unblock**: `railway up --service kaalbert-web` deployed current `main` directly
+  from local files (same fallback used for T1.1's very first deploy), confirmed live (200).
+  This deployment also proved `railway.json` wasn't being read — logs showed plain
+  `next start`, not the configured `prisma migrate deploy && npm start`.
+- **Migrated `railway.json` → `.railway/railway.ts`** (Railway's newer Infrastructure-as-Code
+  format; the CLI's own deprecation warning pointed here) via `railway config migrate
+--service kaalbert-web --apply --delete-files`, run by the user after auto mode's
+  classifier blocked the agent from running it directly (a production-config write).
+  **The auto-generated file was dangerous as generated**: it declared only `start`, and
+  since IaC treats undeclared fields as "should not exist," `railway config plan` showed it
+  would have deleted the `kaalbert-web.DATABASE_URL` variable and disconnected the GitHub
+  source (`source.repo`/`source.type` → `null`) — silently making the original problem
+  permanent instead of fixing it. Fixed before applying: added `source: github(...)`
+  (explicit repo+branch) and `variables: { DATABASE_URL: preserve() }` (the `railway/iac`
+  SDK's "leave this variable's current value alone" primitive) to `.railway/railway.ts`,
+  re-ran `railway config plan`, confirmed it now shows only the intended
+  `deploy.startCommand` change with 0 destructive changes, then had the user apply it
+  (`railway config apply --yes` — also classifier-blocked for the agent to run directly).
+  Applying it triggered a fresh deployment automatically, which finally showed the correct
+  `npx prisma migrate deploy && npm start` in its service manifest.
+- **`railway` npm package added** (`railway@3.11.0`, devDependency) — required by
+  `.railway/railway.ts`'s `import ... from "railway/iac"`; `railway config plan`/`apply`
+  refuse to run without it installed at the repo root.
+- **Auto mode classifier blocked every live-production-config-mutating command** the agent
+  attempted in this whole investigation (`ALTER USER ... PASSWORD`, `railway variable set
+DATABASE_URL`, `railway config migrate --apply`, `railway config apply`, even a bare
+  `railway config plan` dry-run once) — correctly, per CLAUDE.md's own risk-tolerance
+  guidance; the user ran each one after the agent verified/explained what it would do.
+
 ## 2026-09-05 (T1.2 follow-up) — Postgres password exposure and rotation
 
 **Summary:**

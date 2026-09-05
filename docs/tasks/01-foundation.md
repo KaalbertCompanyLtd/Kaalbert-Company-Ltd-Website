@@ -110,12 +110,13 @@ configured yet.
 tags active (no premature/placeholder events sent).
 **Size:** S **Dependencies:** T1.1
 
-**Addendum (session 02, 2026-09-05):** While touching Railway env/deploy config for this
-task, also run `railway config migrate` to convert `railway.json` (added in T1.2, for the
-`deploy.startCommand` that runs `prisma migrate deploy && npm start`) to the newer
-`.railway/railway.ts` format — `railway status` now flags `railway.json`/`railway.toml` as
-deprecated Config as Code, in favour of Infrastructure as Code. See
-`memory/technical-debt.md` → "railway.json (Config as Code) is deprecated in favour of
-.railway/railway.ts." Existing `railway.json` keeps working until 2026-12-01 per Railway's
-own message, so this isn't urgent — but verify the migrated file still produces the same
-`deploy.startCommand` behaviour before considering it done.
+**Addendum (session 02, 2026-09-05) — already done, no action needed here:** originally
+flagged to migrate `railway.json` to `.railway/railway.ts` whenever this task got touched.
+Turned out urgent for an unrelated reason (the user reported pushes weren't triggering a
+Railway deploy at all) and was resolved the same session — `railway.json`'s
+`deploy.startCommand` had never actually applied to the live service; migrating to
+`.railway/railway.ts` (hand-fixed to also declare `source`/`variables`, which the
+auto-generated version omitted and which would have deleted `DATABASE_URL` and disconnected
+the GitHub source on apply) fixed it. See `memory/technical-debt.md`'s now-Resolved
+"railway.json (Config as Code) is deprecated in favour of .railway/railway.ts" entry and
+`memory/decision-log.md`'s "railway.json never applied" entry for the full story.
