@@ -202,36 +202,6 @@ an instruction to act unprompted.
 
 ---
 
-## Business Health Check's two-tier pricing has no real data model yet
-
-**Status:** Open
-**Date raised:** 2026-09-05
-**Reason:** T2.1 needed real `Offer` rows to seed the home page's offer cards. Two of the
-three offers (Financial Clarity Pack, Funding-Readiness Pack) have a single published fee
-band each, matching `core-offer-pages.md`'s documented `fee_amount_min`/`fee_amount_max`/
-`scope_cap` shape exactly. Business Health Check does not — its own mockup
-(`ui/mockups/a-public-site/offer-business-health-check.html`) shows two real tiers (Express:
-GHS 1,000–2,000, 5 working days, single location; Full: GHS 3,000–6,500, 2 weeks, up to 3
-locations), each with its own deliverables, and the mockup itself labels the Full tier's
-band as "the published fee band" while the nav/home-card fee hint shows Express's floor
-("From GHS 1,000"). Nothing in `core-offer-pages.md` accounts for a multi-tier offer.
-**Impact:** T2.1 seeded a provisional `feeAmountMin: 1000, feeAmountMax: 6500` (Express's
-floor to Full's ceiling) and a prose `scopeCap` describing both tiers, so the home card's
-"From GHS 1,000" renders correctly — but this is a stopgap, not a real representation of the
-two tiers, and can't support T2.2's full offer-detail page (which needs to show both tiers
-with their own deliverable lists and required-inputs).
-**Priority:** Medium — doesn't block T2.1's own acceptance criteria, but blocks T2.2 from
-building a correct Business Health Check detail page.
-**Possible Fix/Fixes:** Most likely a dedicated `OfferTier` model (offer_id, name, fee_min,
-fee_max, duration, scope description, deliverables list), with `Offer.feeAmountMin`/`Max`
-either dropped in favour of tier rows or kept as a derived "from X" summary. Needs a real
-design decision, not a mechanical schema add — flagged for T2.2 to make.
-**Trigger type:** Task-sequenced
-**Sequenced into:** T2.2 (Core Offer pages, `docs/tasks/02-public-presentation.md`) — see
-that task's addendum.
-
----
-
 ## About page partners have no real photography yet
 
 **Status:** Open

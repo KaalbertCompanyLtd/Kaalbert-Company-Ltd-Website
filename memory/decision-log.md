@@ -2,6 +2,28 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.9, session 15) — Audit confirmed no new seed work needed; T2.10 already complete; dashboard drift fixed
+
+**Summary:** T2.9's addendum correctly predicted that every entity's `seed*` function was
+already written incrementally by T2.1–T2.7; this session's audit against all three
+acceptance criteria (fresh-DB run, citation completeness, `isPlaceholder`/dashboard sync)
+found nothing missing and wrote no new seed code. Two real drift issues were found and fixed
+along the way: `docs/dashboard.md`'s top-level Technical Debt/Known Bugs summary and Current
+Phase line were stale from before implementation began (still said "None recorded yet
+(pre-implementation)" despite 13 real technical-debt entries existing); and
+`memory/technical-debt.md` had a duplicate "Business Health Check's two-tier pricing" entry
+(one correctly `Resolved`, one a stale `Open` leftover with pre-resolution text) — removed
+the stale duplicate rather than leave two contradictory entries for the same item. Per this
+session's own investigation, `app/not-found.tsx`/`app/error.tsx`/`app/global-error.tsx`
+(T2.10) already exist and were already exercised by T2.8's own Playwright verification with
+zero console errors — marked complete in `docs/dashboard.md` instead of re-building. The
+next task is Milestone 3's first task (`docs/tasks/03-diagnostic.md`), not T2.10.
+**Related Documents:** `docs/tasks/02-public-presentation.md` (T2.9/T2.10),
+`docs/dashboard.md`, `memory/technical-debt.md`, `memory/completed-work.md`,
+`docs/tasks/03-diagnostic.md`.
+
+---
+
 ## 2026-09-05 (T2.8, session 14) — Organization JSON-LD placed per-page, not in root layout; `NEXT_PUBLIC_SITE_URL` fallback; `social_profile_urls` confirmed still empty; address flattened to one `streetAddress`
 
 **Summary:** T2.8 (SEO foundation, `docs/tasks/02-public-presentation.md`) made four choices
@@ -24,7 +46,7 @@ worth recording:
    every listed URL is the production domain even when served from dev.
 3. **`site_settings.social_profile_urls` stays empty** — checked every `Company Docs/*.docx`
    for an actual LinkedIn/Facebook/Instagram URL before assuming none exist (this task's own
-   architecture constraint) and found only platform *names* with no account URLs (10.19 Paid
+   architecture constraint) and found only platform _names_ with no account URLs (10.19 Paid
    Advertising Readiness and Launch Plan's LinkedIn/Meta account-ownership mentions,
    10.05 Positioning and Claims Guidance Note's general "social" references) — no seed change
    made. The Organization JSON-LD's `sameAs` is simply omitted while the array is empty, per

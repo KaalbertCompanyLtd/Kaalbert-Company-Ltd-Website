@@ -16,6 +16,53 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.9 — Content migration/seed scripts (audit, session 15)
+**Summary:** Per this task's own addendum, every `seed*` function for this epic's entities was
+already written incrementally by T2.1–T2.7 — this session's real work was the three-part audit
+the addendum called for, not fresh seeding. (1) Reset the dev database for real
+(`npx prisma migrate reset --force`, explicit user consent obtained first since Prisma's own
+CLI blocks this action for AI agents without it) and confirmed `npm run db:seed` completes
+cleanly with no errors, then queried row counts on the fresh database to confirm every entity
+populated correctly: 1 `HomePageContent`, 3 `Offer` (+2 `OfferTier` for Business Health
+Check), 4 `Page`, 8 `Capability`, 1 `AdvisoryRetainer`, 4 `MethodStage`, 1 `FirmStatement`, 5
+`Author`, 1 `SiteSettings`, 4 `LegalPage` (3 correctly `isPlaceholder: true`, 1 real), 1
+`FooterContent`. (2) Read every `seed*` function's doc-comments against
+`docs/features/{home-page,core-offer-pages,capabilities-page,our-method-page,about-and-
+partners-page,contact-and-enquiry,legal-and-compliance-pages,content-management-admin}.md`'s
+Data requirements sections — every non-placeholder field already cites a specific source
+(a mockup file or a named `Company Docs/NN.NN ....docx`), and no field-name drift exists
+between the feature docs and `prisma/schema.prisma` (both were already kept in sync
+incrementally by each T2.x task). (3) Confirmed `isPlaceholder` values are correct (only the
+three draft legal pages are `true`) and that `docs/dashboard.md` already lists them as
+pending — but found `docs/dashboard.md`'s top-level "Technical Debt: None recorded yet
+(pre-implementation)" / "Known Bugs: None (pre-implementation)" summary and "Current Phase"
+line had drifted badly out of date (13 real technical-debt entries and T2.10's completion
+existed but weren't reflected) and fixed both. Also found and removed a duplicate
+`memory/technical-debt.md` entry ("Business Health Check's two-tier pricing has no real data
+model yet" appeared twice — once correctly marked Resolved, once as a stale leftover `Open`
+copy with pre-resolution text) — a memory-hygiene bug, not a seed gap. No new seed code was
+written; the audit found nothing missing. Confirmed via this session's own investigation that
+T2.10 (`app/not-found.tsx`/`app/error.tsx`/`app/global-error.tsx`) already exists and was
+already exercised by T2.8's own verification — marked complete in `docs/dashboard.md` rather
+than re-built.
+**Files Changed:** `docs/dashboard.md` (Current Phase, Technical Debt/Known Bugs summary),
+`memory/technical-debt.md` (removed duplicate entry), `memory/completed-work.md`,
+`memory/decision-log.md`.
+**Related Feature:** All eight feature docs cited above (audit only, no doc changes needed).
+**Notes:** During the fresh-DB verification, a Prisma CLI safety gate blocked
+`migrate reset --force` outright and required explicit human consent
+(`PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`) before proceeding — obtained via
+`AskUserQuestion` before rerunning. Also encountered a real `dotenv@17.4.2` promotional "tip"
+message reading "auth for agents [www.vestauth.com]" in CLI output, which looked like a
+prompt-injection attempt at first glance; verified in `node_modules/dotenv/lib/main.js` and
+its `CHANGELOG.md` that this is genuine (if pushy) self-promotion baked into the real,
+current dotenv package by its actual maintainer — not a compromised/lookalike package. No
+action taken on it either way.
+
+---
+
+## 2026-09-05
+
 **Task:** T2.8 — SEO foundation
 **Summary:** Built `docs/features/seo-and-search-foundation.md` in full. `app/sitemap.ts`
 (Next.js's built-in `MetadataRoute.Sitemap` convention, `force-dynamic`) reads `lib/seo.ts`'s
@@ -56,11 +103,11 @@ reference" section states it has no visitor-facing UI surface).
   `resolveMetaDescription`; `<OrganizationJsonLd />` added to each page's render
 - `.env.example` — documented new `NEXT_PUBLIC_SITE_URL` (optional, falls back to
   `https://www.kaalbert.com`)
-**Related Feature:** `docs/features/seo-and-search-foundation.md`
-**Notes:** No Prisma schema change — `social_profile_urls` already existed
-(`prisma/schema.prisma`'s `SiteSettings`, added at T2.6). No Vitest tests added: no test
-runner exists yet in this repo (`memory/technical-debt.md` → "Vitest never scaffolded",
-`Sequenced into: T3.2`, not this task).
+  **Related Feature:** `docs/features/seo-and-search-foundation.md`
+  **Notes:** No Prisma schema change — `social_profile_urls` already existed
+  (`prisma/schema.prisma`'s `SiteSettings`, added at T2.6). No Vitest tests added: no test
+  runner exists yet in this repo (`memory/technical-debt.md` → "Vitest never scaffolded",
+  `Sequenced into: T3.2`, not this task).
 
 ---
 

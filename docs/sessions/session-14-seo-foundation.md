@@ -51,8 +51,7 @@ blank-description fallback into every page's `generateMetadata`.
 Every page type built in Milestone 2 (T2.1–T2.7) now carries full per-page SEO metadata
 (title/description/canonical/OG/Twitter) and site-wide Organization structured data; the
 sitemap lists exactly the 12 real published URLs. Verified via `curl` (sitemap XML output,
-every page's meta/OG/Twitter/JSON-LD tags, JSON-LD correctly absent from the unknown-slug
-404) and Playwright MCP (home page + one legal page loaded with zero console errors — no
+every page's meta/OG/Twitter/JSON-LD tags, JSON-LD correctly absent from the unknown-slug 404) and Playwright MCP (home page + one legal page loaded with zero console errors — no
 visual/layout change on any page, so no mobile/tablet/desktop check applied, per this task's
 own "no visitor-facing UI surface" scope note).
 

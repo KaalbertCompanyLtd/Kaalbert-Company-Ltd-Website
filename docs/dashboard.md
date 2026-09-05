@@ -1,7 +1,9 @@
-# Project Health Dashboard — 2026-09-04
+# Project Health Dashboard — 2026-09-05
 
 **Project Name:** kaalbert.com (Kaalbert & Company Ltd Website)
-**Current Phase:** Planning complete / Ready for implementation
+**Current Phase:** Implementation — Milestone 1 (Foundation) and Milestone 2 (Public
+Presentation Layer) complete through T2.9; T2.10 (custom error pages) also confirmed built
+during T2.9's own audit. Next up: Milestone 3, `docs/tasks/03-diagnostic.md`.
 
 ## Artifacts Produced
 
@@ -64,11 +66,15 @@ One is genuinely a firm decision, not engineering's to make, and is carried forw
 blocker rather than assumed — see **Blocked On** below.
 
 **Decisions Made:** 11 ADRs (Phase 3) + 2 task-planning-stage technical decisions above = 13
-**Technical Debt:** None recorded yet (pre-implementation) — `content-management-admin.md`
-already flags one known-simplification-in-advance (last-write-wins on simultaneous page edits,
-accepted for 5 partners/low edit frequency) to be logged in `memory/technical-debt.md` the
-moment implementation begins, per that doc's own note.
-**Known Bugs:** None (pre-implementation)
+**Technical Debt:** 13 open, 3 resolved as of session 15 (T2.9) — see
+`memory/technical-debt.md`. All open items are Low/Medium priority: content/asset gaps
+awaiting the firm (partner photography, response-time commitment, GTM container, favicon),
+mechanical wiring gaps sequenced into T7.8 (`SiteFooter`/`ScopeOfPracticeNote` still reading
+hardcoded copy instead of `site_settings`/`footer_content`), and pre-existing dependency
+notes (ESLint pinned to 9.x, four high-severity advisories in Prisma CLI's dev-only tree).
+The 3 resolved items include Business Health Check's two-tier pricing gap (closed at T2.2)
+and the Railway config-as-code migration. None blocks Phase 1 progress.
+**Known Bugs:** None recorded — see `memory/known-bugs.md`.
 
 **First Task:** `tasks/01-foundation.md`, T1.1 — Repo, Next.js app, and deploy pipeline
 **Blocked On:** Nothing for Phase 1 (Milestones 1–9) — fully unblocked, sequenced, and ready
