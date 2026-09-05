@@ -2,6 +2,21 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.6) — GTM container built against a placeholder, not a real container ID
+
+**Summary:** Asked the user whether a real GTM container already existed for kaalbert.com
+before implementing, since T1.6's acceptance criterion depends on GTM Preview mode against a
+real container. User confirmed no account exists yet and chose the placeholder-plus-deferred-
+verification path (same pattern as T1.1's domain-registration debt) over pausing to create
+one now. Implemented the snippet to render nothing at all when `GTM_CONTAINER_ID` is unset
+(rather than emitting a script tag with an empty/undefined ID), so an un-provisioned
+container never ships a broken tag; verified the snippet's actual behavior against a
+throwaway `GTM-TEST123` ID via Playwright instead of a real container. Full acceptance-
+criterion closure logged as user-triggered debt sequenced into T5.3 — see
+`memory/technical-debt.md` → "GTM container not yet provisioned."
+**Related Documents:** `docs/tasks/01-foundation.md` T1.6, `docs/tasks/05-landing-and-
+measurement.md` T5.3, ADR 0006.
+
 ## 2026-09-05 (T1.5) — Responsive design made a standing rule mid-task; public/admin nav rebuilt as side-sliding drawers
 
 **Summary:** User interrupted mid-task to require that every UI surface be responsive from

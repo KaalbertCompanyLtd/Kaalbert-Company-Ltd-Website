@@ -18,6 +18,41 @@ sequencing requirement:
 
 ---
 
+## GTM container not yet provisioned
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** T1.6 installed the empty GTM bootstrap snippet (head script + `<body>` noscript
+iframe, ADR 0006) in the root `app/layout.tsx`, reading `GTM_CONTAINER_ID` from the
+environment. No real Google Tag Manager account/container exists for kaalbert.com yet —
+creating one is an external action only the user can take (same category as the
+`kaalbert.com` domain registration in T1.1's addendum), so it was not created this session.
+The snippet was verified working end-to-end against a throwaway test ID (`GTM-TEST123`) via
+Playwright: `window.dataLayer` initializes correctly, the `gtm.js` script tag requests the
+right URL with the container ID interpolated, and the noscript iframe renders immediately
+after `<body>` — the only thing missing is a real container ID. When `GTM_CONTAINER_ID` is
+unset (current state), the snippet renders nothing at all, verified via `curl` against the
+dev server — no broken/placeholder script tag ships.
+**Impact:** T1.6's acceptance criterion ("GTM Preview mode confirms the container fires on
+page load with zero tags active") cannot be fully closed out — GTM Preview mode requires a
+real container to preview against. No functional impact on the site: with no container ID
+set, the site renders with zero GTM-related markup, so nothing is broken or half-shipped in
+the meantime.
+**Priority:** Medium — blocks full sign-off of T1.6's acceptance criterion and is a hard
+prerequisite for T5.3 (which populates the container with the six conversion events).
+**Possible Fix/Fixes:** Once the user creates a GTM account/container for kaalbert.com, set
+the real `GTM-XXXXXXX` ID as `GTM_CONTAINER_ID` in `.env.local` and on the Railway
+`kaalbert-web` service, then run GTM's own Preview mode against the deployed/dev site to
+confirm it fires with zero tags active — closing T1.6's acceptance criterion retroactively.
+**Trigger type:** User-triggered — do not create a Google/GTM account or treat reaching
+T5.3 as a cue to sign up for one; wait for the user to say the GTM container exists and
+provide the real container ID.
+**Sequenced into:** T5.3 (GTM container: six conversion events + consent mode,
+`docs/tasks/05-landing-and-measurement.md`) — addendum added this session pointing back
+here; T5.3 cannot start until this is resolved, since it populates the same container.
+
+---
+
 ## Two-partner simultaneous page edits use last-write-wins (no optimistic locking)
 
 **Status:** Open

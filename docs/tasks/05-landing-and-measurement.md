@@ -52,6 +52,15 @@ Preview mode; declining consent still allows full site function while visibly re
 sent (consent mode signal present in the network payload); no tag is hard-coded outside GTM.
 **Size:** L **Dependencies:** T1.6, T3.4–T3.7, T2.6
 
+**Addendum (session 06, 2026-09-05):** No real Google Tag Manager container exists for
+kaalbert.com yet as of T1.6 (`memory/technical-debt.md` → "GTM container not yet
+provisioned"). **User-triggered, not task-sequenced** — creating a GTM account is an
+external action only the user can take (same category as T1.1's domain-registration item).
+**Do not create a GTM account or treat reaching this task as a cue to act.** Wait for the
+user to say the container exists and provide the real `GTM-XXXXXXX` ID; only then set it as
+`GTM_CONTAINER_ID` (`.env.local` + the Railway `kaalbert-web` service) and proceed with this
+task as written.
+
 ### T5.4 — Attribution capture, persistence, and 90-day retention job
 
 **Build:** `attribution` table (`measurement-and-attribution.md`) capturing

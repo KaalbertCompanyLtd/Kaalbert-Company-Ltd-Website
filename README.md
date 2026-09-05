@@ -70,6 +70,41 @@ own `DATABASE_URL` — no public exposure needed in production). `.env.productio
 for testing a local production build (`npm run build && npm start`) — never read by the
 deployed app.
 
+## Environment Variables & Secrets
+
+Three-tier convention, established at T1.2 for `DATABASE_URL` and extended to every secret
+added since (see `memory/decision-log.md`'s "Postgres password exposure and rotation"
+entry):
+
+- **`.env.local`** — local dev, gitignored, loaded first, what `next dev` actually reads.
+- **`.env.production`** — local production-build testing only (`npm run build && npm
+start`), gitignored, never read by the deployed app.
+- **Railway service variables** — source of truth for the deployed app, set directly on the
+  `kaalbert-web` service (`railway variable set`), never read from a file in this repo.
+
+`.env.example` is the checked-in template: every var the app reads gets a placeholder entry
+and a one-line comment saying what it's for and where to find the real value — never a real
+secret. Copy it to `.env.local` (and `.env.production` if needed) and fill in real values;
+`CLAUDE.local.md` (gitignored) tracks which values are already provisioned and where they
+came from.
+
+Current vars (`.env.example`):
+
+- `DATABASE_URL` — Railway Postgres connection string. See "Database & Migrations" above.
+- `NEXTAUTH_SECRET` — session-signing secret (ADR 0007, admin auth — not yet consumed by
+  any code; reserved for Milestone 6).
+- `GTM_CONTAINER_ID` — Google Tag Manager container ID (ADR 0006). Read server-side in the
+  root `app/layout.tsx`; when unset (e.g. no GTM account exists yet), the GTM snippet
+  doesn't render at all rather than emitting a broken script tag — see
+  `memory/technical-debt.md` → "GTM container not yet provisioned." Once a real container
+  exists, set it in `.env.local` and on the Railway service and the snippet activates with
+  no code change.
+- `META_CAPI_ACCESS_TOKEN` — Meta Conversions API token (ADR 0006, Milestone 5, not yet
+  consumed by any code).
+- `CLOUDFLARE_R2_*`, Phase-2 vars (`PAYSTACK_SECRET_KEY`, calendar-sync credentials, CRM
+  webhook auth) — commented out in `.env.example` until each capability's evidence trigger
+  is met (`docs/scope.md`).
+
 ## Documentation
 
 - [Vision & Requirements](docs/vision.md)

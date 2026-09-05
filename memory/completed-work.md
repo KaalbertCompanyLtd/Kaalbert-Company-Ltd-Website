@@ -16,6 +16,44 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T1.6 — Environment/secrets and GTM container stub
+**Summary:** Installed the empty GTM bootstrap snippet (ADR 0006) — head script +
+post-`<body>` noscript iframe — in the root `app/layout.tsx`, reading `GTM_CONTAINER_ID`
+from the environment via the existing three-tier env convention (`.env.local`/
+`.env.production`/Railway service vars, established at T1.2). The snippet renders nothing
+at all when the var is unset, rather than a broken/placeholder script tag — verified via
+`curl` against the dev server. Verified end-to-end against a throwaway test container ID
+(`GTM-TEST123`) via Playwright: `window.dataLayer` initializes, the `gtm.js` request fires
+at the correct interpolated URL, and the noscript iframe is the first child of `<body>`. No
+real GTM account/container exists yet for kaalbert.com (external action only the user can
+take — see `memory/technical-debt.md` → "GTM container not yet provisioned"), so T1.6's
+"GTM Preview mode" acceptance criterion is verified as far as it can be without a real
+container; full closure is deferred to T5.3, sequenced with a `Trigger type: User-triggered`
+addendum. README updated with an "Environment Variables & Secrets" section documenting the
+three-tier convention and every current `.env.example` var.
+**Files Changed:**
+
+- `components/google-tag-manager.tsx` — new: `GoogleTagManagerHeadScript` (the `next/script`
+  `afterInteractive` bootstrap) and `GoogleTagManagerBodyFrame` (the noscript iframe
+  fallback), each taking `containerId` as a required prop
+- `app/layout.tsx` — reads `GTM_CONTAINER_ID` from `process.env`, conditionally renders both
+  GTM components only when the var is set
+- `README.md` — new "Environment Variables & Secrets" section
+- `docs/tasks/05-landing-and-measurement.md` — addendum on T5.3 pointing back to the
+  GTM-not-provisioned debt entry, marked user-triggered
+- `memory/technical-debt.md` — new "GTM container not yet provisioned" entry
+  **Related Feature:** `docs/features/measurement-and-attribution.md` (T1.6 only installs the
+  container this feature's eventual `dataLayer` events will plug into; the events themselves
+  are Milestone 5 / T5.3 scope, not touched here)
+  **Notes:** `.env.example`/`.env.local`/`.env.production` already had `GTM_CONTAINER_ID`
+  placeholder entries from earlier sessions' env-file setup — this task didn't need to add the
+  var itself, only wire it into actual rendered output and document the convention in the
+  README (which hadn't covered env vars at all before this task).
+
+---
+
+## 2026-09-05
+
 **Task:** T1.5 — Shared layout shell: SiteHeader, SiteFooter, admin shell skeleton
 **Summary:** Built `SiteHeader`, `SiteFooter`, `ScopeOfPracticeNote`, and an empty
 authenticated `/admin` shell (sidebar + placeholder content area), matching
