@@ -2,6 +2,34 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (session 22) — Retrofitted `/diagnostic/results` with real score-band labels: a new `DiagnosticScoreBand` model, not an extension of `DiagnosticThreshold`
+
+**Summary:** User asked whether the mockup's score-band labels/statements ("Strong
+Foundation," "Running on Memory," etc.) were already built or planned as admin-editable —
+neither was true (see `memory/technical-debt.md`) — and asked to fix it now rather than defer
+to T7.7. Added `DiagnosticScoreBand` (id, `minScore`, `label`, `statement`, `isPlaceholder`)
+as its own model rather than extending `DiagnosticThreshold`: a real structural mismatch, not
+a style preference — bands must cover the full 0–100 range with no gaps (every score matches
+exactly one band), while thresholds are sparse, internal/partner-facing triage cutoffs that
+may not be breached at all (a high score sets off no threshold and gets no
+`triagePriorityLevel`). Migration `20260905235239_add_diagnostic_score_band`. Seeded the
+mockup's own illustrative 4-band content (`ui/mockups/c-diagnostic/diagnostic-results.html`'s
+`BANDS` array) verbatim, `isPlaceholder: true` from a real column (unlike
+`DiagnosticQuestion`'s own gap, logged separately). Added `lib/diagnostic-flow.ts`'s
+`getScoreBand(score)` (highest `minScore` not exceeding `score`, mirroring the mockup's own
+`BANDS.find` logic) and wired it into `app/diagnostic/results/page.tsx`: the band label
+(accent, bold) and statement now render where the mockup places them; the real, already-
+computed `indicativeCostStatement` (T3.2's own output) moved to lead the dimension breakdown
+panel instead of being dropped, so no real content was lost in fixing this. Verified for real:
+submitted a genuine score-60 response through the running `/api/diagnostic/submit` endpoint,
+loaded the results page, confirmed "Developing, With Real Gaps" and its real statement render
+correctly at desktop and mobile widths with no horizontal overflow. Test row deleted
+afterward. T7.7's own remaining job (admin-editing this content) is unchanged and still
+pending — this fix only builds the data model, seed, and display side.
+**Related Documents:** `memory/technical-debt.md`, `docs/tasks/07-content-admin.md` (T7.7
+addendum), `ui/mockups/c-diagnostic/diagnostic-results.html`, `prisma/schema.prisma`,
+`prisma/seed.ts`, `lib/diagnostic-flow.ts`, `app/diagnostic/results/page.tsx`.
+
 ## 2026-09-05 (T3.6, session 21) — `/diagnostic/results` reads T3.5's stored result via `searchParams`, never recomputes; FR-2.8's requirements-doc text used over the mockup's own paraphrase; the mockup's score-band labels not carried over
 
 **Summary:** Built `app/diagnostic/results/page.tsx` to `ui/mockups/c-diagnostic/diagnostic-

@@ -479,6 +479,34 @@ model DiagnosticThreshold {
   @@map("diagnostic_threshold")
 }
 
+/// docs/features/business-health-check-diagnostic.md "User flow" step 4 — the visitor-facing
+/// descriptive band an overall score falls into (the accepted mockup's own "Strong
+/// Foundation"/"Running on Memory" style labels + one-paragraph statements,
+/// `ui/mockups/c-diagnostic/diagnostic-results.html`'s `BANDS` array). Deliberately its own
+/// model, not an extension of `DiagnosticThreshold`: bands cover the full 0–100 range with no
+/// gaps (every score matches exactly one band, looked up by the band with the highest
+/// `minScore` not exceeding the actual score — mirrors the mockup's own `BANDS.find(b =>
+/// score >= b.min)`), while thresholds are sparse triage cutoffs that may not be breached at
+/// all and serve a different, internal/partner-facing purpose
+/// (`triagePriorityLevel`) — the two didn't fit the same shape. Added at T3.6/T7.7 (session
+/// 22) after `app/diagnostic/results/page.tsx` (T3.6) first shipped without this element,
+/// substituting the real, already-computed `indicativeCostStatement` in its place — see
+/// memory/decision-log.md and memory/technical-debt.md for the full reasoning. Seeded with
+/// the mockup's own illustrative wording, `isPlaceholder: true` (a real column here from the
+/// start, unlike `DiagnosticQuestion`'s own gap), pending firm review, same treatment as the
+/// question set (T3.3).
+model DiagnosticScoreBand {
+  id            Int      @id @default(autoincrement())
+  minScore      Int      @map("min_score")
+  label         String
+  statement     String
+  isPlaceholder Boolean  @default(true) @map("is_placeholder")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("diagnostic_score_band")
+}
+
 /// docs/features/business-health-check-diagnostic.md "Data requirements" — one visitor's
 /// answer to one question within a single diagnostic session. `sessionId` is a plain string
 /// (not a FK to any session/auth table — this diagnostic has no visitor account, per ADR

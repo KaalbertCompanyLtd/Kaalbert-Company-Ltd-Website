@@ -51,3 +51,23 @@ export async function getActiveDiagnosticFlow(): Promise<DiagnosticFlowQuestion[
 export async function getActiveDiagnosticQuestionCount(): Promise<number> {
   return prisma.diagnosticQuestion.count({ where: { active: true } });
 }
+
+export interface DiagnosticScoreBand {
+  label: string;
+  statement: string;
+}
+
+/**
+ * The visitor-facing band a given overall score falls into (`app/diagnostic/results/
+ * page.tsx`, T3.6/T7.7) — the band with the highest `minScore` not exceeding `score` (mirrors
+ * the accepted mockup's own `BANDS.find(b => score >= b.min)`, `ui/mockups/c-diagnostic/
+ * diagnostic-results.html`). Returns `null` only if no bands are configured at all (a
+ * config gap, not a visitor-facing crash) — the caller renders without a band label rather
+ * than throwing, since a missing band is far less severe than a missing dimension/question
+ * (there's always a real score to show regardless).
+ */
+export async function getScoreBand(score: number): Promise<DiagnosticScoreBand | null> {
+  const bands = await prisma.diagnosticScoreBand.findMany({ orderBy: { minScore: "desc" } });
+  const band = bands.find((b) => score >= b.minScore);
+  return band ? { label: band.label, statement: band.statement } : null;
+}

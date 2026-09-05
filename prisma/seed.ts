@@ -1326,6 +1326,66 @@ async function seedDiagnosticThresholds() {
   }
 }
 
+/**
+ * T3.6/T7.7 (session 22) — the visitor-facing score bands `app/diagnostic/results/page.tsx`
+ * reads via `lib/diagnostic-flow.ts`'s `getScoreBand`. Carried over verbatim from
+ * `ui/mockups/c-diagnostic/diagnostic-results.html`'s own `BANDS` array (labels + statements),
+ * which that mockup's own comment already flags as illustrative placeholder reserved to firm
+ * authorship — same treatment as the question set (T3.3): not fabricated fresh, not presented
+ * as final. Upserted by fixed literal `id` (no natural key), same convention as
+ * `DIAGNOSTIC_DIMENSIONS`/`DIAGNOSTIC_THRESHOLDS` above.
+ */
+const DIAGNOSTIC_SCORE_BANDS: Array<{
+  id: number;
+  minScore: number;
+  label: string;
+  statement: string;
+}> = [
+  {
+    id: 1,
+    minScore: 80,
+    label: "Strong Foundation",
+    statement:
+      "This is a business whose numbers could support a serious conversation with a lender or investor today. The firm's attention here would sharpen the edges, not rebuild the foundation.",
+  },
+  {
+    id: 2,
+    minScore: 60,
+    label: "Developing, With Real Gaps",
+    statement:
+      "The basics are mostly in place, but at least one area — often exactly the one flagged below — is the kind of gap a lender or credit committee tests first.",
+  },
+  {
+    id: 3,
+    minScore: 40,
+    label: "Workable, Not Yet Provable",
+    statement:
+      "The business runs day to day, but several of the things a lender, investor or serious buyer would ask for aren't yet in a form you could hand over.",
+  },
+  {
+    id: 4,
+    minScore: 0,
+    label: "Running on Memory",
+    statement:
+      "Common, and fixable — but right now, much of what keeps this business running exists in memory rather than in a record anyone else could pick up.",
+  },
+];
+
+async function seedDiagnosticScoreBands() {
+  for (const band of DIAGNOSTIC_SCORE_BANDS) {
+    await prisma.diagnosticScoreBand.upsert({
+      where: { id: band.id },
+      update: {
+        minScore: band.minScore,
+        label: band.label,
+        statement: band.statement,
+        isPlaceholder: true,
+      },
+      create: { ...band, isPlaceholder: true },
+    });
+  }
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -1347,6 +1407,7 @@ async function main() {
   await seedDiagnosticDimensions();
   await seedDiagnosticQuestions();
   await seedDiagnosticThresholds();
+  await seedDiagnosticScoreBands();
 }
 
 main()

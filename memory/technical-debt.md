@@ -18,6 +18,54 @@ sequencing requirement:
 
 ---
 
+## Diagnostic results screen has no score-band label/statement (e.g. "Strong Foundation") — not seeded, not admin-editable, not planned anywhere
+
+**Status:** Resolved
+**Date raised:** 2026-09-05 (T3.6/T3.7, session 22 — user asked whether this was already
+built or planned as admin-editable; it's neither)
+**Date resolved:** 2026-09-05 (same session — user asked to fix it now rather than defer)
+**Reason:** `ui/mockups/c-diagnostic/diagnostic-results.html`'s own `BANDS` array pairs each
+score threshold with a visitor-facing label ("Strong Foundation", "Developing, With Real
+Gaps", "Workable, Not Yet Provable", "Running on Memory") and a matching prose statement —
+that file's own comment already flags this content as "illustrative placeholder — reserved
+to firm authorship," the same status the question set carried at T3.3. Unlike the question
+set, though, T3.3 never seeded illustrative band-label content anywhere (no schema field
+exists for it — `DiagnosticThreshold` only has `triagePriorityLevel`, an internal
+partner-facing priority word like "High", not the same thing as a visitor-facing band
+label), and `docs/features/content-management-admin.md`'s Diagnostic Configuration scope
+(bullet #8, restated in Business rules) explicitly lists only "question text, order, active
+flag, dimension weights, triage thresholds" as admin-editable — band labels/statements are
+named nowhere as planned admin content, at T7.7 or anywhere else. T3.6 (this session) chose
+to omit the band label/statement entirely rather than build it, substituting the real,
+already-computed `indicativeCostStatement` in that screen position — a reasoned call at the
+time, but in hindsight inconsistent with T3.3's own precedent (carry the mockup's real
+illustrative content over, flagged placeholder, rather than omit it) — see
+`memory/decision-log.md`, T3.6.
+**Impact:** Low today (the results screen still shows a real score and real statement, just
+not the band-label element specifically) but a real content gap once the firm supplies real
+band wording: there's no field to put it in and no admin screen to edit it from.
+**Priority:** Medium
+**Possible Fix/Fixes:** ~~Add real fields to hold this...~~ Done: added a new
+`DiagnosticScoreBand` model (id, `minScore`, `label`, `statement`, `isPlaceholder` — a real
+column from the start, unlike `DiagnosticQuestion`'s own gap) rather than extending
+`DiagnosticThreshold` (a real structural mismatch — bands cover the full 0–100 range with no
+gaps, thresholds are sparse triage cutoffs that may not be breached at all). Migration
+`20260905235239_add_diagnostic_score_band`. Seeded the mockup's own illustrative 4-band
+content (`prisma/seed.ts`'s `seedDiagnosticScoreBands`) flagged `isPlaceholder: true`, same
+treatment as the question set. Added `lib/diagnostic-flow.ts`'s `getScoreBand(score)` and
+wired it into `app/diagnostic/results/page.tsx` — the band label/statement now render in the
+mockup's own position, with the real `indicativeCostStatement` moved to lead the dimension
+breakdown instead of being dropped. Verified for real: submitted a real score-60 response via
+the running dev server, confirmed the results page renders "Developing, With Real Gaps" and
+its real statement correctly, at both desktop and mobile widths, no horizontal overflow. Test
+row deleted afterward. Extending T7.7's admin screen to edit this content is still future
+work (not done as part of this fix, which only builds the data model + display side) — left
+in the addendum below.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.7 (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — the
+admin-editing side of this content is still that task's own job; the data model, seed, and
+display are done.
+
 ## `footer_content.scope_of_practice_statement`/`company_registration_details` materialized but not wired into `SiteFooter`/`ScopeOfPracticeNote`
 
 **Status:** Open

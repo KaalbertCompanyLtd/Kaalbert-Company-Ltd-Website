@@ -146,6 +146,16 @@ column." Add a real `isPlaceholder Boolean @default(false)` column to `Diagnosti
 (a migration) as part of this task, set it `true` on T3.3's seeded rows, and surface it in
 this editor the same way any other placeholder-flagged content would be shown.
 
+**Addendum (session 22, 2026-09-05):** Score-band labels/statements (e.g. mockup's "Strong
+Foundation"/"Running on Memory") are now modelled and displayed — a new `DiagnosticScoreBand`
+model (migration `20260905235239_add_diagnostic_score_band`), seeded with the mockup's own
+illustrative 4-band content flagged `isPlaceholder: true`, read via `lib/diagnostic-
+flow.ts`'s `getScoreBand` and rendered on `app/diagnostic/results/page.tsx` (T3.6). What's
+still this task's own job: extend this editor to cover `diagnostic_score_band` rows
+(minScore/label/statement/isPlaceholder) the same way it covers question/dimension/threshold
+rows — see `memory/technical-debt.md` → "Diagnostic results screen has no score-band label/
+statement" for the full history.
+
 ### T7.8 — Site Settings (singleton)
 
 **Build:** Single settings form — phone_primary/secondary, email, whatsapp_number, address,

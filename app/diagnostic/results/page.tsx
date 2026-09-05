@@ -6,6 +6,7 @@ import { NOT_FOUND_METADATA } from "@/app/not-found";
 import { DiagnosticCompletedEvent } from "@/components/diagnostic-completed-event";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getScoreBand } from "@/lib/diagnostic-flow";
 import { getDiagnosticResultByEnquiryId } from "@/lib/diagnostic-submit";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata } from "@/lib/seo";
@@ -63,7 +64,7 @@ export default async function DiagnosticResultsPage({ searchParams }: Diagnostic
     notFound();
   }
 
-  const offerNavLinks = await getOfferNavLinks();
+  const [offerNavLinks, band] = await Promise.all([getOfferNavLinks(), getScoreBand(result.score)]);
   const weakestSet = new Set(result.weakestDimensions);
 
   return (
@@ -78,12 +79,18 @@ export default async function DiagnosticResultsPage({ searchParams }: Diagnostic
           <div className="font-display text-primary text-[4rem] leading-none font-bold">
             {result.score}%
           </div>
-          <p className="text-body text-muted-foreground mx-auto mt-3.5 max-w-[560px]">
-            {result.indicativeCostStatement}
+          {band && <div className="text-accent text-lead mb-3.5 font-bold">{band.label}</div>}
+          <p className="text-body text-muted-foreground mx-auto max-w-[560px]">
+            {band ? band.statement : result.indicativeCostStatement}
           </p>
         </div>
 
         <div className="border-border bg-card mx-auto mb-8 max-w-[720px] rounded-md border p-6 sm:p-8">
+          {band && (
+            <p className="text-caption text-muted-foreground mb-5">
+              {result.indicativeCostStatement}
+            </p>
+          )}
           {result.dimensionScores.map((dimension) => {
             const isWeak = weakestSet.has(dimension.name);
             return (
