@@ -128,3 +128,65 @@ model OfferTier {
   @@unique([offerId, sortOrder])
   @@map("offer_tier")
 }
+
+/// The shared generic marketing-page entity (CLAUDE.md's Recurring Patterns: "the home for a
+/// marketing page's own copy when it has no other entity to attach to"). New at T2.3
+/// (Capabilities), keyed by `slug` since more than one page shares this model —
+/// `capabilities-page.md`'s "Data requirements" names id/slug/hero_kicker/hero_heading/
+/// hero_lead/meta_title/meta_description; `introCopy` isn't part of that list but is added
+/// now per T2.3's own architecture constraint ("our-method-page.md (T2.4) reuses the same
+/// page model with an added intro_copy field, so design it as a real shared model from the
+/// start") — nullable and unused by the capabilities row.
+model Page {
+  id              Int      @id @default(autoincrement())
+  slug            String   @unique
+  heroKicker      String   @map("hero_kicker")
+  heroHeading     String   @map("hero_heading")
+  heroLead        String   @map("hero_lead")
+  /// Unique to our-method-page.md (T2.4) — null for every other page's row, including
+  /// capabilities.
+  introCopy       String?  @map("intro_copy")
+  metaTitle       String   @map("meta_title")
+  metaDescription String   @map("meta_description")
+  isPlaceholder   Boolean  @default(false) @map("is_placeholder")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("page")
+}
+
+/// docs/features/capabilities-page.md "Data requirements" — one of the 8 service-line
+/// summaries on /capabilities. `order` is the field name the feature doc itself names (not
+/// `sortOrder`, unlike `OfferTier.sortOrder` above, per CLAUDE.md's "every entity field named
+/// in a docs/features/*.md ... maps to a Prisma schema field of the same name" rule).
+model Capability {
+  id               Int      @id @default(autoincrement())
+  name             String
+  slug             String   @unique
+  shortDescription String   @map("short_description")
+  order            Int
+  isPlaceholder    Boolean  @default(false) @map("is_placeholder")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("capability")
+}
+
+/// docs/features/capabilities-page.md "Data requirements" — a singleton (same
+/// findFirst-by-fixed-id pattern as `HomePageContent`), deliberately a single recurring
+/// `feeAmount` + `billingPeriod` rather than `OfferTier`'s multi-tier shape or the three core
+/// offers' fee_amount_min/max band: a retainer is priced as one figure per period, not a
+/// range with a scope cap (capabilities-page.md's business rules; core-offer-pages.md's band
+/// shape doesn't apply here).
+model AdvisoryRetainer {
+  id            Int      @id @default(autoincrement())
+  feeAmount     Int      @map("fee_amount")
+  feeCurrency   String   @map("fee_currency")
+  billingPeriod String   @map("billing_period")
+  description   String
+  isPlaceholder Boolean  @default(false) @map("is_placeholder")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("advisory_retainer")
+}

@@ -2,6 +2,24 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.3) — Shared `Page` model designed with T2.4's `intro_copy` field from the start; Advisory Retainer modelled as a true singleton, not a third fee shape bolted onto `Offer`
+
+**Summary:** `capabilities-page.md` and `our-method-page.md` both point at the same generic
+`page` entity (CLAUDE.md's Recurring Patterns: "the home for a marketing page's own copy when
+it has no other entity to attach to"). Rather than create a capabilities-specific model and
+migrate it again at T2.4, added `Page.introCopy` as a nullable field now (per T2.3's own
+architecture constraint), left null on the capabilities row, to be populated when T2.4 builds
+`/our-method`. Considered giving `AdvisoryRetainer` the same multi-tier shape as `OfferTier`
+(Essential/Standard/Full, all three real per `Company Docs/05.04 Rate Card.docx`) but rejected
+it: `capabilities-page.md`'s Data requirements section explicitly models the retainer as a
+singleton with one `fee_amount`, and the mockup itself only ever publishes the Essential
+tier's floor ("From GHS 1,500 / month") — building tier support for data the page never
+displays would be scope beyond the documented contract. If a future task needs to publish the
+Standard/Full tiers too, that's a schema change to make then, not one to anticipate now.
+**Related Documents:** `prisma/schema.prisma` (`Page`, `Capability`, `AdvisoryRetainer`),
+`docs/features/capabilities-page.md`, `docs/features/our-method-page.md`,
+`Company Docs/05.04 Rate Card.docx`.
+
 ## 2026-09-05 (T2.10) — Custom error pages must not depend on a live database read, discovered by hitting a real transient DNS failure in-session
 
 **Summary:** Built `app/not-found.tsx` reading live `getOfferNavLinks()` for `SiteHeader`'s

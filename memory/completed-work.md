@@ -16,6 +16,49 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.3 — Capabilities page
+**Summary:** Built `/capabilities` to `ui/mockups/a-public-site/capabilities.html`. Introduced
+the shared generic `Page` model (`prisma/schema.prisma`) as the first task to create it, per
+CLAUDE.md's Recurring Patterns — added an `introCopy` field now even though this page doesn't
+use it, since `our-method-page.md` (T2.4) reuses the same model with that field, per this
+task's own architecture constraint. Also added `Capability` (8 rows, `order`-sorted) and
+`AdvisoryRetainer` (a singleton, single `feeAmount`/`feeCurrency`/`billingPeriod`, distinct
+from `OfferTier`'s multi-tier shape and the three core offers' min/max band — a retainer is
+priced as one figure per period). The 8 capability names, order and short-description copy
+were sourced verbatim from the mockup, then cross-checked against `Company Docs/05.03 Core
+Offer Focus Note.docx`'s Section 5 "Treatment of every service line" table (same 8 lines,
+same order) — confirming the mockup copy as real, accepted content rather than needing
+fresh drafting. The retainer's `From GHS 1,500 / month` figure matches the mockup and is also
+the Essential tier's floor in `Company Docs/05.04 Rate Card.docx`'s own three-tier retainer
+table (Essential/Standard/Full) — only the entry-level single figure is modelled, per
+`capabilities-page.md`'s singleton data requirement (the three-tier detail isn't represented).
+Verified for real via Playwright MCP at mobile (390px), tablet (768px) and desktop (1280px) —
+all 8 cards render with correct copy and correctly-formed `/contact?service=[slug]` links
+(confirmed one resolves to the branded 404, expected since `/contact` isn't built until T2.6),
+retainer panel renders and stacks correctly at each width, meta tags populate from the `page`
+row, no console errors.
+**Files Changed:**
+
+- `prisma/schema.prisma` — new `Page`, `Capability`, `AdvisoryRetainer` models
+- `prisma/migrations/20260905124815_t2_3_page_capability_advisory_retainer/` — new migration
+- `prisma/seed.ts` — `seedCapabilitiesPage`, `seedCapabilities`, `seedAdvisoryRetainer`, wired
+  into `main()`
+- `lib/pages.ts` — new: `getPageBySlug()`, the shared resolver for the generic `page` entity
+- `lib/capabilities.ts` — new: `getCapabilities()`, `getAdvisoryRetainer()`,
+  `formatRetainerFee()`
+- `app/capabilities/page.tsx` — new: the page itself, `force-dynamic`, live `offerNavLinks`
+  passed to `SiteHeader` per T2.2's established pattern
+  **Related Feature:** `docs/features/capabilities-page.md`
+  **Notes:** `npm run lint`, `format:check`, and `npm run typecheck` all pass clean. No unit
+  tests added — `lib/pages.ts`/`lib/capabilities.ts` are thin data-fetch wrappers with no
+  branching logic worth unit-testing, same precedent as T2.1/T2.2; the Vitest-scaffolding gap
+  itself is unrelated pre-existing debt already sequenced into T3.2
+  (`memory/technical-debt.md`).
+
+---
+
+## 2026-09-05
+
 **Task:** T2.10 — Custom error pages (404 / runtime error / root-layout crash)
 **Summary:** Built `app/not-found.tsx`, `app/error.tsx`, and `app/global-error.tsx`, added
 mid-epic at the user's explicit request ("having the empty pages call the default 404 page is

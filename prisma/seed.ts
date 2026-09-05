@@ -396,12 +396,153 @@ async function seedOfferTiers() {
   }
 }
 
+/**
+ * T2.3 (docs/tasks/02-public-presentation.md) — the capabilities page's own hero copy, via
+ * the shared `page` entity (prisma/schema.prisma's `Page` model). Sourced verbatim from
+ * ui/mockups/a-public-site/capabilities.html's `<section class="page-hero">`, which the
+ * epic's own opening paragraph treats as a real content source (not placeholder), same as
+ * home.html at T2.1. `metaTitle`/`metaDescription` aren't shown in the mockup (a bare
+ * `<title>` tag only) — written fresh here in the same style as `seedOffers`'s per-offer meta
+ * tags, `isPlaceholder: false` since the copy itself is real, just not mockup-sourced
+ * verbatim for these two fields specifically.
+ */
+async function seedCapabilitiesPage() {
+  await prisma.page.upsert({
+    where: { slug: "capabilities" },
+    update: {},
+    create: {
+      slug: "capabilities",
+      heroKicker: "Capabilities",
+      heroHeading: "The wider service line, in summary",
+      heroLead:
+        "Three offers get the firm's senior attention this year — the eight capabilities below cover everything else we do, so an adjacent need doesn't go unanswered. Each one routes straight to a partner, not to a thin page of its own.",
+      introCopy: null,
+      metaTitle: "Capabilities — Kaalbert & Company Ltd",
+      metaDescription:
+        "The wider service line beyond our three core offers, from financial advisory to digital transformation — each one routes straight to a partner.",
+      isPlaceholder: false,
+    },
+  });
+}
+
+/**
+ * T2.3 — the 8 `capability` rows. Names, order and short-description copy sourced verbatim
+ * from ui/mockups/a-public-site/capabilities.html's 8 `.cap-card` entries, cross-checked
+ * against `Company Docs/05.03 Core Offer Focus Note.docx`'s Section 5 "Treatment of every
+ * service line" table (same 8 service lines, same order, same Core/Supporting/Available
+ * framing) — confirming the mockup copy as the real, accepted content, not placeholder (same
+ * verification approach as T2.2's Rate Card cross-check, see memory/decision-log.md).
+ * `slug` is each card's `?service=` query-param value, carried through unchanged to the
+ * `/contact?service=[slug]` link (capabilities-page.md's FR-1.2).
+ */
+async function seedCapabilities() {
+  const capabilities: Array<{
+    name: string;
+    slug: string;
+    shortDescription: string;
+    order: number;
+  }> = [
+    {
+      name: "Financial Advisory, Tax and Audit Support",
+      slug: "financial-advisory-tax-audit",
+      shortDescription:
+        "Structured financial advisory, with tax and audit needs referred to a licensed practitioner where that's what's required.",
+      order: 1,
+    },
+    {
+      name: "Grants, Funding and Investment Readiness",
+      slug: "grants-funding-investment",
+      shortDescription:
+        "Grant and investment-readiness work, built on the same preparation that underpins our Funding-Readiness Pack.",
+      order: 2,
+    },
+    {
+      name: "SME Growth and Business Development",
+      slug: "sme-growth-development",
+      shortDescription:
+        "Positioning, pricing and growth planning for a business ready to move past its first structure.",
+      order: 3,
+    },
+    {
+      name: "Regulatory, Compliance and Registration",
+      slug: "regulatory-compliance-registration",
+      shortDescription:
+        "Business formalisation, registration support, and a compliance calendar you can actually run.",
+      order: 4,
+    },
+    {
+      name: "Strategy and Corporate Advisory",
+      slug: "strategy-corporate-advisory",
+      shortDescription:
+        "Strategic and corporate advisory work, taken on where the mandate is well defined.",
+      order: 5,
+    },
+    {
+      name: "Market Research and Feasibility",
+      slug: "market-research-feasibility",
+      shortDescription:
+        "Market research and feasibility studies, scoped tightly and priced for the research effort involved.",
+      order: 6,
+    },
+    {
+      name: "HR, Recruitment and Training",
+      slug: "hr-recruitment-training",
+      shortDescription:
+        "HR foundations, training and recruitment support, delivered where an existing client's team needs it.",
+      order: 7,
+    },
+    {
+      name: "Digital Transformation and Operations",
+      slug: "digital-transformation-operations",
+      shortDescription:
+        "Process and operations work, including our Applied Intelligence practice for clients ready for it.",
+      order: 8,
+    },
+  ];
+
+  for (const capability of capabilities) {
+    await prisma.capability.upsert({
+      where: { slug: capability.slug },
+      update: { ...capability, isPlaceholder: false },
+      create: { ...capability, isPlaceholder: false },
+    });
+  }
+}
+
+/**
+ * T2.3 — the Advisory Retainer singleton. `feeAmount`/`billingPeriod` sourced from
+ * ui/mockups/a-public-site/capabilities.html's retainer panel ("From GHS 1,500 / month"),
+ * which matches the Essential tier's floor in `Company Docs/05.04 Rate Card.docx`'s own
+ * Advisory Retainer table (Essential 1,500/month, Standard 2,800/month, Full 5,000/month) —
+ * capabilities-page.md's Data requirements section models this as a single amount, not
+ * `OfferTier`'s multi-tier shape, so the three-tier detail from the Rate Card isn't
+ * represented here; only the entry-level figure the mockup itself publishes.
+ */
+async function seedAdvisoryRetainer() {
+  await prisma.advisoryRetainer.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      feeAmount: 1500,
+      feeCurrency: "GHS",
+      billingPeriod: "month",
+      description:
+        "For a business that wants ongoing partner access rather than a single engagement — monthly review, a standing call, and hands-on support as needed.",
+      isPlaceholder: false,
+    },
+  });
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
   await seedHomePageContent();
   await seedOffers();
   await seedOfferTiers();
+  await seedCapabilitiesPage();
+  await seedCapabilities();
+  await seedAdvisoryRetainer();
 }
 
 main()
