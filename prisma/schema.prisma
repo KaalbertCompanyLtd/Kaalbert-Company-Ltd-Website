@@ -1,8 +1,8 @@
-// Prisma schema baseline (T1.2). No models yet — this is deliberate: entities are added
-// incrementally, epic by epic, as each docs/features/*.md's "Data requirements" section is
-// built against (see CLAUDE.md's "Every entity field named in a docs/features/*.md ...
-// maps to a Prisma schema field" rule). The migration tooling and conventions here are what
-// every later epic's tasks build on.
+// Prisma schema baseline (T1.2). Entities are added incrementally, epic by epic, as each
+// docs/features/*.md's "Data requirements" section is built against (see CLAUDE.md's
+// "Every entity field named in a docs/features/*.md ... maps to a Prisma schema field"
+// rule). The migration tooling and conventions here are what every later epic's tasks
+// build on.
 
 generator client {
   provider = "prisma-client"
@@ -11,4 +11,59 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+/// docs/features/home-page.md "Data requirements". Singleton row (queried via findFirst,
+/// seeded/upserted with a fixed id) — no `site_settings`-style multi-tenancy applies here,
+/// there is exactly one home page. Only the fields home-page.md's Data requirements section
+/// actually names are modelled; the mockup's hero kicker, hero facts sidebar, method-strip
+/// step copy, and trust band are fixed template chrome (not named as editable data in that
+/// section) rather than an undocumented field invented for them — see memory/decision-log.md
+/// (T2.1) for the reasoning.
+model HomePageContent {
+  id                  Int      @id @default(autoincrement())
+  heroStatement       String   @map("hero_statement")
+  primaryCtaLabel     String   @map("primary_cta_label")
+  primaryCtaHref      String   @map("primary_cta_href")
+  seniorAttentionCopy String   @map("senior_attention_copy")
+  /// Up to 3 `article` ids; empty = most-recent-fallback per home-page.md's edge cases.
+  /// No `article` table exists yet (insights-engine.md is Milestone 4, not built yet), so
+  /// this is currently always empty and lib/home.ts's featured-articles resolver always
+  /// returns none — see the code comment there.
+  featuredArticleIds  Int[]    @default([]) @map("featured_article_ids")
+  metaTitle           String   @map("meta_title")
+  metaDescription     String   @map("meta_description")
+  isPlaceholder       Boolean  @default(false) @map("is_placeholder")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("home_page_content")
+}
+
+/// docs/features/core-offer-pages.md "Data requirements" — only the subset T2.1's home-page
+/// offer cards actually read (slug, name, a card teaser, and the fee band + its scope cap,
+/// per CLAUDE.md's "fee is always a structured min/max band with a scope cap" rule). `teaser`
+/// is a field this task adds to core-offer-pages.md's documented entity (a real gap: the doc
+/// had no field distinct from the full-page `problem_statement` for the shorter home/
+/// capabilities card blurb — see memory/decision-log.md). The remaining core-offer-pages.md
+/// fields (problem_statement, who_for/who_not_for, method_stages, deliverables,
+/// client_inputs, indicative_timeline, out_of_scope_note, faqs, cta_href, meta_title,
+/// meta_description) are deliberately not added yet — T2.2 (Core Offer pages) adds them when
+/// it also resolves the Business Health Check offer's two-tier (Express/Full) pricing
+/// structure, which the current single fee_amount_min/max/scope_cap shape doesn't represent
+/// (see memory/technical-debt.md).
+model Offer {
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  name          String
+  teaser        String
+  feeAmountMin  Int      @map("fee_amount_min")
+  feeAmountMax  Int      @map("fee_amount_max")
+  feeCurrency   String   @map("fee_currency")
+  scopeCap      String   @map("scope_cap")
+  isPlaceholder Boolean  @default(false) @map("is_placeholder")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("offer")
 }

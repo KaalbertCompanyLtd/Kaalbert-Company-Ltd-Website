@@ -16,6 +16,65 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.1 — Home page
+**Summary:** Built `/` (`app/(public)/page.tsx`) to `ui/mockups/a-public-site/home.html`,
+reading a new `HomePageContent` singleton and `Offer` rows from Postgres. Since no entities
+existed yet for this epic, added both Prisma models and seeded them for real (T2.1's own
+dependency note authorizes doing T2.9's `home_page_content`/`offer` portions first) — every
+seeded value sourced from `ui/mockups/a-public-site/home.html` and the three `offer-*.html`
+mockups, `isPlaceholder: false` throughout, per the epic's own "content sourced from Company
+Docs/mockups" note. Only `home-page.md`'s explicitly-named 7 fields are database-backed;
+everything else the mockup shows (hero kicker, hero facts sidebar, method-strip copy, trust
+band) renders as fixed template JSX, per this session's decision-log entry. `Offer` only got
+the fields the home cards need (slug, name, teaser — a new field this task added to
+`core-offer-pages.md` — fee band, scope cap); the rest is T2.2's job, along with resolving
+Business Health Check's real two-tier pricing (flagged as technical debt, not solved here).
+`lib/home.ts` holds the page's data-access (`getHomePageContent`, `getOfferCards`,
+`getFeaturedArticles`) per CLAUDE.md's business-logic-in-`lib/` rule; `getFeaturedArticles` is
+a stub returning `[]` since `insights-engine.md`'s `article` model doesn't exist yet
+(Milestone 4) — this correctly triggers home-page.md's own "no articles published" edge case
+(the featured-Insights section is omitted). Along the way, found and fixed a real bug:
+`prisma/seed.ts`'s very first real query failed with a self-signed-certificate TLS error
+against Railway's public Postgres proxy — fixed via a new shared `lib/db-adapter.ts` (see
+decision-log). Verified with Playwright MCP (connected this session) at desktop (1280px),
+tablet (768px), and mobile (390px) — full-page screenshots at each width, mobile drawer nav
+opened/closed for real, zero console errors/warnings throughout.
+**Files Changed:**
+
+- `prisma/schema.prisma` — new `HomePageContent` and `Offer` models (see their doc-comments
+  for what's scoped in vs. deferred to T2.2)
+- `prisma/migrations/20260905063122_t2_1_home_page_and_offer/` — new migration
+- `prisma/seed.ts` — new `seedHomePageContent`/`seedOffers`, called from `main()`; also fixed
+  to use the new shared `lib/db-adapter.ts`
+- `lib/db-adapter.ts` — new: `createDatabaseAdapter`, the Railway self-signed-cert TLS fix,
+  shared by `lib/prisma.ts` and `prisma/seed.ts`
+- `lib/prisma.ts` — now uses `createDatabaseAdapter`
+- `lib/home.ts` — new: `getHomePageContent`, `getOfferCards`, `getFeaturedArticles`
+- `app/(public)/page.tsx` — new: the home page (`app/page.tsx`/`page.module.css`, the
+  create-next-app default, removed — this route group is now where the public home page
+  lives, per CLAUDE.md's folder structure)
+- `docs/features/core-offer-pages.md` — added `teaser` to `offer`'s Data requirements; noted
+  the Business Health Check two-tier gap
+- `docs/tasks/02-public-presentation.md` — addenda on T2.2 (offer fields deferred + two-tier
+  pricing gap), T2.5 (senior-attention photo placeholder), and T2.9 (home_page_content/offer
+  already seeded)
+- `memory/decision-log.md`, `memory/technical-debt.md` — this session's entries
+  **Related Feature:** `docs/features/home-page.md`, `docs/features/core-offer-pages.md`
+  (partial), `docs/features/seo-and-search-foundation.md` (per-page title/meta description
+  only — OG/Twitter and Organization JSON-LD are T2.8's job)
+  **Notes:** Playwright MCP (`.mcp.json`'s `verification` server) was connected and used
+  directly this session, unlike several prior sessions that had to fall back to
+  `claude-in-chrome`. No Vitest test added: `lib/home.ts`'s functions are thin Prisma
+  passthroughs (plus a stub) with no branching/computed logic of their own to unit-test yet —
+  same reasoning T1.3/T1.4/T1.5 used for their own `npm run test` gap; the real trigger for
+  scaffolding Vitest is still T3.2's scoring engine (`memory/technical-debt.md` — reviewed
+  this session, sequencing unchanged). `npm run lint`, `format:check`, and `npx tsc --noEmit`
+  (via `npm run typecheck`) all pass clean.
+
+---
+
+## 2026-09-05
+
 **Task:** T1.6 — Environment/secrets and GTM container stub
 **Summary:** Installed the empty GTM bootstrap snippet (ADR 0006) — head script +
 post-`<body>` noscript iframe — in the root `app/layout.tsx`, reading `GTM_CONTAINER_ID`

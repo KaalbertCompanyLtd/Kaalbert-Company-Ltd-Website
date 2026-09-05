@@ -2,6 +2,59 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.1) — Railway's public Postgres proxy needs `ssl.rejectUnauthorized: false`, and `sslmode=require` in the URL overrides it
+
+**Summary:** `prisma/seed.ts` failed with `P1011`/`self-signed certificate in certificate
+chain` on its very first real query — the first time any code path actually exercised
+`lib/prisma.ts`'s driver adapter against a real query (T1.2's own seed run had nothing to
+seed, so it never really opened a connection). Root cause: Railway's public TCP proxy
+(`DATABASE_URL` for local/dev, per CLAUDE.local.md) terminates TLS with a self-signed
+certificate, and `pg`'s current connection-string parsing treats a bare `sslmode=require` as
+an alias for `verify-full` (full chain verification) — confirmed via a raw `pg.Pool` test
+that an explicit `ssl: { rejectUnauthorized: false }` passed alongside a connection string
+still carrying `sslmode=require` does **not** override it; the fix only works once
+`sslmode` is stripped from the URL and `rejectUnauthorized: false` is set explicitly.
+Extracted the fix into a new shared `lib/db-adapter.ts` (`createDatabaseAdapter`), used by
+both `lib/prisma.ts` and `prisma/seed.ts`, so the workaround exists in exactly one place.
+Not a portability compromise (ADR 0003/0008 — Railway is the sole hosting target).
+**Related Documents:** `lib/db-adapter.ts`, `lib/prisma.ts`, `prisma/seed.ts`.
+
+## 2026-09-05 (T2.1) — Only `home-page.md`'s named Data-requirements fields are database-backed; the rest of the mockup's copy is fixed template chrome
+
+**Summary:** `docs/features/home-page.md`'s Data requirements section names exactly 7 fields
+(`hero_statement`, `primary_cta_label/href`, `senior_attention_copy`, `featured_article_ids`,
+`meta_title/description`) — far less than everything the home page mockup actually shows
+(hero kicker, hero facts sidebar, the four-stage method strip's copy, the trust band). Rather
+than inventing undocumented fields to make "every visible string" database-backed, treated
+the feature doc's explicit field list as authoritative (CLAUDE.md: feature docs are the
+data/interface contract) and rendered everything else as fixed JSX copy in
+`app/(public)/page.tsx` — mirroring how the four-stage method names are already treated as
+fixed, repeated brand copy elsewhere in this project. Also decided `primary_cta_label/href`
+governs the diagnostic band's CTA specifically (the doc's own wording: "the diagnostic
+presented as the primary call to action"), not the hero's two buttons, which are fixed hero
+copy with their own dedicated `hero_statement` field already covering the hero's editable
+line. If a future session decides more of this copy should be partner-editable, that's a
+`home-page.md` doc update plus a schema migration, not a silent field addition.
+**Related Documents:** `docs/features/home-page.md`, `prisma/schema.prisma`'s
+`HomePageContent` doc-comment, `app/(public)/page.tsx`.
+
+## 2026-09-05 (T2.1) — Added `Offer.teaser`; scoped `Offer`/`HomePageContent` schemas to only what T2.1 needs
+
+**Summary:** `core-offer-pages.md`'s documented `offer` entity has no field for the short
+card blurb the home page (and later Capabilities) mockups show — only the fuller
+`problem_statement` meant for the offer's own detail page. Added `teaser` to both the
+Prisma model and the feature doc (a real documentation gap, same category as the
+`fee_amount_min/max` split already fixed during planning). Deliberately did not add the rest
+of `core-offer-pages.md`'s fields (problem_statement, who_for/who_not_for, method_stages,
+deliverables, client_inputs, indicative_timeline, out_of_scope_note, faqs, cta_href, offer's
+own meta_title/description) — T2.2 adds those, following T1.5's own precedent of not adding
+placeholder schema for a field with no current consumer. Also found the Business Health
+Check offer has a real two-tier (Express/Full) pricing structure the current single fee-band
+shape can't represent — flagged as technical debt for T2.2, not solved here.
+**Related Documents:** `docs/features/core-offer-pages.md`, `prisma/schema.prisma`,
+`memory/technical-debt.md` → "Business Health Check's two-tier pricing has no real data
+model yet", `docs/tasks/02-public-presentation.md` (T2.2 addendum).
+
 ## 2026-09-05 (T1.6) — GTM container built against a placeholder, not a real container ID
 
 **Summary:** Asked the user whether a real GTM container already existed for kaalbert.com

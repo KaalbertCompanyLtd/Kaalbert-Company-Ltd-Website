@@ -35,6 +35,18 @@ FR-4.1 order; fee band displays as a range, never a single figure; FAQ accordion
 matches the mockup's interaction.
 **Size:** L **Dependencies:** T1.5, T2.9
 
+**Addendum (session 07, 2026-09-05):** T2.1 seeded `Offer` with only the fields the home
+page's cards need (slug, name, teaser, fee_amount_min/max, scope_cap) — see
+`prisma/schema.prisma`'s `Offer` doc-comment. This task adds the rest of
+`core-offer-pages.md`'s documented fields (problem_statement, who_for/who_not_for,
+method_stages, deliverables, client_inputs, indicative_timeline, out_of_scope_note, faqs,
+cta_href, meta_title, meta_description) and must also resolve the Business Health Check
+offer's real two-tier (Express/Full) pricing structure, which the current single
+fee_amount_min/max/scope_cap shape doesn't represent — see `memory/technical-debt.md` →
+"Business Health Check's two-tier pricing has no real data model yet." T2.1 seeded BHC's
+fee band as a provisional Express-floor-to-Full-ceiling span (GHS 1,000–6,500); don't treat
+that as the real answer.
+
 ### T2.3 — Capabilities page
 
 **Build:** `/capabilities` to `ui/mockups/a-public-site/capabilities.html`, reading the
@@ -65,6 +77,14 @@ order with correct copy; intro copy renders above the stage list per the mockup.
 **Acceptance criteria:** All partner bios render with photo, name, role, and bio copy sourced
 from Company Docs, not placeholder, since this content exists in the source material.
 **Size:** M **Dependencies:** T1.5, T2.9
+
+**Addendum (session 07, 2026-09-05):** T2.1's home page has a placeholder card in its
+Senior Attention section (no real partner photos/credentials exist yet) — see
+`memory/technical-debt.md` → "Home page senior-attention panel has no real partner
+photography yet." Once this task sources real partner photos/bios for `/about`, consider
+whether the home page's placeholder card should also be updated to show a photo (e.g. a
+small partner-headshot strip) instead of the italic note — not required, but worth a look
+since the underlying asset gap this task closes is the same one blocking it.
 
 ### T2.6 — Contact page
 
@@ -127,3 +147,12 @@ placeholder field is queryable/reportable as such (a `is_placeholder` convention
 equivalent) so Milestone 7's admin UI and `docs/dashboard.md` can both surface what's still
 pending real content.
 **Size:** L **Dependencies:** T1.2
+
+**Addendum (session 07, 2026-09-05):** T2.1 already did this task's `home_page_content` and
+`offer` portions (per T2.1's own dependency note authorizing that), all real content sourced
+from `ui/mockups/a-public-site/home.html` and the three `offer-*.html` mockups, `isPlaceholder:
+false` throughout — see `prisma/seed.ts`'s `seedHomePageContent`/`seedOffers` and
+`memory/completed-work.md`. Only the `offer` fields T2.1 actually needed were seeded (see
+T2.2's own addendum above); this task still owes the remaining `offer` fields plus every
+other entity this epic introduces (capability, page, method_stage, team/about content,
+legal pages, etc.).

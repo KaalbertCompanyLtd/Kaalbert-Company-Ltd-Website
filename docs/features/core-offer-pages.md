@@ -36,14 +36,25 @@ Story 4).
 
 ## Data requirements
 
-- `offer` — id, slug, name, problem_statement, who_for, who_not_for, method_stages
+- `offer` — id, slug, name, teaser, problem_statement, who_for, who_not_for, method_stages
   (ordered list), deliverables (list), client_inputs (list), indicative_timeline,
   fee_amount_min, fee_amount_max, fee_currency, scope_cap, out_of_scope_note, faqs (list of
   Q&A), cta_href, meta_title, meta_description (NFR-5; `seo-and-search-foundation.md`). Fee
   is a published band (every real offer's fee is a range, e.g. "GHS 9,000–19,000," never a
   single figure) — `fee_amount` as one field was an error corrected here;
   `StructuredFeeFieldEditor` (`components.md`) edits both bounds together with `scope_cap`,
-  never separately.
+  never separately. `teaser` (added at T2.1, `docs/tasks/02-public-presentation.md`) is a
+  short, one-to-two-sentence summary distinct from the fuller `problem_statement` — it's what
+  the home page's and Capabilities' offer cards render, since neither can reasonably show the
+  full-page problem statement; a documentation gap found while building the home page's offer
+  cards (see `memory/decision-log.md`).
+
+**Known gap (T2.1, not yet resolved):** the Business Health Check offer has two real pricing
+tiers (Express and Full, each its own fee band and deliverable set) that this single
+`fee_amount_min`/`fee_amount_max`/`scope_cap` shape can't represent — see
+`memory/technical-debt.md` → "Business Health Check's two-tier pricing has no real data model
+yet." T2.2 must resolve this (likely a dedicated tier sub-entity) before building this
+offer's full detail page.
 
 ## Interfaces
 
