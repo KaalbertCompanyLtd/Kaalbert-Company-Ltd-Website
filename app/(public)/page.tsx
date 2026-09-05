@@ -105,7 +105,7 @@ export default async function HomePage() {
                 </Link>
               </div>
             </div>
-            <div className="border-pine-500 mt-8 flex flex-row flex-wrap gap-6 border-t pt-7 lg:mt-1 lg:flex-col lg:flex-nowrap lg:gap-6.5 lg:border-t-0 lg:border-l lg:pt-1 lg:pl-9">
+            <div className="border-pine-500 hidden md:mt-8 md:flex md:flex-row md:flex-wrap md:gap-6 md:border-t md:pt-7 lg:mt-1 lg:flex-col lg:flex-nowrap lg:gap-6.5 lg:border-t-0 lg:border-l lg:pt-1 lg:pl-9">
               <div className="flex-1 basis-[45%] lg:basis-auto">
                 <span className="text-kicker text-brass-300 mb-1 block font-semibold tracking-[0.08em] uppercase">
                   Method

@@ -57,6 +57,16 @@ certificate) hit along the way.
   branching/computed logic yet to unit-test; reviewed `memory/technical-debt.md`'s existing
   "Vitest never scaffolded" entry and left its sequencing (T3.2) unchanged.
 
+## Post-commit fix (same session)
+
+User review caught that the hero's Method/Attention/Boundary facts sidebar was showing at
+mobile widths too, cramped below the hero text — the mockup itself is desktop-only and never
+showed this content collapsed to a single narrow column. Changed it to `hidden` below `md`
+(768px) and `flex` (row-wrapped, matching the existing tablet treatment) from `md` up, so
+mobile now shows only the hero statement, lead, and CTAs — re-verified with Playwright MCP at
+390px (facts hidden) and 768px (facts shown, unchanged). Committed separately as
+`fix(T02-01)` rather than amending the T2.1 commit, per CLAUDE.md's commit protocol.
+
 ## Current State
 
 The home page is live, fully database-driven, and matches the mockup at desktop (1280px),
