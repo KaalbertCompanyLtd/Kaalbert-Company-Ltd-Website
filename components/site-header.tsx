@@ -119,7 +119,7 @@ export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
             width={1980}
             height={382}
             priority
-            className={`col-start-1 row-start-1 h-[28px] w-auto transition-opacity duration-[400ms] ease-in-out sm:h-[35px] ${
+            className={`col-start-1 row-start-1 h-[36px] w-auto transition-opacity duration-[400ms] ease-in-out sm:h-[35px] ${
               solid ? "opacity-0" : "opacity-100"
             }`}
           />
@@ -128,7 +128,7 @@ export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
             alt="Kaalbert & Company Ltd"
             width={1980}
             height={382}
-            className={`col-start-1 row-start-1 h-[28px] w-auto transition-opacity duration-[400ms] ease-in-out sm:h-[35px] ${
+            className={`col-start-1 row-start-1 h-[36px] w-auto transition-opacity duration-[400ms] ease-in-out sm:h-[35px] ${
               solid ? "opacity-100" : "opacity-0"
             }`}
           />
