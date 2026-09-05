@@ -99,8 +99,10 @@ API-level) creates a working new landing page end to end with zero code or deplo
 ### T7.6 — Team / author profile editor
 
 **Build:** Self-service (and right-role-gated other-partner) editor for the `author` record
-— photo (via the same R2 media pipeline as article preview images, ADR 0004), practice area,
-credentials (stored verbatim, never altered/abbreviated), personal statement, bio, order.
+— photo (via the same R2 media pipeline as article preview images, ADR 0004), title (the
+partner's rank — "Lead Partner"/"Partner", a free-text field defaulting to "Partner" for a
+newly onboarded partner), practice area, credentials (stored verbatim, never
+altered/abbreviated), personal statement, bio, order.
 **Input → Output:** Profile form submission → `author` row; `published` stays false until
 name/practice area/personal statement are set — photo and credentials are NOT publish-gating
 (revised at T2.5 per explicit firm direction, session 11, 2026-09-05; see

@@ -700,6 +700,12 @@ async function seedFirmStatement() {
  * per explicit firm direction (session 11, 2026-09-05): "Founder/CEO" → "Lead Partner",
  * "Co-Founder" → "Partner" (memory/decision-log.md).
  *
+ * `title`/`practiceArea` split (session 11 follow-up): the mockup only combined rank and
+ * responsibility into one string for the featured partner ("Lead Partner · Lead
+ * Consultant") and showed no rank at all for the other four — a real gap the user flagged,
+ * not something to preserve. Every partner now gets both fields distinctly: `title` is the
+ * rank (rendered as a visually distinct badge), `practiceArea` is just the responsibility.
+ *
  * `photoUrl: null` for all five — no partner photography exists yet (checked `public/` and
  * `ui/mockups/assets/`, neither has one). Per the revised policy (memory/decision-log.md,
  * session 11), this does NOT block `published` — every other required field is complete and
@@ -722,6 +728,7 @@ async function seedAuthors() {
   const authors: Array<{
     name: string;
     photoUrl: string | null;
+    title: string;
     practiceArea: string;
     credentials: string | null;
     personalStatement: string;
@@ -730,7 +737,8 @@ async function seedAuthors() {
     {
       name: "Albert Kwakye Amponsah",
       photoUrl: null,
-      practiceArea: "Lead Partner · Lead Consultant",
+      title: "Lead Partner",
+      practiceArea: "Lead Consultant",
       credentials: null,
       personalStatement:
         "A Ghanaian accounting and finance professional with over fifteen years of disciplined, sector-diverse experience spanning corporate finance, fund administration, real estate, education administration, wood-processing manufacturing and consultancy. Albert brings hands-on expertise in financial modelling, business intelligence, strategic planning and complex data analysis using modern tools and languages.",
@@ -739,6 +747,7 @@ async function seedAuthors() {
     {
       name: "Ama Wiafe",
       photoUrl: null,
+      title: "Partner",
       practiceArea: "Growth, Markets & Clients",
       credentials: null,
       personalStatement:
@@ -748,6 +757,7 @@ async function seedAuthors() {
     {
       name: "Joseph Bordoh",
       photoUrl: null,
+      title: "Partner",
       practiceArea: "Technology & Operations",
       credentials: null,
       personalStatement:
@@ -757,6 +767,7 @@ async function seedAuthors() {
     {
       name: "John Dogbey",
       photoUrl: null,
+      title: "Partner",
       practiceArea: "Financial Reporting & Tax",
       credentials: "Chartered Accountant",
       personalStatement:
@@ -766,6 +777,7 @@ async function seedAuthors() {
     {
       name: "Evans Agyemang",
       photoUrl: null,
+      title: "Partner",
       practiceArea: "Financial Control & Compliance",
       credentials: "Chartered Accountant",
       personalStatement:
@@ -779,6 +791,7 @@ async function seedAuthors() {
       adminUserId: null,
       name: author.name,
       photoUrl: author.photoUrl,
+      title: author.title,
       practiceArea: author.practiceArea,
       credentials: author.credentials,
       personalStatement: author.personalStatement,

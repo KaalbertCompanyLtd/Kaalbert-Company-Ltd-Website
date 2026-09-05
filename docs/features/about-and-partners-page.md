@@ -14,9 +14,10 @@ without a milestones/history timeline the firm hasn't earned yet (Document 13.03
 1. Visitor reaches `/about` from Home or navigation.
 2. Reads the firm's founding statement, values, and standard.
 3. Sees each partner with a photograph (or, until one is ready, an initials avatar — see
-   Edge cases), named practice area, accurately stated credentials where the partner has one
-   to state (professional designations exactly as the awarding body permits), and a short
-   statement in their own voice.
+   Edge cases), their title (e.g. "Lead Partner", "Partner") shown as a visually distinct
+   badge from their named practice area/responsibility, accurately stated credentials where
+   the partner has one to state (professional designations exactly as the awarding body
+   permits), and a short statement in their own voice.
 
 ## Business rules
 
@@ -39,10 +40,14 @@ without a milestones/history timeline the firm hasn't earned yet (Document 13.03
   opaque blob, added at T2.5 — see `memory/decision-log.md`.
 - `author` (shared with `insights-engine.md`; managed via `content-management-admin.md`'s
   Team area, not static) — id, admin_user_id, name, photo_url, practice_area, credentials,
-  personal_statement, bio, published, plus `order` (added at T2.5, not originally named here —
-  a stable display order; the lowest `order` value renders as this page's single featured
-  "Lead Partner" card, the rest in a grid). `photo_url` and `credentials` are both nullable
-  (see Edge cases).
+  personal_statement, bio, published, plus two fields added at T2.5, not originally named
+  here: `order` (a stable display order; the lowest `order` value renders as this page's
+  single featured "Lead Partner" card, the rest in a grid) and `title` (added as a session-11
+  follow-up — the partner's rank, e.g. "Lead Partner"/"Partner", rendered as a distinct badge
+  separate from `practice_area`'s responsibility text; the mockup originally combined the two
+  into one string for the featured partner only and omitted rank entirely for the other four
+  — a real gap, not preserved). `photo_url` and `credentials` are both nullable (see Edge
+  cases).
 
 ## Interfaces
 

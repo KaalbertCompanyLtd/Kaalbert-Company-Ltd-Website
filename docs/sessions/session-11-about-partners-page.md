@@ -17,6 +17,17 @@ publish-state change — a deliberate reversal of `about-and-partners-page.md`'s
 case, propagated to `content-management-admin.md` and the future Team-editor task (T7.6) so
 they don't rebuild the old behavior.
 
+**Follow-up round (same session):** after reviewing the shipped page, the user flagged that
+only the featured Lead Partner card showed any rank/title at all (as one plain string, no
+visual split from their responsibility), and the other four showed no rank whatsoever — a gap
+already present in the mockup, not preserved. Added `Author.title` (separate from
+`practiceArea`), rendered as a distinct badge for every partner uniformly. Also removed the
+"partner photographs are from a single coordinated session..." caption from the live page per
+the user's note that it belongs in the mockup as planning commentary, not in front of real
+visitors. A detour chasing what looked like a Base UI `Badge` bug turned out to be the dev
+server holding a stale, pre-migration Prisma client in memory — restarting it resolved
+everything; `components/ui/badge.tsx` was never actually broken.
+
 ## Files Changed
 
 - `prisma/schema.prisma` — new `FirmStatement` and `Author` models.
@@ -34,6 +45,11 @@ they don't rebuild the old behavior.
 - `docs/tasks/07-content-admin.md` — T7.6 (Team / author profile editor) corrected to the new
   policy, plus a session-11 addendum flagging the pending photo/credentials gap.
 - `memory/decision-log.md`, `memory/technical-debt.md`, `memory/completed-work.md` — updated.
+- (follow-up round) `prisma/migrations/20260905144109_t2_5_author_title/` — migration adding
+  `Author.title`; `app/about/page.tsx` — new `PartnerRoleLine` helper, `anyPhotoPending` note
+  removed; `ui/mockups/a-public-site/about.html` — `.title-badge` pill added to every entry;
+  `docs/features/about-and-partners-page.md`, `docs/features/content-management-admin.md`,
+  `docs/tasks/07-content-admin.md` — `title` field documented throughout.
 
 ## Decisions Made
 

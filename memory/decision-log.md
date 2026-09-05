@@ -2,6 +2,45 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.5, session 11 follow-up) — `Author.title` split from `practiceArea`; visitor-facing photo-pending note removed from the live page
+
+**Summary:** After T2.5 shipped, the user flagged two real gaps: (1) only the featured Lead
+Partner card showed any rank/title text at all ("Lead Partner · Lead Consultant" as one
+plain string), and the four grid partners showed only their responsibility with no title —
+a gap already present in the original mockup, not something to preserve; (2) even where a
+title showed, it had no visual distinction from the responsibility text next to it. Fixed by
+adding a new `title` field to `Author` (default `"Partner"`, migration
+`20260905144109_t2_5_author_title`) separate from `practiceArea`, seeded per partner (Albert:
+"Lead Partner", the other four: "Partner"), and rendering it as a solid `Badge` chip next to
+`practiceArea`'s existing accent-colored kicker text for every partner uniformly
+(`app/about/page.tsx`'s new `PartnerRoleLine`). The mockup was updated to match (a
+`.title-badge` pill added to every partner entry, not just the featured one).
+
+While debugging this, chased what first looked like a Base UI `Badge` component rendering
+bug (`<Badge>{title}</Badge>` rendered with zero children in the DOM, reproduced even on the
+pre-existing `app/dev/component-scaffold/page.tsx` scratch page). Root cause turned out to be
+unrelated to Base UI entirely: the running dev server process still had the pre-migration
+Prisma client cached in memory from before `title` was added to the schema, so
+`author.title` was genuinely `undefined` at render time — confirmed by instrumenting Badge
+directly (`props={}`) and by testing a plain non-Base-UI component with the same children
+(also `undefined`). A dev-server restart after `prisma generate` resolved it immediately;
+`components/ui/badge.tsx` was restored to its original state, unmodified, since it was never
+actually broken. **Lesson for future sessions:** any schema change made while `npm run dev`
+is already running requires a server restart before testing, not just `prisma generate` — the
+generated client is a module the running Node process already has in memory. This is the
+second time this exact class of issue has come up in this session (see the `FirmStatement`/
+`Author` model addition earlier); worth remembering going forward rather than re-diagnosing
+via a library-bug detour each time.
+
+Separately, the user pointed out the "Partner photographs are from a single coordinated
+session, currently in progress..." caption — appropriate as planning-stage annotation in the
+mockup — has no business being visible to real site visitors on the deployed page. Removed
+the rendered paragraph and its `anyPhotoPending` check from `app/about/page.tsx` entirely; the
+mockup's own equivalent note is left as-is (it's wireframe/planning commentary, not live copy).
+**Related Documents:** `app/about/page.tsx`, `prisma/schema.prisma` (`Author` doc-comment),
+`ui/mockups/a-public-site/about.html`, `docs/features/about-and-partners-page.md`,
+`docs/features/content-management-admin.md`, `docs/tasks/07-content-admin.md` (T7.6).
+
 ## 2026-09-05 (T2.5, session 11) — Partner photo readiness no longer gates `published`; initials avatar instead
 
 **Summary:** `about-and-partners-page.md`'s original edge case said a partner's `author` row

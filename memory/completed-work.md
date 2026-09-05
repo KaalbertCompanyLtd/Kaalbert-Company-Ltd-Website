@@ -16,6 +16,36 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.5 (follow-up fix) — Partner title/role visual distinction; live-page note removed
+**Summary:** User flagged two real gaps right after T2.5 shipped: only the featured Lead
+Partner card showed any rank at all (as one plain string with no visual split from their
+responsibility), and the other four partners showed no rank at all — a gap already present in
+the mockup, not preserved. Added a new `Author.title` field (default `"Partner"`, migration
+`20260905144109_t2_5_author_title`), seeded per partner, rendered as a solid `Badge` chip
+distinct from `practiceArea`'s existing accent-colored text, for every partner uniformly
+(`app/about/page.tsx`'s new `PartnerRoleLine`). Mockup updated to match. Also removed the
+"partner photographs are from a single coordinated session..." caption from the live page
+per the user's follow-up note — appropriate as mockup/planning annotation only, not visitor-
+facing copy; the mockup's own version is untouched.
+En route, chased what looked like a Base UI `Badge` rendering bug (children not appearing in
+the DOM) that turned out to be the dev server holding a stale, pre-migration Prisma client in
+memory — a restart resolved it; `components/ui/badge.tsx` was never actually broken and is
+unchanged. See `memory/decision-log.md` for the full diagnosis.
+**Files Changed:**
+
+- `prisma/schema.prisma` — `Author.title` field added.
+- `prisma/migrations/20260905144109_t2_5_author_title/` — migration.
+- `prisma/seed.ts` — `title` seeded per author.
+- `app/about/page.tsx` — new `PartnerRoleLine` helper; `anyPhotoPending` note removed.
+- `ui/mockups/a-public-site/about.html` — `.title-badge` pill added to every partner entry.
+- `docs/features/about-and-partners-page.md`, `docs/features/content-management-admin.md`,
+  `docs/tasks/07-content-admin.md` — `title` field documented.
+  **Related Feature:** `docs/features/about-and-partners-page.md`.
+  **Notes:** Verified via Playwright MCP at mobile/tablet/desktop, no console errors. All
+  quality gates pass.
+
+---
+
 **Task:** T2.5 — About / Team page
 **Summary:** Built `/about` to `ui/mockups/a-public-site/about.html`'s structure, adding the
 `Author` model (new at this task) and a new `FirmStatement` singleton model for the founding

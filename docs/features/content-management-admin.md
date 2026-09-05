@@ -43,10 +43,10 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
 6. **Create a landing page**: select the landing page template, set the independently-
    editable headline and opening paragraph, save — a new live `/lp/` page exists.
 7. **Maintain a profile**: a partner opens their own entry under Team and edits their
-   photograph, practice area, credentials, and personal statement — the `author` record used
-   by both `about-and-partners-page.md` and `insights-engine.md` (FR-3.3). A partner with the
-   right role may also edit another partner's entry (e.g. onboarding a new co-founder), but
-   the normal path is self-service.
+   photograph, title (their rank — "Lead Partner"/"Partner"), practice area, credentials, and
+   personal statement — the `author` record used by both `about-and-partners-page.md` and
+   `insights-engine.md` (FR-3.3). A partner with the right role may also edit another
+   partner's entry (e.g. onboarding a new co-founder), but the normal path is self-service.
 8. **Adjust the diagnostic**: a partner with the right role edits question text, order, and
    active flag, dimension weights, and triage thresholds — the exact configuration data named
    in `business-health-check-diagnostic.md` (FR-2.2). The underlying scoring algorithm stays
@@ -128,10 +128,12 @@ Shares the schema of the features it edits (`article`, `category`, `page`, `lega
 `landing_page`, `author`, `diagnostic_question`, `diagnostic_dimension`,
 `diagnostic_threshold`) — this feature is the UI and authorization layer over that data, not
 a separate data model. `author`
-— id, admin_user_id (FK), name, photo_url, practice_area, credentials, personal_statement,
-bio, order (int, added at T2.5 — display order; lowest value is the featured "Lead Partner"
-entry on `/about`), published (bool) — one record per partner, linked to but distinct from
-their login identity so public profile edits never touch authentication data. `site_settings`
+— id, admin_user_id (FK), name, photo_url, title (string, added session 11 — the partner's
+rank, e.g. "Lead Partner"/"Partner", rendered as a badge distinct from practice_area),
+practice_area, credentials, personal_statement, bio, order (int, added at T2.5 — display
+order; lowest value is the featured "Lead Partner" entry on `/about`), published (bool) — one
+record per partner, linked to but distinct from their login identity so public profile edits
+never touch authentication data. `site_settings`
 — a
 singleton record: phone_primary, phone_secondary (nullable), email, whatsapp_number, address,
 response_time_commitment, social_profile_urls (list, nullable —

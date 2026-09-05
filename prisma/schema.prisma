@@ -269,11 +269,23 @@ model FirmStatement {
 /// the feature doc) — needed to render exactly one partner as the page's single featured
 /// "Lead Partner" card and the rest in a grid, in a stable, admin-editable order; the lowest
 /// `order` value is the featured entry (see lib/about.ts's `getAuthors`).
+///
+/// `title` is new, added after the initial T2.5 build (session 11 follow-up): the mockup
+/// combined a partner's rank ("Lead Partner", "Co-Founder") and their responsibility
+/// ("Lead Consultant", "Growth, Markets & Clients") into one `practiceArea` string for the
+/// featured partner only, and showed no rank at all for the other four (only the section
+/// kicker said "Partners") — a real gap in the mockup itself, not something to preserve.
+/// `title` now holds just the rank (rendered as a distinct badge, `app/about/page.tsx`'s
+/// `PartnerAvatar`-adjacent title chip) and `practiceArea` holds just the responsibility, for
+/// every partner uniformly. Defaults to `"Partner"` — a reasonable prefill for a newly
+/// onboarded partner's profile once T7.6's Team editor exists; the lead/featured entry's row
+/// overrides it to `"Lead Partner"`.
 model Author {
   id                Int      @id @default(autoincrement())
   adminUserId       Int?     @map("admin_user_id")
   name              String
   photoUrl          String?  @map("photo_url")
+  title             String   @default("Partner")
   practiceArea      String   @map("practice_area")
   credentials       String?
   personalStatement String   @map("personal_statement")

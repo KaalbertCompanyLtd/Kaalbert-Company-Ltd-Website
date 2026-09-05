@@ -5,6 +5,7 @@ import { getAuthors, getFirmStatement, getInitials } from "@/lib/about";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -58,6 +59,25 @@ function PartnerAvatar({
   );
 }
 
+/**
+ * A partner's rank (`title` — "Lead Partner", "Partner") as a solid badge, next to their
+ * responsibility (`practiceArea` — "Growth, Markets & Clients") as the page's existing
+ * accent-colored kicker text. The mockup only showed this pairing for the featured partner,
+ * and even then as one plain string with no visual split between rank and responsibility —
+ * a real gap, flagged directly by the user, not preserved here. Every partner gets both,
+ * visually distinct from each other (a solid primary-color chip vs. small uppercase text).
+ */
+function PartnerRoleLine({ title, practiceArea }: { title: string; practiceArea: string }) {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+      <Badge>{title}</Badge>
+      <span className="text-kicker text-accent font-semibold tracking-[0.05em] uppercase">
+        {practiceArea}
+      </span>
+    </div>
+  );
+}
+
 export default async function AboutPage() {
   const [page, firmStatement, authors, offerNavLinks] = await Promise.all([
     getPageBySlug("about"),
@@ -67,7 +87,6 @@ export default async function AboutPage() {
   ]);
 
   const [leadPartner, ...otherPartners] = authors;
-  const anyPhotoPending = authors.some((author) => !author.photoUrl);
 
   return (
     <>
@@ -136,9 +155,10 @@ export default async function AboutPage() {
                   <h3 className="font-display text-primary text-h3 mb-1 font-bold">
                     {leadPartner.name}
                   </h3>
-                  <span className="text-kicker text-accent mb-3 block font-semibold tracking-[0.06em] uppercase">
-                    {leadPartner.practiceArea}
-                  </span>
+                  <PartnerRoleLine
+                    title={leadPartner.title}
+                    practiceArea={leadPartner.practiceArea}
+                  />
                   {leadPartner.credentials && (
                     <span className="text-caption text-muted-foreground mb-3 block">
                       {leadPartner.credentials}
@@ -165,11 +185,9 @@ export default async function AboutPage() {
                           <h3 className="font-display text-primary mb-0.5 text-[1.0625rem] font-bold">
                             {partner.name}
                           </h3>
-                          <span className="text-kicker text-accent block font-semibold tracking-[0.05em] uppercase">
-                            {partner.practiceArea}
-                          </span>
                         </div>
                       </div>
+                      <PartnerRoleLine title={partner.title} practiceArea={partner.practiceArea} />
                       {partner.credentials && (
                         <span className="text-caption text-muted-foreground mb-2 block">
                           {partner.credentials}
@@ -180,13 +198,6 @@ export default async function AboutPage() {
                   ))}
                 </div>
               </>
-            )}
-
-            {anyPhotoPending && (
-              <p className="text-caption text-muted-foreground mt-4 italic">
-                Partner photographs are from a single coordinated session, currently in progress —
-                each partner&apos;s initials appear until their photo is ready.
-              </p>
             )}
           </div>
         </section>
