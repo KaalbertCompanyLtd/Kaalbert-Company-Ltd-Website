@@ -35,9 +35,10 @@ a release with a peer range that includes ESLint 10 cleanly (check `npm info
 eslint-config-next peerDependencies` before retrying).
 **Trigger type:** Task-sequenced — re-check opportunistically whenever `package.json` is next
 touched for an unrelated reason; no separate user go-ahead needed.
-**Sequenced into:** None yet — re-check the next time a task touches `package.json` for an
-unrelated reason (T1.4 already re-checked this session, see below; the debt survived that
-check with a stronger reason, not a smaller one).
+**Sequenced into:** T3.2 (Server-side scoring function, `docs/tasks/03-diagnostic.md`) — the
+next confirmed `package.json` touch after T1.4 (grepped across every `docs/tasks/*.md` for an
+`npm install`/dependency mention; nothing between T1.5 and T3.1 qualifies), and it's already
+installing Vitest there anyway — see that task's session-04 addendum.
 
 **Re-checked (session 04, 2026-09-05, T1.4):** `npm info eslint-config-next@16.3.4
 peerDependencies` now reports `eslint: >=9.0.0` — technically includes 10 — and a dry-run
@@ -131,9 +132,10 @@ stable, and downgrading to 6.x is a step backward on both counts. Real fix is a 
 Prisma 7.x patch release (or a stabilized 8.0) that bumps `mysql2`/`deepmerge-ts` — revisit
 next time `package.json` dependencies are touched.
 **Trigger type:** Task-sequenced
-**Sequenced into:** None yet — re-check the next time `package.json` dependencies are next
-touched for an unrelated reason (T1.4 already re-checked this session, see below; still no
-fix available).
+**Sequenced into:** T3.2 (Server-side scoring function, `docs/tasks/03-diagnostic.md`) — the
+next confirmed `package.json` touch after T1.4 (same grep-across-`docs/tasks/*.md` check as
+the ESLint entry above), already installing Vitest there anyway — see that task's session-04
+addendum.
 
 **Re-checked (session 04, 2026-09-05, T1.4):** `npm info prisma version` /
 `@prisma/client version` / `@prisma/adapter-pg version` all still report `7.10.0` as latest

@@ -41,6 +41,27 @@ script exists in `package.json` at all yet), and write this task's scoring-funct
 against that new setup. See `memory/technical-debt.md` → "Vitest
 never scaffolded (no test runner exists yet)."
 
+**Addendum (session 04, 2026-09-05):** This task is also the next confirmed `package.json`
+touch after T1.4 (per the grep across `docs/tasks/*.md` done that session — no task between
+T1.5 and T3.1 installs anything), so re-check two low-priority debt items already re-checked
+twice without resolution, while the Vitest install above is already touching dependencies
+anyway:
+
+- **ESLint 9→10** (`memory/technical-debt.md` → "ESLint pinned to the EOL 9.x line"): T1.4
+  found `eslint@^10` now installs with no ERESOLVE warning, but `npm run lint` crashes with a
+  real `TypeError` inside `eslint-plugin-react`'s `react/display-name` rule — reverted to
+  `^9.39.5`. Re-run `npm run lint` after bumping to whatever `eslint@10.x` is current at this
+  point; only keep the bump if lint actually passes clean, not just installs cleanly.
+- **Prisma CLI npm-audit vulnerabilities** (`memory/technical-debt.md` → "4 high-severity npm
+  audit vulnerabilities in Prisma CLI's dev-tooling tree"): check `npm info prisma version`
+  for a patched `7.x` or a stabilized (non-`-rc`) `8.0`; bump with `--save-exact` (keeping
+  `prisma`/`@prisma/client`/`@prisma/adapter-pg` in lockstep) only if one exists and
+  `npm audit` confirms the `mysql2`/`deepmerge-ts` advisories are actually gone afterward.
+
+Low priority — skip either or both without blocking this task if nothing's changed; just
+don't forget to check, and update both `memory/technical-debt.md` entries either way (a
+"still open, re-checked" note is itself real due diligence, not a no-op).
+
 ### T3.3 — Diagnostic question-set seed
 
 **Build:** Seed script populating `diagnostic_question`/`diagnostic_dimension`/
