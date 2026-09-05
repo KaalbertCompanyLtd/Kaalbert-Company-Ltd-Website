@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { NOT_FOUND_METADATA } from "@/app/not-found";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -70,7 +71,7 @@ interface OfferPageParams {
 export async function generateMetadata({ params }: OfferPageParams): Promise<Metadata> {
   const { slug } = await params;
   const offer = await getOfferBySlug(slug);
-  if (!offer) return {};
+  if (!offer) return NOT_FOUND_METADATA;
   return {
     title: offer.metaTitle,
     description: offer.metaDescription,

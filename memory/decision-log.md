@@ -2,6 +2,23 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.10) — Custom error pages must not depend on a live database read, discovered by hitting a real transient DNS failure in-session
+
+**Summary:** Built `app/not-found.tsx` reading live `getOfferNavLinks()` for `SiteHeader`'s
+nav fee hints, same pattern as every other real page. While verifying it via Playwright MCP,
+a genuine transient DNS failure against Railway's public Postgres proxy
+(`metro.proxy.rlwy.net`, `getaddrinfo EAI_AGAIN`) made the page hang for well over a minute
+before failing — the exact opposite of what a 404 page is for. Removed the live data fetch
+entirely: `app/not-found.tsx` now renders `<SiteHeader hasHero />` with no `offerNavLinks`
+prop, which falls back to that component's own hard-coded `FALLBACK_CORE_OFFERS` (T2.2). The
+same reasoning applies more strongly to `app/error.tsx` (a required Client Component, so it
+couldn't have fetched live data anyway) and `app/global-error.tsx` (deliberately has zero
+dependencies on the app shell it stands in for). General principle worth remembering for any
+future fallback/error surface on this project: it must have fewer runtime dependencies than
+the thing it's a fallback for, not the same ones.
+**Related Documents:** `app/not-found.tsx`, `app/error.tsx`, `app/global-error.tsx`,
+`components/site-header.tsx`.
+
 ## 2026-09-05 (T2.2) — Business Health Check's two-tier pricing modelled as a new `OfferTier` relation, not a schema change to `Offer` itself
 
 **Summary:** Resolved the "Business Health Check's two-tier pricing has no real data model

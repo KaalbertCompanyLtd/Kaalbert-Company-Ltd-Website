@@ -1,8 +1,8 @@
-# Session 08 — Core Offer pages
+# Session 08 — Core Offer pages, custom error pages
 
 # Date: 2026-09-05
 
-# Tasks completed: T2.2
+# Tasks completed: T2.2, T2.10
 
 ## What Was Built
 
@@ -12,6 +12,16 @@ sections in order for Business Health Check, Financial Clarity Pack, and Funding
 Pack. This session also resolved the Business Health Check two-tier pricing gap flagged at
 T2.1, extended the `Offer` entity with every remaining `core-offer-pages.md` field, and wired
 `SiteHeader`'s Core Offers nav fee hints to live data (T1.5/T2.1's own deferred note).
+
+After T2.2 was committed, the user asked for custom 404/error pages in this same session
+("having the empty pages call the default 404 page is not nice since the site is deployed"),
+so a second task (T2.10, added to the epic file mid-session since it wasn't originally
+planned) built `app/not-found.tsx`, `app/error.tsx`, and `app/global-error.tsx`, and fixed
+`app/layout.tsx`'s root metadata (still `create-next-app`'s literal scaffold default). While
+verifying `not-found.tsx` with Playwright MCP, a real transient DNS failure against Railway's
+Postgres proxy made a DB-backed version of it hang for over a minute — fixed by removing the
+live data fetch entirely, since a fallback/error surface must have fewer runtime dependencies
+than what it's standing in for, not the same ones (see `memory/decision-log.md`).
 
 ## Files Changed
 
@@ -35,6 +45,18 @@ T2.1, extended the `Offer` entity with every remaining `core-offer-pages.md` fie
 - `memory/completed-work.md`, `memory/decision-log.md`, `memory/technical-debt.md` — this
   session's entries
 
+**T2.10:**
+
+- `app/not-found.tsx` — new: branded 404, catches unmatched routes and `notFound()` calls,
+  zero runtime dependencies (no live data fetch, see Decisions Made)
+- `app/error.tsx` — new: branded runtime-error boundary ("use client", `reset()` action)
+- `app/global-error.tsx` — new: minimal, fully self-contained root-layout-crash fallback
+- `app/layout.tsx` — root `metadata` fixed from create-next-app's scaffold default
+- `app/offers/[slug]/page.tsx` — `generateMetadata`'s missing-offer branch now returns
+  `NOT_FOUND_METADATA` (exported from `app/not-found.tsx`) instead of `{}`
+- `docs/tasks/02-public-presentation.md` — new T2.10 entry
+- `memory/completed-work.md`, `memory/decision-log.md` — this task's entries
+
 ## Decisions Made
 
 - Business Health Check's two-tier pricing modelled as a new `OfferTier` relation (Express/
@@ -57,12 +79,27 @@ T2.1, extended the `Offer` entity with every remaining `core-offer-pages.md` fie
   hard-coded array) so T1.5's dev scratch pages under `app/dev/layout-shell/*` keep working
   without a DB read; every real public page now passes live data.
 
+**T2.10:**
+
+- `app/not-found.tsx` deliberately doesn't fetch live `getOfferNavLinks()` even though it
+  could (unlike `error.tsx`, it's a Server Component) — a real transient DNS failure against
+  Railway's Postgres proxy during verification made a DB-backed version hang for over a
+  minute. It renders via `SiteHeader`'s existing `FALLBACK_CORE_OFFERS` default instead
+  (T2.2), so it has zero runtime dependencies. See `memory/decision-log.md`.
+- `app/global-error.tsx` (the root-layout-crash fallback) doesn't reuse `SiteHeader`/
+  `SiteFooter` at all — it's the one surface where even those components' own dependencies
+  (however minimal) are one too many, since it stands in for the app shell itself failing.
+- Not part of the epic's original task list — added mid-session at explicit user direction,
+  given its own task ID (T2.10) after the fact for a permanent record.
+
 ## Current State
 
 All three core offer pages are live, database-driven, and verified end-to-end (desktop/
 tablet/mobile, FAQ accordion multi-open behaviour, mobile drawer, live nav fee hints, and a
-real 404 for an unknown slug) via Playwright MCP. Milestone 2 (Public Presentation Layer) has
-two of nine tasks complete (T2.1, T2.2); Capabilities is next.
+real 404 for an unknown slug) via Playwright MCP. Custom 404/runtime-error/root-layout-crash
+pages are live and verified the same way, none dependent on the database. Milestone 2 (Public
+Presentation Layer) has two of nine originally-planned tasks complete (T2.1, T2.2) plus one
+unplanned addition (T2.10); Capabilities is next.
 
 ## Blockers
 

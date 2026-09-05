@@ -163,3 +163,24 @@ false` throughout — see `prisma/seed.ts`'s `seedHomePageContent`/`seedOffers` 
 T2.2's own addendum above); this task still owes the remaining `offer` fields plus every
 other entity this epic introduces (capability, page, method_stage, team/about content,
 legal pages, etc.).
+
+### T2.10 — Custom error pages (404 / runtime error / root-layout crash)
+
+**Build:** `app/not-found.tsx`, `app/error.tsx`, and `app/global-error.tsx`, branded to the
+design system rather than Next.js's generic framework fallbacks. No dedicated mockup exists
+for this screen (added mid-epic, user-directed, not originally planned in this file);
+structure/copy inferred from the interior-page hero pattern T2.2's offer pages established
+(dark hero, kicker, heading, lead, single CTA).
+**Input → Output:** An unmatched route or an explicit `notFound()` call → the branded 404
+page; an uncaught runtime error below the root layout → the branded error page with a "Try
+again" action; a crash in the root layout itself → a minimal, fully self-contained fallback
+(Next.js's error-boundary scoping requires this to be a separate file, unable to reuse
+`SiteHeader`/`SiteFooter` since the app shell that crashed is what it's standing in for).
+**Acceptance criteria:** A nonexistent route and an offer page's unknown slug both render the
+branded 404, not Next's default; a thrown error below the layout renders the branded error
+page and "Try again" successfully re-renders on fix; none of the three pages depend on a
+live database read succeeding (verified this the hard way in-session — see
+`memory/decision-log.md`).
+**Size:** S **Dependencies:** T1.5 (`SiteHeader`/`SiteFooter`), T2.2 (`SiteHeader`'s optional
+`offerNavLinks` prop and its `FALLBACK_CORE_OFFERS` default — this task's 404/error pages are
+exactly the case that fallback exists for).
