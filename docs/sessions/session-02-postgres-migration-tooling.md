@@ -108,26 +108,54 @@ repo: Claude Code itself was updated (2.1.260 → 2.1.261), and `~/.claude/setti
 sets `permissions.defaultMode: "auto"` globally (the user's own machine config, not a
 project file).
 
+**Further follow-up (2026-09-05, same session): deploy pipeline investigation.** After the
+user pushed the first two commits, they reported Railway wasn't deploying the new code at
+all (dashboard still showed the old T1.1 commit). Investigated and fixed — see
+`memory/decision-log.md`'s "railway.json never applied; migrated to Infrastructure as Code"
+entry for the full story. Short version: `railway.json`'s `deploy.startCommand` had never
+actually applied to the live service (confirmed via deployment metadata showing
+`startCommand: null`); confirmed via GitHub's Actions API that GitHub's own webhook delivery
+was fine, isolating the actual "push doesn't trigger a deploy" break to Railway's side of
+the GitHub-App integration (not further diagnosable via CLI/API alone). Unblocked
+immediately with `railway up` (direct deploy from local files), then properly fixed the
+`railway.json` issue by migrating to `.railway/railway.ts` — catching and correcting a real
+danger in the auto-generated migration first (it would have deleted `DATABASE_URL` and
+disconnected the GitHub source on apply, since it omitted `source`/`variables` entirely).
+Verified via deployment logs that `prisma migrate deploy` now genuinely runs before
+`next start` in production. The underlying "why doesn't Railway's GitHub App trigger a
+build on push" question is still open — flagged below.
+
 ## Current State
 
-T1.2 is complete: all Task Completion Checklist items pass (lint/format/typecheck clean,
-Prisma client generated, migration mechanism proven live, memory files updated). Postgres is
-live on Railway with a freshly-rotated password, `.env.local` has a working `DATABASE_URL`,
-`.env.production` exists (gitignored) for local prod-build testing, and the repo is ready
-for T1.3 to start building on top of a working database layer whenever it needs one. Both
-commits (`c4a8a68`, `03b2359`) are made and not yet pushed — a human reviews with
-`git log --oneline` and pushes manually, per protocol.
+T1.2 is complete and its deploy pipeline is now verified working end-to-end in production
+(not just locally): Postgres is live with a freshly-rotated password, `.env.local`/
+`.env.production` are set up, and the `kaalbert-web` service now genuinely runs
+`prisma migrate deploy && npm start` on every deploy (confirmed live via deployment logs).
+Four commits made this session (`c4a8a68`, `03b2359`, `bcc0177`, `ae8d100`, `4dfd4e7` — five,
+correcting the count), the first three pushed by the user and manually deployed via
+`railway up` since GitHub-triggered auto-deploy isn't currently firing; the `.railway/
+railway.ts` fix commit (`4dfd4e7`) is not yet pushed.
 
 ## Blockers
 
-None for T1.2 itself. Carried over from session 01, still open:
+None for T1.2's own scope — deploy pipeline is verified working via manual trigger. One new
+item surfaced this session:
 
-1. `kaalbert.com` is not registered — user-triggered, not task-sequenced (see
+1. **Railway's GitHub-App auto-deploy isn't triggering builds on push to `main`**, despite
+   T1.1 having verified it working end-to-end and the GitHub source connection still showing
+   correctly connected (`railway service list --json`). GitHub's own side is confirmed fine
+   (Actions CI runs successfully within about a minute of each push). Not root-caused — only
+   worked around (`railway up` for now; `.railway/railway.ts` fix was unrelated and doesn't
+   resolve this specific symptom, since builds still aren't auto-triggering as of the last
+   check). Needs investigation in Railway's dashboard (GitHub App connection / installation
+   status, "Deploy Triggers" settings for the service) — not diagnosable further via CLI or
+   a repo-scoped PAT.
+
+Carried over from session 01, still open:
+
+2. `kaalbert.com` is not registered — user-triggered, not task-sequenced (see
    `memory/technical-debt.md` and T1.1's addendum). Do not act on this without the user
    explicitly saying the domain is registered.
-2. The two most recent T1.1-era commits were confirmed pushed by the user between sessions
-   per `git log`, so this is no longer open — noting only that session 01's file said it was
-   open; confirm with `git log --oneline` if in doubt.
 
 ## Next Task
 
