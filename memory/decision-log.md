@@ -2,6 +2,57 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.4) — shadcn CLI run with the `nova` preset, then its colour/font choices discarded in favour of T1.3's tokens
+
+**Summary:** The shadcn CLI's `init` command has no non-interactive way to skip its
+preset-selection prompt (`-p custom` doesn't exist despite "Custom" appearing in the
+interactive list) — every preset (Nova, Vega, Maia, …) ships its own starter colour palette
+and a Google Font (Nova = Lucide/Geist). Ran `init` with `-b base -t next -p nova -y` (Nova,
+since it's the CLI's own default) purely to get `components.json` + `lib/utils.ts` +
+`button.tsx` scaffolded, then immediately reverted every part of its output that touched
+design decisions already made in T1.3: restored `app/globals.css`'s exact hex token values
+(the CLI had overwritten them with Nova's neutral-grey oklch palette and a `.dark` block —
+the latter explicitly rejected by `ui/design-system.md` line 96, "no dark-mode variant is
+defined for this brand"), and reverted `app/layout.tsx` entirely (the CLI wired in Geist via
+`next/font/google`, contradicting T1.3's "system fonts only, no web font file" decision).
+Kept only the CLI's structural (non-colour, non-font) additions to `globals.css`: `@import
+"tw-animate-css"` and `@import "shadcn/tailwind.css"` — the latter defines the
+`data-open`/`data-closed`/etc. custom variants Base UI's generated components actually
+require to animate correctly, confirmed by reading the package's source rather than assuming.
+**Related Documents:** `ui/design-system.md`, `app/globals.css`, `app/layout.tsx`,
+`components.json`.
+
+## 2026-09-05 (T1.4) — used shadcn's `field` component in place of `ui/components.md`'s "Form"
+
+**Summary:** `ui/components.md`'s foundation-layer list names "Form (field wrapper +
+validation display)" as one of the 21 primitives to scaffold. The current shadcn registry's
+`form` component returns as an empty placeholder (`{"name": "form", "type": "registry:ui"}`,
+no files, no dependencies) — react-hook-form's old `Form`/`FormField`/`FormMessage` wrapper
+has been retired from the Base UI (`base-nova`) style. Its documented replacement is `field`
+(`Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldGroup`, `FieldLegend`,
+`FieldSeparator`, `FieldSet`) — same role (field wrapper + validation display), Base UI's own
+naming rather than a React Hook Form binding. Installed `field` (+ its `label` dependency)
+instead of chasing the dead `form` entry, and used `Field`/`FieldLabel`/`FieldError`/
+`FieldDescription` throughout the T1.4 scratch page's form section. No feature doc or ADR
+names "Form" specifically enough to require reconciling — `ui/components.md` is descriptive
+of shadcn's foundation layer, not a contract pinned to react-hook-form.
+**Related Documents:** `ui/components.md`, ADR 0010, `components/ui/field.tsx`.
+
+## 2026-09-05 (T1.4) — Base UI's `render` prop used instead of Radix's `asChild` for composed triggers
+
+**Summary:** Base UI (the primitive library ADR 0010 mandates over Radix) does not support
+the `asChild` composition pattern at all — `tsc` rejects it outright (`Property 'asChild'
+does not exist`) on every Trigger component (`DialogTrigger`, `AlertDialogTrigger`,
+`PopoverTrigger`, `TooltipTrigger`, `DropdownMenuTrigger`). Base UI's equivalent is a `render`
+prop accepting a `ReactElement` (`<DialogTrigger render={<Button variant="outline">Open
+dialog</Button>} />`) rather than a child + `asChild` boolean. This is a Base UI API
+difference feature epics need to know going in, not a scaffold defect — recorded here so a
+future task doesn't waste time trying the Radix pattern first. Every generated component file
+that renders a `<Trigger>`-shaped part already used this `render` convention internally
+(e.g. `select.tsx`'s `<SelectPrimitive.Icon render={<ChevronDownIcon .../>} />`), confirming
+it's the library's real pattern, not a one-off.
+**Related Documents:** ADR 0010, `components/ui/dialog.tsx` and siblings.
+
 ## 2026-09-05 (T1.3 follow-up) — reversed: added the four extra brand tones to both design-system.md and globals.css
 
 **Summary:** User reviewed the judgment call below (keep `globals.css` to

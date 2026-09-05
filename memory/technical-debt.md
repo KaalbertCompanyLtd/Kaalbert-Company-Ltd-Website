@@ -18,6 +18,43 @@ sequencing requirement:
 
 ---
 
+## ESLint pinned to the EOL 9.x line
+
+**Status:** Open
+**Date raised:** 2026-09-04
+**Reason:** `eslint@^10` is current, but bumping produced `ERESOLVE overriding peer
+dependency` warnings against `eslint-config-next@16.3.4`'s plugin chain (something in that
+chain still peer-depends on ESLint 9). `create-next-app`'s own generated `package.json` for
+this exact Next.js version independently chose `eslint@^9`, so matched that rather than force
+an unproven combo on day one. npm flags `eslint@9.39.5` as "no longer supported."
+**Impact:** No functional impact today — lint passes clean. Risk is losing ESLint 10-only
+rules/fixes and eventually losing security patches on the 9.x line.
+**Priority:** Low — revisit opportunistically, not urgent.
+**Possible Fix/Fixes:** Re-attempt the `eslint@^10` bump once `eslint-config-next` publishes
+a release with a peer range that includes ESLint 10 cleanly (check `npm info
+eslint-config-next peerDependencies` before retrying).
+**Trigger type:** Task-sequenced — re-check opportunistically whenever `package.json` is next
+touched for an unrelated reason; no separate user go-ahead needed.
+**Sequenced into:** None yet — re-check the next time a task touches `package.json` for an
+unrelated reason (T1.4 already re-checked this session, see below; the debt survived that
+check with a stronger reason, not a smaller one).
+
+**Re-checked (session 04, 2026-09-05, T1.4):** `npm info eslint-config-next@16.3.4
+peerDependencies` now reports `eslint: >=9.0.0` — technically includes 10 — and a dry-run
+install shows no ERESOLVE errors at all (the warning above no longer reproduces; a
+transitive dependency must have relaxed its range since T1.1). Actually installed
+`eslint@^10.10.0` and ran `npm run lint` for real: it crashes outright —
+`TypeError: contextOrFilename.getFilename is not a function` thrown inside
+`eslint-plugin-react`'s `react/display-name` rule (`node_modules/eslint-config-next/
+node_modules/eslint-plugin-react/lib/util/version.js`), because that rule calls an ESLint 9
+context API removed in ESLint 10. This is a harder blocker than the original ERESOLVE
+warning — a real runtime crash, not just an unresolved peer range — so `eslint-config-next`
+must ship a `eslint-plugin-react` bump before this can move. Reverted to `eslint@^9.39.5`
+(confirmed `npm run lint` passes clean again) rather than leave the repo on a broken lint
+config.
+
+---
+
 ## Vitest never scaffolded (no test runner exists yet)
 
 **Status:** Open
@@ -94,9 +131,17 @@ stable, and downgrading to 6.x is a step backward on both counts. Real fix is a 
 Prisma 7.x patch release (or a stabilized 8.0) that bumps `mysql2`/`deepmerge-ts` — revisit
 next time `package.json` dependencies are touched.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T1.4 (shadcn/ui + Base UI component scaffold) — see that task's
-addendum in `docs/tasks/01-foundation.md`, which already re-checks a dependency version
-while touching `package.json` for that task's own reason (the ESLint 9→10 debt item below).
+**Sequenced into:** None yet — re-check the next time `package.json` dependencies are next
+touched for an unrelated reason (T1.4 already re-checked this session, see below; still no
+fix available).
+
+**Re-checked (session 04, 2026-09-05, T1.4):** `npm info prisma version` /
+`@prisma/client version` / `@prisma/adapter-pg version` all still report `7.10.0` as latest
+stable; npm's `latest` dist-tag for `prisma` is still `8.0.0-rc.13` (a pre-release, unchanged
+from T1.2). `npm audit --json` still reports the same 4 high-severity advisories via the same
+`mysql2`/`deepmerge-ts` chain, with the same `npm audit fix --force` "fix" (downgrade to
+`6.19.3`) still the only automated option — still rejected for the same reason. No action
+taken; nothing has changed since T1.2.
 
 ---
 
@@ -144,28 +189,6 @@ any task) as a cue to act; wait for the user to say the domain is registered and
 explicitly.
 **Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum added session 01,
 2026-09-04, explicitly marked user-triggered)
-
-## ESLint pinned to the EOL 9.x line
-
-**Status:** Open
-**Date raised:** 2026-09-04
-**Reason:** `eslint@^10` is current, but bumping produced `ERESOLVE overriding peer
-dependency` warnings against `eslint-config-next@16.3.4`'s plugin chain (something in that
-chain still peer-depends on ESLint 9). `create-next-app`'s own generated `package.json` for
-this exact Next.js version independently chose `eslint@^9`, so matched that rather than force
-an unproven combo on day one. npm flags `eslint@9.39.5` as "no longer supported."
-**Impact:** No functional impact today — lint passes clean. Risk is losing ESLint 10-only
-rules/fixes and eventually losing security patches on the 9.x line.
-**Priority:** Low — revisit opportunistically, not urgent.
-**Possible Fix/Fixes:** Re-attempt the `eslint@^10` bump once `eslint-config-next` publishes
-a release with a peer range that includes ESLint 10 cleanly (check `npm info
-eslint-config-next peerDependencies` before retrying).
-**Trigger type:** Task-sequenced — whichever session works T1.4 should just check this in
-passing, no separate user go-ahead needed.
-**Sequenced into:** T1.4 (docs/tasks/01-foundation.md — addendum added session 01,
-2026-09-04: T1.4 already touches `package.json`'s dependencies, natural moment to re-check)
-
----
 
 ## Anticipated (not yet raised — a placeholder to watch for)
 

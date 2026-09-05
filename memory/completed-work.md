@@ -16,6 +16,86 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T1.4 — shadcn/ui + Base UI component scaffold
+**Summary:** Ran the shadcn CLI (`shadcn@4.21.0`) with `-b base` (Base UI, not Radix, per ADR 0010) and the `nova` preset (the only way to get a non-interactive init; presets only differ
+in starter colour/font choices, which get overwritten by our own tokens anyway). The CLI's
+own `init` overwrote `app/globals.css`'s colour values with its Nova neutral-grey defaults
+and added a `.dark` block + Geist Google Font wiring in `app/layout.tsx` — reverted
+`layout.tsx` entirely and restored T1.3's exact hex token values in `globals.css`, keeping
+only the CLI's genuinely new structural additions: `@import "tw-animate-css"` (animate-in/out
+utilities Base UI components use for open/close transitions) and `@import
+"shadcn/tailwind.css"` (defines the `data-open`/`data-closed`/`data-checked`/etc. custom
+variants Base UI's `data-state`-driven components style against — components literally don't
+animate correctly without this import). Deliberately did not carry over the `.dark` block or
+`--font-sans`/`--font-heading` additions: `ui/design-system.md` line 96 explicitly says no
+dark-mode variant is defined for this brand, and `--font-sans` isn't part of this project's
+token set (`--font-display`/`--font-body`/`--font-mono` only). Generated all 21 foundation
+primitives from `ui/components.md`'s list via `npx shadcn add`: button, input, textarea,
+select, checkbox, radio-group, switch, card, dialog, alert-dialog, accordion, tabs, badge,
+table, avatar, tooltip, dropdown-menu, popover, progress, separator, sonner — plus `label`
+(a direct dependency of several of the above) and `field` in place of the list's "Form": the
+current shadcn registry's `form` component is an empty placeholder (react-hook-form's old
+Form wrapper has been retired from the Base UI style), and `field` (Field/FieldLabel/
+FieldDescription/FieldError/FieldGroup/etc.) is its documented replacement — the same "field
+wrapper + validation display" role `ui/components.md` describes, just under Base UI's own
+naming. Built `app/dev/component-scaffold/page.tsx` (route `/dev/component-scaffold`) with at
+least one themed instance of every one of those 21 primitives, matching T1.3's `/dev/
+design-tokens` scratch-page pattern. Verified with real Chrome browser automation (Playwright
+MCP still not connected this session — same fallback as T1.3): screenshotted every section
+and interactively exercised Dialog, AlertDialog, DropdownMenu, Popover, Tooltip (hover),
+Select (value change), and Sonner (toast) — all render with the Kaalbert palette (Pine Green
+primary, Ivory surfaces, Brass accents) with no per-component colour overrides, confirming
+the token-name match between `app/globals.css` and what the shadcn CLI generates. Found and
+fixed two real Base UI API-composition bugs surfaced only by actually clicking through the
+page (not visible from source review or typecheck): (1) Base UI's `Select.Value` shows the
+raw `value` string, not the matching item's label, unless `Select.Root` gets an `items` map —
+without it the trigger showed `"health-check"` instead of "Business Health Check"; (2) Base
+UI's `Menu.GroupLabel` (what `DropdownMenuLabel` renders) throws
+`MenuGroupContext is missing` at runtime unless wrapped in `Menu.Group`
+(`DropdownMenuGroup`) — Radix's equivalent didn't require this, so it wasn't obvious from
+the generated component source. Also fixed all `asChild`-pattern trigger compositions (Radix
+convention, doesn't exist on Base UI) to use Base UI's `render={<Button .../>}` prop instead
+— caught by `tsc`, not runtime. Addendums checked while touching `package.json`: bumped
+`eslint` to `^10.10.0`, ran the full quality-gate suite, and found `npm run lint` throws
+`TypeError: contextOrFilename.getFilename is not a function` inside
+`eslint-plugin-react`'s `react/display-name` rule — a real breakage, not just an ERESOLVE
+peer-dependency warning (which is what the existing technical-debt entry was based on) —
+reverted to `eslint@^9.39.5` and updated that debt entry with the concrete failure mode.
+Re-ran `npm audit`: still the same 4 high-severity transitive vulnerabilities in Prisma CLI's
+dev-tooling tree (`mysql2`, `deepmerge-ts`); no patched `prisma`/`@prisma/client` release
+exists yet (npm's `latest` is still `8.0.0-rc.13`, a pre-release) — left that debt entry open,
+updated its "checked again" note.
+**Files Changed:**
+
+- `app/globals.css` — added `@import "tw-animate-css"` and `@import "shadcn/tailwind.css"`;
+  added `* { @apply border-border outline-ring/50; }` to the base layer (shadcn's standard
+  default-border/focus-ring rule, resolves purely from existing tokens); all colour/radius
+  values unchanged from T1.3
+- `components.json` — new: shadcn CLI config (`style: base-nova`, `iconLibrary: lucide`, `@/`
+  aliases matching `tsconfig.json`)
+- `components/ui/*.tsx` — new: 23 generated files (21 foundation primitives + `label` +
+  `field`), each restyled against the T1.3 token layer by the CLI, no hand-patched colours
+- `lib/utils.ts` — new: `export { cn } from "cn"` (shadcn's `cn` helper, re-exported from the
+  small `cn` npm package rather than hand-rolling `clsx`+`tailwind-merge`)
+- `app/dev/component-scaffold/page.tsx` — new: the acceptance-criteria test page
+- `package.json`/`package-lock.json` — added `@base-ui/react`, `class-variance-authority`,
+  `cn`, `lucide-react`, `next-themes` (Sonner's theme-detection dependency), `shadcn`,
+  `sonner`, `tw-animate-css` as dependencies; `eslint` unchanged at `^9.39.5` (bumped to
+  `^10` then reverted — see technical-debt.md)
+- `app/layout.tsx` — untouched (CLI's Geist-font edit was reverted before it ever landed)
+
+**Related Feature:** None — `ui/components.md` is the authoritative reference (no
+`docs/features/*.md` governs the component scaffold).
+**Notes:** Playwright MCP still not connected this session (same as T1.3/see that entry) —
+used `claude-in-chrome` browser automation instead, including real clicks/hovers, not just
+screenshots. `npm run test` still has nothing to run (no Vitest scaffold yet — unchanged
+gap, see `memory/technical-debt.md`); this task adds generated component files + a scratch
+page, no `lib/` logic to unit test.
+
+---
+
+## 2026-09-05
+
 **Task:** T1.3 — Design tokens and Tailwind v4 setup
 **Summary:** Installed Tailwind CSS v4 (`tailwindcss`, `@tailwindcss/postcss`, both pinned
 `4.3.3`) CSS-first, no `tailwind.config.js`/`.ts` per ADR 0010. `app/globals.css` now carries
