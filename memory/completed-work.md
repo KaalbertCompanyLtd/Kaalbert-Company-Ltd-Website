@@ -25,29 +25,37 @@ Data requirements list — `whatHappens` — because the mockup's `.stage-detail
 dedicated "What happens" cell per stage distinct from the longer descriptive paragraph
 (`description`); updated the feature doc to name it, same precedent as T2.2 adding
 `Offer.ctaLabel`/`tiers`. The mockup's "One journey, not three separate products" intro
-paragraph has two inline links to offer pages that a plain-text `introCopy` field can't carry
-(no content field anywhere else in this project embeds markup) — seeded the paragraph as plain
-text instead, offer names un-linked; the same three offers are already reachable from the
-primary nav and footer on this page. All four stages seeded with equal structural depth per
-the feature doc's business rule; `capabilityTransferNote` populated only for Deliver (order 4),
-null for the other three. Verified for real via Playwright MCP at mobile (390px), tablet
-(768px) and desktop (1280px) — all four stages render in order with correct copy, the
-capability-transfer panel appears only under Deliver, meta tags populate from the `page` row,
-no console errors. Hit and fixed a stale-Prisma-client issue: the already-running dev server
-had the pre-migration client loaded in memory, so `prisma.methodStage` was `undefined` until
-the dev server was restarted after `prisma generate` — worth remembering for any future
-mid-session schema change.
+paragraph links its three offer-name mentions inline (`<a>` tags to each offer page) — kept
+`introCopy` itself as plain, admin-editable text (no content field anywhere else in this
+project embeds markup) but added `app/our-method/page.tsx`'s `renderIntroCopyWithOfferLinks`,
+which matches each of `getOfferNavLinks()`'s live offer names against the plain-text string at
+render time and re-inserts a real `Link` to that offer's actual route — preserves the mockup's
+linking behaviour without a templating scheme in the database field itself, and stays correct
+even if an offer is renamed. (First pass at this task shipped the paragraph fully un-linked,
+reasoning the same three offers were already reachable from nav/footer — the user caught that
+this dropped real mockup-specified functionality; corrected same-day, see
+`memory/decision-log.md`.) All four stages seeded with equal structural depth per the feature
+doc's business rule; `capabilityTransferNote` populated only for Deliver (order 4), null for
+the other three. Verified for real via Playwright MCP at mobile (390px), tablet (768px) and
+desktop (1280px) — all four stages render in order with correct copy, the capability-transfer
+panel appears only under Deliver, the three intro-copy links resolve to their real offer
+routes (confirmed by clicking one through), meta tags populate from the `page` row, no console
+errors. Hit and fixed a stale-Prisma-client issue: the already-running dev server had the
+pre-migration client loaded in memory, so `prisma.methodStage` was `undefined` until the dev
+server was restarted after `prisma generate` — worth remembering for any future mid-session
+schema change.
 **Files Changed:**
+
 - `prisma/schema.prisma` — added `MethodStage` model.
 - `prisma/migrations/20260905131349_add_method_stage/` — new migration.
 - `prisma/seed.ts` — added `seedOurMethodPage()`, `seedMethodStages()`, wired into `main()`.
 - `lib/our-method.ts` — new, `getMethodStages()`.
-- `app/our-method/page.tsx` — new route.
+- `app/our-method/page.tsx` — new route, incl. `renderIntroCopyWithOfferLinks()`.
 - `docs/features/our-method-page.md` — added `what_happens` to the `method_stage` Data
   requirements list.
-**Related Feature:** `docs/features/our-method-page.md`
-**Notes:** No admin editor exists yet for `page`/`method_stage` (Milestone 7) — this task only
-builds the read side, per this epic's own opening note.
+  **Related Feature:** `docs/features/our-method-page.md`
+  **Notes:** No admin editor exists yet for `page`/`method_stage` (Milestone 7) — this task only
+  builds the read side, per this epic's own opening note.
 
 ---
 

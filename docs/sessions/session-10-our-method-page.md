@@ -20,7 +20,8 @@ and updated the feature doc to match, same precedent as T2.2.
 - `prisma/seed.ts` — added `seedOurMethodPage()` (the `our-method` `Page` row) and
   `seedMethodStages()` (the 4 rows), wired into `main()`.
 - `lib/our-method.ts` — new, `getMethodStages()`.
-- `app/our-method/page.tsx` — new route: hero, intro copy, four equal-depth stages with a
+- `app/our-method/page.tsx` — new route: hero, intro copy (with its two offer names rendered
+  as real links via `renderIntroCopyWithOfferLinks()`), four equal-depth stages with a
   three-cell detail grid each, capability-transfer panel on Deliver only, fixed-chrome final
   CTA. `export const dynamic = "force-dynamic"` set.
 - `docs/features/our-method-page.md` — added `what_happens` to the `method_stage` Data
@@ -32,11 +33,15 @@ and updated the feature doc to match, same precedent as T2.2.
 - Added `MethodStage.whatHappens` beyond the feature doc's original three-field list — the
   mockup's `.stage-detail-grid` has a dedicated "What happens" cell distinct from each stage's
   longer paragraph, so both are real content, not one field wearing two hats.
-- The mockup's intro paragraph links two offer names inline (`<a href="...">`); no plain-text
-  content field anywhere else in this project embeds markup, so seeded `Page.introCopy` as
-  plain text with the offer names un-linked rather than inventing a one-off templating scheme
-  for a single paragraph — the same three offers are already reachable from nav and footer on
-  this page. Full reasoning in `memory/decision-log.md`.
+- The mockup's intro paragraph links its three offer names inline (`<a href="...">`).
+  First pass seeded `Page.introCopy` as plain text with the names un-linked, reasoning the
+  same offers were reachable from nav/footer anyway — the user caught that this dropped a
+  real, mockup-specified behaviour, not an optional embellishment. Corrected same-day:
+  `introCopy` stays plain text (still no markup in the DB field, consistent with every other
+  content field in this project) but `app/our-method/page.tsx`'s
+  `renderIntroCopyWithOfferLinks()` matches each live offer name from `getOfferNavLinks()`
+  against the string at render time and re-inserts a real `Link`. Full reasoning (both the
+  original call and the correction) in `memory/decision-log.md`.
 - The "One journey, not three separate products" kicker and the final CTA section are
   rendered as fixed template chrome (not DB-sourced), same treatment as the home page's own
   fixed sections and capabilities' "Continuing arrangement" kicker — neither is named as a
@@ -45,7 +50,9 @@ and updated the feature doc to match, same precedent as T2.2.
 ## Current State
 
 `/our-method` is live and fully database-driven, all four stages present with equal
-structural depth, capability-transfer note rendered only under Deliver. Verified via
+structural depth, capability-transfer note rendered only under Deliver, and the intro
+paragraph's three offer names link to their real `/offers/[slug]` routes (matching the
+mockup, confirmed by clicking one through to `/offers/financial-clarity-pack`). Verified via
 Playwright MCP at mobile (390px), tablet (768px), and desktop (1280px) — no console errors,
 meta tags populate correctly. Ready for T2.5.
 

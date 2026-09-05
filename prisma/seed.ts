@@ -538,14 +538,14 @@ async function seedAdvisoryRetainer() {
  * T2.4 (docs/tasks/02-public-presentation.md) — the our-method page's own hero + intro copy,
  * via the shared `page` entity. Hero copy sourced verbatim from
  * ui/mockups/a-public-site/our-method.html's `<section class="page-hero">`. `introCopy` is
- * the mockup's "One journey, not three separate products" paragraph, sourced verbatim except
- * for its two inline `<a>` links to offer pages — this project's plain-text content fields
- * carry no embedded markup anywhere else (`heroLead`, `Offer.problemStatement`, etc.), so the
- * two offer names are kept as plain text here rather than introducing a one-off
- * token-substitution scheme for a single paragraph (see memory/decision-log.md, T2.4); the
- * same three offers are already one click away via the primary nav and footer on this same
- * page. The section's own kicker ("One journey, not three separate products") is rendered as
- * fixed chrome by app/our-method/page.tsx, same treatment as capabilities.html's "Continuing
+ * the mockup's "One journey, not three separate products" paragraph, sourced verbatim; stays
+ * plain text (no embedded markup, same as every other content field in this project) even
+ * though the mockup links its two offer-name mentions inline — app/our-method/page.tsx's
+ * `renderIntroCopyWithOfferLinks` re-links any of `getOfferNavLinks()`'s live offer names it
+ * finds in this string at render time, so the mockup's linking behaviour is preserved without
+ * requiring markup in the database field itself (see memory/decision-log.md, T2.4). The
+ * section's own kicker ("One journey, not three separate products") is rendered as fixed
+ * chrome by app/our-method/page.tsx, same treatment as capabilities.html's "Continuing
  * arrangement" kicker in seedCapabilitiesPage above — not part of this doc's named fields.
  */
 async function seedOurMethodPage() {
@@ -559,7 +559,7 @@ async function seedOurMethodPage() {
       heroLead:
         "Four stages, each with a defined input, output and decision point — not a slogan. This is the firm's strongest differentiator.",
       introCopy:
-        "The three core offers — Business Health Check, Financial Clarity Pack, and Funding-Readiness Pack — are one sequence the firm sells, not three separate products. Every stage below runs inside each of them.",
+        "The three core offers — Business Health Check, Financial Clarity Pack, Funding-Readiness Pack — are one sequence the firm sells, not three separate products. Every stage below runs inside each of them.",
       metaTitle: "Our Method — Kaalbert & Company Ltd",
       metaDescription:
         "The four-stage method behind every Kaalbert & Company engagement — Discover, Diagnose, Design, Deliver — including how capability transfers back to the client at the end.",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
@@ -26,12 +27,53 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * The mockup's intro paragraph links each of the three core-offer names inline
+ * (`our-method.html`'s two `<a>` tags). `page.introCopy` stays plain, admin-editable text
+ * (no markup embedded, same as every other content field in this project) — this splits it
+ * on each live offer's own `name` and re-inserts a real `Link` to that offer's actual route,
+ * so the links stay correct even if an offer is renamed or re-ordered, without requiring a
+ * templating scheme in the database field itself.
+ */
+function renderIntroCopyWithOfferLinks(
+  introCopy: string,
+  offerNavLinks: { name: string; href: string }[],
+) {
+  const namesPattern = offerNavLinks
+    .map((offer) => offer.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  if (!namesPattern) {
+    return introCopy;
+  }
+  const parts = introCopy.split(new RegExp(`(${namesPattern})`, "g"));
+  return parts.map((part, index) => {
+    const offer = offerNavLinks.find((candidate) => candidate.name === part);
+    if (!offer) {
+      return <Fragment key={index}>{part}</Fragment>;
+    }
+    return (
+      <Link key={index} href={offer.href} className="text-primary font-bold hover:underline">
+        {part}
+      </Link>
+    );
+  });
+}
+
 export default async function OurMethodPage() {
   const [page, stages, offerNavLinks] = await Promise.all([
     getPageBySlug("our-method"),
     getMethodStages(),
     getOfferNavLinks(),
   ]);
+
+  // `introCopy` is mandatory content for this page specifically (our-method-page.md's edge
+  // case: this page does not degrade gracefully to a partial state) — a null value here is a
+  // seed/migration bug, not a real "no content yet" state a visitor should ever see.
+  if (!page.introCopy) {
+    throw new Error(
+      `page "our-method" has no introCopy — run \`npm run db:seed\` (see prisma/seed.ts).`,
+    );
+  }
 
   return (
     <>
@@ -51,12 +93,15 @@ export default async function OurMethodPage() {
         </section>
 
         {/* Intro copy — the `page` entity's own `introCopy` field, above the stage list per
-            the mockup. The kicker text itself is fixed chrome, same treatment as
-            capabilities.html's "Continuing arrangement" kicker. */}
+            the mockup, with the three core-offer names linked to their real routes (the
+            mockup's own two `<a>` tags). The kicker text itself is fixed chrome, same
+            treatment as capabilities.html's "Continuing arrangement" kicker. */}
         <section className="border-border border-b px-4 py-12 sm:px-6">
           <div className="mx-auto max-w-[820px]">
             <span className={KICKER}>One journey, not three separate products</span>
-            <p className="text-body text-foreground mb-0 max-w-[640px]">{page.introCopy}</p>
+            <p className="text-body text-foreground mb-0 max-w-[640px]">
+              {renderIntroCopyWithOfferLinks(page.introCopy, offerNavLinks)}
+            </p>
           </div>
         </section>
 

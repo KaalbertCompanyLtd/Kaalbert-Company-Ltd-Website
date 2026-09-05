@@ -2,6 +2,27 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.4, correction) — Intro-copy paragraph's offer-name links restored; dropping them was wrong
+
+**Summary:** The entry directly below this one decided to seed `Page.introCopy` as fully
+plain text, un-linking the mockup's two `<a>` tags around offer names, reasoning that a
+one-off token-substitution scheme wasn't worth it since the same offers were reachable from
+nav/footer anyway. The user flagged this directly: the mockup specifies those names as links,
+and dropping them wasn't this project's call to make unilaterally — "the mockups are
+authoritative... don't invent layout" cuts against removing specified interactive behaviour,
+not just against adding un-specified behaviour. Corrected by keeping `introCopy` itself as
+plain text (still no markup in the database field — that part of the original reasoning
+holds) but adding `app/our-method/page.tsx`'s `renderIntroCopyWithOfferLinks()`: it matches
+each of `getOfferNavLinks()`'s live offer names against the plain string at render time and
+re-inserts a real `Link` to that offer's actual route. This gets the mockup's exact behaviour
+back (verified by clicking through to `/offers/financial-clarity-pack`) while keeping the
+content itself plain and admin-editable, and without hand-coding stale `.html`-style hrefs
+the way the mockup itself does. General lesson: "the mockup specifies X" is a requirement to
+satisfy, not a starting point to simplify away for engineering convenience — if a
+mockup-specified behaviour seems like more trouble than it's worth, that's a question to
+raise, not a decision to make silently.
+**Related Documents:** `app/our-method/page.tsx`, `prisma/seed.ts` (`seedOurMethodPage`).
+
 ## 2026-09-05 (T2.4) — `MethodStage.whatHappens` added beyond the feature doc's original field list; intro-copy paragraph seeded as plain text without its mockup's inline offer links
 
 **Summary:** `our-method-page.md`'s original Data requirements named only
