@@ -217,3 +217,72 @@ model MethodStage {
 
   @@map("method_stage")
 }
+
+/// docs/features/about-and-partners-page.md "Data requirements" — the founding
+/// statement/values/standard `firm_statement` entity, decomposed into named fields the same
+/// way `HomePageContent`/`Offer`/`MethodStage` decompose their own mockup sections, rather
+/// than one opaque rich-text blob (the feature doc's one-line "rich content" description
+/// doesn't preclude this — the mockup's four numbered value cards and two distinct panels
+/// need their own fields to render, same reasoning as T2.4 adding `MethodStage.whatHappens`
+/// beyond its feature doc's original list). Singleton row, same `findFirst`-by-fixed-id
+/// pattern as `HomePageContent`/`AdvisoryRetainer`. The page's own hero
+/// (kicker/heading/lead/meta) reuses the shared `Page` model instead (slug `"about"`), same
+/// as capabilities/our-method — this entity holds only the content below the hero.
+model FirmStatement {
+  id             Int      @id @default(autoincrement())
+  standingIntro  String   @map("standing_intro")
+  /// Fixed 4-item ordered list ("What we stand on"'s value cards) — Integrity, Excellence,
+  /// Partnership, Impact. A plain string array, not `Json`, since each value is just a name
+  /// with no other per-value content in the mockup.
+  values         String[]
+  forwardHeading String   @map("forward_heading")
+  forwardBody    String   @map("forward_body")
+  /// "What we are not" panel's body paragraph — the panel heading itself is fixed template
+  /// chrome (a standard compliance-disclaimer heading), not modelled as a field.
+  scopeBody      String   @map("scope_body")
+  isPlaceholder  Boolean  @default(false) @map("is_placeholder")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("firm_statement")
+}
+
+/// docs/features/about-and-partners-page.md / content-management-admin.md "Data
+/// requirements" — shared with the not-yet-built insights-engine.md (article bylines).
+/// `adminUserId` models the doc's `admin_user_id` FK for schema completeness only — no
+/// `admin_user` table exists yet (Milestone 6, admin authentication), same precedent as
+/// `HomePageContent.featuredArticleIds` pointing at the not-yet-built `article` table (T2.1,
+/// see memory/decision-log.md) — not exercised by this task.
+///
+/// `photoUrl`/`credentials` are nullable, and `published` no longer gates on photo readiness
+/// the way about-and-partners-page.md's original edge case specified — revised during T2.5
+/// per explicit firm direction (memory/decision-log.md, session 11): a partner with no photo
+/// yet still publishes, rendered with an initials avatar in `photoUrl`'s place (never a fake
+/// placeholder image standing in for a real one), swapped for the real photo the moment one
+/// is uploaded — no publish-state change required. `credentials` is similarly nullable where
+/// a partner has no formal designation to state yet — never fabricated to fill the field,
+/// rendered only when present. `published` still gates on the other required fields (name,
+/// practiceArea, personalStatement, bio) per content-management-admin.md's publish-gating
+/// rule.
+///
+/// `order` follows `Capability.order`/`MethodStage.order`'s naming precedent (not named in
+/// the feature doc) — needed to render exactly one partner as the page's single featured
+/// "Lead Partner" card and the rest in a grid, in a stable, admin-editable order; the lowest
+/// `order` value is the featured entry (see lib/about.ts's `getAuthors`).
+model Author {
+  id                Int      @id @default(autoincrement())
+  adminUserId       Int?     @map("admin_user_id")
+  name              String
+  photoUrl          String?  @map("photo_url")
+  practiceArea      String   @map("practice_area")
+  credentials       String?
+  personalStatement String   @map("personal_statement")
+  bio               String
+  order             Int
+  published         Boolean  @default(false)
+  isPlaceholder     Boolean  @default(false) @map("is_placeholder")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("author")
+}

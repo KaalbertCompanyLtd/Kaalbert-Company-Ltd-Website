@@ -16,6 +16,46 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.5 — About / Team page
+**Summary:** Built `/about` to `ui/mockups/a-public-site/about.html`'s structure, adding the
+`Author` model (new at this task) and a new `FirmStatement` singleton model for the founding
+statement/values/standard content, both seeded with real, Company-Docs-sourced content — the
+5 partners' names, roles, credentials and bios, not placeholder. The firm asked mid-task to
+correct two partner titles ("Founder/CEO" → "Lead Partner", "Co-Founder" → "Partner"), applied
+directly in the seed data (and the mockup, since it already held the real content). The user
+then rejected this task's own architecture constraint's literal "no photo → hidden entirely"
+edge case once real photography turned out not to exist yet — redirected to an initials-avatar
+fallback instead, so all 5 partners publish now with `photoUrl: null`, swapped for a real photo
+whenever one is uploaded. This reverses `about-and-partners-page.md`'s original edge case and
+`content-management-admin.md`'s publish-gating rule, both updated to match, plus T7.6 (the
+future Team editor task) corrected so it doesn't rebuild the old hide-on-no-photo behavior.
+Verified via Playwright MCP at mobile/tablet/desktop — initials avatars, corrected titles, and
+credentials (shown only for the two partners whose bios state a formal designation) all render
+correctly with no console errors.
+**Files Changed:**
+
+- `prisma/schema.prisma` — new `FirmStatement` and `Author` models.
+- `prisma/migrations/20260905142546_t2_5_firm_statement_and_author/` — migration.
+- `lib/about.ts` — new: `getFirmStatement`, `getAuthors`, `getInitials`.
+- `app/about/page.tsx` — new: the page itself, including `PartnerAvatar`.
+- `prisma/seed.ts` — `seedAboutPage`, `seedFirmStatement`, `seedAuthors` added and wired into
+  `main()`.
+- `ui/mockups/a-public-site/about.html` — the two corrected title labels.
+- `docs/features/about-and-partners-page.md` — Data requirements (`order`, `FirmStatement`
+  decomposition) and the photo/credentials edge cases, revised.
+- `docs/features/content-management-admin.md` — the publish-gating business rule and
+  `author`'s field list, revised to match.
+- `docs/tasks/07-content-admin.md` — T7.6 (Team / author profile editor) corrected to the new
+  policy, plus a session-11 addendum on the pending photo/credentials gap.
+  **Related Feature:** `docs/features/about-and-partners-page.md`.
+  **Notes:** No test runner exists yet (`memory/technical-debt.md` → "Vitest never
+  scaffolded", sequenced into T3.2) — consistent with every other T2.x task, no tests were
+  added for `lib/about.ts`. Two new technical-debt entries track the still-missing partner
+  photography (`/about`'s own initials-avatar state, and the still-unresolved home-page
+  senior-attention panel placeholder), both user-triggered and sequenced into T7.6.
+
+---
+
 **Task:** T1.5 (follow-up fix) — SiteHeader current-page nav active state
 **Summary:** None of the mockups mark the current page in the nav (every page's `<nav>`
 markup is identical, copy-pasted across all of them) — user flagged this as a real gap

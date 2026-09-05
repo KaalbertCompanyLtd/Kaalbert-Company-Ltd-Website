@@ -141,6 +141,32 @@ that task's addendum.
 
 ---
 
+## About page partners have no real photography yet
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** T2.5 sourced real names, roles, credentials and bios for all 5 partners from
+`ui/mockups/a-public-site/about.html`/Company Docs, but no partner photograph exists anywhere
+in the repo (checked `public/` and `ui/mockups/assets/` before building — neither has one).
+Per revised policy (session 11, `memory/decision-log.md`), this does not block publishing:
+all 5 `author` rows are seeded `published: true` with `photoUrl: null`, rendered on `/about`
+with an initials avatar (`app/about/page.tsx`'s `PartnerAvatar`) in place of a photo.
+**Impact:** Low — cosmetic only; every partner's real profile is fully visible and correct,
+just without a photograph. `/about` is not "half-finished" by this project's own revised
+standard, but a photo does read more credibly than initials long-term.
+**Priority:** Low
+**Possible Fix/Fixes:** Once the firm delivers real partner photography (single coordinated
+session, per Document 13.03 Section 13), upload each photo and set that `author` row's
+`photoUrl` — via T7.6's Team editor once built, or a direct seed/DB update if that's not yet
+available. No other code change needed; the avatar swaps automatically the moment `photoUrl`
+is set.
+**Trigger type:** User-triggered
+**Sequenced into:** T7.6 (Team / author profile editor, `docs/tasks/07-content-admin.md`) —
+see that task's session-11 addendum. Do not source or generate partner photos proactively;
+wait for the firm to say photography is ready.
+
+---
+
 ## Home page senior-attention panel has no real partner photography yet
 
 **Status:** Open
@@ -154,12 +180,15 @@ placeholder-content rule, applied to an image asset gap rather than text copy).
 **Impact:** Low — cosmetic only, doesn't block T2.1's own acceptance criteria. The home page
 currently ships an admittedly-provisional panel in a section that's meant to build trust.
 **Priority:** Low
-**Possible Fix/Fixes:** Once T2.5 sources real partner photos/bios for `/about`, swap this
-panel for a real photo (or small multi-partner strip) instead of the italic note.
-**Trigger type:** Task-sequenced
-**Sequenced into:** T2.5 (About / Team page, `docs/tasks/02-public-presentation.md`) — see
-that task's addendum. Not required as part of T2.5's own acceptance criteria, just worth
-revisiting once the asset gap it depends on is closed.
+**Possible Fix/Fixes:** T2.5 (now complete) sourced real partner names/bios/credentials for
+`/about`, but not real photography (see "About page partners have no real photography yet"
+above — same underlying asset gap). Once that gap closes, swap this panel for a real photo
+(or small multi-partner strip) instead of the italic note; until then, this panel and
+`/about`'s own initials-avatar treatment are consistent with each other, not a contradiction.
+**Trigger type:** User-triggered
+**Sequenced into:** T7.6 (Team / author profile editor, `docs/tasks/07-content-admin.md`) —
+tied to the same photography delivery as the entry above; revisit both together once photos
+exist.
 
 ---
 

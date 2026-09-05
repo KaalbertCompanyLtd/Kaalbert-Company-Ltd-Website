@@ -643,6 +643,159 @@ async function seedMethodStages() {
   }
 }
 
+/**
+ * T2.5 (docs/tasks/02-public-presentation.md) — the about page's own hero copy, via the
+ * shared `page` entity. Sourced verbatim from ui/mockups/a-public-site/about.html's
+ * `<section class="page-hero">`. `metaTitle`/`metaDescription` aren't shown in the mockup (a
+ * bare `<title>` tag only) — written fresh here, same treatment as `seedCapabilitiesPage`.
+ */
+async function seedAboutPage() {
+  await prisma.page.upsert({
+    where: { slug: "about" },
+    update: {},
+    create: {
+      slug: "about",
+      heroKicker: "About & Partners",
+      heroHeading: "A firm built to make your business organised, sound and ready to grow",
+      heroLead:
+        "Where a business is informal, we help it become structured. Where it's struggling to manage money, we help it gain control. Where it wants funding, we help it become fundable — and where it wants to grow but doesn't know how, we give it a clear plan and help it execute.",
+      introCopy: null,
+      metaTitle: "About & Partners — Kaalbert & Company Ltd",
+      metaDescription:
+        "The firm's founding statement, values and standard, and the five partners you'd actually work with — named, credentialed, and accountable.",
+      isPlaceholder: false,
+    },
+  });
+}
+
+/**
+ * T2.5 — the `firm_statement` singleton. Sourced verbatim from
+ * ui/mockups/a-public-site/about.html's "What we stand on", "What we're building toward" and
+ * "What we are not" sections — see prisma/schema.prisma's `FirmStatement` doc-comment for why
+ * this is decomposed into named fields rather than one rich-text blob.
+ */
+async function seedFirmStatement() {
+  await prisma.firmStatement.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      standingIntro:
+        "We work with you, not just for you. Four values are simple and non-negotiable — the standard every engagement is held to, whoever on the team is running it.",
+      values: ["Integrity", "Excellence", "Partnership", "Impact"],
+      forwardHeading: "Senior attention on every engagement, for as long as the firm exists",
+      forwardBody:
+        "Kaalbert & Company is a young firm with an old-fashioned standard: every engagement gets senior partner-level attention, never passed down and forgotten. We implement alongside our clients rather than handing over a report and leaving, and we're honest about what sits outside our remit — connecting clients to the licensed accountants, tax agents and lawyers a piece of work actually requires, rather than overreaching. That standard is what we're asking to be judged against as the firm grows.",
+      scopeBody:
+        "Kaalbert & Company is not a licensed or chartered accounting firm, not licensed tax practitioners, and not a law firm. We do not audit or sign statutory accounts, act as your tax agent of record, or give legal opinions. Where the law requires a licensed professional, we prepare you thoroughly — and connect you to certified accountants, tax agents and lawyers we trust. We work hand in hand with them; we do not replace them.",
+      isPlaceholder: false,
+    },
+  });
+}
+
+/**
+ * T2.5 — the 5 `author` rows. Names, roles and bio copy sourced verbatim from
+ * ui/mockups/a-public-site/about.html's partner-feature/partner-grid entries (the firm's own
+ * supplied content, not placeholder — see this task's session-11 summary). Titles corrected
+ * per explicit firm direction (session 11, 2026-09-05): "Founder/CEO" → "Lead Partner",
+ * "Co-Founder" → "Partner" (memory/decision-log.md).
+ *
+ * `photoUrl: null` for all five — no partner photography exists yet (checked `public/` and
+ * `ui/mockups/assets/`, neither has one). Per the revised policy (memory/decision-log.md,
+ * session 11), this does NOT block `published` — every other required field is complete and
+ * real, so all five publish now with an initials-avatar fallback (app/about/page.tsx's
+ * `PartnerAvatar`), swapped for a real photo the moment one is uploaded.
+ *
+ * `credentials` is set only for John Dogbey and Evans Agyemang ("Chartered Accountant"),
+ * copied verbatim from their own bio text below — the other three partners' bios don't state
+ * a formal professional designation, so `credentials` stays null rather than inventing one
+ * (never fabricated, per CLAUDE.md).
+ *
+ * `personalStatement`/`bio` are seeded with the same paragraph: the mockup and Company Docs
+ * supply exactly one paragraph per partner, written in third person rather than two distinct
+ * first-person/byline texts. `personalStatement` is what this page renders (per
+ * about-and-partners-page.md's user flow); `bio` is duplicated for `insights-engine.md`'s own
+ * future use (article bylines, not built yet) rather than left empty — see
+ * memory/decision-log.md.
+ */
+async function seedAuthors() {
+  const authors: Array<{
+    name: string;
+    photoUrl: string | null;
+    practiceArea: string;
+    credentials: string | null;
+    personalStatement: string;
+    order: number;
+  }> = [
+    {
+      name: "Albert Kwakye Amponsah",
+      photoUrl: null,
+      practiceArea: "Lead Partner · Lead Consultant",
+      credentials: null,
+      personalStatement:
+        "A Ghanaian accounting and finance professional with over fifteen years of disciplined, sector-diverse experience spanning corporate finance, fund administration, real estate, education administration, wood-processing manufacturing and consultancy. Albert brings hands-on expertise in financial modelling, business intelligence, strategic planning and complex data analysis using modern tools and languages.",
+      order: 1,
+    },
+    {
+      name: "Ama Wiafe",
+      photoUrl: null,
+      practiceArea: "Growth, Markets & Clients",
+      credentials: null,
+      personalStatement:
+        "An accomplished operations and finance professional with ten years of experience in financial administration and executive support. Ama's expertise lies in enhancing operational controls while facilitating business growth across multifunctional teams.",
+      order: 2,
+    },
+    {
+      name: "Joseph Bordoh",
+      photoUrl: null,
+      practiceArea: "Technology & Operations",
+      credentials: null,
+      personalStatement:
+        "An IT support and network professional with over ten years of hands-on experience in systems administration, network infrastructure, information security and IT service management. Joseph is skilled in Windows Server, Active Directory, Office 365, VLANs, IP telephony, ERP support and user training, with a proven record of keeping business systems stable and reliable.",
+      order: 3,
+    },
+    {
+      name: "John Dogbey",
+      photoUrl: null,
+      practiceArea: "Financial Reporting & Tax",
+      credentials: "Chartered Accountant",
+      personalStatement:
+        "A chartered accountant and MBA Finance graduate with over ten years of experience in financial reporting, tax compliance, management and cost accounting, and in-depth financial analysis across regulatory and commercial environments. John prepares IFRS-compliant financial statements, establishes internal controls, builds budgets with variance analysis and forecasts cash flow, working fluently in Power BI and Tableau to turn numbers into decisions.",
+      order: 4,
+    },
+    {
+      name: "Evans Agyemang",
+      photoUrl: null,
+      practiceArea: "Financial Control & Compliance",
+      credentials: "Chartered Accountant",
+      personalStatement:
+        "A chartered accountant with more than seven years of experience delivering financial and reporting solutions across corporate, regulatory and public-sector environments. Evans brings depth in financial reporting, analysis, reconciliations, cost control and regulatory compliance, with a proven record of managing complex multi-entity operations and producing accurate, audit-ready results under strict deadlines.",
+      order: 5,
+    },
+  ];
+
+  for (const author of authors) {
+    const data = {
+      adminUserId: null,
+      name: author.name,
+      photoUrl: author.photoUrl,
+      practiceArea: author.practiceArea,
+      credentials: author.credentials,
+      personalStatement: author.personalStatement,
+      bio: author.personalStatement,
+      order: author.order,
+      published: true,
+      isPlaceholder: false,
+    };
+    const existing = await prisma.author.findFirst({ where: { name: author.name } });
+    if (existing) {
+      await prisma.author.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.author.create({ data });
+    }
+  }
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -654,6 +807,9 @@ async function main() {
   await seedAdvisoryRetainer();
   await seedOurMethodPage();
   await seedMethodStages();
+  await seedAboutPage();
+  await seedFirmStatement();
+  await seedAuthors();
 }
 
 main()

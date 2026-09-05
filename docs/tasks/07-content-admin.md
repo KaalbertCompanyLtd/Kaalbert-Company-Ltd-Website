@@ -100,13 +100,27 @@ API-level) creates a working new landing page end to end with zero code or deplo
 
 **Build:** Self-service (and right-role-gated other-partner) editor for the `author` record
 — photo (via the same R2 media pipeline as article preview images, ADR 0004), practice area,
-credentials (stored verbatim, never altered/abbreviated), personal statement, bio.
+credentials (stored verbatim, never altered/abbreviated), personal statement, bio, order.
 **Input → Output:** Profile form submission → `author` row; `published` stays false until
-every required field is set.
-**Acceptance criteria:** A partial profile (e.g. no photo) never appears on `/about` or as an
-article byline — omitted entirely, not shown half-filled; a completed profile appears on both
-surfaces immediately on save.
+name/practice area/personal statement are set — photo and credentials are NOT publish-gating
+(revised at T2.5 per explicit firm direction, session 11, 2026-09-05; see
+`memory/decision-log.md` and `docs/features/about-and-partners-page.md`'s edge cases).
+**Acceptance criteria:** A profile missing name/practice area/personal statement never
+appears on `/about` or as an article byline — omitted entirely, not shown half-filled. A
+profile with no photo yet DOES appear, rendered with an initials avatar
+(`app/about/page.tsx`'s `PartnerAvatar`); uploading a photo later simply replaces the
+initials on save, no separate publish step.
 **Size:** M **Dependencies:** T6.3, T2.5, T4.3
+
+**Addendum (session 11, 2026-09-05):** All 5 seeded partners (`prisma/seed.ts`'s
+`seedAuthors`) currently publish with `photoUrl: null` — no partner photography exists yet
+(see `memory/technical-debt.md` → "About page partners have no real photography yet").
+**Trigger type: User-triggered.** Do not treat reaching this task as a cue to source or
+generate partner photos — wait for the firm to say real photography is ready, then this
+task's own editor (or a direct seed/DB update, whichever is faster at the time) uploads each
+partner's real photo. Three partners (Ama Wiafe, Joseph Bordoh, Albert Kwakye Amponsah) also
+have no `credentials` value seeded — real designations may not exist for these roles at all;
+confirm with the firm before assuming a gap, rather than assuming one is missing.
 
 ### T7.7 — Diagnostic Configuration
 

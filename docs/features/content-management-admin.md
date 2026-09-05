@@ -90,11 +90,15 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
   Document 13.03, Section 13, calls "a commitment the firm cannot hold."
 - Every admin account requires TOTP before any content action is available (NFR-3).
 - A partner's public entry (About page, article bylines) does not go live until every
-  required field is set — name, photo, practice area, credentials, personal statement — so a
-  half-finished profile is never publicly visible (Document 13.03's "smaller and complete
-  beats larger and unfinished" principle, applied here as in
-  `about-and-partners-page.md`'s edge cases). Professional designations are stored exactly as
-  the partner supplies them; the admin does not alter or abbreviate a credential string.
+  required field is set — name, practice area, personal statement — so a half-finished
+  profile is never publicly visible (Document 13.03's "smaller and complete beats larger and
+  unfinished" principle). Photo and credentials are not publish-gating: revised at T2.5 per
+  explicit firm direction (session 11, 2026-09-05) — a partner with no photo yet still
+  publishes, shown with an initials avatar until a real one is uploaded
+  (`about-and-partners-page.md`'s edge cases; `memory/decision-log.md`), and a partner with no formal
+  designation to state simply shows no credentials line, rather than an entry sitting hidden
+  for either reason. Professional designations are stored exactly as the partner supplies
+  them; the admin does not alter or abbreviate a credential string.
 - Diagnostic Configuration edits values (question text, order, active flag, dimension
   weights, triage thresholds), never the scoring algorithm itself — restructuring how a score
   is computed is a developer change, per FR-8's scope and `business-health-check-diagnostic.md`
@@ -125,8 +129,10 @@ Shares the schema of the features it edits (`article`, `category`, `page`, `lega
 `diagnostic_threshold`) — this feature is the UI and authorization layer over that data, not
 a separate data model. `author`
 — id, admin_user_id (FK), name, photo_url, practice_area, credentials, personal_statement,
-bio, published (bool) — one record per partner, linked to but distinct from their login
-identity so public profile edits never touch authentication data. `site_settings` — a
+bio, order (int, added at T2.5 — display order; lowest value is the featured "Lead Partner"
+entry on `/about`), published (bool) — one record per partner, linked to but distinct from
+their login identity so public profile edits never touch authentication data. `site_settings`
+— a
 singleton record: phone_primary, phone_secondary (nullable), email, whatsapp_number, address,
 response_time_commitment, social_profile_urls (list, nullable —
 `seo-and-search-foundation.md`'s Organization schema `sameAs` source). Additionally:

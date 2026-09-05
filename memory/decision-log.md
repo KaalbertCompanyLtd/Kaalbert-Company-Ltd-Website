@@ -2,6 +2,62 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.5, session 11) — Partner photo readiness no longer gates `published`; initials avatar instead
+
+**Summary:** `about-and-partners-page.md`'s original edge case said a partner's `author` row
+stays `published: false`, entry hidden entirely, until a real photo exists. Before building
+T2.5, I confirmed no partner photography exists anywhere in the repo (`public/`, `ui/mockups/
+assets/`) and proposed shipping per that documented edge case — all 5 partners unpublished,
+empty partner section. The user rejected this outright: withholding a partner's entire real,
+complete profile (name, credentials, bio) just because a photo shoot hasn't happened yet was
+the wrong tradeoff, and asked for an initials-avatar fallback instead — the real photo simply
+swaps in later, no publish-state change. This is a deliberate reversal of a documented feature
+doc edge case (CLAUDE.md's Rollback/Revision Protocol), not an engineering judgment call, so
+both `about-and-partners-page.md` and `content-management-admin.md` were updated to match
+(their edge-case/publish-gating text, not just the code). Concretely: `Author.photoUrl` and
+`Author.credentials` are both nullable and neither blocks `published`; `published` gates only
+on name/practiceArea/personalStatement being complete. `app/about/page.tsx`'s `PartnerAvatar`
+renders `AvatarImage` when `photoUrl` is set, else an `AvatarFallback` showing the same
+first-two-word initials the original mockup used ("AK" for Albert Kwakye Amponsah), sized
+larger (7rem featured / 5rem grid) than the design system's default `Avatar` presets per the
+user's own follow-up request that the avatars "show a bit more/better" given they're currently
+the only visual identity a visitor sees for each partner. All 5 seeded partners publish now
+(`prisma/seed.ts`'s `seedAuthors`).
+**Related Documents:** `prisma/schema.prisma` (`Author` doc-comment), `app/about/page.tsx`,
+`docs/features/about-and-partners-page.md`, `docs/features/content-management-admin.md`.
+
+## 2026-09-05 (T2.5, session 11) — `firm_statement` decomposed into named fields; `Page` model reused for the hero
+
+**Summary:** `about-and-partners-page.md` names `firm_statement` as one entity holding
+"founding statement, values, standard (rich content)" with no sub-field breakdown. The
+mockup's actual content needs four numbered value cards and two distinct panels (forward
+statement, scope disclaimer) rendered separately, so — same precedent as T2.2's `Offer`
+fields and T2.4's `MethodStage.whatHappens` — this was decomposed into a new `FirmStatement`
+singleton model (`standingIntro`, `values` as a plain `String[]`, `forwardHeading`/
+`forwardBody`, `scopeBody`) rather than one opaque rich-text blob. The page's own hero
+(kicker/heading/lead/meta) reuses the shared `Page` model at slug `"about"` instead — same
+hero shape as `capabilities`/`our-method`'s rows, per CLAUDE.md's "shared generic page entity"
+recurring pattern. `docs/features/about-and-partners-page.md`'s Data requirements section was
+updated to name both.
+**Related Documents:** `prisma/schema.prisma` (`FirmStatement` doc-comment),
+`prisma/seed.ts` (`seedAboutPage`, `seedFirmStatement`), `docs/features/about-and-partners-page.md`.
+
+## 2026-09-05 (T2.5, session 11) — `personalStatement`/`bio` seeded identically; `credentials` left null where not literally sourced
+
+**Summary:** `about-and-partners-page.md` names both `personal_statement` (this page's own
+"in their own voice" field) and `bio` (shared with the not-yet-built `insights-engine.md`'s
+article bylines) as distinct fields, but the only real source material (the mockup / Company
+Docs) supplies exactly one third-person paragraph per partner — not two. Rather than leave
+`bio` empty pending Insights (Milestone 4), it's seeded with the same paragraph as
+`personalStatement`; `/about` itself renders only `personalStatement`, per the feature doc's
+own user flow. Separately, `credentials` (professional designations, "exactly as the awarding
+body permits") has no distinct source string for any partner beyond prose already in their
+bio — only John Dogbey's and Evans Agyemang's bios literally state "a chartered accountant",
+so only those two got `credentials: "Chartered Accountant"`, copied verbatim; the other three
+partners' bios name no formal designation, so `credentials` stays `null` for them rather than
+inventing one (CLAUDE.md's fabrication rule).
+**Related Documents:** `prisma/seed.ts` (`seedAuthors`), `docs/features/about-and-partners-page.md`.
+
 ## 2026-09-05 (T1.5, follow-up) — Nav active-state added even though no mockup shows one
 
 **Summary:** User pointed out `SiteHeader`'s nav has no current-page indicator on either
