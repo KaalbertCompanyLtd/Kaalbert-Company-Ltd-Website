@@ -16,6 +16,50 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T3.2 — Server-side scoring function (session 17)
+**Summary:** Built `lib/diagnostic-scoring.ts`'s `scoreDiagnosticResponses` — a pure function
+taking `{questionId, answer}[]` and returning `{score, dimensionScores, weakestDimensions,
+indicativeCostStatement, overallTriageFlag}`, reading every `DiagnosticDimension.weight` and
+`DiagnosticThreshold` row fresh from the database on each call (ADR 0005). Algorithm: every
+answer is a numeric string pre-normalized to 0–1 regardless of `responseType` (mirrors the
+accepted mockup's own client-side value resolution — see the decision-log entry below); a
+dimension's score is the 0–100 rounded mean of its active questions' normalized answers; the
+overall score is the weight-averaged mean of dimension scores; a threshold "trips" when a
+score falls below its `thresholdValue`, and the tightest-fitting band's `triagePriorityLevel`
+wins when several apply; `weakestDimensions` returns every triage-flagged dimension (max 3),
+falling back to the lowest-scoring 2 when fewer than 2 are flagged, so the result always
+carries 2–3 names per the feature doc's "User flow" step 4. A dimension with zero active
+questions is caught, logged via `console.error`, and thrown as `DiagnosticConfigurationError`
+(never an uncaught 500); a missing or out-of-range answer throws `DiagnosticValidationError` —
+both distinct classes so T3.5's future route can map each to the right HTTP response, following
+`lib/enquiries.ts`'s `ContactValidationError` precedent. Also scaffolded Vitest (installed
+`vitest`/`@testing-library/react`/`@testing-library/jest-dom`/`jsdom`, added
+`vitest.config.mts` with a `jsdom` default environment and the `@/*` path alias, added the
+`test` script) since no test runner existed anywhere in the repo yet — see
+`memory/technical-debt.md`'s "Vitest never scaffolded" entry, now resolved. Six unit tests in
+`lib/diagnostic-scoring.test.ts` (mocking `@/lib/prisma`) cover: full-marks (100 across every
+dimension, no triage), zero-marks (0 across every dimension, every threshold tripped), one
+dimension tripping its threshold while the other doesn't, the no-active-questions
+configuration error (asserting both the thrown type and that `console.error` logged it), a
+missing answer, and an out-of-range answer.
+**Files Changed:** `lib/diagnostic-scoring.ts` (new), `lib/diagnostic-scoring.test.ts` (new),
+`vitest.config.mts` (new), `package.json`/`package-lock.json` (test script + new
+devDependencies + `@types/node` bumped `^20` → `^22`), `prisma/schema.prisma`
+(`DiagnosticResponse.answerValue` doc-comment corrected to describe the actual normalized-0–1
+convention decided here, no field/migration change).
+**Related Feature:** `docs/features/business-health-check-diagnostic.md` ("User flow" step 4,
+"Edge cases" — the no-active-questions case), `docs/tasks/03-diagnostic.md` (T3.2), ADR 0005.
+**Notes:** No route or UI surface in this task (T3.5 is the first caller) — Playwright MCP
+verification doesn't apply here; quality gates (`npm run lint`, `npm run format:check`,
+`npm run typecheck`, `npm run test`) all pass clean. Re-checked (not repeated) the two
+low-priority `package.json` debt items sequenced into this task per the session-04 addendum:
+ESLint 9→10 and the Prisma CLI audit vulnerabilities — both still blocked on the same upstream
+versions as the last check, see `memory/technical-debt.md`.
+
+---
+
+## 2026-09-05
+
 **Task:** T3.1 — Scoring engine data model (session 16)
 **Summary:** Built the four diagnostic scoring tables per
 `docs/features/business-health-check-diagnostic.md`'s Data requirements section:

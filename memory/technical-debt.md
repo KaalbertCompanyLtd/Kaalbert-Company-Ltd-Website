@@ -346,10 +346,10 @@ a release with a peer range that includes ESLint 10 cleanly (check `npm info
 eslint-config-next peerDependencies` before retrying).
 **Trigger type:** Task-sequenced — re-check opportunistically whenever `package.json` is next
 touched for an unrelated reason; no separate user go-ahead needed.
-**Sequenced into:** T3.2 (Server-side scoring function, `docs/tasks/03-diagnostic.md`) — the
-next confirmed `package.json` touch after T1.4 (grepped across every `docs/tasks/*.md` for an
-`npm install`/dependency mention; nothing between T1.5 and T3.1 qualifies), and it's already
-installing Vitest there anyway — see that task's session-04 addendum.
+**Sequenced into:** T3.7 (Gated summary request, `docs/tasks/03-diagnostic.md`) — the
+transactional-email utility it builds is the next task expected to add a real new
+dependency, so the next natural `package.json` touch to re-check against; see the
+session-17 re-check below for why T3.2 itself didn't move this.
 
 **Re-checked (session 04, 2026-09-05, T1.4):** `npm info eslint-config-next@16.3.4
 peerDependencies` now reports `eslint: >=9.0.0` — technically includes 10 — and a dry-run
@@ -365,12 +365,20 @@ must ship a `eslint-plugin-react` bump before this can move. Reverted to `eslint
 (confirmed `npm run lint` passes clean again) rather than leave the repo on a broken lint
 config.
 
+**Re-checked (session 17, 2026-09-05, T3.2):** `npm info eslint version` still reports
+`10.10.0`, `npm info eslint-plugin-react version` still reports `7.37.5` — both unchanged
+since the T1.4 crash above, so the same `react/display-name` `TypeError` almost certainly
+still reproduces. Did not re-attempt the actual install/lint-run this time (nothing in the
+upstream versions changed to justify re-testing a combination already confirmed broken);
+re-sequenced to T3.7 above rather than left pointing at this now-completed task.
+
 ---
 
 ## Vitest never scaffolded (no test runner exists yet)
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
+**Date resolved:** 2026-09-05 (T3.2, session 17)
 **Reason:** CLAUDE.md names Vitest + React Testing Library as the unit/component-testing
 stack, but no task through T1.3 has actually installed or configured it — there's no
 `vitest.config.ts`, no `test` script in `package.json`, and no `*.test.*` file anywhere in
@@ -388,6 +396,15 @@ script to `package.json`.
 **Sequenced into:** T3.2 (Server-side scoring function, `docs/tasks/03-diagnostic.md`) — the
 first task with real `lib/` logic and explicit unit-test acceptance criteria; see that task's
 addendum.
+
+**Resolved (session 17, 2026-09-05, T3.2):** Installed `vitest`, `@testing-library/react`,
+`@testing-library/jest-dom`, `jsdom`; added `vitest.config.mts` (`jsdom` default environment,
+`@/*` alias matching `tsconfig.json`); added `"test": "vitest run"` to `package.json`. Hit a
+real peer-dependency conflict resolving it — `vitest@5`/`@testing-library/jest-dom@7` require
+`@types/node@^22 || >=24`, but `@types/node` was still pinned `^20`; bumped to `^22` (see
+`memory/decision-log.md` — this also corrects a pre-existing mismatch against
+`engines.node: ">=22"`). First real suite: `lib/diagnostic-scoring.test.ts`, 6 tests, all
+passing.
 
 ---
 
@@ -443,10 +460,10 @@ stable, and downgrading to 6.x is a step backward on both counts. Real fix is a 
 Prisma 7.x patch release (or a stabilized 8.0) that bumps `mysql2`/`deepmerge-ts` — revisit
 next time `package.json` dependencies are touched.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T3.2 (Server-side scoring function, `docs/tasks/03-diagnostic.md`) — the
-next confirmed `package.json` touch after T1.4 (same grep-across-`docs/tasks/*.md` check as
-the ESLint entry above), already installing Vitest there anyway — see that task's session-04
-addendum.
+**Sequenced into:** T3.7 (Gated summary request, `docs/tasks/03-diagnostic.md`) — the
+transactional-email utility it builds is the next task expected to add a real new
+dependency, so the next natural `package.json` touch to re-check against; see the
+session-17 re-check below for why T3.2 itself didn't move this.
 
 **Re-checked (session 04, 2026-09-05, T1.4):** `npm info prisma version` /
 `@prisma/client version` / `@prisma/adapter-pg version` all still report `7.10.0` as latest
@@ -455,6 +472,12 @@ from T1.2). `npm audit --json` still reports the same 4 high-severity advisories
 `mysql2`/`deepmerge-ts` chain, with the same `npm audit fix --force` "fix" (downgrade to
 `6.19.3`) still the only automated option — still rejected for the same reason. No action
 taken; nothing has changed since T1.2.
+
+**Re-checked (session 17, 2026-09-05, T3.2):** `npm info prisma dist-tags` still shows
+`prev: 7.10.0` / `latest: 8.0.0-rc.13` — no stable patch beyond the currently-pinned version
+exists yet. `npm audit` (after this task's own dependency installs) still reports the same 4
+high-severity advisories via the same `mysql2`/`deepmerge-ts` chain. No action taken;
+re-sequenced to T3.7 above rather than left pointing at this now-completed task.
 
 ---
 

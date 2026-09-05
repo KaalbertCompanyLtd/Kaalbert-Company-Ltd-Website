@@ -129,3 +129,24 @@ not duplicated.
 capability also needed by Milestone 4 (subscriber confirmation) and Milestone 8 (enquiry
 notifications) — build the underlying email-send utility once here, in T3.7, since this is
 its first consumer, and reuse it in those later epics rather than re-implementing it.
+
+**Addendum (session 17, 2026-09-05):** Building the email-send utility is very likely this
+project's next real `package.json` dependency addition (an email-provider SDK), so re-check
+two low-priority debt items already re-checked three times without resolution, while a
+dependency install is already happening here anyway:
+
+- **ESLint 9→10** (`memory/technical-debt.md` → "ESLint pinned to the EOL 9.x line"): last
+  re-checked at T3.2 (session 17) — `eslint@10.10.0` and `eslint-plugin-react@7.37.5` (the
+  exact combination that crashed `npm run lint` with a real `TypeError` at T1.4) were both
+  still current, unchanged since that crash was found. Re-run `npm info eslint-plugin-react
+version` here; only actually re-attempt the bump if it's moved past `7.37.5`.
+- **Prisma CLI npm-audit vulnerabilities** (`memory/technical-debt.md` → "4 high-severity npm
+  audit vulnerabilities in Prisma CLI's dev-tooling tree"): last re-checked at T3.2 — still
+  no stable `prisma` release beyond `7.10.0` (npm's `latest` tag is still a `-rc`). Re-check
+  `npm info prisma dist-tags`; only bump (with `--save-exact`, keeping `prisma`/
+  `@prisma/client`/`@prisma/adapter-pg` in lockstep) if a stabilized version now exists.
+
+Low priority — skip either or both without blocking this task if nothing's changed; just
+update both `memory/technical-debt.md` entries either way (a "still open, re-checked" note is
+itself real due diligence, not a no-op), and re-sequence `Sequenced into:` to whichever task
+next touches `package.json` if this one doesn't resolve them either.

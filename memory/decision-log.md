@@ -2,6 +2,53 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T3.2, session 17) — Scoring algorithm decisions: uniform 0–1 answer convention, threshold-band resolution, no-fabricated-numbers cost statement; `@types/node` bumped to unblock Vitest
+
+**Summary:** Four real algorithmic decisions made building `lib/diagnostic-scoring.ts`
+(docs/tasks/03-diagnostic.md's own architecture constraint: "the algorithm ... is this task's
+own code and is a developer decision, not something to leave ambiguous"):
+
+1. **Every `answerValue`/submitted answer is a numeric string pre-normalized to 0–1, uniformly
+   across `scale`/`boolean`/`choice`.** `prisma/schema.prisma`'s `DiagnosticResponse` doc-comment
+   (written at T3.1) claimed the scoring function would interpret "a scale number, a boolean, or
+   a choice label" differently per `responseType` — but `diagnostic_question` has no column
+   storing a choice option's label-to-value mapping (the feature doc's own Data requirements list
+   doesn't name one), so a literal "choice label" string would have nothing to score against.
+   Resolved by following the accepted mockup exactly (`ui/mockups/c-diagnostic/diagnostic-
+flow.html`'s `scoreAndFinish`/`option()`, which stores `parseFloat(inp.value)` uniformly
+   regardless of `q.type`): every answer arrives already resolved to 0–1 by the client (T3.4),
+   so `responseType` only drives which input widget renders, never how T3.2 interprets the
+   result. Corrected the `DiagnosticResponse.answerValue` doc-comment in the same commit to
+   describe this instead of the stale, never-implemented per-type interpretation — no schema
+   field or migration changed, comment only.
+2. **Threshold-band resolution:** a threshold "trips" when a score falls strictly below its
+   `thresholdValue` (generalizes the mockup's own hard-coded `d.score < 75` weak-dimension check
+   into a real, data-driven value). When several thresholds could apply to one score, the one
+   with the smallest `thresholdValue` still above the score wins, as the tightest/most specific
+   band.
+3. **`weakestDimensions` (2–3 names, per the feature doc's "User flow" step 4):** every
+   triage-flagged dimension, capped at 3; if fewer than 2 are flagged, falls back to the
+   lowest-scoring 2 regardless of flag state, so the result always shows at least 2. Mirrors the
+   mockup's own fallback shape without copying its hard-coded `< 75`.
+4. **`indicativeCostStatement` makes no fabricated numeric cost claim.** `user-stories.md` calls
+   this a "cost-of-inaction statement," but nothing in this schema holds a real firm-supplied
+   cost figure — inventing one would violate CLAUDE.md's "do not fabricate content" rule. Instead
+   it states the real computed score, the breached threshold's own `triagePriorityLevel` text
+   (admin-tunable data) when one was breached, and the real weakest-dimension names — never
+   branching code logic on a specific dimension name, per this task's own explicit constraint,
+   only ever interpolating dimension names as data.
+
+Separately: installing Vitest (`memory/technical-debt.md`'s "Vitest never scaffolded," this
+task's own addendum) hit a real peer-dependency conflict — `vitest@5`/`@testing-library/
+jest-dom@7` require `@types/node@^22 || >=24`, but `package.json` still pinned `@types/node@^20`
+even though `engines.node` has required `>=22` since T1.1 and the actual dev runtime is v22.15.0.
+Bumped `@types/node` to `^22` to resolve the conflict and correct that pre-existing mismatch
+(verified `npm run typecheck` and `npm run build`-equivalent typegen still pass clean) rather
+than pin an older Vitest to avoid touching it.
+**Related Documents:** `docs/tasks/03-diagnostic.md` (T3.2), `docs/features/business-health-
+check-diagnostic.md`, `ui/mockups/c-diagnostic/diagnostic-flow.html`, `prisma/schema.prisma`,
+`lib/diagnostic-scoring.ts`, `memory/technical-debt.md`, `memory/completed-work.md`.
+
 ## 2026-09-05 (T3.1, session 16) — Diagnostic scoring tables built; `diagnostic_response.timestamp` mapped to `createdAt`; nullable FK used for "dimension or overall"
 
 **Summary:** Built `DiagnosticDimension`/`DiagnosticQuestion`/`DiagnosticThreshold`/
