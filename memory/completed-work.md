@@ -16,6 +16,56 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.8 — SEO foundation
+**Summary:** Built `docs/features/seo-and-search-foundation.md` in full. `app/sitemap.ts`
+(Next.js's built-in `MetadataRoute.Sitemap` convention, `force-dynamic`) reads `lib/seo.ts`'s
+`getSitemapEntries()`, which gathers every published URL across `HomePageContent`/`Offer`/
+`Page`/`LegalPage` — 12 URLs total today (home, 3 offers, capabilities/our-method/about/
+contact, 4 legal pages) — with `lastModified` from each row's own `updatedAt`; `article`/
+`landing_page` are deliberately not queried (neither table exists yet, Milestones 4/5). A new
+`components/organization-json-ld.tsx` renders `schema.org/Organization` JSON-LD sourced live
+from `site_settings` (name/url/logo/telephone/email/address, `sameAs` from
+`social_profile_urls` — omitted entirely since that field is still empty, no firm social
+account URL was found anywhere in `Company Docs/` after checking, only platform names with no
+URLs, e.g. 10.19's LinkedIn/Meta account-ownership mentions), added to all seven T2.1–T2.7
+page components (home, offer detail, capabilities, our-method, about, contact, legal detail) —
+not the root layout, since that also wraps `/admin`/`/dev` and `app/not-found.tsx` (which
+deliberately has zero DB dependency, see its own comment). `lib/seo.ts`'s
+`buildPageMetadata()` is a single shared helper (title/description/path in, full
+`Metadata` with canonical/OG/Twitter out) now called by all seven pages' `generateMetadata`,
+replacing each one's previous plain `{ title, description }` return; `resolveMetaDescription()`
+implements the blank-description-falls-back-to-truncated-excerpt business rule (defensive
+today — every `metaTitle`/`metaDescription` field is schema-required, so this only actually
+fires once Milestone 7's admin UI lets a partner save one blank); `legalPageBodyExcerpt()`
+extracts a `legal_page.body` block list's own text for that same fallback path.
+`social_profile_urls`, added to `SiteSettings` at T2.6 in anticipation of this task, is now
+read live for the first time. Verified via curl (`/sitemap.xml`'s exact 12-URL output; every
+page's `<title>`/canonical/OG/Twitter/JSON-LD; JSON-LD absent from the unknown-slug 404) and
+Playwright MCP (home page and one legal page, zero console errors) — no visual/layout change
+on any page, so no mobile/tablet/desktop check was needed (this task's own "Mockup / UI
+reference" section states it has no visitor-facing UI surface).
+**Files Changed:**
+
+- `lib/seo.ts` — new: `getSiteUrl`, `resolveMetaDescription`, `legalPageBodyExcerpt`,
+  `buildPageMetadata`, `getOrganizationJsonLd`, `getSitemapEntries`
+- `app/sitemap.ts` — new: `GET /sitemap.xml`
+- `components/organization-json-ld.tsx` — new: `<OrganizationJsonLd />` server component
+- `app/(public)/page.tsx`, `app/offers/[slug]/page.tsx`, `app/capabilities/page.tsx`,
+  `app/our-method/page.tsx`, `app/about/page.tsx`, `app/contact/page.tsx`,
+  `app/legal/[slug]/page.tsx` — `generateMetadata` now calls `buildPageMetadata`/
+  `resolveMetaDescription`; `<OrganizationJsonLd />` added to each page's render
+- `.env.example` — documented new `NEXT_PUBLIC_SITE_URL` (optional, falls back to
+  `https://www.kaalbert.com`)
+**Related Feature:** `docs/features/seo-and-search-foundation.md`
+**Notes:** No Prisma schema change — `social_profile_urls` already existed
+(`prisma/schema.prisma`'s `SiteSettings`, added at T2.6). No Vitest tests added: no test
+runner exists yet in this repo (`memory/technical-debt.md` → "Vitest never scaffolded",
+`Sequenced into: T3.2`, not this task).
+
+---
+
+## 2026-09-05
+
 **Task:** T2.7 — Legal & compliance pages
 **Summary:** Built `/legal/[slug]` (four fixed instances: privacy-notice, cookie-notice,
 terms-of-use, scope-of-practice) to `ui/mockups/e-legal/*.html`'s exact structure and copy —

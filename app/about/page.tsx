@@ -4,8 +4,10 @@ import Link from "next/link";
 import { getAuthors, getFirmStatement, getInitials } from "@/lib/about";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
+import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -24,10 +26,11 @@ const VALUE_NUMBERS = ["01", "02", "03", "04"];
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageBySlug("about");
-  return {
+  return buildPageMetadata({
     title: page.metaTitle,
-    description: page.metaDescription,
-  };
+    description: resolveMetaDescription(page.metaDescription, page.heroLead),
+    path: "/about",
+  });
 }
 
 /**
@@ -90,6 +93,7 @@ export default async function AboutPage() {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         {/* Hero — the shared `page` entity's own copy. */}

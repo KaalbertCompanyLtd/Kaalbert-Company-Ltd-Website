@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getAdvisoryRetainer, formatRetainerFee, getCapabilities } from "@/lib/capabilities";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
+import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -20,10 +22,11 @@ const BTN_SECONDARY =
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageBySlug("capabilities");
-  return {
+  return buildPageMetadata({
     title: page.metaTitle,
-    description: page.metaDescription,
-  };
+    description: resolveMetaDescription(page.metaDescription, page.heroLead),
+    path: "/capabilities",
+  });
 }
 
 export default async function CapabilitiesPage() {
@@ -36,6 +39,7 @@ export default async function CapabilitiesPage() {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         {/* Hero — the shared `page` entity's own copy. */}

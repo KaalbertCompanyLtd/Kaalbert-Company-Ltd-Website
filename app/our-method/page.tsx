@@ -5,6 +5,8 @@ import { Fragment } from "react";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { getMethodStages } from "@/lib/our-method";
+import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -21,10 +23,11 @@ const BTN_ACCENT =
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageBySlug("our-method");
-  return {
+  return buildPageMetadata({
     title: page.metaTitle,
-    description: page.metaDescription,
-  };
+    description: resolveMetaDescription(page.metaDescription, page.heroLead),
+    path: "/our-method",
+  });
 }
 
 /**
@@ -77,6 +80,7 @@ export default async function OurMethodPage() {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         {/* Hero — the shared `page` entity's own copy. */}

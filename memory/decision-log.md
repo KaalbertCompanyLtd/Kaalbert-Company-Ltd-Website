@@ -2,6 +2,47 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.8, session 14) — Organization JSON-LD placed per-page, not in root layout; `NEXT_PUBLIC_SITE_URL` fallback; `social_profile_urls` confirmed still empty; address flattened to one `streetAddress`
+
+**Summary:** T2.8 (SEO foundation, `docs/tasks/02-public-presentation.md`) made four choices
+worth recording:
+
+1. **`<OrganizationJsonLd />` is rendered by each of the seven T2.1–T2.7 page components
+   individually, not once in `app/layout.tsx`.** The root layout also wraps `/admin` and
+   `/dev` (neither is public content this schema describes), and `app/not-found.tsx`
+   deliberately has zero DB dependency by design (its own comment, T2.10) — giving the root
+   layout a `site_settings` read would force it dynamic for every route it wraps, including
+   the one page whose whole job is to render even when the database is down. Per-page
+   placement costs one extra import + one extra line per page, in exchange for not touching
+   that guarantee.
+2. **`lib/seo.ts`'s `getSiteUrl()` falls back to a hardcoded `https://www.kaalbert.com`**
+   (docs/vision.md's own stated production domain) when `NEXT_PUBLIC_SITE_URL` is unset —
+   documented in `.env.example` but deliberately left blank there, since sitemap/canonical/OG
+   URLs are supposed to describe the live site regardless of which host actually served the
+   request (a local dev or Railway preview request should still produce production URLs, not
+   `localhost:3000` links in a sitemap). Confirmed via `curl localhost:3000/sitemap.xml` that
+   every listed URL is the production domain even when served from dev.
+3. **`site_settings.social_profile_urls` stays empty** — checked every `Company Docs/*.docx`
+   for an actual LinkedIn/Facebook/Instagram URL before assuming none exist (this task's own
+   architecture constraint) and found only platform *names* with no account URLs (10.19 Paid
+   Advertising Readiness and Launch Plan's LinkedIn/Meta account-ownership mentions,
+   10.05 Positioning and Claims Guidance Note's general "social" references) — no seed change
+   made. The Organization JSON-LD's `sameAs` is simply omitted while the array is empty, per
+   the feature doc's own documented edge case.
+4. **The Organization schema's `address` is one flattened `streetAddress` string**
+   (`site_settings.address`'s newline-separated lines joined with ", ") plus a fixed
+   `addressCountry: "GH"`, not a locality/region breakdown. `schema.org/PostalAddress` doesn't
+   require that finer split, and the two-line address format (`lib/site-settings.ts`'s
+   `splitAddressLines`) doesn't cleanly separate street from locality/region on its own — a
+   flattened string avoids guessing a parse that would need redoing once a partner can edit
+   this field via /admin (Milestone 7).
+
+**Related Documents:** `docs/features/seo-and-search-foundation.md`,
+`docs/tasks/02-public-presentation.md` (T2.8), `docs/adr/0006-gtm-measurement-container.md`
+(the Organization JSON-LD / GTM boundary, restated in T2.8's own architecture constraints).
+
+---
+
 ## 2026-09-05 (T2.7, session 13) — Epic-file mockup path discrepancy; `legal_page.body` modelled as ordered content blocks; `isPlaceholder` defaults `true`; `footer_content` materialized but left unwired
 
 **Summary:** T2.7 (Legal & compliance pages, `docs/tasks/02-public-presentation.md`) surfaced

@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ContactForm } from "@/components/contact-form";
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WhatsAppLinkButton } from "@/components/whatsapp-link-button";
 import { buildWhatsAppMessage, resolveServiceContext } from "@/lib/contact";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
+import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
 import { getSiteSettings, splitAddressLines, toTelHref } from "@/lib/site-settings";
 
 // Reads live `page`/`site_settings` rows on every request — same reasoning as
@@ -28,10 +30,11 @@ export async function generateMetadata({ searchParams }: ContactPageProps): Prom
   const page = await getPageBySlug("contact");
   const { service } = await searchParams;
   const serviceContext = await resolveServiceContext(service);
-  return {
+  return buildPageMetadata({
     title: serviceContext ? `${page.metaTitle} — ${serviceContext.label}` : page.metaTitle,
-    description: page.metaDescription,
-  };
+    description: resolveMetaDescription(page.metaDescription, page.heroLead),
+    path: "/contact",
+  });
 }
 
 export default async function ContactPage({ searchParams }: ContactPageProps) {
@@ -48,6 +51,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         {/* Hero — the shared `page` entity's own copy, same pattern as capabilities/our-method/about. */}

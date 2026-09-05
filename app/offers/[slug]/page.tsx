@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NOT_FOUND_METADATA } from "@/app/not-found";
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { formatFeeBand, getOfferBySlug, getOfferNavLinks } from "@/lib/offers";
 import type { MethodStage, OfferFaq } from "@/lib/offers";
+import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
 
 // Reads live `offer`/`offer_tier` rows on every request — same reasoning as
 // app/(public)/page.tsx: this content is meant to become admin-editable (Milestone 7), and
@@ -72,10 +74,11 @@ export async function generateMetadata({ params }: OfferPageParams): Promise<Met
   const { slug } = await params;
   const offer = await getOfferBySlug(slug);
   if (!offer) return NOT_FOUND_METADATA;
-  return {
+  return buildPageMetadata({
     title: offer.metaTitle,
-    description: offer.metaDescription,
-  };
+    description: resolveMetaDescription(offer.metaDescription, offer.problemStatement),
+    path: `/offers/${offer.slug}`,
+  });
 }
 
 export default async function OfferPage({ params }: OfferPageParams) {
@@ -95,6 +98,7 @@ export default async function OfferPage({ params }: OfferPageParams) {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         {/* 1. Problem statement (FR-4.1) */}

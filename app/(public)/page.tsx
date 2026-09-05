@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getFeaturedArticles, getHomePageContent, getOfferCards } from "@/lib/home";
 import { getOfferNavLinks } from "@/lib/offers";
+import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
 
 // Reads live `home_page_content`/`offer` rows on every request rather than being baked into
 // a static build. Two reasons: (1) this content is meant to become admin-editable later
@@ -78,10 +80,11 @@ const TRUST_ITEMS = [
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getHomePageContent();
-  return {
+  return buildPageMetadata({
     title: content.metaTitle,
-    description: content.metaDescription,
-  };
+    description: resolveMetaDescription(content.metaDescription, content.heroStatement),
+    path: "/",
+  });
 }
 
 export default async function HomePage() {
@@ -94,6 +97,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         <section className="bg-primary relative flex min-h-screen items-center overflow-hidden pt-24 pb-14">

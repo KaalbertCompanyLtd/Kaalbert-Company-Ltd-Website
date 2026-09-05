@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { NOT_FOUND_METADATA } from "@/app/not-found";
+import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -15,6 +16,7 @@ import {
 import { formatRevisedDate, getLegalPageBySlug } from "@/lib/legal";
 import type { LegalPageBlock } from "@/lib/legal";
 import { getOfferNavLinks } from "@/lib/offers";
+import { buildPageMetadata, legalPageBodyExcerpt, resolveMetaDescription } from "@/lib/seo";
 
 // Reads live `legal_page` rows on every request — same reasoning as every other page built
 // against seeded content this epic (memory/decision-log.md, T2.1): this content is meant to
@@ -30,10 +32,12 @@ export async function generateMetadata({ params }: LegalPageParams): Promise<Met
   const { slug } = await params;
   const legalPage = await getLegalPageBySlug(slug);
   if (!legalPage) return NOT_FOUND_METADATA;
-  return {
+  const blocks = legalPage.body as unknown as LegalPageBlock[];
+  return buildPageMetadata({
     title: `${legalPage.title} — Kaalbert & Company Ltd`,
-    description: legalPage.metaDescription,
-  };
+    description: resolveMetaDescription(legalPage.metaDescription, legalPageBodyExcerpt(blocks)),
+    path: `/legal/${legalPage.slug}`,
+  });
 }
 
 /**
@@ -142,6 +146,7 @@ export default async function LegalPage({ params }: LegalPageParams) {
 
   return (
     <>
+      <OrganizationJsonLd />
       <SiteHeader offerNavLinks={offerNavLinks} />
       <main className="pt-19">
         {/* No hero — ui/mockups/e-legal/*.html's plain <body>, per this task's own architecture
