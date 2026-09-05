@@ -16,6 +16,51 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.7 — Legal & compliance pages
+**Summary:** Built `/legal/[slug]` (four fixed instances: privacy-notice, cookie-notice,
+terms-of-use, scope-of-practice) to `ui/mockups/e-legal/*.html`'s exact structure and copy —
+the epic file's own cited path (`ui/mockups/a-public-site/legal-*.html`) doesn't exist; flagged
+in `memory/decision-log.md` rather than silently resolved. Materialized `legal_page` (body
+modelled as an ordered array of typed content blocks — statement/prose/pending/table — since
+the four real pages don't share one uniform shape) and `footer_content` (the scope-of-practice/
+company-registration-details singleton). Seeded all four pages verbatim from their mockups:
+Privacy Notice/Cookie Notice/Terms of Use as genuine structural placeholders
+(`isPlaceholder: true`, `lastRevisedAt: null`, matching their own "drafted by the firm with
+counsel" mockup text); Scope of Practice as real content (`isPlaceholder: false`, real
+2026-08-26 revision date) — the same Company-Docs-sourced text already verified into
+`FirmStatement.scopeBody` at T2.5. The acceptance criterion's "draft — pending legal review"
+marker is a computed banner shown whenever `isPlaceholder` is true, not seeded copy, so it
+disappears automatically once real text is supplied. Verified end-to-end via Playwright MCP:
+all four pages render correctly (including the cookie/boundary tables), the footer's four
+legal links resolve, an unknown slug 404s to the branded not-found page, and all four pages
+were checked at mobile (390px), tablet (768px) and desktop (1280px) with zero console errors.
+`footer_content` is seeded but deliberately not wired into `SiteFooter`/`ScopeOfPracticeNote`
+(both still render T1.5's hardcoded text) — logged as technical debt, same shape and same
+sequencing (T7.8) as the pre-existing `SiteSettings`/`SiteFooter` gap.
+**Files Changed:**
+
+- `prisma/schema.prisma` — `LegalPage`, `FooterContent` models added.
+- `prisma/migrations/20260905154557_t2_7_legal_page_and_footer_content/` — migration.
+- `prisma/seed.ts` — `seedLegalPages()`, `seedFooterContent()`.
+- `lib/legal.ts` — `LegalPageBlock` type, `LEGAL_PAGE_SLUGS`, `getLegalPageBySlug`,
+  `formatRevisedDate` (new file).
+- `app/legal/[slug]/page.tsx` — the page itself, including the per-block-kind renderer and the
+  placeholder banner (new file).
+- `docs/features/legal-and-compliance-pages.md` — `meta_description`/block-shape/wiring-gap
+  notes added to the Data requirements section.
+- `docs/tasks/07-content-admin.md` — T7.8 addendum for the new `footer_content` wiring debt.
+- `memory/decision-log.md`, `memory/technical-debt.md` — this task's decisions and the new
+  `footer_content` wiring debt item.
+  **Related Feature:** `docs/features/legal-and-compliance-pages.md`.
+  **Notes:** Hit the same stale-Prisma-client issue as T2.5/T2.6 (the already-running dev
+  server had the pre-migration client cached) — restarted it before verifying, not a real bug.
+  No test runner exists yet (`memory/technical-debt.md` → "Vitest never scaffolded", sequenced
+  into T3.2) — consistent with every other T2.x task, no automated tests added.
+
+---
+
+## 2026-09-05
+
 **Task:** T2.6 — Contact page
 **Summary:** Built `/contact` to `ui/mockups/a-public-site/contact.html`'s structure, reading
 the optional `?service=[slug]` param (resolved live against real `Offer`/`Capability` slugs

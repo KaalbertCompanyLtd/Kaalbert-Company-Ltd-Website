@@ -18,6 +18,7 @@
 
 import { Prisma, PrismaClient } from "../generated/prisma/client";
 import { createDatabaseAdapter } from "../lib/db-adapter";
+import type { LegalPageBlock } from "../lib/legal";
 
 const adapter = createDatabaseAdapter(process.env.DATABASE_URL);
 const prisma = new PrismaClient({ adapter });
@@ -871,6 +872,237 @@ async function seedSiteSettings() {
   });
 }
 
+/**
+ * T2.7 (docs/tasks/02-public-presentation.md) — the four fixed legal pages, sourced verbatim
+ * from `ui/mockups/e-legal/*.html` (structure and copy exactly, per that task's own
+ * architecture constraint). Privacy Notice/Cookie Notice/Terms of Use are genuine structural
+ * placeholders — their own mockups say so explicitly ("This page is a structural
+ * placeholder... drafted by the firm with counsel") — seeded `isPlaceholder: true`,
+ * `lastRevisedAt: null`. Scope of Practice is real, firm-supplied content: the same
+ * `../Company Docs/07.10 Scope of Practice and Regulatory Boundary Policy.docx` text already
+ * verified and seeded into `FirmStatement.scopeBody`/`ScopeOfPracticeNote` at T2.5 (session
+ * 11 follow-up, memory/decision-log.md) — seeded `isPlaceholder: false`, with its mockup's own
+ * real revision date.
+ */
+async function seedLegalPages() {
+  const pages: {
+    slug: string;
+    title: string;
+    body: LegalPageBlock[];
+    metaDescription: string;
+    lastRevisedAt: Date | null;
+    isPlaceholder: boolean;
+  }[] = [
+    {
+      slug: "privacy-notice",
+      title: "Privacy Notice",
+      body: [
+        {
+          kind: "statement",
+          text: "Kaalbert & Company Ltd is the data controller for personal information collected through this site, once the firm's Data Protection Commission registration is complete (Document 13.03, Section 9).",
+        },
+        {
+          kind: "prose",
+          text: "This page is a structural placeholder, not a real privacy notice. The actual wording is drafted by the firm with counsel and cannot be written by the build team (Document 13.03, Section 13) — it must be complete before the site is publicly reachable. The sections below are the required content areas, each pending its real text; the shape is fixed, edited in admin once supplied.",
+        },
+        {
+          kind: "pending",
+          heading: "What we collect",
+          text: "Pending — the diagnostic responses, contact-form details, and Insights subscription data this site collects, stated plainly.",
+        },
+        {
+          kind: "pending",
+          heading: "Why we collect it",
+          text: "Pending — the specific purpose for each category of information collected.",
+        },
+        {
+          kind: "pending",
+          heading: "How long we keep it",
+          text: "Pending — a documented retention period per data category (Document 13.03, Section 9).",
+        },
+        {
+          kind: "pending",
+          heading: "Who it's shared with",
+          text: "Pending — named third parties, if any, and confirmation that diagnostic responses are never transmitted to an advertising platform (Document 13.03, Section 9).",
+        },
+        {
+          kind: "pending",
+          heading: "How to request deletion",
+          text: "Pending — the concrete steps a visitor takes to request their data be deleted.",
+        },
+      ],
+      metaDescription:
+        "How Kaalbert & Company Ltd collects, uses and protects personal information submitted through this site. Final wording pending the firm's legal review.",
+      lastRevisedAt: null,
+      isPlaceholder: true,
+    },
+    {
+      slug: "cookie-notice",
+      title: "Cookie Notice",
+      body: [
+        {
+          kind: "statement",
+          text: "This site uses cookies for analytics and, where you consent, advertising. Non-essential cookies are held until you give consent — declining does not block the site from working (Document 13.03, Section 9, Section 11.1).",
+        },
+        {
+          kind: "prose",
+          text: "This page is a structural placeholder. The specific cookie list and retention periods are drafted by the firm with counsel (Document 13.03, Section 13) — the categories below are fixed by the site's actual measurement setup and populated once the tag container is configured.",
+        },
+        {
+          kind: "table",
+          heading: "Cookie categories on this site",
+          headers: ["Category", "Purpose", "Consent required"],
+          rows: [
+            ["Essential", "Session state, security, form functionality", "No — always active"],
+            ["Analytics", "Google Analytics 4, via the site's single tag container", "Yes"],
+            ["Advertising", "Meta Pixel, Google Ads, LinkedIn Insight Tag", "Yes"],
+          ],
+        },
+        {
+          kind: "prose",
+          heading: "How consent works",
+          text: 'A consent banner appears on your first visit. Choosing "decline" keeps analytics and advertising cookies off; your choice is passed to the tag container so measurement degrades gracefully rather than firing regardless.',
+        },
+        {
+          kind: "pending",
+          heading: "Changing your choice",
+          text: "Pending — the mechanism for a returning visitor to change their consent choice after the first visit.",
+        },
+      ],
+      metaDescription:
+        "The cookie categories kaalbert.com uses, how consent works, and how to change your choice. Final wording pending the firm's legal review.",
+      lastRevisedAt: null,
+      isPlaceholder: true,
+    },
+    {
+      slug: "terms-of-use",
+      title: "Terms of Use",
+      body: [
+        {
+          kind: "prose",
+          text: "This page is a structural placeholder, not real terms. The wording is drafted by the firm with counsel (Document 13.03, Section 13) and cannot be written by the build team. The sections below are the standard content areas a terms-of-use page holds; each is pending its real text.",
+        },
+        {
+          kind: "pending",
+          heading: "Acceptance of terms",
+          text: "Pending — what using this site means you agree to.",
+        },
+        {
+          kind: "pending",
+          heading: "Use of the site",
+          text: "Pending — permitted and prohibited use of the site's content and tools, including the Business Health Check.",
+        },
+        {
+          kind: "pending",
+          heading: "Intellectual property",
+          text: "Pending — ownership of the site's content, brand and Insights articles.",
+        },
+        {
+          kind: "pending",
+          heading: "Disclaimers",
+          text: "Pending — the site's content, including diagnostic results, is informational and not professional advice (consistent with the Scope of Practice page).",
+        },
+        {
+          kind: "pending",
+          heading: "Governing law",
+          text: "Pending — the jurisdiction these terms are governed by.",
+        },
+      ],
+      metaDescription:
+        "The terms governing use of kaalbert.com. Final wording pending the firm's legal review.",
+      lastRevisedAt: null,
+      isPlaceholder: true,
+    },
+    {
+      slug: "scope-of-practice",
+      title: "Scope of Practice",
+      body: [
+        {
+          kind: "statement",
+          text: "Kaalbert & Company Ltd is a business advisory firm. It is not a licensed audit, tax or legal practice, and connects clients to licensed practitioners where such work is required.",
+        },
+        {
+          kind: "prose",
+          heading: "What Kaalbert is",
+          text: "Kaalbert & Company Ltd is a business advisory and consulting firm. It advises, analyses, structures, prepares, designs, trains and supports implementation — helping a client understand their position, decide what to do, build the systems to do it, and produce the documents they need to act. Everything the firm does is done for the client and remains the client's own act: the firm prepares, the client adopts, approves and files.",
+        },
+        {
+          kind: "prose",
+          heading: "What Kaalbert is not",
+          text: "The firm holds no practising licence of any kind. Where a partner holds an individual professional qualification, that qualification is personal to them and does not extend to the firm — the firm does not lend it to work it is not licensed to perform.",
+        },
+        {
+          kind: "table",
+          headers: ["The firm is not", "And therefore does not"],
+          rows: [
+            [
+              "An audit firm",
+              "Express an audit opinion, issue an assurance or review report, hold itself out as auditor, or describe any work it performs as an audit.",
+            ],
+            [
+              "A licensed tax practice",
+              "Act as a client's tax agent before the Ghana Revenue Authority, sign or file a return on a client's behalf, or represent a client in a tax audit, objection or appeal.",
+            ],
+            [
+              "A law firm",
+              "Give a legal opinion, advise on the legal effect of a document, or represent a client in any proceeding or negotiation as its legal adviser.",
+            ],
+            [
+              "A licensed financial or investment adviser",
+              "Advise on the merits of buying or selling securities, arrange or promote an investment, or hold, receive or handle client money.",
+            ],
+          ],
+        },
+        {
+          kind: "prose",
+          variant: "muted",
+          text: "The firm also does not act as company secretary, does not certify or attest documents, and does not hold client funds in any account under its control.",
+        },
+        {
+          kind: "prose",
+          heading: "Where the firm refers you on",
+          text: "Where an engagement needs licensed audit, tax representation, legal advice, or investment advice, the firm says so plainly and connects you to a licensed practitioner it trusts. The firm works alongside that practitioner; it does not replace them.",
+        },
+      ],
+      metaDescription:
+        "What Kaalbert & Company Ltd is and is not, and where the firm refers clients to a licensed practitioner. A business advisory firm, not a licensed audit, tax or legal practice.",
+      lastRevisedAt: new Date("2026-08-26"),
+      isPlaceholder: false,
+    },
+  ];
+
+  for (const page of pages) {
+    const { body, ...rest } = page;
+    const data = { ...rest, body: body as unknown as Prisma.InputJsonValue };
+    await prisma.legalPage.upsert({
+      where: { slug: page.slug },
+      update: data,
+      create: data,
+    });
+  }
+}
+
+/**
+ * T2.7 — the `footer_content` singleton (`prisma/schema.prisma`'s `FooterContent`
+ * doc-comment). `scopeOfPracticeStatement` matches `components/scope-of-practice-note.tsx`'s
+ * currently-hardcoded text verbatim (not yet wired live — see that model's doc-comment and
+ * memory/technical-debt.md). `companyRegistrationDetails` stays null — not yet supplied
+ * (FR-5.2's edge case).
+ */
+async function seedFooterContent() {
+  await prisma.footerContent.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      scopeOfPracticeStatement:
+        "Kaalbert & Company Ltd is a business advisory firm. It is not a licensed audit, tax or legal practice, and connects clients to licensed practitioners where such work is required.",
+      companyRegistrationDetails: null,
+      isPlaceholder: false,
+    },
+  });
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -887,6 +1119,8 @@ async function main() {
   await seedAuthors();
   await seedContactPage();
   await seedSiteSettings();
+  await seedLegalPages();
+  await seedFooterContent();
 }
 
 main()

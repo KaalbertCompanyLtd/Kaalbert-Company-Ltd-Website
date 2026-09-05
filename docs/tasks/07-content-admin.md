@@ -160,6 +160,18 @@ this task, so a Site Settings edit actually reaches the footer everywhere, not j
 this task as a cue to invent one — only set it via this task's own form once the firm has
 actually stated a real, keepable number.
 
+**Addendum (session 13, 2026-09-05):** A third `memory/technical-debt.md` item lands here
+too, from T2.7's Legal & compliance pages build: "`footer_content.scope_of_practice_statement`/
+`company_registration_details` materialized but not wired into `SiteFooter`/
+`ScopeOfPracticeNote`" — T2.7 materialized the `footer_content` singleton
+(`legal-and-compliance-pages.md`'s second footer panel, alongside `site_settings` on this same
+screen), but `ScopeOfPracticeNote` still renders T1.5's hardcoded scope-of-practice text and
+has no `companyRegistrationDetails` prop at all. Same fix shape as item (1) above, and the
+same seven `SiteFooter` call sites — do both in one pass: switch every caller to also read
+`getFooterContent()` (write that resolver in `lib/legal.ts` when this is actually built) and
+pass `scopeOfPracticeStatement`/`companyRegistrationDetails` through, rendering the
+registration-details line only when non-null (`legal-and-compliance-pages.md`'s edge case).
+
 ### T7.9 — Subscribers list
 
 **Build:** `ui/screen-inventory.md` #35a — `AdminDataTable` variant under Operations, listing

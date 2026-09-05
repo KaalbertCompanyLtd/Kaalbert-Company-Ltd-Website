@@ -387,3 +387,56 @@ model EnquiryRecord {
 
   @@map("enquiry_record")
 }
+
+/// docs/features/legal-and-compliance-pages.md "Data requirements" — one of the four fixed
+/// legal documents (privacy-notice, cookie-notice, terms-of-use, scope-of-practice), each at
+/// its own stable `/legal/[slug]` URL (never one combined page with anchors — advertising
+/// platforms require a direct privacy-policy URL, per that doc's business rules). `body` is
+/// an ordered array of content blocks (see lib/legal.ts's `LegalPageBlock` type) rather than
+/// one opaque rich-text blob — the four real mockups (ui/mockups/e-legal/*.html) don't share
+/// one uniform shape (a highlighted statement box, plain prose, a "pending — real text not
+/// yet supplied" note, and a data table all appear across the four pages) — same "no admin
+/// editor yet to justify full relational modelling" reasoning as `Offer.methodStages`/`faqs`.
+/// `metaDescription` is added beyond the feature doc's original id/slug/title/body/
+/// last_revised_at list per CLAUDE.md's "every public page type carries meta_title/
+/// meta_description" rule — `title` itself doubles as the page's meta title (no mockup shows
+/// SEO title text distinct from the visible H1), same precedent as T2.2/T2.4 adding fields
+/// beyond a feature doc's original list (see memory/decision-log.md). `isPlaceholder`
+/// defaults `true` here — unlike every other placeholder-flagged model in this schema, which
+/// defaults `false` — because three of the four real seeded rows are illustrative drafts
+/// pending the firm's actual legal text (Document 13.03, Section 13); a `false` default would
+/// misrepresent the norm for this one entity.
+model LegalPage {
+  id              Int       @id @default(autoincrement())
+  slug            String    @unique
+  title           String
+  /// Ordered `LegalPageBlock[]` — see lib/legal.ts.
+  body            Json
+  metaDescription String    @map("meta_description")
+  lastRevisedAt   DateTime? @map("last_revised_at")
+  isPlaceholder   Boolean   @default(true) @map("is_placeholder")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("legal_page")
+}
+
+/// docs/features/legal-and-compliance-pages.md "Data requirements" — the shared footer's
+/// legal/compliance text, a singleton (same `findFirst`/fixed-id pattern as `SiteSettings`/
+/// `FirmStatement`), distinct from `site_settings` (contact details) per that doc's own
+/// business rule. `companyRegistrationDetails` stays null until the firm supplies it
+/// post-incorporation (FR-5.2's edge case: omitted from the footer entirely while null, never
+/// a placeholder). Not yet wired into `SiteFooter`/`ScopeOfPracticeNote` — both still render
+/// T1.5's original hardcoded copy — same gap already flagged for `SiteSettings`
+/// (memory/technical-debt.md → "SiteFooter callers still pass hardcoded address/phone props"),
+/// logged again here rather than silently left unnoticed, sequenced into that same T7.8 fix.
+model FooterContent {
+  id                         Int      @id @default(autoincrement())
+  scopeOfPracticeStatement   String   @map("scope_of_practice_statement")
+  companyRegistrationDetails String?  @map("company_registration_details")
+  isPlaceholder              Boolean  @default(false) @map("is_placeholder")
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+
+  @@map("footer_content")
+}

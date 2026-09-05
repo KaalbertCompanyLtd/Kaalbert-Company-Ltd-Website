@@ -37,14 +37,21 @@ a stable, direct privacy-policy URL (Document 13.03, Section 5, Section 9).
 
 - `legal_page` — id, slug (one of the four fixed slugs), title, body (rich content),
   last_revised_at. Edited via `content-management-admin.md`'s Pages content area, the same as
-  any other page.
+  any other page. `meta_description` added at T2.7 (build), beyond this doc's original field
+  list, per CLAUDE.md's "every public page type carries meta_title/meta_description" rule —
+  `title` itself doubles as the page's meta title. `body` is implemented as an ordered array
+  of content blocks (`lib/legal.ts`'s `LegalPageBlock`: `statement`/`prose`/`pending`/`table`
+  kinds), not one opaque string — the four real mockups (`ui/mockups/e-legal/*.html`) don't
+  share one uniform shape.
 - `footer_content` — scope_of_practice_statement, company_registration_details (nullable
   until supplied). Distinct from `site_settings` (`content-management-admin.md`), which holds
   the footer's contact details (phone, email, address) — this entity is legal/compliance text
   specifically, supplied by counsel per the business rule above. Edited as a second panel on
   the same Site Settings screen as `site_settings` (both are singletons the footer reads from)
   — not a separate nav item, since it's one small block of text, not a content type of its
-  own.
+  own. Materialized at T2.7 but not yet wired into `SiteFooter`/`ScopeOfPracticeNote`, which
+  still render T1.5's original hardcoded copy — see `memory/technical-debt.md`, sequenced into
+  T7.8 alongside the equivalent `site_settings` gap.
 
 ## Interfaces
 

@@ -72,8 +72,17 @@ moment implementation begins, per that doc's own note.
 
 **First Task:** `tasks/01-foundation.md`, T1.1 — Repo, Next.js app, and deploy pipeline
 **Blocked On:** Nothing for Phase 1 (Milestones 1–9) — fully unblocked, sequenced, and ready
-to start at T1.1. Two items are blocked within later scope, both flagged rather than assumed:
+to start at T1.1. Three items are blocked within later scope, all flagged rather than assumed:
 
+- **Known placeholder content (T2.7, session 13, 2026-09-05):** `/legal/privacy-notice`,
+  `/legal/cookie-notice`, and `/legal/terms-of-use` are live at their stable URLs (structurally
+  complete, matching `ui/mockups/e-legal/*.html`) but carry illustrative/draft text only, each
+  clearly marked "Draft — pending legal review" on the page itself
+  (`legal_page.isPlaceholder: true`). Per `legal-and-compliance-pages.md`'s FR-6.5, the privacy
+  notice specifically must carry real, firm-supplied-with-counsel wording before the site is
+  publicly reachable — this is a genuine pre-launch content gate, not an engineering task. The
+  fourth legal page, `/legal/scope-of-practice`, is real, non-placeholder content (sourced from
+  `Company Docs/07.10 Scope of Practice and Regulatory Boundary Policy.docx`, verified at T2.5).
 - `tasks/08-enquiry-management.md` T8.4 (personal-data deletion for a _converted_ enquiry) —
   blocked on the firm confirming the retention/deletion boundary; not an engineering gap.
 - `tasks/16-paid-diagnostic-suite.md` (P2-7, gated) — blocked on its own evidence trigger

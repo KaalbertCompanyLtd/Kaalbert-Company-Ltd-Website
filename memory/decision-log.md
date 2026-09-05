@@ -2,6 +2,56 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.7, session 13) — Epic-file mockup path discrepancy; `legal_page.body` modelled as ordered content blocks; `isPlaceholder` defaults `true`; `footer_content` materialized but left unwired
+
+**Summary:** T2.7 (Legal & compliance pages, `docs/tasks/02-public-presentation.md`) surfaced
+several things worth recording:
+
+1. **Mockup path discrepancy.** The epic file's own T2.7 entry cites
+   `ui/mockups/a-public-site/legal-*.html`, which does not exist. The task's own architecture
+   constraints section had already caught this and named the real path
+   (`ui/mockups/e-legal/{privacy-notice,cookie-notice,terms-of-use,scope-of-practice}.html`) —
+   confirmed those four files are what actually exist, built to them, and flag the discrepancy
+   here per the task's own explicit instruction rather than silently treating it as resolved.
+   `docs/tasks/02-public-presentation.md` itself was left unedited (the task said to flag it in
+   the decision log, not to rewrite the epic file).
+2. **`LegalPage.body` modelled as an ordered array of typed content blocks** (`lib/legal.ts`'s
+   `LegalPageBlock`: `statement`/`prose`/`pending`/`table` kinds), not one opaque rich-text
+   string. The four real mockups don't share one uniform shape — a highlighted statement box,
+   plain prose, a "pending — real text not yet supplied" note, and a data table all appear
+   across the four pages in different combinations and orders — so a single string field
+   couldn't reproduce them without embedding markup. Same "no admin editor yet to justify full
+   relational modelling" reasoning already used for `Offer.methodStages`/`faqs`. Added
+   `metaDescription` beyond the feature doc's original field list (same T2.2/T2.4 precedent),
+   both models' schema doc-comments and `legal-and-compliance-pages.md` updated to name it.
+3. **`LegalPage.isPlaceholder` defaults `true`**, the only model in this schema where the
+   placeholder flag defaults `true` rather than `false` — deliberate, since three of the four
+   real seeded rows (Privacy Notice, Cookie Notice, Terms of Use) are genuine structural
+   placeholders per their own mockups' text ("This page is a structural placeholder... drafted
+   by the firm with counsel"), and `false` would misrepresent the norm for this entity.
+   Scope of Practice is the one real, non-placeholder row — its mockup already carries a real
+   revision date ("Last revised 26 August 2026") rather than "Pending first publication", and
+   its content is the same `../Company Docs/07.10 Scope of Practice and Regulatory Boundary
+Policy.docx` text already verified and seeded into `FirmStatement.scopeBody`/
+   `ScopeOfPracticeNote` at T2.5 (session 11 follow-up) — not fresh build-team text.
+4. **The acceptance criterion's "draft — pending legal review" marker is a computed UI banner**
+   (`app/legal/[slug]/page.tsx`, rendered whenever `legalPage.isPlaceholder` is true), not
+   seeded content — keeps the marker consistent across all three placeholder pages and makes
+   it disappear automatically the moment a page's `isPlaceholder` flips to `false` via a future
+   admin edit, with no code change needed.
+5. **`footer_content` materialized (seeded) but deliberately not wired into `SiteFooter`/
+   `ScopeOfPracticeNote`** — both still render T1.5's hardcoded scope-of-practice text, and
+   `ScopeOfPracticeNote` has no prop for `companyRegistrationDetails` at all. The task's own
+   architecture constraint allowed resolving or logging this gap; logged it instead
+   (`memory/technical-debt.md`), same precedent and same fix shape as the identical
+   `SiteSettings`/`SiteFooter` gap T2.6 logged rather than fixing inline — both would require
+   threading a fetched prop through the same seven `SiteFooter` call sites, more than this
+   Small-sized task's own scope. Sequenced into T7.8 alongside that existing entry.
+   **Related Documents:** `prisma/schema.prisma` (`LegalPage`, `FooterContent`),
+   `docs/features/legal-and-compliance-pages.md`, `lib/legal.ts`, `prisma/seed.ts`
+   (`seedLegalPages`, `seedFooterContent`), `app/legal/[slug]/page.tsx`,
+   `memory/technical-debt.md`, `docs/tasks/07-content-admin.md` (T7.8).
+
 ## 2026-09-05 (T2.6, session 12) — `enquiry_record`/`site_settings` schema scoping, `message` field addition, Page model reuse
 
 **Summary:** T2.6 (Contact page) is the first task to materialize both `site_settings` and

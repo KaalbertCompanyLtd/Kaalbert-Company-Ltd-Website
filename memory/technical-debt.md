@@ -18,6 +18,41 @@ sequencing requirement:
 
 ---
 
+## `footer_content.scope_of_practice_statement`/`company_registration_details` materialized but not wired into `SiteFooter`/`ScopeOfPracticeNote`
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** T2.7 (`docs/tasks/02-public-presentation.md`) materialized the `footer_content`
+singleton (seeded with the same scope-of-practice wording `components/scope-of-practice-
+note.tsx` already hardcodes, plus `companyRegistrationDetails: null`), reading it live on
+every new `/legal/[slug]` page's own body content. But `ScopeOfPracticeNote` (rendered inside
+`SiteFooter` on every public page) still renders T1.5's original hardcoded text, and has no
+prop for `companyRegistrationDetails` at all — the exact same "second hardcoded copy" gap
+already flagged for `SiteSettings`/`SiteFooter`'s address/phone props (see the entry directly
+below this one), now also true for this entity. Deliberately not fixed as part of T2.7 itself
+— that task's own architecture constraint allowed either resolving or logging this gap, and
+fixing it would mean threading `getFooterContent()`-fetched props through all seven `SiteFooter`
+call sites (home, capabilities, our-method, about, contact, offers/[slug], and the new legal
+page) for a Small-sized task, the same cost/precedent T2.6 weighed for the site_settings gap.
+**Impact:** Low today (the hardcoded text and the seeded `footer_content` row match exactly,
+and `companyRegistrationDetails` was never shown anywhere before this row existed either), but
+identical staleness risk to the `SiteSettings` gap below: once T7.8 makes this content
+admin-editable, an edit won't propagate to the footer until this is fixed. Also means the
+footer never shows company registration details even once the firm supplies them, until fixed.
+**Priority:** Medium
+**Possible Fix/Fixes:** Same shape as the `SiteSettings`/`SiteFooter` fix directly below —
+change `ScopeOfPracticeNote` to accept `scopeOfPracticeStatement`/`companyRegistrationDetails`
+as props (rendering the registration-details line only when non-null, per this feature's own
+edge case), and update every `SiteFooter` caller to fetch `getFooterContent()` (a resolver not
+yet written — add it to `lib/legal.ts` when this is actually wired in) and pass them through.
+Natural to do in the same pass as the `SiteSettings` fix, since both are footer singletons
+read by the same seven call sites.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.8 (Site Settings singleton, `docs/tasks/07-content-admin.md`) —
+addendum added this session pointing back here, alongside the existing `SiteSettings` entry.
+
+---
+
 ## `site_settings.response_time_commitment` has no real value yet — firm hasn't confirmed a number
 
 **Status:** Open
