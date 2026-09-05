@@ -16,6 +16,35 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T1.5 (follow-up fix) — SiteHeader current-page nav active state
+**Summary:** None of the mockups mark the current page in the nav (every page's `<nav>`
+markup is identical, copy-pasted across all of them) — user flagged this as a real gap
+regardless, since indicating current location is a WCAG 2.1 AA expectation, not something to
+skip just because the mockups happened to omit it everywhere. Added active-state highlighting
+to `SiteHeader` via `usePathname()` (already a client component): a matching top-level nav
+link gets the same color it already uses on hover, permanently, plus an underline, so it
+reads as visually distinct from a transient hover on a different item; `aria-current="page"`
+set alongside for assistive tech. "Core Offers" (a dropdown, not a single route) is marked
+active whenever the current path matches one of the three offer hrefs, and the matching item
+inside the dropdown itself is called out in accent text — same logic duplicated for the
+mobile drawer (its own `NAV_LINKS`/`coreOffers` render loop), with a `bg-muted` background
+added there since a drawer item has no adjacent items to contrast against the way a
+horizontal nav's underline does. Verified for real via Playwright MCP: `/our-method` shows
+"Our Method" active on both desktop and the mobile drawer; `/offers/financial-clarity-pack`
+shows "Core Offers" active in both its transparent-over-hero and solid-scrolled header states.
+**Files Changed:**
+
+- `components/site-header.tsx` — `usePathname()` added; active-state classes computed for the
+  desktop nav list, the Core Offers dropdown trigger/items, and the mobile drawer's equivalent
+  items.
+  **Related Feature:** None — a cross-cutting `SiteHeader` fix, not tied to a single feature doc.
+  **Notes:** Applies retroactively to every page already built on `SiteHeader` (T2.1–T2.4 so
+  far) with no per-page changes needed, since the component itself owns the logic.
+
+---
+
+## 2026-09-05
+
 **Task:** T2.4 — Our Method page
 **Summary:** Built `/our-method` to `ui/mockups/a-public-site/our-method.html`, reusing T2.3's
 shared `Page` model (`getPageBySlug("our-method")`, `lib/pages.ts`, no changes needed) and

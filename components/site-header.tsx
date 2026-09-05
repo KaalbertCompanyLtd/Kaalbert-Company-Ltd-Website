@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { ChevronDown, Menu, X } from "lucide-react";
 
@@ -88,6 +89,7 @@ export interface SiteHeaderProps {
 export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
   const coreOffers = offerNavLinks ?? FALLBACK_CORE_OFFERS;
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     function onScroll() {
@@ -102,6 +104,14 @@ export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
   const navLinkClass = solid
     ? "text-foreground hover:text-accent"
     : "text-primary-foreground hover:text-brass-300";
+  // No mockup addresses current-page nav highlighting (every page's nav markup is identical,
+  // copy-pasted) — added regardless, since indicating the visitor's current location is a
+  // WCAG 2.1 AA expectation (CLAUDE.md's Accessibility rule), not an optional embellishment.
+  // "Current" text color matches the link's own hover color (so it reads as permanently in
+  // the hovered state) plus an underline, so it's visually distinct from a transient hover on
+  // a different link.
+  const navLinkActiveClass = solid ? "text-accent" : "text-brass-300";
+  const isCoreOffersActive = coreOffers.some((offer) => offer.href === pathname);
 
   return (
     <header
@@ -141,7 +151,12 @@ export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
                 <DropdownMenuTrigger
                   openOnHover
                   delay={0}
-                  className={`group inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors duration-[400ms] ease-in-out outline-none ${navLinkClass}`}
+                  aria-current={isCoreOffersActive ? "page" : undefined}
+                  className={`group inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors duration-[400ms] ease-in-out outline-none ${
+                    isCoreOffersActive
+                      ? `${navLinkActiveClass} underline underline-offset-4`
+                      : navLinkClass
+                  }`}
                 >
                   Core Offers
                   <ChevronDown className="size-3.5 transition-transform group-data-[popup-open]:rotate-180" />
@@ -152,9 +167,18 @@ export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
                       <DropdownMenuItem
                         key={offer.href}
                         render={<Link href={offer.href} />}
+                        aria-current={offer.href === pathname ? "page" : undefined}
                         className="flex-col items-start gap-0.5 py-2.5"
                       >
-                        <span className="text-foreground text-[0.9375rem]">{offer.name}</span>
+                        <span
+                          className={`text-[0.9375rem] ${
+                            offer.href === pathname
+                              ? "text-accent font-semibold"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {offer.name}
+                        </span>
                         <span className="text-caption text-muted-foreground">{offer.feeHint}</span>
                       </DropdownMenuItem>
                     ))}
@@ -162,16 +186,22 @@ export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </li>
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={`text-[0.9375rem] font-semibold transition-colors duration-[400ms] ease-in-out ${navLinkClass}`}
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isActive = link.href === pathname;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`text-[0.9375rem] font-semibold transition-colors duration-[400ms] ease-in-out ${
+                      isActive ? `${navLinkActiveClass} underline underline-offset-4` : navLinkClass
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
@@ -204,6 +234,8 @@ function MobileNavTrigger({
   navLinkClass: string;
   coreOffers: readonly OfferNavLink[];
 }) {
+  const pathname = usePathname();
+
   return (
     <Dialog>
       <DialogPrimitive.Trigger
@@ -229,30 +261,48 @@ function MobileNavTrigger({
           </div>
 
           <span className="text-kicker text-accent px-2">Core Offers</span>
-          {coreOffers.map((offer) => (
-            <DialogClose
-              key={offer.href}
-              render={<Link href={offer.href} />}
-              nativeButton={false}
-              className="hover:bg-muted flex flex-col gap-0.5 rounded-sm px-2 py-2.5"
-            >
-              <span className="text-foreground text-[0.9375rem] font-semibold">{offer.name}</span>
-              <span className="text-caption text-muted-foreground">{offer.feeHint}</span>
-            </DialogClose>
-          ))}
+          {coreOffers.map((offer) => {
+            const isActive = offer.href === pathname;
+            return (
+              <DialogClose
+                key={offer.href}
+                render={<Link href={offer.href} />}
+                nativeButton={false}
+                aria-current={isActive ? "page" : undefined}
+                className={`hover:bg-muted flex flex-col gap-0.5 rounded-sm px-2 py-2.5 ${
+                  isActive ? "bg-muted" : ""
+                }`}
+              >
+                <span
+                  className={`text-[0.9375rem] font-semibold ${
+                    isActive ? "text-accent" : "text-foreground"
+                  }`}
+                >
+                  {offer.name}
+                </span>
+                <span className="text-caption text-muted-foreground">{offer.feeHint}</span>
+              </DialogClose>
+            );
+          })}
 
           <div className="border-border my-3 border-t" />
 
-          {NAV_LINKS.map((link) => (
-            <DialogClose
-              key={link.href}
-              render={<Link href={link.href} />}
-              nativeButton={false}
-              className="hover:bg-muted text-foreground rounded-sm px-2 py-2.5 text-[0.9375rem] font-semibold"
-            >
-              {link.name}
-            </DialogClose>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const isActive = link.href === pathname;
+            return (
+              <DialogClose
+                key={link.href}
+                render={<Link href={link.href} />}
+                nativeButton={false}
+                aria-current={isActive ? "page" : undefined}
+                className={`hover:bg-muted rounded-sm px-2 py-2.5 text-[0.9375rem] font-semibold ${
+                  isActive ? "text-accent bg-muted" : "text-foreground"
+                }`}
+              >
+                {link.name}
+              </DialogClose>
+            );
+          })}
 
           <DialogClose
             render={<Link href="/diagnostic" />}

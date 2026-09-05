@@ -2,6 +2,21 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.5, follow-up) — Nav active-state added even though no mockup shows one
+
+**Summary:** User pointed out `SiteHeader`'s nav has no current-page indicator on either
+desktop or mobile. Checked every public-site mockup's `<nav>` markup first — confirmed the
+gap genuinely stems from the mockups themselves (all of them render byte-for-byte identical
+nav markup regardless of which page they represent, so there was never a per-page "active"
+class to copy from in the first place). Built it anyway rather than treating "the mockup
+doesn't show it" as license to skip it: WCAG 2.1 AA expects the current location in a nav to
+be programmatically and visually indicated, and CLAUDE.md's accessibility rule is a hard
+requirement, not contingent on the mockup happening to demonstrate it. Implementation: reuse
+each link's own hover color as its permanent color when active (plus an underline, plus
+`aria-current="page"`), rather than inventing a new color not in the token set — keeps this
+consistent with the existing hover treatment instead of adding a fourth nav-link visual state.
+**Related Documents:** `components/site-header.tsx`, `ui/design-system.md`.
+
 ## 2026-09-05 (T2.4, correction) — Intro-copy paragraph's offer-name links restored; dropping them was wrong
 
 **Summary:** The entry directly below this one decided to seed `Page.introCopy` as fully
