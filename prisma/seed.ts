@@ -16,7 +16,7 @@
  *   docs/tasks/02-public-presentation.md T2.9) — never fabricated as if it were final copy.
  */
 
-import { Prisma, PrismaClient } from "../generated/prisma/client";
+import { DiagnosticResponseType, Prisma, PrismaClient } from "../generated/prisma/client";
 import { createDatabaseAdapter } from "../lib/db-adapter";
 import type { LegalPageBlock } from "../lib/legal";
 
@@ -1103,6 +1103,229 @@ async function seedFooterContent() {
   });
 }
 
+/**
+ * T3.3 (docs/tasks/03-diagnostic.md) — the Business Health Check's launch dimension/question/
+ * threshold set. Sourced verbatim from `ui/mockups/c-diagnostic/diagnostic-flow.html`'s own
+ * inline `QUESTIONS` array, which that mockup's own comment already flags: "Illustrative
+ * question set — real wording, scoring and result copy are reserved to firm authorship
+ * (Document 13.03, Section 13: Evans Agyemang with Albert Kwakye Amponsah, derived from the
+ * firm's own business and financial diagnostic tools)." Not fabricated fresh here — carried
+ * over as-is — and not presented as final: every question below is flagged `is_placeholder:
+ * true` in this comment, per docs/tasks/03-diagnostic.md T3.3's own acceptance criterion.
+ * There is no queryable `is_placeholder` column on `diagnostic_question` itself (unlike every
+ * other content-bearing model in this schema) — `docs/features/business-health-check-
+ * diagnostic.md`'s Data requirements section never named one, matching T3.1's already-migrated
+ * schema — so this comment is the only flag available today; see
+ * `memory/technical-debt.md` → "`diagnostic_question` has no queryable `is_placeholder`
+ * column" for the gap this leaves for Milestone 7's admin UI.
+ *
+ * `DiagnosticDimension`/`DiagnosticThreshold` have no unique natural key beyond `id` (unlike
+ * `MethodStage.order`'s precedent above), so every row below is upserted by a fixed literal
+ * `id` — the same fixed-id convention this file's singleton seeds already use
+ * (`HomePageContent`, `SiteSettings`, ...), generalized here to a small known set of rows
+ * rather than one. `DiagnosticQuestion` does have a real natural key
+ * (`@@unique([dimensionId, order])`), so its own upserts use that instead.
+ *
+ * Dimension weights are seeded equal (1 each) — a real, considered default (not a
+ * placeholder zero), pending the firm's own tuned weighting once supplied; scoring weights
+ * are configuration data the firm can revise without a deployment, but only the build team
+ * adjusts the scoring algorithm itself (`docs/features/business-health-check-diagnostic.md`'s
+ * business rules).
+ *
+ * Threshold values/priority levels are similarly a real, considered illustrative default:
+ * a per-dimension threshold at 50 ("High") generalizes the mockup's own hard-coded
+ * weak-dimension cutoff (`d.score < 75`) into real per-dimension data — tightened to 50 since
+ * `lib/diagnostic-scoring.ts`'s `weakestDimensions` already guarantees 2–3 names regardless of
+ * whether a threshold trips, so the threshold itself is reserved for a more urgent signal.
+ * Two overall bands (40 → "High", 70 → "Medium") give `EnquiryRecord.triageFlag` (T3.5) a
+ * real multi-tier signal to work with.
+ *
+ * `choice`-type questions have no schema column to store an option's label-to-value mapping
+ * (decided at T3.2 — every answer, regardless of `responseType`, is a plain numeric string
+ * pre-normalized to 0–1, see `lib/diagnostic-scoring.ts`'s and `prisma/schema.prisma`'s
+ * `DiagnosticResponse.answerValue` doc-comments) — so each choice question's real option set
+ * and values is documented inline below, carried over verbatim from the mockup's own
+ * per-question `options` array, for T3.4's client flow to read from directly.
+ */
+const DIAGNOSTIC_DIMENSIONS: Array<{ id: number; name: string; weight: number }> = [
+  { id: 1, name: "Structure", weight: 1 },
+  { id: 2, name: "Records", weight: 1 },
+  { id: 3, name: "Cash Control", weight: 1 },
+  { id: 4, name: "Funding Readiness", weight: 1 },
+  { id: 5, name: "Owner Dependence", weight: 1 },
+];
+
+async function seedDiagnosticDimensions() {
+  for (const dimension of DIAGNOSTIC_DIMENSIONS) {
+    await prisma.diagnosticDimension.upsert({
+      where: { id: dimension.id },
+      update: { name: dimension.name, weight: dimension.weight },
+      create: dimension,
+    });
+  }
+}
+
+const DIAGNOSTIC_QUESTIONS: Array<{
+  dimensionId: number;
+  order: number;
+  promptText: string;
+  responseType: DiagnosticResponseType;
+}> = [
+  // Dimension 1: Structure
+  {
+    dimensionId: 1,
+    order: 1,
+    // Choice options (label → normalized value): "Yes" → 1, "In progress" → 0.5, "Not yet" → 0.
+    promptText:
+      "Is the business formally registered — incorporated, or a registered business name?",
+    responseType: DiagnosticResponseType.choice,
+  },
+  {
+    dimensionId: 1,
+    order: 2,
+    promptText: "Do the people working in the business have clearly defined roles?",
+    responseType: DiagnosticResponseType.scale,
+  },
+  {
+    dimensionId: 1,
+    order: 3,
+    promptText: "Is there a written plan the business is working from, even a simple one?",
+    responseType: DiagnosticResponseType.boolean,
+  },
+  // Dimension 2: Records
+  {
+    dimensionId: 2,
+    order: 1,
+    // Choice options: "Regular record-keeping" → 1, "Rough notes" → 0.5, "No record" → 0.
+    promptText: "Do you keep a record of sales — even a notebook or a spreadsheet?",
+    responseType: DiagnosticResponseType.choice,
+  },
+  {
+    dimensionId: 2,
+    order: 2,
+    promptText: "Are business costs and expenses tracked separately from personal spending?",
+    responseType: DiagnosticResponseType.scale,
+  },
+  {
+    dimensionId: 2,
+    order: 3,
+    // Choice options: "12 months or more" → 1, "3–12 months" → 0.66, "1–3 months" → 0.33,
+    // "Less than 1 month" → 0.
+    promptText: "How many months back could you produce a reasonably complete financial picture?",
+    responseType: DiagnosticResponseType.choice,
+  },
+  // Dimension 3: Cash Control
+  {
+    dimensionId: 3,
+    order: 1,
+    promptText:
+      "Is money moving between you and the business tracked separately from business cash?",
+    responseType: DiagnosticResponseType.scale,
+  },
+  {
+    dimensionId: 3,
+    order: 2,
+    promptText: "Do you know, roughly, how much customers currently owe the business?",
+    responseType: DiagnosticResponseType.boolean,
+  },
+  {
+    dimensionId: 3,
+    order: 3,
+    promptText: "Do you know, roughly, what the business owes suppliers or lenders?",
+    responseType: DiagnosticResponseType.boolean,
+  },
+  {
+    dimensionId: 3,
+    order: 4,
+    promptText:
+      "Does the business use a bank or mobile money account separate from your personal one?",
+    responseType: DiagnosticResponseType.boolean,
+  },
+  // Dimension 4: Funding Readiness
+  {
+    dimensionId: 4,
+    order: 1,
+    // Choice options: "Applied, successful" → 1, "Applied, not successful" → 0.5,
+    // "Never applied" → 0.
+    promptText: "Has the business applied for a loan, grant or investment before?",
+    responseType: DiagnosticResponseType.choice,
+  },
+  {
+    dimensionId: 4,
+    order: 2,
+    promptText:
+      "If a lender asked for twelve months of financial statements today, could you produce them?",
+    responseType: DiagnosticResponseType.scale,
+  },
+  {
+    dimensionId: 4,
+    order: 3,
+    promptText:
+      "Do you have a clear, specific reason you'd want funding — equipment, stock, expansion?",
+    responseType: DiagnosticResponseType.boolean,
+  },
+  // Dimension 5: Owner Dependence
+  {
+    dimensionId: 5,
+    order: 1,
+    promptText: "Could the business run for two weeks without you being reachable?",
+    responseType: DiagnosticResponseType.scale,
+  },
+  {
+    dimensionId: 5,
+    order: 2,
+    promptText:
+      "Is there anyone besides you who could make a significant business decision if needed?",
+    responseType: DiagnosticResponseType.boolean,
+  },
+];
+
+async function seedDiagnosticQuestions() {
+  for (const question of DIAGNOSTIC_QUESTIONS) {
+    await prisma.diagnosticQuestion.upsert({
+      where: { dimensionId_order: { dimensionId: question.dimensionId, order: question.order } },
+      update: {
+        promptText: question.promptText,
+        responseType: question.responseType,
+        active: true,
+      },
+      create: { ...question, active: true },
+    });
+  }
+}
+
+const DIAGNOSTIC_THRESHOLDS: Array<{
+  id: number;
+  dimensionId: number | null;
+  thresholdValue: number;
+  triagePriorityLevel: string;
+}> = [
+  // Overall bands (dimensionId: null) — the tightest-fitting band a score falls under wins
+  // (lib/diagnostic-scoring.ts's resolveTriageBand).
+  { id: 1, dimensionId: null, thresholdValue: 40, triagePriorityLevel: "High" },
+  { id: 2, dimensionId: null, thresholdValue: 70, triagePriorityLevel: "Medium" },
+  // One per-dimension band each, keyed to DIAGNOSTIC_DIMENSIONS' fixed ids above.
+  { id: 3, dimensionId: 1, thresholdValue: 50, triagePriorityLevel: "High" },
+  { id: 4, dimensionId: 2, thresholdValue: 50, triagePriorityLevel: "High" },
+  { id: 5, dimensionId: 3, thresholdValue: 50, triagePriorityLevel: "High" },
+  { id: 6, dimensionId: 4, thresholdValue: 50, triagePriorityLevel: "High" },
+  { id: 7, dimensionId: 5, thresholdValue: 50, triagePriorityLevel: "High" },
+];
+
+async function seedDiagnosticThresholds() {
+  for (const threshold of DIAGNOSTIC_THRESHOLDS) {
+    await prisma.diagnosticThreshold.upsert({
+      where: { id: threshold.id },
+      update: {
+        dimensionId: threshold.dimensionId,
+        thresholdValue: threshold.thresholdValue,
+        triagePriorityLevel: threshold.triagePriorityLevel,
+      },
+      create: threshold,
+    });
+  }
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -1121,6 +1344,9 @@ async function main() {
   await seedSiteSettings();
   await seedLegalPages();
   await seedFooterContent();
+  await seedDiagnosticDimensions();
+  await seedDiagnosticQuestions();
+  await seedDiagnosticThresholds();
 }
 
 main()

@@ -2,6 +2,52 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T3.3, session 18) — Fixed-id upsert convention for `DiagnosticDimension`/`DiagnosticThreshold`; real default weights/thresholds seeded; question wording carried verbatim from the mockup
+
+**Summary:** Seeded `DiagnosticDimension`/`DiagnosticQuestion`/`DiagnosticThreshold` in
+`prisma/seed.ts` (`seedDiagnosticDimensions`/`seedDiagnosticQuestions`/
+`seedDiagnosticThresholds`, called from `main()`). Three decisions:
+
+1. **Fixed-literal-`id` upsert for `DiagnosticDimension` and `DiagnosticThreshold`.** Neither
+   model has a unique natural key beyond `id` (`DiagnosticDimension.name` isn't `@unique`;
+   `DiagnosticThreshold` has no natural key at all) — but this file's own established
+   convention requires every seed write to be an idempotent `upsert` keyed on a stable key.
+   Rather than a schema change (adding `@unique` constraints, out of this seed-only task's
+   scope), used the same fixed-literal-`id` pattern this file already uses for its singleton
+   rows (`HomePageContent`, `SiteSettings`, ...), generalized to a small known set of rows
+   (5 dimensions, ids 1–5; 7 thresholds, ids 1–7) instead of one. `DiagnosticQuestion` does
+   have a real natural key (`@@unique([dimensionId, order])`), so its own upserts use that
+   instead, no schema change needed anywhere.
+2. **Dimension weights seeded equal (1 each)**, and thresholds seeded as two overall bands
+   (40 → "High", 70 → "Medium") plus one per-dimension band each (50 → "High") — a real,
+   considered illustrative default per `docs/features/business-health-check-diagnostic.md`'s
+   "weights/thresholds are configuration data" rule, not placeholder zeros. The per-dimension
+   value (50) is deliberately tighter than the overall bands, generalizing the accepted
+   mockup's own hard-coded weak-dimension cutoff (`d.score < 75`,
+   `ui/mockups/c-diagnostic/diagnostic-flow.html`) into real per-dimension data, kept tighter
+   since `lib/diagnostic-scoring.ts`'s `weakestDimensions` already guarantees 2–3 names
+   regardless of whether a threshold trips.
+3. **Question wording/count/dimension grouping carried over verbatim** from the mockup's own
+   15-question `QUESTIONS` array (5 dimensions: Structure, Records, Cash Control, Funding
+   Readiness, Owner Dependence) — not fabricated fresh, matching that file's own comment
+   ("Illustrative question set — real wording ... reserved to firm authorship"). Flagged
+   `is_placeholder: true` only in this seed script's own comment, since `diagnostic_question`
+   has no real `is_placeholder` column (see `memory/technical-debt.md`'s new entry for that
+   gap and its `T7.7` follow-up).
+
+Verified end to end with a throwaway script (T3.1's own established practice): queried the
+real seeded rows, ran `lib/diagnostic-scoring.ts`'s `scoreDiagnosticResponses` against them
+for real (not mocked) with a full-marks and a zero-marks answer set, confirmed 100/0 scores
+and correct triage flags/weakest-dimension output, then deleted the script. Also drove the
+actual mockup HTML through all 15 real clicks via Playwright MCP (served locally, since
+`file://` navigation is blocked) to confirm the exact seeded question set completes with no
+dead ends and reaches the results screen — structural confirmation of "15 questions... under
+six minutes," not an empirical human-paced timing (bot clicks don't validate reading speed;
+that's for T3.4's real route, once built, to confirm with actual users/analytics).
+**Related Documents:** `docs/tasks/03-diagnostic.md` (T3.3), `docs/features/business-health-
+check-diagnostic.md`, `ui/mockups/c-diagnostic/diagnostic-flow.html`, `prisma/seed.ts`,
+`lib/diagnostic-scoring.ts`, `memory/technical-debt.md`, `memory/completed-work.md`.
+
 ## 2026-09-05 (T3.2, session 17) — Scoring algorithm decisions: uniform 0–1 answer convention, threshold-band resolution, no-fabricated-numbers cost statement; `@types/node` bumped to unblock Vitest
 
 **Summary:** Four real algorithmic decisions made building `lib/diagnostic-scoring.ts`

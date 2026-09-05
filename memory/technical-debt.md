@@ -374,6 +374,38 @@ re-sequenced to T3.7 above rather than left pointing at this now-completed task.
 
 ---
 
+## `diagnostic_question` has no queryable `is_placeholder` column
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** T3.3 (`docs/tasks/03-diagnostic.md`) seeded the launch question set carried over
+verbatim from `ui/mockups/c-diagnostic/diagnostic-flow.html` and — per that task's own
+acceptance criterion — flagged every question `is_placeholder: true`, but only in the seed
+script's own comment. `diagnostic_question` has no real `is_placeholder` boolean column,
+unlike every other content-bearing model in this schema (`Offer`, `Page`, `MethodStage`,
+`Author`, `SiteSettings`, `LegalPage`, ...) — `docs/features/business-health-check-
+diagnostic.md`'s Data requirements section never named one, matching T3.1's already-migrated
+schema exactly, so T3.3 couldn't add one without a schema change outside its own scope.
+**Impact:** Low today — the seed comment correctly documents the pending status for a
+developer reading the source. But Milestone 7's config admin (T7.7, Diagnostic Configuration)
+and `docs/dashboard.md` are both expected (per T3.3's own acceptance criterion and the
+`is_placeholder` convention established at T2.9) to surface "what's still pending real
+content" — a comment-only flag can't be read or displayed by that admin screen or the
+dashboard at runtime, so once T7.7 ships, a partner editing the question set has no way to
+see that this launch set is still the mockup's illustrative wording pending firm review.
+**Priority:** Medium
+**Possible Fix/Fixes:** Add a real `isPlaceholder Boolean @default(false)` column to
+`DiagnosticQuestion` (mirroring every other content model's convention) via a migration, then
+update T3.3's seed rows to set it `true` via the real column instead of only a comment, and
+have T7.7's admin screen surface it the same way it would for any other placeholder-flagged
+content.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.7 (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — the
+first task that actually builds a UI surface over this question set; see the addendum added
+to that task's entry this session.
+
+---
+
 ## Vitest never scaffolded (no test runner exists yet)
 
 **Status:** Resolved

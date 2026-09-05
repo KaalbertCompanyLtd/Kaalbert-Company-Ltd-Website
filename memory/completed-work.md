@@ -16,6 +16,40 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T3.3 — Diagnostic question-set seed (session 18)
+**Summary:** Added `seedDiagnosticDimensions`/`seedDiagnosticQuestions`/
+`seedDiagnosticThresholds` to `prisma/seed.ts`, called from `main()`. Seeded 5 dimensions
+(Structure, Records, Cash Control, Funding Readiness, Owner Dependence; weight 1 each), 15
+questions (3+3+4+3+2 across those dimensions, `scale`/`boolean`/`choice` response types),
+and 7 thresholds (2 overall bands at 40/"High" and 70/"Medium", 1 per-dimension band each at
+50/"High") — all carried over verbatim from `ui/mockups/c-diagnostic/diagnostic-flow.html`'s
+own illustrative `QUESTIONS` array, flagged `is_placeholder: true` in the seed script's own
+comment (no real column exists for it — see technical-debt entry below). `DiagnosticQuestion`
+upserts keyed on its real `[dimensionId, order]` unique constraint; `DiagnosticDimension`/
+`DiagnosticThreshold` (no natural key beyond `id`) upserted by fixed literal ids instead,
+mirroring this file's existing singleton-row convention. Ran the seed script twice against
+the real dev database to confirm idempotency (no duplicate/thrown rows), then verified the
+data with a throwaway script that queried the real rows and called `lib/diagnostic-
+scoring.ts`'s `scoreDiagnosticResponses` against them for real — full-marks → 100/no triage,
+zero-marks → 0/all triage flagged, both correct — before deleting the script. Also drove the
+actual mockup HTML through all 15 real clicks via Playwright MCP (local static server, since
+`file://` is blocked) confirming the seeded question set completes with no dead ends and
+reaches the results screen.
+**Files Changed:** `prisma/seed.ts` (new `seedDiagnosticDimensions`/`seedDiagnosticQuestions`/
+`seedDiagnosticThresholds` functions + `main()` wiring), `docs/tasks/07-content-admin.md`
+(addendum to T7.7 for the `is_placeholder` column gap).
+**Related Feature:** `docs/features/business-health-check-diagnostic.md` ("User flow" step 2,
+Business rules' 6-minute target), `docs/tasks/03-diagnostic.md` (T3.3), ADR 0005.
+**Notes:** No route/UI surface owned by this task — the mockup click-through above is
+structural verification (question set completes with no dead ends), not an empirical
+human-paced timing claim; that belongs to T3.4's real route. Quality gates (`npm run lint`,
+`npm run format:check`, `npm run typecheck`, `npm run test`) all pass clean; no schema
+change, so no `prisma generate` needed.
+
+---
+
+## 2026-09-05
+
 **Task:** T3.2 — Server-side scoring function (session 17)
 **Summary:** Built `lib/diagnostic-scoring.ts`'s `scoreDiagnosticResponses` — a pure function
 taking `{questionId, answer}[]` and returning `{score, dimensionScores, weakestDimensions,

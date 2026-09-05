@@ -137,6 +137,15 @@ rejected inline, naming the dimension — the exact scenario `business-health-ch
 save.
 **Size:** M **Dependencies:** T6.3, T3.1, T3.3
 
+**Addendum (session 18, 2026-09-05):** `diagnostic_question` has no queryable
+`is_placeholder` column — T3.3 flagged the launch question set pending-review status only in
+`prisma/seed.ts`'s own comment, since no such column exists on this model (unlike every other
+content-bearing model in this schema) and T3.3's own scope didn't include a schema change.
+See `memory/technical-debt.md` → "`diagnostic_question` has no queryable `is_placeholder`
+column." Add a real `isPlaceholder Boolean @default(false)` column to `DiagnosticQuestion`
+(a migration) as part of this task, set it `true` on T3.3's seeded rows, and surface it in
+this editor the same way any other placeholder-flagged content would be shown.
+
 ### T7.8 — Site Settings (singleton)
 
 **Build:** Single settings form — phone_primary/secondary, email, whatsapp_number, address,
