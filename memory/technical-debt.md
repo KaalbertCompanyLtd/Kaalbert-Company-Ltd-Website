@@ -18,6 +18,36 @@ sequencing requirement:
 
 ---
 
+## Temporary favicon in use — pending the firm's confirmed final icon
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** User asked to use the "KB" monogram favicon from `Company Docs/Brand
+assets/` (the site's `app/favicon.ico` was still Next.js's default) explicitly as a
+temporary stand-in, until the firm confirms a real, final icon. Used the pre-generated
+iconifier.net set already present there rather than regenerating one:
+`Company Docs/Brand assets/favicon.ico` → `app/favicon.ico` (multi-res .ico, matches
+`Brand assets/iconified/favicon.ico` byte-for-byte) and
+`Brand assets/iconified/apple-touch-icon-180x180.png` → `app/apple-icon.png` (Next.js's
+file-based icon convention only wires one apple-touch size automatically; 180×180 is the
+modern-device-covering size, per the other pre-generated sizes in that folder being for
+older/smaller devices this project doesn't need to support separately).
+**Impact:** None functionally — the site now has a real (if provisional) favicon/apple
+touch icon instead of Next's default. Purely a "don't treat this as the final brand
+decision" flag.
+**Priority:** Low
+**Possible Fix/Fixes:** Once the firm confirms a final icon, replace `app/favicon.ico` and
+`app/apple-icon.png` directly with the confirmed assets (re-run them through an
+iconifier-style tool first if only a source logo is supplied, not a ready `.ico`).
+**Trigger type:** User-triggered — do not treat reaching T2.8 (or any other task) as a cue
+to swap this on its own; only replace it when the user says the firm has confirmed a final
+icon.
+**Sequenced into:** T2.8 (SEO foundation, `docs/tasks/02-public-presentation.md`) — a
+checkpoint to confirm whether a final icon exists yet by the time that task is reached, not
+an instruction to act unprompted.
+
+---
+
 ## Business Health Check's two-tier pricing has no real data model yet
 
 **Status:** Open

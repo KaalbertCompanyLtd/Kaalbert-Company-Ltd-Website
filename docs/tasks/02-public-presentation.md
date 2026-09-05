@@ -134,6 +134,13 @@ accepts the Organization schema with no errors; a missing `meta_description` on 
 falls back to a truncated body excerpt rather than an empty tag.
 **Size:** M **Dependencies:** T2.1–T2.7
 
+**Addendum (session 08, 2026-09-05):** `app/favicon.ico`/`app/apple-icon.png` are currently
+the firm's "KB" monogram from `Company Docs/Brand assets/`, used as an explicit temporary
+stand-in per user instruction — see `memory/technical-debt.md` → "Temporary favicon in use —
+pending the firm's confirmed final icon" (`Trigger type: User-triggered`). Do not swap these
+files as part of doing this task; only check whether the user has since said the firm
+confirmed a final icon, and if not, leave them as-is.
+
 ### T2.9 — Content migration/seed scripts
 
 **Build:** Seed scripts (per T1.2's convention) populating every entity introduced in this
