@@ -82,6 +82,32 @@ CLAUDE.md Code Conventions rule so every later page built against seeded content
 onward) applies this from the start rather than rediscovering it per task. Committed as
 `fix(T02-01)`.
 
+## Post-commit fix #3 (same session) — hero heading weight
+
+The hero H1 was missing `font-bold` — the mockup's h1 inherits `font-weight: 700` from a
+shared base rule, but the hero heading needed a fully custom class list (clamp-based size,
+tracking, color), so Tailwind's preflight reset it to normal weight. Added `font-bold`;
+verified visually. Committed as `fix(T02-01)`.
+
+## Post-commit fix #4 (same session) — Core Offers dropdown didn't open on hover
+
+User caught that `SiteHeader`'s Core Offers dropdown (T1.5) opened on click only, not hover
+like the mockup. Base UI's `Menu` defaults to click-to-open (correct for an action menu, not
+a nav dropdown). Fixed with `openOnHover delay={0}` on the `DropdownMenuTrigger` instance in
+`components/site-header.tsx` only — the shared `dropdown-menu.tsx` primitive's defaults are
+unchanged, so future click-based menus (e.g. admin actions) aren't affected. See
+`memory/decision-log.md`. Committed as `fix(T01-05)` (the bug is in T1.5's own component).
+
+## Post-commit change (same session) — temporary favicon
+
+User asked to use the firm's real "KB" monogram favicon from `Company Docs/Brand assets/`
+(the `iconified/` pre-generated set) in place of Next.js's default, explicitly as a stand-in
+until the firm confirms a final icon. Replaced `app/favicon.ico` and added `app/apple-icon.png`
+(180×180, Next's file-based icon convention). Tracked as user-triggered debt sequenced into
+T2.8 so it isn't swapped again without the user's confirmation — see
+`memory/technical-debt.md` → "Temporary favicon in use — pending the firm's confirmed final
+icon." Committed as `chore(T02-08)`.
+
 ## Current State
 
 The home page is live, fully database-driven, and matches the mockup at desktop (1280px),

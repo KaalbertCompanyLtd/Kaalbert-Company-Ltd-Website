@@ -2,6 +2,20 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.5) — Nav dropdowns need Base UI's `MenuTrigger` `openOnHover`, not the default click-to-open
+
+**Summary:** User caught that `SiteHeader`'s Core Offers dropdown (built T1.5) didn't open on
+hover like `ui/mockups/_shared.css`'s `.nav-dropdown:hover .nav-dropdown-menu` rule — Base
+UI's `Menu` (`components/ui/dropdown-menu.tsx`) opens on click/Enter by default, the correct
+behavior for an action menu but not a horizontal nav's dropdown. Fixed by passing
+`openOnHover delay={0}` directly on the `DropdownMenuTrigger` instance in
+`components/site-header.tsx`, not by changing the shared `dropdown-menu.tsx` primitive's
+defaults — other/future usages (e.g. an admin action menu) should stay click-based. Click
+still works alongside hover (Base UI's default `MenuTrigger` behavior), so keyboard/touch
+users aren't affected. Any later nav-style dropdown (e.g. Capabilities, if it ever gets one)
+should use the same two props.
+**Related Documents:** `components/site-header.tsx`, `components/ui/dropdown-menu.tsx`.
+
 ## 2026-09-05 (T2.1) — Railway production build failed: `next build` can't reach `postgres.railway.internal`; fixed by marking `/` dynamic
 
 **Summary:** The first real Railway deploy of `/` failed at `npm run build` with a Prisma
