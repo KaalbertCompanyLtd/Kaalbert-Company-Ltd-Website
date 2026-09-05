@@ -2,6 +2,45 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.3) — globals.css kept to design-system.md's token set exactly (no extra brand tokens added for mockup hover-state fidelity)
+
+**Summary:**
+
+- `ui/mockups/_shared.css` defines four extra brand colours (`--pine-700`, `--pine-500`,
+  `--brass-500`, `--brass-300`) beyond shadcn's semantic set, used only for hover states and
+  decorative accents (e.g. `.btn-primary:hover { background: var(--pine-700); }`). They're
+  listed in `ui/design-system.md`'s "Full brand color palette" table but deliberately absent
+  from that same doc's own "Complete CSS-first configuration" code block — i.e. the doc
+  itself already decided not to thread them into the Tailwind theme.
+- Chose to treat that code block as complete/authoritative and copy it into `app/globals.css`
+  verbatim, rather than independently adding the four extra tokens back in for closer
+  hover-state pixel-fidelity. Reasoning: the task's acceptance criteria is a static
+  side-by-side visual match (buttons/cards/inputs at rest), not hover-interaction parity;
+  the design-system doc's own "Complete configuration" framing is a stronger signal of intent
+  than re-deriving from the mockup CSS a second time; and CLAUDE.md's colour-restraint rule
+  ("no colour outside that table without firm approval") cuts toward not inventing new theme
+  keys speculatively. If a later task needs exact hover-colour parity, add those four tokens
+  to `design-system.md`'s config block first (not just to `globals.css`), so the two stay in
+  sync.
+- Also removed the create-next-app Geist Google Fonts wiring from `app/layout.tsx` (not
+  requested by the task directly, but design-system.md states plainly that both brand
+  typefaces are system fonts with no web font file loaded — leaving Geist loaded app-wide
+  would have silently contradicted that the first time anyone reached for a default
+  `font-sans`).
+- Left `app/page.tsx`/`page.module.css` (the create-next-app placeholder homepage) untouched —
+  out of scope for a tokens-only task, and it's slated for full replacement once the
+  public-presentation epic builds the real home page from `ui/mockups/a-public-site/home.html`.
+- Playwright MCP (`.mcp.json`'s `verification` server) wasn't connected this session (no
+  `mcp__verification__*` tools resolved via ToolSearch) — consistent with CLAUDE.md's note
+  that a new/changed MCP server needs a session restart _and_ human approval first. Used the
+  `claude-in-chrome` browser-automation tools instead for real-browser visual verification
+  (per CLAUDE.md's own explicit fallback instruction), including serving
+  `ui/mockups/a-public-site/home.html` via a temporary local `python3 -m http.server` since
+  the extension can't load `file://` URLs directly.
+
+**Related Documents:** `docs/adr/0010-styling-and-component-stack.md`,
+`ui/design-system.md`, `docs/tasks/01-foundation.md` (T1.3)
+
 ## 2026-09-05 (T1.2 follow-up) — railway.json never applied; migrated to Infrastructure as Code
 
 **Summary:**

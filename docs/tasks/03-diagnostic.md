@@ -32,6 +32,15 @@ questions returns a caught, logged error, never an uncaught 500 reaching a visit
 (matches the documented edge case).
 **Size:** M **Dependencies:** T3.1
 
+**Addendum (session 03, 2026-09-05):** No Vitest config or test file exists anywhere in the
+repo yet — every task through T1.3 has been infrastructure/tokens with no `lib/` business
+logic to unit-test. This is the first task with a pure `lib/` function and explicit
+unit-test acceptance criteria, so scaffold Vitest + React Testing Library (CLAUDE.md's
+stated stack) here, not before: install the deps, add a minimal `vitest.config.ts`, add the `npm run test` script (no `test`
+script exists in `package.json` at all yet), and write this task's scoring-function tests
+against that new setup. See `memory/technical-debt.md` → "Vitest
+never scaffolded (no test runner exists yet)."
+
 ### T3.3 — Diagnostic question-set seed
 
 **Build:** Seed script populating `diagnostic_question`/`diagnostic_dimension`/

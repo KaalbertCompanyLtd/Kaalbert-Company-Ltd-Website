@@ -27,6 +27,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "^20",
     "@types/pg": "8.23.1",
     "@types/react": "^19",
@@ -39,6 +40,7 @@
     "prettier-plugin-tailwindcss": "^0.6",
     "prisma": "7.10.0",
     "railway": "3.11.0",
+    "tailwindcss": "4.3.3",
     "tsx": "4.23.13",
     "typescript": "^5"
   }

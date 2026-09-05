@@ -18,6 +18,30 @@ sequencing requirement:
 
 ---
 
+## Vitest never scaffolded (no test runner exists yet)
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** CLAUDE.md names Vitest + React Testing Library as the unit/component-testing
+stack, but no task through T1.3 has actually installed or configured it — there's no
+`vitest.config.ts`, no `test` script in `package.json`, and no `*.test.*` file anywhere in
+the repo. T1.3 (design tokens + a scratch visual-verification page) had nothing worth
+unit-testing, so it surfaced the gap without being the right place to close it.
+**Impact:** `npm run test` (part of CLAUDE.md's Quality Gates) currently has nothing to run.
+No functional risk yet — no `lib/` business logic exists yet either — but the gap must close
+before the first task that ships real business logic, or that task's own unit-test
+acceptance criteria can't be met.
+**Priority:** Medium — not urgent today, but blocking the moment it's needed.
+**Possible Fix/Fixes:** Install `vitest`, `@testing-library/react`, `@testing-library/jest-dom`
+(and a DOM environment, e.g. `jsdom` or `happy-dom`); add `vitest.config.ts`; add a `test`
+script to `package.json`.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T3.2 (Server-side scoring function, `docs/tasks/03-diagnostic.md`) — the
+first task with real `lib/` logic and explicit unit-test acceptance criteria; see that task's
+addendum.
+
+---
+
 ## railway.json (Config as Code) is deprecated in favour of .railway/railway.ts
 
 **Status:** Resolved
