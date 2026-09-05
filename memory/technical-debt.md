@@ -18,6 +18,47 @@ sequencing requirement:
 
 ---
 
+## Two-partner simultaneous page edits use last-write-wins (no optimistic locking)
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** `docs/features/content-management-admin.md`'s "Edge cases" section documents:
+"Two partners edit the same page simultaneously: last write wins at launch — optimistic
+locking/conflict detection is not required for Phase 1 given five partners and low edit
+frequency, but is noted here as a known simplification (recorded in
+`memory/technical-debt.md` once implementation begins)." Logged now, proactively, at the
+user's explicit request this session, rather than waiting for T7.2/T7.3 to actually be
+implemented as the feature doc's own text originally planned — the user flagged that leaving
+it as an undated "Anticipated" placeholder (with no `Sequenced into:` target, no `Status`,
+no `Priority`) wasn't real due diligence and asked for it to become a proper entry now.
+**Impact:** If two partners save overlapping edits to the same `article`/`page`/other
+admin-editable entity within the same window, the second `PATCH` silently overwrites the
+first partner's changes with no warning to either partner — no error, no merge, no "someone
+else edited this" notice. Explicitly accepted as tolerable for Phase 1 launch given the
+firm's actual partner count (five) and edit frequency (low) — this is a documented,
+deliberate simplification, not an oversight, and does not need to be fixed before T7.2/T7.3
+ship.
+**Priority:** Low — accepted for Phase 1 by the feature doc itself; revisit only if the
+partner count grows or edit frequency increases enough that real collisions start
+happening in practice.
+**Possible Fix/Fixes:** Lightest option: an `updated_at` (or a dedicated `version` column)
+check on each `PATCH` that rejects a stale write with a "someone else has edited this since
+you opened it — reload to see their changes" error, rather than silently overwriting.
+Heavier option: a "currently being edited by [name]" banner shown to the second partner
+before they even start editing. Full real-time collaborative editing (Google-Docs-style) is
+explicitly out of scope for this project's size. No fix is required to ship T7.2/T7.3 —
+this entry exists so the limitation is a conscious, documented choice at that point, not a
+silently-shipped gap.
+**Trigger type:** Task-sequenced — whichever session builds T7.2/T7.3 should read this entry
+and consciously decide "ship as documented last-write-wins" vs. "add the lightweight
+staleness check while already building the PATCH handler" — not treated as a mandatory fix,
+just a required conscious decision point.
+**Sequenced into:** T7.2 (Articles editor + Categories) and T7.3 (Pages editor), both in
+`docs/tasks/07-content-admin.md` — addenda added this session to both task entries pointing
+back here.
+
+---
+
 ## ESLint pinned to the EOL 9.x line
 
 **Status:** Open
@@ -191,12 +232,3 @@ any task) as a cue to act; wait for the user to say the domain is registered and
 explicitly.
 **Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum added session 01,
 2026-09-04, explicitly marked user-triggered)
-
-## Anticipated (not yet raised — a placeholder to watch for)
-
-`docs/features/content-management-admin.md`'s documented edge case: simultaneous edits to
-the same page by two partners use last-write-wins, with no optimistic locking/conflict
-detection, accepted for Phase 1 given five partners and low edit frequency. **Must be logged
-as a real dated entry above (with a `Sequenced into:` target, per the rule) the moment
-T7.2/T7.3 (the Articles/Pages editors) are implemented** — do not let this slip past
-implementation silently.

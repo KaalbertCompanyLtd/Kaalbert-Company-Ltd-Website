@@ -34,6 +34,16 @@ fix — re-verify in browser); retiring a category leaves its articles un-delete
 to no-category; a duplicate category slug is rejected inline, not silently duplicated.
 **Size:** L **Dependencies:** T6.3, T4.1
 
+**Addendum (session 04, 2026-09-05):** Before building the article `PATCH` handler, read
+`memory/technical-debt.md` → "Two-partner simultaneous page edits use last-write-wins (no
+optimistic locking)". `content-management-admin.md`'s edge case explicitly accepts
+last-write-wins for Phase 1 (five partners, low edit frequency) — no fix is required to
+ship this task. Make a conscious call and note which you chose in this task's
+`memory/completed-work.md` entry: ship as documented (silent overwrite on a stale save), or
+add the lightweight `updated_at`/version staleness check described in that debt entry while
+already building the handler. Either is acceptable; silently doing neither (i.e., not even
+considering it) is the thing to avoid.
+
 ### T7.3 — Pages editor (marketing pages incl. Capabilities, Our Method; legal pages)
 
 **Build:** One Pages content area editing the shared `page` entity (hero_kicker/
@@ -50,6 +60,14 @@ without a deploy; editing a legal page's body updates its `/legal/[slug]` page; 
 10.05-compliance sign-off gate (FR-5.4) applies to marketing-page publish actions the same way
 it does to articles.
 **Size:** L **Dependencies:** T6.3, T2.3, T2.4, T2.7
+
+**Addendum (session 04, 2026-09-05):** Same debt item as T7.2's addendum above —
+`memory/technical-debt.md` → "Two-partner simultaneous page edits use last-write-wins (no
+optimistic locking)" — applies here too (this task literally is "the Pages editor" the debt
+entry names). Make and record the same conscious call for this task's `page`/`capability`/
+`method_stage`/`legal_page`/`footer_content` `PATCH` handlers: ship as documented, or add the
+staleness check. Decide independently of whatever T7.2 chose — they're separate handlers and
+don't need to match.
 
 ### T7.4 — Offer editor (fee bands, FAQs, and full field set)
 
