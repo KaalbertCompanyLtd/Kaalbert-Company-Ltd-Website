@@ -129,6 +129,8 @@ export function SiteHeader({ hasHero = true }: SiteHeaderProps) {
             <li className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger
+                  openOnHover
+                  delay={0}
                   className={`group inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors duration-[400ms] ease-in-out outline-none ${navLinkClass}`}
                 >
                   Core Offers
