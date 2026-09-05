@@ -23,6 +23,10 @@ const swatches: Array<{ label: string; className: string; textClassName: string 
     textClassName: "text-foreground",
   },
   { label: "destructive", className: "bg-destructive", textClassName: "text-primary-foreground" },
+  { label: "pine-700", className: "bg-pine-700", textClassName: "text-primary-foreground" },
+  { label: "pine-500", className: "bg-pine-500", textClassName: "text-primary-foreground" },
+  { label: "brass-500", className: "bg-brass-500", textClassName: "text-accent-foreground" },
+  { label: "brass-300", className: "bg-brass-300", textClassName: "text-foreground" },
 ];
 
 export default function DesignTokensTestPage() {
@@ -44,7 +48,7 @@ export default function DesignTokensTestPage() {
         <div className="flex flex-wrap gap-4">
           <button
             type="button"
-            className={`${buttonBase} bg-primary text-primary-foreground hover:opacity-90`}
+            className={`${buttonBase} bg-primary text-primary-foreground hover:bg-pine-700`}
           >
             Take the Health Check
           </button>
@@ -56,7 +60,7 @@ export default function DesignTokensTestPage() {
           </button>
           <button
             type="button"
-            className={`${buttonBase} bg-accent text-accent-foreground hover:opacity-90`}
+            className={`${buttonBase} bg-accent text-accent-foreground hover:bg-brass-500`}
           >
             Take the free Business Health Check
           </button>

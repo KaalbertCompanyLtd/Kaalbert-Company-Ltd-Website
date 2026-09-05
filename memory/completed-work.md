@@ -39,12 +39,22 @@ itself. Verified visually with Chrome browser automation (Playwright MCP itself 
 connected this session — see Notes): screenshotted `/dev/design-tokens` side by side with
 `ui/mockups/a-public-site/home.html` (served locally via `python3 -m http.server` since the
 extension can't load `file://` URLs) — buttons, cards (radius, border, shadow, colour), and
-form-input styling all matched.
+form-input styling all matched. **Follow-up (same session):** at the user's request, added
+the mockups' four extra hover/decorative brand tones (`--pine-700`, `--pine-500`,
+`--brass-500`, `--brass-300` — all already in `design-system.md`'s brand-palette table, just
+not in its original "Complete configuration" code block) into **both**
+`ui/design-system.md`'s config block and `app/globals.css`, and updated the test page's
+primary/accent button hovers to use them exactly like `ui/mockups/_shared.css` does, plus
+added them to the swatch grid. See `memory/decision-log.md` for the full reversal writeup.
 **Files Changed:**
 
 - `postcss.config.mjs` — new: registers `@tailwindcss/postcss`
-- `app/globals.css` — rewritten: Tailwind import + full design-token `@theme` block +
-  minimal body base layer (replaces the create-next-app default light/dark-mode stub)
+- `app/globals.css` — rewritten: Tailwind import + full design-token `@theme` block (incl.
+  the four brand-tone tokens added in the same-session follow-up) + minimal body base layer
+  (replaces the create-next-app default light/dark-mode stub)
+- `ui/design-system.md` — same-session follow-up: added the four brand-tone tokens to the
+  "Complete CSS-first configuration" code block, with a note explaining why they exist
+  outside shadcn's semantic set
 - `app/layout.tsx` — removed Geist/Geist Mono `next/font/google` wiring (contradicted the
   "system fonts only" token rule); `<html>` no longer carries the font-variable classes
 - `app/dev/design-tokens/page.tsx` — new: the acceptance-criteria test page

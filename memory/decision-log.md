@@ -2,6 +2,26 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.3 follow-up) — reversed: added the four extra brand tones to both design-system.md and globals.css
+
+**Summary:** User reviewed the judgment call below (keep `globals.css` to
+`design-system.md`'s published token block, omitting `--pine-700`/`--pine-500`/
+`--brass-500`/`--brass-300`) and explicitly overrode it: since the mockups use these four
+tones and the project intends to match the mockups closely, add them in both places, not
+just the app. Added all four as raw `:root` variables plus `@theme inline` mappings (so
+`bg-pine-700`, `hover:bg-brass-500`, etc. are real Tailwind utilities) in **both**
+`ui/design-system.md`'s "Complete CSS-first configuration" code block and `app/globals.css`
+— keeping the two in sync was exactly the caveat the original entry below flagged if this
+was ever revisited. Also updated `app/dev/design-tokens/page.tsx`'s primary/accent button
+hover states to use `hover:bg-pine-700`/`hover:bg-brass-500` (matching
+`ui/mockups/_shared.css`'s `.btn-primary:hover`/`.btn-accent:hover` exactly, rather than the
+earlier generic `hover:opacity-90` approximation) and added the four tones to the swatch
+grid. Verified via the compiled CSS output (`.bg-pine-700`, `.hover\:bg-brass-500:hover`,
+etc. all present and resolving to the correct hex values) since the Chrome extension
+disconnected mid-session and a screenshot re-check wasn't reliably available.
+**Related Documents:** `ui/design-system.md`, `app/globals.css`, the original entry
+immediately below.
+
 ## 2026-09-05 (T1.3) — globals.css kept to design-system.md's token set exactly (no extra brand tokens added for mockup hover-state fidelity)
 
 **Summary:**

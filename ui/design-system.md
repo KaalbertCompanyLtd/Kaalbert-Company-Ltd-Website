@@ -81,6 +81,18 @@ than perceptual-uniformity gains.
 | `--sidebar-border`             | `#1C4234` | Pine 700 — a subtle border within the dark sidebar                                                                                                                                                                                                                                                                      |
 | `--sidebar-ring`               | `#A9853F` | Brass 500, matching `--ring`                                                                                                                                                                                                                                                                                            |
 
+**Four additional brand tones, outside shadcn's semantic set.** `--pine-700`, `--pine-500`,
+`--brass-500`, and `--brass-300` (all already in the full brand palette table above) don't
+map onto any shadcn semantic slot — shadcn's convention has no token for "a button's hover
+background" or "a decorative border tone distinct from `--border`". The mockups use exactly
+these four for that purpose (`.btn-primary:hover { background: var(--pine-700); }`,
+`.btn-accent:hover { background: var(--brass-500); }`, the admin sidebar's active/hover
+states, hairlines on dark sections, etc.), so they're declared as raw `:root` variables and
+also exposed as Tailwind utilities (`bg-pine-700`, `text-brass-300`, `border-pine-500`, …)
+alongside the semantic set below — not introducing a new colour, just carrying four rows
+already in the authoritative palette table through into code, matching the mockups exactly
+rather than approximating hover/accent states with the semantic palette alone.
+
 No `.dark` variant is defined. Kaalbert's brand is one fixed identity, not a dual-mode
 system — Document 13.03 does not ask for a dark-mode toggle, and introducing one would be
 exactly the kind of unrequested decorative/mode addition Section 12 requires approval for.
@@ -195,6 +207,13 @@ etc.), matching 09.01/Document 13.03's "generous spacing" direction without any 
   --sidebar-accent-foreground: #fcfaf5;
   --sidebar-border: #1c4234;
   --sidebar-ring: #a9853f;
+
+  /* Brand tones outside shadcn's semantic set — hover states and decorative accents that
+     match the mockups exactly (see the note above the colour-mapping table). */
+  --pine-700: #1c4234;
+  --pine-500: #356b55;
+  --brass-500: #a9853f;
+  --brass-300: #cbb074;
 }
 
 @theme inline {
@@ -229,6 +248,12 @@ etc.), matching 09.01/Document 13.03's "generous spacing" direction without any 
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand tones outside shadcn's semantic set — see the note above the colour-mapping table */
+  --color-pine-700: var(--pine-700);
+  --color-pine-500: var(--pine-500);
+  --color-brass-500: var(--brass-500);
+  --color-brass-300: var(--brass-300);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
