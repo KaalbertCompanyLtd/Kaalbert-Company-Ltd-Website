@@ -5,6 +5,16 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getFeaturedArticles, getHomePageContent, getOfferCards } from "@/lib/home";
 
+// Reads live `home_page_content`/`offer` rows on every request rather than being baked into
+// a static build. Two reasons: (1) this content is meant to become admin-editable later
+// (CLAUDE.md's "content the firm can edit ... read live by every surface" pattern), so a
+// static build would go stale the moment that exists; (2) Railway's build step runs in an
+// isolated container with no access to the private network (`postgres.railway.internal`) —
+// without this, `next build` tries to statically prerender "/" and fails trying to reach the
+// database at build time, since Next.js has no other signal that this page depends on
+// per-request state (no cookies/headers/searchParams used).
+export const dynamic = "force-dynamic";
+
 const BTN_ACCENT =
   "inline-flex items-center justify-center gap-2 rounded-sm bg-accent px-6 py-3 text-body font-semibold text-accent-foreground transition-colors hover:bg-brass-500";
 const BTN_OUTLINE_LIGHT =

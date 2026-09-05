@@ -2,6 +2,25 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.1) — Railway production build failed: `next build` can't reach `postgres.railway.internal`; fixed by marking `/` dynamic
+
+**Summary:** The first real Railway deploy of `/` failed at `npm run build` with a Prisma
+`P1001`/`DatabaseNotReachable` error against `postgres.railway.internal` — Railway's private
+network hostname, which only resolves for running services, not the isolated container
+`next build` runs in. Next.js had no signal that `/` depends on per-request state (no
+cookies/headers/searchParams, and Prisma calls aren't tracked by Next's fetch-cache
+heuristics), so it defaulted to statically prerendering the page at build time, which
+executed `getHomePageContent()` before the app was ever running where the private network is
+reachable. Fixed by adding `export const dynamic = "force-dynamic"` to
+`app/(public)/page.tsx` — not just a build workaround: this content is meant to be read live
+(and become admin-editable later), so it shouldn't have been eligible for static prerendering
+in the first place. Verified with a real local `npm run build` (previously untested locally
+since the local `DATABASE_URL` is Railway's *public* proxy, which is reachable during a local
+build, masking this Railway-build-specific failure). Any future page that reads live
+DB-backed content (offers, capabilities, etc.) needs the same treatment unless a deliberate
+ISR/ on-demand-revalidation strategy is designed instead.
+**Related Documents:** `app/(public)/page.tsx`, `lib/home.ts`.
+
 ## 2026-09-05 (T2.1) — Railway's public Postgres proxy needs `ssl.rejectUnauthorized: false`, and `sslmode=require` in the URL overrides it
 
 **Summary:** `prisma/seed.ts` failed with `P1011`/`self-signed certificate in certificate

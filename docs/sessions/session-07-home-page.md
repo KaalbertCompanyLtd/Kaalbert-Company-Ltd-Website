@@ -67,6 +67,21 @@ mobile now shows only the hero statement, lead, and CTAs — re-verified with Pl
 390px (facts hidden) and 768px (facts shown, unchanged). Committed separately as
 `fix(T02-01)` rather than amending the T2.1 commit, per CLAUDE.md's commit protocol.
 
+## Post-commit fix #2 (same session) — Railway production build failure
+
+First real Railway deploy of `main` failed at `npm run build`: Next.js tried to statically
+prerender `/` and hit a Prisma `P1001` reaching `postgres.railway.internal` — Railway's
+private network hostname, unreachable from the isolated build container (only resolves for
+running services). Root cause: nothing about the page told Next.js it depends on per-request
+state, so it defaulted to build-time prerendering. Fixed by adding
+`export const dynamic = "force-dynamic"` to `app/(public)/page.tsx` — also the architecturally
+correct choice, since this content is meant to be read live and become admin-editable later.
+Verified with a real local `npm run build` (this specific failure mode isn't reproducible
+locally otherwise, since the local `DATABASE_URL` is Railway's public proxy). Added a new
+CLAUDE.md Code Conventions rule so every later page built against seeded content (T2.2
+onward) applies this from the start rather than rediscovering it per task. Committed as
+`fix(T02-01)`.
+
 ## Current State
 
 The home page is live, fully database-driven, and matches the mockup at desktop (1280px),
@@ -154,6 +169,12 @@ those same three rows, not create new ones — see this task's own addendum belo
   treat it as correct.
 - Business logic (e.g. resolving an offer by slug, 404-if-missing, formatting the fee band)
   lives in `lib/`, never inline in the page component.
+- **Add `export const dynamic = "force-dynamic";` to `app/offers/[slug]/page.tsx`.** Hit for
+  real at T2.1 (see `memory/decision-log.md`): without it, Next.js may statically prerender
+  a page at build time whenever it sees no dynamic API used, and on Railway the build
+  container can't reach the private-network database host that reads use at runtime — the
+  build fails outright. This is now a standing CLAUDE.md Code Conventions rule for every
+  page reading seeded content, not just a T2.1-specific fix.
 - **Content the firm can change lives in the database, never hard-coded** — every piece of
   copy these pages render comes from the seeded `offer` rows (and `OfferTier` rows, if that's
   the resolution chosen), not literal strings in the component.

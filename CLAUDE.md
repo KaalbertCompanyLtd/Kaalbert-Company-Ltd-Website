@@ -140,6 +140,17 @@ memory/                 # persistent knowledge — see Knowledge Management Resp
 - Accessibility: WCAG 2.1 AA (NFR-2) is a hard requirement, not aspirational — Base UI's
   primitives exist specifically to make this achievable without hand-building ARIA/focus
   management; use them rather than a bare `<div>` for anything interactive.
+- **Any page/route that reads live database content must export `export const dynamic =
+  "force-dynamic"`.** Without it, Next.js may statically prerender the route at build time
+  whenever it sees no dynamic API used (`cookies()`/`headers()`/`searchParams`) — Prisma
+  calls aren't tracked by Next's fetch-cache heuristics, so a page can look static to Next.js
+  even though it isn't. On Railway specifically this isn't just a staleness concern: the
+  build step runs in an isolated container with no access to the private network hostname
+  production reads use (`*.railway.internal`), so a static-prerender attempt fails the build
+  outright trying to reach the database (hit for real at T2.1 — see
+  `memory/decision-log.md`). Apply this to every page/route built against seeded content
+  (offers, capabilities, our-method, about, contact, insights, etc.) as it's built, not
+  discovered again at each task's own deploy.
 
 ## Quality Gates (must pass before every commit)
 
