@@ -2,6 +2,31 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.5, session 11 follow-up) — "What we are not" scope statement verified against real Company Docs, no change needed
+
+**Summary:** User challenged whether `FirmStatement.scopeBody` (seeded from
+`ui/mockups/a-public-site/about.html`'s "What we are not" panel) was actually sourced from
+real Company Docs, given it reads as odd next to two partners' seeded "Chartered Accountant"
+credentials ("connect you to certified accountants... we do not replace them" — while the
+firm apparently already has two in-house). Located the real source document at
+`../Company Docs/07.10 Scope of Practice and Regulatory Boundary Policy.docx` (a sibling
+folder to this repo, not previously read directly in any session — prior seed.ts comments
+cite Company Docs files but this is the first time one was actually opened and converted for
+verification; see the new reference note in personal assistant memory on how to read `.docx`
+files here, since the Read tool can't parse them directly). Section 2 of that policy settles
+the question explicitly: "The firm holds no practising licence of any kind. Two partners are
+Chartered Accountants, and that does not change the firm's position: an individual's
+membership is not a firm's practising certificate." Section 9 goes further: "The firm's own
+two Chartered Accountant partners do not satisfy this requirement [the external referral
+panel]. A partner cannot provide an independent opinion on the firm's own client work." So the
+seeded copy is accurate, deliberate firm policy, not a mockup-authoring error or fabrication —
+no change made. General lesson: when firm-supplied content looks internally inconsistent,
+check the actual Company Docs folder (a real sibling directory, not something to assume
+doesn't exist) before editing or flagging it as a placeholder/error.
+**Related Documents:** `prisma/seed.ts` (`seedFirmStatement`),
+`docs/features/about-and-partners-page.md`,
+`../Company Docs/07.10 Scope of Practice and Regulatory Boundary Policy.docx`.
+
 ## 2026-09-05 (T2.5, session 11 follow-up) — `Author.title` split from `practiceArea`; visitor-facing photo-pending note removed from the live page
 
 **Summary:** After T2.5 shipped, the user flagged two real gaps: (1) only the featured Lead
