@@ -18,6 +18,69 @@ sequencing requirement:
 
 ---
 
+## Funding-Readiness Pack's checklist cross-promo panel omitted from the offer detail page
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** `ui/mockups/a-public-site/offer-funding-readiness-pack.html` has a
+`.checklist-panel` section between the fee panel and the out-of-scope note, promoting a free
+"Funding-Readiness Checklist" download and linking to
+`ui/mockups/d-landing-pages/landing-funding-readiness-checklist.html`. That landing page is
+Milestone 5 scope (T5.1/T5.2, `docs/tasks/05-landing-and-measurement.md`) and doesn't exist
+as a real route yet at T2.2. This section isn't one of FR-4.1's 10 fixed fields (it's a lead-
+magnet cross-promo, not part of `core-offer-pages.md`'s documented `offer` entity), so T2.2
+omitted it entirely from `app/offers/[slug]/page.tsx` rather than link to a route that would
+404, or fabricate a substitute destination.
+**Impact:** Low — the Funding-Readiness Pack page is otherwise complete per FR-4.1. This is a
+missed cross-sell opportunity to the checklist lead magnet until Milestone 5 ships it, not a
+correctness or compliance issue.
+**Priority:** Low
+**Possible Fix/Fixes:** Once T5.2 seeds the `/lp/funding-readiness-checklist` landing page
+instance, add the `.checklist-panel` section back to the Funding-Readiness Pack offer page
+(`app/offers/[slug]/page.tsx`), linking to that real route.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T5.2 (Three landing page instances, seeded,
+`docs/tasks/05-landing-and-measurement.md`) — addendum added this session pointing back here.
+
+---
+
+## Business Health Check's two-tier pricing has no real data model yet
+
+**Status:** Resolved
+**Date raised:** 2026-09-05
+**Date resolved:** 2026-09-05 (T2.2, same day — this project's sessions have run in rapid
+succession)
+**Reason:** T2.1 needed real `Offer` rows to seed the home page's offer cards. Two of the
+three offers (Financial Clarity Pack, Funding-Readiness Pack) have a single published fee
+band each, matching `core-offer-pages.md`'s documented `fee_amount_min`/`fee_amount_max`/
+`scope_cap` shape exactly. Business Health Check does not — its own mockup
+(`ui/mockups/a-public-site/offer-business-health-check.html`) shows two real tiers (Express:
+GHS 1,000–2,000, 5 working days, single location; Full: GHS 3,000–6,500, 2 weeks, up to 3
+locations), each with its own deliverables, and the mockup itself labels the Full tier's
+band as "the published fee band" while the nav/home-card fee hint shows Express's floor
+("From GHS 1,000"). Nothing in `core-offer-pages.md` accounted for a multi-tier offer.
+**Impact:** T2.1 seeded a provisional `feeAmountMin: 1000, feeAmountMax: 6500` (Express's
+floor to Full's ceiling) and a prose `scopeCap` describing both tiers, so the home card's
+"From GHS 1,000" rendered correctly — but that was a stopgap, not a real representation of
+the two tiers.
+**Priority:** N/A — resolved
+**Possible Fix/Fixes:** ~~Most likely a dedicated `OfferTier` model~~ Done: added a real
+`OfferTier` model (`offer_id`, `name`, `is_featured`, `duration_label`, `scope_label`,
+`scope_cap`, `fee_amount_min/max`, `fee_currency`, `deliverables`, `client_inputs`,
+`sort_order`), seeded with Business Health Check's real Express/Full rows
+(`prisma/seed.ts`'s `seedOfferTiers()`). `app/offers/[slug]/page.tsx` renders a tier grid
+(deliverables + fee) and a per-tier "required from you" section when `offer.tiers.length >
+0`, and resolves the fee-panel's "published fee band" to whichever tier has `is_featured:
+true` (Full), with the other tier(s) surfaced as the panel's alt-note. `Offer`'s own
+`feeAmountMin/Max` (Express's floor to Full's ceiling) is kept unchanged for the home-card/
+nav-dropdown "From GHS 1,000" hint — that's a genuinely different summary than the detail
+page's own fee panel, not a duplicate to be removed.
+**Trigger type:** N/A — resolved
+**Sequenced into:** T2.2 (Core Offer pages, `docs/tasks/02-public-presentation.md`) — closed
+out per that task's own addendum.
+
+---
+
 ## Temporary favicon in use — pending the firm's confirmed final icon
 
 **Status:** Open

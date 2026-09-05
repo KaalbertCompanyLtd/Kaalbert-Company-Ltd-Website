@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getFeaturedArticles, getHomePageContent, getOfferCards } from "@/lib/home";
+import { getOfferNavLinks } from "@/lib/offers";
 
 // Reads live `home_page_content`/`offer` rows on every request rather than being baked into
 // a static build. Two reasons: (1) this content is meant to become admin-editable later
@@ -84,12 +85,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [content, offers] = await Promise.all([getHomePageContent(), getOfferCards()]);
+  const [content, offers, offerNavLinks] = await Promise.all([
+    getHomePageContent(),
+    getOfferCards(),
+    getOfferNavLinks(),
+  ]);
   const featuredArticles = await getFeaturedArticles(content.featuredArticleIds);
 
   return (
     <>
-      <SiteHeader hasHero />
+      <SiteHeader hasHero offerNavLinks={offerNavLinks} />
       <main>
         <section className="bg-primary relative flex min-h-screen items-center overflow-hidden pt-24 pb-14">
           <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(120%_80%_at_88%_-10%,rgba(169,133,63,0.18),transparent_58%)]" />

@@ -22,11 +22,13 @@ import {
 } from "@/components/ui/dialog";
 
 /**
- * Core Offers dropdown fee hints, hard-coded to ui/mockups/a-public-site/home.html's actual
- * copy. T2.2 (docs/tasks/02-public-presentation.md) replaces this with a live read of each
- * Offer's `fee_amount_min` once the Offer entity exists — no placeholder schema is added here.
+ * Fallback Core Offers dropdown fee hints, matching ui/mockups/a-public-site/home.html's
+ * actual copy — used only when a caller doesn't pass `offerNavLinks` (T1.5's dev scratch
+ * pages under app/dev/layout-shell/*, which don't fetch real data). Every real public page
+ * passes live data from `lib/offers.ts`'s `getOfferNavLinks()` instead (T2.2 — this was
+ * hard-coded here specifically because the `Offer` entity didn't exist yet at T1.5).
  */
-const CORE_OFFERS = [
+const FALLBACK_CORE_OFFERS = [
   {
     name: "Business Health Check",
     href: "/offers/business-health-check",
@@ -43,6 +45,8 @@ const CORE_OFFERS = [
     feeHint: "From GHS 9,000",
   },
 ] as const;
+
+type OfferNavLink = { name: string; href: string; feeHint: string };
 
 const NAV_LINKS = [
   { name: "Capabilities", href: "/capabilities" },
@@ -74,9 +78,15 @@ export interface SiteHeaderProps {
    * it, the header renders solid from the first frame instead of transparent-until-scrolled.
    */
   hasHero?: boolean;
+  /**
+   * Live Core Offers fee hints (`lib/offers.ts`'s `getOfferNavLinks()`). Optional so T1.5's
+   * dev scratch pages keep working without a DB read — every real public page must pass this.
+   */
+  offerNavLinks?: readonly OfferNavLink[];
 }
 
-export function SiteHeader({ hasHero = true }: SiteHeaderProps) {
+export function SiteHeader({ hasHero = true, offerNavLinks }: SiteHeaderProps) {
+  const coreOffers = offerNavLinks ?? FALLBACK_CORE_OFFERS;
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -138,7 +148,7 @@ export function SiteHeader({ hasHero = true }: SiteHeaderProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="min-w-60 p-2">
                   <DropdownMenuGroup>
-                    {CORE_OFFERS.map((offer) => (
+                    {coreOffers.map((offer) => (
                       <DropdownMenuItem
                         key={offer.href}
                         render={<Link href={offer.href} />}
@@ -172,7 +182,7 @@ export function SiteHeader({ hasHero = true }: SiteHeaderProps) {
           Take the Health Check
         </Link>
 
-        <MobileNavTrigger navLinkClass={navLinkClass} />
+        <MobileNavTrigger navLinkClass={navLinkClass} coreOffers={coreOffers} />
       </div>
     </header>
   );
@@ -187,7 +197,13 @@ export function SiteHeader({ hasHero = true }: SiteHeaderProps) {
  * mobile nav at all): see CLAUDE.md's "Responsive is built in from the first implementation"
  * rule and memory/decision-log.md.
  */
-function MobileNavTrigger({ navLinkClass }: { navLinkClass: string }) {
+function MobileNavTrigger({
+  navLinkClass,
+  coreOffers,
+}: {
+  navLinkClass: string;
+  coreOffers: readonly OfferNavLink[];
+}) {
   return (
     <Dialog>
       <DialogPrimitive.Trigger
@@ -213,7 +229,7 @@ function MobileNavTrigger({ navLinkClass }: { navLinkClass: string }) {
           </div>
 
           <span className="text-kicker text-accent px-2">Core Offers</span>
-          {CORE_OFFERS.map((offer) => (
+          {coreOffers.map((offer) => (
             <DialogClose
               key={offer.href}
               render={<Link href={offer.href} />}

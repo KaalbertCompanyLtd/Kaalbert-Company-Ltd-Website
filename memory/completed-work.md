@@ -16,6 +16,57 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.2 — Core Offer pages (×3)
+**Summary:** Built `/offers/[slug]` (`app/offers/[slug]/page.tsx`) to all three
+`ui/mockups/a-public-site/offer-*.html` files, rendering FR-4.1's 10 fixed sections in order
+for Business Health Check, Financial Clarity Pack, and Funding-Readiness Pack. Extended the
+`Offer` model with every remaining `core-offer-pages.md` field (problem_statement,
+who_for/who_not_for, method_stages, deliverables, client_inputs, indicative_timeline,
+out_of_scope_note, faqs, cta_href, meta_title, meta_description) plus one new field the
+mockups needed but the doc didn't name (`cta_label` — the fee-panel button text differs per
+offer). Resolved the Business Health Check two-tier pricing gap flagged at T2.1 with a new
+`OfferTier` model (Express/Full rows), and sourced the two single-tier offers'
+`indicative_timeline` from `Company Docs/05.04 Rate Card.docx` (real content, not
+placeholder — the mockups themselves don't surface a distinct timeline section, but FR-4.1
+requires one). Since two `offer` rows already existed from T2.1's seed, added the new NOT
+NULL columns via a nullable-then-backfill-then-constrain migration pattern rather than a
+destructive `DELETE`/reset. Wired `components/site-header.tsx`'s Core Offers fee hints to a
+new `getOfferNavLinks()` (live `Offer.feeAmountMin` reads) instead of the T1.5 hard-coded
+array, per that task's own deferred note — kept optional with a fallback so T1.5's dev
+scratch pages keep working without a DB read. FAQ built on Base UI's `Accordion`
+(`multiple`, `defaultValue={[0]}`) to match the mockups' independently-toggleable `<details>`
+behaviour, not a hand-rolled `<details>` reimplementation. Verified with Playwright MCP
+(`verification` server) at desktop (1280px), tablet (768px), and mobile (390px) across all
+three offers — full-page screenshots, FAQ multi-open interaction, mobile drawer nav, live nav
+dropdown fee hints, and a real 404 for a non-existent slug, zero console errors throughout.
+**Files Changed:**
+
+- `prisma/schema.prisma` — extended `Offer`, new `OfferTier` model
+- `prisma/migrations/20260905113754_t2_2_offer_full_content_and_tiers/`,
+  `prisma/migrations/20260905114536_t2_2_offer_tier_scope_cap/` — new migrations (both
+  hand-edited to nullable-backfill-then-NOT-NULL against T2.1's existing 3 seeded rows)
+- `prisma/seed.ts` — `seedOffers()` now seeds every field with a real `update:` clause (fixed
+  a latent bug: the previous `update: {}` was a no-op on re-seed); new `seedOfferTiers()`
+- `lib/offers.ts` — new: `getOfferBySlug`, `getOfferNavLinks`, `formatFeeHint`,
+  `formatFeeBand`, `MethodStage`/`OfferFaq` types
+- `app/offers/[slug]/page.tsx` — new: the offer detail page template
+- `components/site-header.tsx` — `CORE_OFFERS` renamed `FALLBACK_CORE_OFFERS`, new optional
+  `offerNavLinks` prop on `SiteHeader`/`MobileNavTrigger`
+- `app/(public)/page.tsx` — passes live `getOfferNavLinks()` to `SiteHeader`
+- `docs/features/core-offer-pages.md` — documented `offer_tier`, `cta_label`, and the
+  indicative-timeline sourcing decision
+- `docs/tasks/05-landing-and-measurement.md` — addendum on T5.2 (omitted checklist cross-promo)
+- `memory/decision-log.md`, `memory/technical-debt.md` — this session's entries
+  **Related Feature:** `docs/features/core-offer-pages.md`
+  **Notes:** The Funding-Readiness Pack mockup's `.checklist-panel` cross-promo (linking to a
+  Milestone 5 landing page that doesn't exist yet) was deliberately omitted rather than
+  linked to a route that would 404 — see `memory/technical-debt.md`. `npm run lint`,
+  `format:check`, and `npm run typecheck` all pass clean.
+
+---
+
+## 2026-09-05
+
 **Task:** T2.1 — Home page
 **Summary:** Built `/` (`app/(public)/page.tsx`) to `ui/mockups/a-public-site/home.html`,
 reading a new `HomePageContent` singleton and `Offer` rows from Postgres. Since no entities

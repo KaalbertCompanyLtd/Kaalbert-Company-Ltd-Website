@@ -40,30 +40,91 @@ model HomePageContent {
   @@map("home_page_content")
 }
 
-/// docs/features/core-offer-pages.md "Data requirements" — only the subset T2.1's home-page
-/// offer cards actually read (slug, name, a card teaser, and the fee band + its scope cap,
-/// per CLAUDE.md's "fee is always a structured min/max band with a scope cap" rule). `teaser`
-/// is a field this task adds to core-offer-pages.md's documented entity (a real gap: the doc
-/// had no field distinct from the full-page `problem_statement` for the shorter home/
-/// capabilities card blurb — see memory/decision-log.md). The remaining core-offer-pages.md
-/// fields (problem_statement, who_for/who_not_for, method_stages, deliverables,
-/// client_inputs, indicative_timeline, out_of_scope_note, faqs, cta_href, meta_title,
-/// meta_description) are deliberately not added yet — T2.2 (Core Offer pages) adds them when
-/// it also resolves the Business Health Check offer's two-tier (Express/Full) pricing
-/// structure, which the current single fee_amount_min/max/scope_cap shape doesn't represent
-/// (see memory/technical-debt.md).
+/// docs/features/core-offer-pages.md "Data requirements" — full entity as of T2.2 (Core
+/// Offer pages). `teaser` was added at T2.1 for the home/capabilities card blurb. T2.2 added
+/// every remaining documented field, plus two fields not named in the feature doc but needed
+/// once the full detail page was actually built (see memory/decision-log.md, T2.2):
+/// `ctaLabel` (the doc only named `cta_href`, but the fee-panel CTA's button text differs per
+/// offer — "Start with the free Health Check" vs. "Start a conversation" — and that's
+/// firm-editable copy same as the href), and the `tiers` relation (`OfferTier`, below), which
+/// resolves the Business Health Check two-tier pricing gap flagged at T2.1
+/// (memory/technical-debt.md). `deliverables`/`clientInputs`/`indicativeTimeline` are used
+/// directly by a single-tier offer (Financial Clarity Pack, Funding-Readiness Pack, whose
+/// `tiers` relation is empty); a tiered offer (Business Health Check) leaves these three
+/// empty/null on the parent row and carries the equivalent data per-tier instead, since each
+/// tier has its own deliverables, required inputs and timeline. `methodStages`/`faqs` are
+/// ordered lists stored as `Json` ({title, description}[] / {question, answer}[] respectively,
+/// see lib/offers.ts's `MethodStage`/`OfferFaq` types) — no admin editor exists yet
+/// (Milestone 7) to justify a fully relational shape for these today.
 model Offer {
+  id                 Int         @id @default(autoincrement())
+  slug               String      @unique
+  name               String
+  teaser             String
+  problemStatement   String      @map("problem_statement")
+  whoFor             String      @map("who_for")
+  whoNotFor          String      @map("who_not_for")
+  /// Ordered `{title, description}[]`.
+  methodStages       Json        @map("method_stages")
+  /// Empty when this offer uses `tiers` instead (see model doc-comment above).
+  deliverables       String[]    @default([])
+  /// Empty when this offer uses `tiers` instead. A "list" per the feature doc even where a
+  /// single-tier offer's mockup renders one paragraph — seeded as a one-element array so the
+  /// render (`array.map` over `<p>`) reproduces the mockup exactly without special-casing.
+  clientInputs       String[]    @default([]) @map("client_inputs")
+  /// Null when this offer uses `tiers` instead (each tier carries its own `durationLabel`).
+  indicativeTimeline String?     @map("indicative_timeline")
+  feeAmountMin       Int         @map("fee_amount_min")
+  feeAmountMax       Int         @map("fee_amount_max")
+  feeCurrency        String      @map("fee_currency")
+  scopeCap           String      @map("scope_cap")
+  outOfScopeNote     String      @map("out_of_scope_note")
+  /// Ordered `{question, answer}[]`, 3–5 real entries per core-offer-pages.md's business rule.
+  faqs               Json
+  ctaHref            String      @map("cta_href")
+  ctaLabel           String      @map("cta_label")
+  metaTitle          String      @map("meta_title")
+  metaDescription    String      @map("meta_description")
+  isPlaceholder      Boolean     @default(false) @map("is_placeholder")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  tiers              OfferTier[]
+
+  @@map("offer")
+}
+
+/// New at T2.2 — resolves "Business Health Check's two-tier pricing has no real data model
+/// yet" (memory/technical-debt.md). Only Business Health Check has rows here today; a
+/// single-tier offer's `Offer.tiers` is simply empty and its own top-level
+/// deliverables/clientInputs/indicativeTimeline/fee fields are used instead (see `Offer`'s
+/// doc-comment). `isFeatured` marks which tier the offer detail page's fee-panel section
+/// presents as "the published fee band" (BHC's own mockup: the Full tier) — the other
+/// tier(s) surface as the panel's "alt-note" instead, by fee floor + duration.
+model OfferTier {
   id            Int      @id @default(autoincrement())
-  slug          String   @unique
+  offerId       Int      @map("offer_id")
+  offer         Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
   name          String
-  teaser        String
+  isFeatured    Boolean  @default(false) @map("is_featured")
+  durationLabel String   @map("duration_label")
+  /// Short form for the tier-meta line ("5 working days · single-location business"), e.g.
+  /// "single-location business".
+  scopeLabel    String   @map("scope_label")
+  /// Full form for the fee-panel's "Scope cap:" line (FR-4.1's fee-band-plus-scope-cap
+  /// element) — a fuller description than `scopeLabel`, e.g. Full's "up to 3 locations or
+  /// business lines, 12 months of available records" vs. its `scopeLabel`'s shorter "up to
+  /// three locations or business lines".
+  scopeCap      String   @map("scope_cap")
   feeAmountMin  Int      @map("fee_amount_min")
   feeAmountMax  Int      @map("fee_amount_max")
   feeCurrency   String   @map("fee_currency")
-  scopeCap      String   @map("scope_cap")
-  isPlaceholder Boolean  @default(false) @map("is_placeholder")
+  deliverables  String[] @default([])
+  /// Same one-element-array-for-a-paragraph convention as `Offer.clientInputs`.
+  clientInputs  String[] @default([]) @map("client_inputs")
+  sortOrder     Int      @map("sort_order")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  @@map("offer")
+  @@unique([offerId, sortOrder])
+  @@map("offer_tier")
 }

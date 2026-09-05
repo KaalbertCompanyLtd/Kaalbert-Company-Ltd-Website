@@ -37,24 +37,44 @@ Story 4).
 ## Data requirements
 
 - `offer` — id, slug, name, teaser, problem_statement, who_for, who_not_for, method_stages
-  (ordered list), deliverables (list), client_inputs (list), indicative_timeline,
-  fee_amount_min, fee_amount_max, fee_currency, scope_cap, out_of_scope_note, faqs (list of
-  Q&A), cta_href, meta_title, meta_description (NFR-5; `seo-and-search-foundation.md`). Fee
-  is a published band (every real offer's fee is a range, e.g. "GHS 9,000–19,000," never a
-  single figure) — `fee_amount` as one field was an error corrected here;
-  `StructuredFeeFieldEditor` (`components.md`) edits both bounds together with `scope_cap`,
-  never separately. `teaser` (added at T2.1, `docs/tasks/02-public-presentation.md`) is a
-  short, one-to-two-sentence summary distinct from the fuller `problem_statement` — it's what
-  the home page's and Capabilities' offer cards render, since neither can reasonably show the
-  full-page problem statement; a documentation gap found while building the home page's offer
-  cards (see `memory/decision-log.md`).
+  (ordered list of `{title, description}`), deliverables (list), client_inputs (list),
+  indicative_timeline, fee_amount_min, fee_amount_max, fee_currency, scope_cap,
+  out_of_scope_note, faqs (ordered list of `{question, answer}`), cta_href, cta_label,
+  meta_title, meta_description (NFR-5; `seo-and-search-foundation.md`). Fee is a published
+  band (every real offer's fee is a range, e.g. "GHS 9,000–19,000," never a single figure) —
+  `fee_amount` as one field was an error corrected here; `StructuredFeeFieldEditor`
+  (`components.md`) edits both bounds together with `scope_cap`, never separately. `teaser`
+  (added at T2.1) is a short, one-to-two-sentence summary distinct from the fuller
+  `problem_statement` — it's what the home page's and Capabilities' offer cards render.
+  `cta_label` (added at T2.2) sits alongside `cta_href`: the fee-panel CTA's button text is
+  real, firm-editable copy that differs per offer ("Start with the free Health Check" vs.
+  "Start a conversation"), same as the href it's not editable independently of.
+  `deliverables`/`client_inputs`/`indicative_timeline` apply directly to a single-tier offer;
+  a tiered offer (see below) leaves them empty/null and carries the equivalent data per tier
+  instead.
 
-**Known gap (T2.1, not yet resolved):** the Business Health Check offer has two real pricing
-tiers (Express and Full, each its own fee band and deliverable set) that this single
-`fee_amount_min`/`fee_amount_max`/`scope_cap` shape can't represent — see
-`memory/technical-debt.md` → "Business Health Check's two-tier pricing has no real data model
-yet." T2.2 must resolve this (likely a dedicated tier sub-entity) before building this
-offer's full detail page.
+- `offer_tier` (added at T2.2) — id, offer_id, name, is_featured, duration_label,
+  scope_label, scope_cap, fee_amount_min, fee_amount_max, fee_currency, deliverables (list),
+  client_inputs (list), sort_order. Resolves the Business Health Check two-tier gap below:
+  only Business Health Check has rows here (Express, Full); the other two offers' `offer_tier`
+  relation is empty and use the parent `offer` row's own fee/deliverables/client_inputs/
+  indicative_timeline fields directly. `is_featured` marks which tier the fee-panel section
+  presents as "the published fee band" (BHC: the Full tier) — the other tier(s) surface in
+  the panel's alt-note instead, by fee floor and duration.
+
+**Two-tier pricing (T2.1 gap, resolved at T2.2):** the Business Health Check offer has two
+real pricing tiers (Express and Full, each its own fee band, deliverable set and required
+client inputs) that the single `fee_amount_min`/`fee_amount_max`/`scope_cap` shape on `offer`
+can't represent — see `memory/technical-debt.md` → "Business Health Check's two-tier pricing
+has no real data model yet" (now Resolved). The `offer_tier` model above is the resolution.
+
+**Indicative timeline sourcing (T2.2):** `ui/mockups/a-public-site/offer-financial-clarity-
+pack.html` and `offer-funding-readiness-pack.html` don't surface a distinct "indicative
+timeline" section visually, but FR-4.1 requires one on every offer page. The real figure for
+each (Financial Clarity Pack: "3 to 5 weeks"; Funding-Readiness Pack: "3 to 6 weeks") is
+sourced from `Company Docs/05.04 Rate Card.docx`'s own Offer/Duration/Fee/Scope table, not
+fabricated — see `memory/decision-log.md`, T2.2. Business Health Check's tiers already
+surface their own duration (`offer_tier.duration_label`) without a separate section.
 
 ## Interfaces
 

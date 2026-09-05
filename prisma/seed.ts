@@ -16,7 +16,7 @@
  *   docs/tasks/02-public-presentation.md T2.9) — never fabricated as if it were final copy.
  */
 
-import { PrismaClient } from "../generated/prisma/client";
+import { Prisma, PrismaClient } from "../generated/prisma/client";
 import { createDatabaseAdapter } from "../lib/db-adapter";
 
 const adapter = createDatabaseAdapter(process.env.DATABASE_URL);
@@ -55,60 +55,343 @@ async function seedHomePageContent() {
   });
 }
 
+/** Ordered method-stage entry — see prisma/schema.prisma's `Offer.methodStages` doc-comment. */
+interface MethodStageSeed {
+  title: string;
+  description: string;
+}
+
+/** Ordered FAQ entry — see prisma/schema.prisma's `Offer.faqs` doc-comment. */
+interface OfferFaqSeed {
+  question: string;
+  answer: string;
+}
+
+const OUT_OF_SCOPE_NOTE_STANDARD =
+  "Statutory audit, tax filing, and legal advice are not part of this engagement. Kaalbert & Company Ltd is a business advisory firm, not a licensed audit, tax or legal practice — where any of these is required, we connect you to a licensed practitioner.";
+
 /**
- * T2.1/T2.9 — the three core offers' home-page card fields only (see
- * prisma/schema.prisma's Offer doc-comment for what's deliberately deferred to T2.2). Sourced
- * from each offer's own mockup page (ui/mockups/a-public-site/offer-*.html) plus
- * home.html's card copy, all real content per the epic's sourcing note.
+ * T2.1/T2.9 — the three core offers, now with every `core-offer-pages.md` field (T2.2).
+ * Sourced from each offer's own mockup page (ui/mockups/a-public-site/offer-*.html), plus
+ * `Company Docs/05.04 Rate Card.docx` for `indicativeTimeline` specifically — the two
+ * single-tier offers' mockups don't surface a distinct timeline section visually, but
+ * FR-4.1 requires one, and the Rate Card's own "Offer / Duration / Fee / Scope" table gives
+ * the real figure (Financial Clarity Pack: "3 to 5 weeks"; Funding-Readiness Pack: "3 to 6
+ * weeks") — not fabricated, not placeholder (see memory/decision-log.md, T2.2).
  *
- * Business Health Check's fee band is provisional: the real offer has two tiers (Express
- * GHS 1,000–2,000; Full GHS 3,000–6,500, the mockup's own "published fee band"). This single
- * min/max/scope_cap shape can't represent two tiers — feeAmountMin/Max here span Express's
- * floor to Full's ceiling so the home card's real "From GHS 1,000" renders correctly, and
- * scopeCap notes the tier split in prose. T2.2 must resolve this properly (see
- * memory/technical-debt.md — "Business Health Check's two-tier pricing has no real data
- * model yet").
+ * Business Health Check's two-tier pricing (memory/technical-debt.md, resolved at T2.2) is
+ * modelled via `seedOfferTiers()` below rather than this offer's own
+ * deliverables/clientInputs/indicativeTimeline fields, which are left empty/null for it —
+ * see prisma/schema.prisma's `Offer` doc-comment.
  */
 async function seedOffers() {
-  const offers = [
+  const offers: Array<{
+    slug: string;
+    name: string;
+    teaser: string;
+    problemStatement: string;
+    whoFor: string;
+    whoNotFor: string;
+    methodStages: MethodStageSeed[];
+    deliverables: string[];
+    clientInputs: string[];
+    indicativeTimeline: string | null;
+    feeAmountMin: number;
+    feeAmountMax: number;
+    feeCurrency: string;
+    scopeCap: string;
+    outOfScopeNote: string;
+    faqs: OfferFaqSeed[];
+    ctaHref: string;
+    ctaLabel: string;
+    metaTitle: string;
+    metaDescription: string;
+  }> = [
     {
       slug: "business-health-check",
       name: "Business Health Check",
       teaser:
         "A structured, partner-led read of where your business really stands before you take it to a bank or a board.",
+      problemStatement:
+        "You know something isn't quite right — the numbers, the controls, or how dependent the business is on you personally — but not exactly what, or what it's costing you. This gives you a partner-led answer, at a level sized to your business.",
+      whoFor:
+        "Founder-led businesses turning over roughly GHS 500,000–20 million, preparing for a bank conversation, a board, or simply tired of not trusting their own numbers.",
+      whoNotFor:
+        "A business that already has clear, current management accounts and needs deeper financial control specifically — the Financial Clarity Pack is the more targeted next step.",
+      methodStages: [
+        {
+          title: "Discover",
+          description:
+            "A structured walkthrough of your records, controls and reporting as they actually run today.",
+        },
+        {
+          title: "Diagnose",
+          description: "We name the constraints actually limiting growth or funding readiness.",
+        },
+        {
+          title: "Design",
+          description:
+            "A ranked, costed action plan, sized to what your team can realistically run.",
+        },
+        {
+          title: "Deliver",
+          description:
+            "The written assessment and a presentation — not a document that sits unread.",
+        },
+      ],
+      deliverables: [],
+      clientInputs: [],
+      indicativeTimeline: null,
       feeAmountMin: 1000,
       feeAmountMax: 6500,
       feeCurrency: "GHS",
       scopeCap:
         "Two tiers: Express (single-location business, one working session, 5 working days) or Full (up to 3 locations or business lines, 12 months of available records, 2 weeks) — the published band above spans Express's floor to Full's ceiling",
+      outOfScopeNote: OUT_OF_SCOPE_NOTE_STANDARD,
+      faqs: [
+        {
+          question: "How is this different from an audit?",
+          answer:
+            "An audit gives an opinion on historical financial statements. This gives you a forward-looking, practical read on structure, controls and readiness — it is not an assurance engagement and doesn't carry audit-level assurance.",
+        },
+        {
+          question: "Which level should I start with?",
+          answer:
+            "If you're deciding whether to engage the firm at all, Express is built for exactly that — a real result, a small commitment. Businesses that already know they need a fuller picture, or that operate across more than one location, go straight to Full.",
+        },
+        {
+          question: "Is the fee negotiable?",
+          answer:
+            "The published bands reflect the standard scope. Above GHS 5,000, engagements can be spread across up to four monthly instalments — the deposit still applies, but the fee itself isn't discounted. A materially smaller scope is a different conversation, and never the same scope at a lower rate.",
+        },
+      ],
+      ctaHref: "/diagnostic",
+      ctaLabel: "Start with the free Health Check",
+      metaTitle: "Business Health Check — Kaalbert & Company Ltd",
+      metaDescription:
+        "A structured, partner-led read of where your business really stands before you take it to a bank or a board. Two tiers from GHS 1,000, or take the free six-minute preview first.",
     },
     {
       slug: "financial-clarity-pack",
       name: "Financial Clarity Pack",
       teaser:
         "Management accounts that actually reconcile to your bank balance, and that a lender will trust on sight.",
+      problemStatement:
+        "Your numbers exist somewhere, but not in a form anyone would trust — not you, not a lender, not a board. This is where records become a monthly management accounts pack you can actually run the business on.",
+      whoFor:
+        "A business whose records exist but aren't consistent, reconciled or current — and that needs ongoing control of its numbers, not a one-off read.",
+      whoNotFor:
+        "A business that just wants a first, honest read of where it stands — start with the Business Health Check instead. One that already has clean monthly accounts and is ready to approach lenders goes straight to the Funding-Readiness Pack.",
+      methodStages: [
+        {
+          title: "Discover",
+          description: "We map your records as they actually exist today, across every account.",
+        },
+        {
+          title: "Diagnose",
+          description: "We identify exactly where the records break down or stop reconciling.",
+        },
+        {
+          title: "Design",
+          description: "We rebuild the records on one consistent basis, with controls that hold.",
+        },
+        {
+          title: "Deliver",
+          description:
+            "A monthly management accounts pack you can maintain yourself, handed over properly.",
+        },
+      ],
+      deliverables: [
+        "Up to twelve months of records reconstructed on one consistent basis",
+        "Up to three bank or mobile money accounts reconciled",
+        "A monthly management accounts pack you can maintain",
+        "A working twelve-month cash flow, plus the controls that keep it right",
+      ],
+      clientInputs: [
+        "Access to your bank and mobile money statements for the period covered, whatever existing records you have (even incomplete ones), and time for two working sessions with the team.",
+      ],
+      indicativeTimeline: "3 to 5 weeks",
       feeAmountMin: 4500,
       feeAmountMax: 9500,
       feeCurrency: "GHS",
       scopeCap: "Up to 12 months of records, up to 3 bank or mobile money accounts",
+      outOfScopeNote: OUT_OF_SCOPE_NOTE_STANDARD,
+      faqs: [
+        {
+          question: "My records are a mess. Is that a problem?",
+          answer:
+            "No — that's the usual starting point, and it's exactly what this pack fixes. Records that don't yet reconcile are the reason to start here, not a reason to wait.",
+        },
+        {
+          question: "Can I maintain the accounts myself after the engagement?",
+          answer:
+            "Yes — the pack is specifically designed to hand over a format and a process you can run monthly on your own, not something that quietly requires us again next month.",
+        },
+        {
+          question: "Does this lead into a retainer?",
+          answer:
+            "For many clients, yes — this is where the Advisory Retainer naturally picks up, since keeping the numbers right is ongoing work. It's never assumed; it's offered once you've seen what the pack actually produces.",
+        },
+      ],
+      ctaHref: "/contact?service=financial-clarity-pack",
+      ctaLabel: "Start a conversation",
+      metaTitle: "Financial Clarity Pack — Kaalbert & Company Ltd",
+      metaDescription:
+        "Management accounts that actually reconcile to your bank balance, and that a lender will trust on sight. Published fee band GHS 4,500–9,500.",
     },
     {
       slug: "funding-readiness-pack",
       name: "Funding-Readiness Pack",
       teaser:
         "Everything a facility application needs, assembled and reviewed before a lender ever sees it.",
+      problemStatement:
+        "You need a facility, and you know your business is stronger than your paperwork makes it look. This turns your numbers into a case a credit committee can actually test.",
+      whoFor:
+        "A business seeking a specific facility, with reasonably current records, ready to approach a lender or funder within the next few months.",
+      whoNotFor:
+        "A business whose records aren't under control yet — start with the Financial Clarity Pack first. Facilities above GHS 1,000,000 and multi-entity groups are scoped separately, not covered by this published band.",
+      methodStages: [
+        {
+          title: "Discover",
+          description:
+            "We map your current financial position and what the target facility actually requires.",
+        },
+        {
+          title: "Diagnose",
+          description:
+            "We identify the gaps between what you can show today and what a credit committee will test.",
+        },
+        {
+          title: "Design",
+          description:
+            "We build the business case, forecasts and sensitivity analysis to close those gaps.",
+        },
+        {
+          title: "Deliver",
+          description:
+            "The complete document pack, ready for the lenders or funders you've identified.",
+        },
+      ],
+      deliverables: [
+        "A defensible business case",
+        "Three-year forecasts a credit committee can test",
+        "Sensitivity analysis",
+        "The complete document pack, for up to three lenders or funders",
+      ],
+      clientInputs: [
+        "Your current financial records, details of the facility you're seeking, and time with management to build the business case and test the forecasts together.",
+      ],
+      indicativeTimeline: "3 to 6 weeks",
       feeAmountMin: 9000,
       feeAmountMax: 19000,
       feeCurrency: "GHS",
       scopeCap: "One facility, up to 3 lenders or funders approached",
+      outOfScopeNote:
+        "Statutory audit, tax filing, and legal advice are not part of this engagement. Kaalbert & Company Ltd is a business advisory firm, not a licensed audit, tax or legal practice — where any of these is required, we connect you to a licensed practitioner. We do not guarantee approval by any lender or funder.",
+      faqs: [
+        {
+          question: "Can you guarantee my facility will be approved?",
+          answer:
+            "No — no adviser honestly can, and we'd tell you not to trust anyone who does. What we can do is make sure your case is one a credit committee can actually test, which is the single biggest reason strong businesses get declined.",
+        },
+        {
+          question: "What if my facility is larger than GHS 1,000,000?",
+          answer:
+            "The published band assumes a facility at or below that size and a single entity. Larger facilities and multi-entity groups are scoped and quoted individually, since the work involved genuinely differs.",
+        },
+        {
+          question: "My records aren't in great shape yet — can I still start here?",
+          answer:
+            "You can, but we'll likely recommend the Financial Clarity Pack first. A funding case built on records that don't hold up under questioning does more harm than good in front of a lender.",
+        },
+      ],
+      ctaHref: "/contact?service=funding-readiness-pack",
+      ctaLabel: "Start a conversation",
+      metaTitle: "Funding-Readiness Pack — Kaalbert & Company Ltd",
+      metaDescription:
+        "Everything a facility application needs, assembled and reviewed before a lender ever sees it. Published fee band GHS 9,000–19,000.",
     },
   ];
 
   for (const offer of offers) {
+    const { methodStages, faqs, ...rest } = offer;
+    const data = {
+      ...rest,
+      methodStages: methodStages as unknown as Prisma.InputJsonValue,
+      faqs: faqs as unknown as Prisma.InputJsonValue,
+      isPlaceholder: false,
+    };
     await prisma.offer.upsert({
       where: { slug: offer.slug },
-      update: {},
-      create: { ...offer, isPlaceholder: false },
+      update: data,
+      create: data,
+    });
+  }
+}
+
+/**
+ * New at T2.2 — resolves Business Health Check's two-tier pricing (memory/technical-debt.md).
+ * Sourced from ui/mockups/a-public-site/offer-business-health-check.html's tier cards, with
+ * `durationLabel` cross-checked against `Company Docs/05.04 Rate Card.docx`'s own
+ * Offer/Duration/Fee/Scope table (Express "5 working days", Full "2 weeks" — matches exactly).
+ * Only Business Health Check has tiers; the other two offers' `tiers` relation stays empty.
+ */
+async function seedOfferTiers() {
+  const bhc = await prisma.offer.findUnique({ where: { slug: "business-health-check" } });
+  if (!bhc) {
+    throw new Error(
+      "seedOfferTiers: business-health-check offer not found — run seedOffers first.",
+    );
+  }
+
+  const tiers = [
+    {
+      name: "Express",
+      isFeatured: false,
+      durationLabel: "5 working days",
+      scopeLabel: "single-location business",
+      scopeCap: "single-location business",
+      feeAmountMin: 1000,
+      feeAmountMax: 2000,
+      feeCurrency: "GHS",
+      deliverables: [
+        "Structured diagnostic questionnaire",
+        "One working session, up to two hours",
+        "A written assessment naming what's holding the business back and the three actions that matter most",
+      ],
+      clientInputs: [
+        "One working session, up to two hours, and whatever records you already have on hand for that session.",
+      ],
+      sortOrder: 1,
+    },
+    {
+      name: "Full",
+      isFeatured: true,
+      durationLabel: "2 weeks",
+      scopeLabel: "up to three locations or business lines",
+      scopeCap: "up to 3 locations or business lines, 12 months of available records",
+      feeAmountMin: 3000,
+      feeAmountMax: 6500,
+      feeCurrency: "GHS",
+      deliverables: [
+        "All four diagnostic instruments",
+        "Review of the last twelve months of available records",
+        "Two working sessions",
+        "A full written assessment with a ranked and costed action plan",
+        "A presentation to the owner or board",
+      ],
+      clientInputs: [
+        "Your last twelve months of available records, and two working sessions with the team.",
+      ],
+      sortOrder: 2,
+    },
+  ];
+
+  for (const tier of tiers) {
+    await prisma.offerTier.upsert({
+      where: { offerId_sortOrder: { offerId: bhc.id, sortOrder: tier.sortOrder } },
+      update: { ...tier, offerId: bhc.id },
+      create: { ...tier, offerId: bhc.id },
     });
   }
 }
@@ -118,6 +401,7 @@ async function main() {
   // are added to prisma/schema.prisma.
   await seedHomePageContent();
   await seedOffers();
+  await seedOfferTiers();
 }
 
 main()

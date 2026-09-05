@@ -2,6 +2,59 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.2) — Business Health Check's two-tier pricing modelled as a new `OfferTier` relation, not a schema change to `Offer` itself
+
+**Summary:** Resolved the "Business Health Check's two-tier pricing has no real data model
+yet" gap (`memory/technical-debt.md`, flagged at T2.1) with a new `OfferTier` model
+(`offer_id`, `name`, `is_featured`, `duration_label`, `scope_label`, `scope_cap`,
+`fee_amount_min/max`, `fee_currency`, `deliverables`, `client_inputs`, `sort_order`) rather
+than adding tier-shaped columns directly to `Offer`. Only Business Health Check has rows
+there; Financial Clarity Pack and Funding-Readiness Pack's `tiers` relation stays empty and
+they keep using `Offer`'s own flat `deliverables`/`client_inputs`/`indicative_timeline`
+fields. `app/offers/[slug]/page.tsx` branches on `offer.tiers.length > 0` to decide which
+section shapes to render (tier grid + per-tier "required from you" vs. a flat deliverables
+grid + paragraph). `is_featured` (true on Full) marks which tier the fee-panel's "published
+fee band" section uses; the other tier surfaces as the panel's alt-note by fee floor and
+duration, matching the mockup's own "Not ready for the full engagement? Express starts at…"
+line. `Offer.feeAmountMin/Max` (Express's floor to Full's ceiling) was deliberately left
+unchanged — it's a genuinely different summary (the home-card/nav-dropdown "From GHS 1,000"
+hint) than the detail page's own tier-specific fee panel, not a value to reconcile away.
+Added `OfferTier.scopeCap` as a second, fuller field alongside the shorter `scopeLabel` after
+first trying to derive the fee-panel's "Scope cap: up to 3 locations or business lines, 12
+months of available records" text from `scopeLabel` + `durationLabel` and finding it produced
+wrong, hacky output — a tier's fee-panel scope description and its tier-meta summary line are
+genuinely different strings, not one derivable from the other.
+**Related Documents:** `prisma/schema.prisma` (`Offer`, `OfferTier`), `prisma/seed.ts`
+(`seedOfferTiers`), `app/offers/[slug]/page.tsx`, `docs/features/core-offer-pages.md`.
+
+## 2026-09-05 (T2.2) — `Offer.indicativeTimeline` for the two single-tier offers sourced from `Company Docs/05.04 Rate Card.docx`, not the mockups
+
+**Summary:** FR-4.1 requires an "indicative timeline" section on every core offer page, but
+`ui/mockups/a-public-site/offer-financial-clarity-pack.html` and
+`offer-funding-readiness-pack.html` don't surface one visually (Business Health Check's own
+mockup does, via each tier's duration). Rather than fabricate a placeholder figure or omit
+the FR-4.1-mandated section, checked `Company Docs/05.04 Rate Card.docx` (extracted via
+`python3`'s `zipfile`/`re` against `word/document.xml`, since no docx-to-text tool was
+available in-session) — its own "Offer / Duration / Fee / Scope" table gives the real figures
+(Financial Clarity Pack: "3 to 5 weeks"; Funding-Readiness Pack: "3 to 6 weeks"), and its fee
+bands/scope descriptions for all three offers match the mockups exactly, confirming it as the
+same underlying source. Added a small new section to `app/offers/[slug]/page.tsx` between
+"Required from you" and the fee panel to render this for a single-tier offer only.
+**Related Documents:** `prisma/seed.ts`, `docs/features/core-offer-pages.md`,
+`Company Docs/05.04 Rate Card.docx`.
+
+## 2026-09-05 (T2.2) — `components/site-header.tsx`'s Core Offers fee hints now take an optional live `offerNavLinks` prop instead of a hard-coded constant
+
+**Summary:** Per T1.5/T2.1's own deferred note, wired the nav dropdown/mobile-menu fee hints
+to read `Offer.feeAmountMin` live once the field existed. Made the new `offerNavLinks` prop
+**optional** (falling back to the old hard-coded array, renamed `FALLBACK_CORE_OFFERS`) rather
+than required, specifically so T1.5's dev scratch pages under `app/dev/layout-shell/*` (which
+render `SiteHeader` with no data-fetching of their own) keep working unchanged. Every real
+public page (`/`, `/offers/[slug]`) now fetches `lib/offers.ts`'s new `getOfferNavLinks()` and
+passes it down explicitly.
+**Related Documents:** `components/site-header.tsx`, `lib/offers.ts`,
+`app/(public)/page.tsx`, `app/offers/[slug]/page.tsx`.
+
 ## 2026-09-05 (T1.5) — Nav dropdowns need Base UI's `MenuTrigger` `openOnHover`, not the default click-to-open
 
 **Summary:** User caught that `SiteHeader`'s Core Offers dropdown (built T1.5) didn't open on

@@ -37,6 +37,14 @@ each CTA correctly routes to its stated destination (diagnostic, checklist downl
 enquiry route respectively).
 **Size:** S **Dependencies:** T5.1
 
+**Addendum (session 08, 2026-09-05):** T2.2 omitted the Funding-Readiness Pack offer page's
+`.checklist-panel` cross-promo (`ui/mockups/a-public-site/offer-funding-readiness-pack.html`)
+because `/lp/funding-readiness-checklist` didn't exist yet — see
+`memory/technical-debt.md` → "Funding-Readiness Pack's checklist cross-promo panel omitted
+from the offer detail page." Once this task seeds that landing page instance for real, add
+the cross-promo section back to `app/offers/[slug]/page.tsx`'s Funding-Readiness Pack render,
+linking to the real route.
+
 ### T5.3 — GTM container: six conversion events + consent mode
 
 **Build:** Populate the T1.6 GTM container with the six defined events (diagnostic started,
