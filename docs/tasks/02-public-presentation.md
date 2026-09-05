@@ -23,7 +23,7 @@ same epic once the epic completes).
 
 ### T2.2 — Core Offer pages (×3)
 
-**Build:** `/services/[slug]` dynamic route to `ui/mockups/a-public-site/offer-*.html`,
+**Build:** `/offers/[slug]` dynamic route to `ui/mockups/a-public-site/offer-*.html`,
 reading the `offer` entity (`docs/features/core-offer-pages.md`) — including the corrected
 `fee_amount_min`/`fee_amount_max` band, `who_for`/`who_not_for`, `client_inputs`,
 `indicative_timeline`, `deliverables`, `faqs`, `meta_title`/`meta_description` — for all three

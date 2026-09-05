@@ -106,6 +106,18 @@ memory/                 # persistent knowledge — see Knowledge Management Resp
   file under `ui/mockups/`. Build to that file's structure and copy; don't invent layout.
   Where a screen has no dedicated mockup, the task names which built screen's pattern to
   infer from (`ui/screen-inventory.md`'s "Can be inferred" mapping) — never guess fresh.
+- **Responsive is built in from a component's first implementation, never a later pass.**
+  The mockups under `ui/mockups/` are desktop-only wireframes (fixed widths, no mobile
+  breakpoints) — that is a limitation of the wireframing tool, not license to ship
+  desktop-only markup and file a "make it responsive" follow-up task. Every component/page a
+  task builds must work at mobile (~375–430px), tablet (~768px), and desktop (the mockup's
+  own width, ~1200px+) before that task is called done, even though no mockup shows the
+  narrower states — infer a reasonable mobile/tablet treatment consistent with the design
+  system's existing spacing/stacking patterns (`ui/design-system.md`) rather than guessing a
+  one-off layout. **Public-site mobile navigation is a side-sliding drawer/sheet** (built on
+  the Dialog primitive, positioned to slide in from an edge rather than drop down from the
+  top) — decided explicitly at T1.5, applies to any later nav-pattern work too (e.g. the
+  admin shell's own off-canvas sidebar).
 - **Feature docs (`docs/features/*.md`) are the data/interface contract.** Entity shapes,
   business rules, and edge cases documented there are not optional — they were written from
   a full requirements audit specifically so nothing gets discovered missing mid-build.
@@ -437,6 +449,8 @@ Before marking work complete:
     screen), it was exercised for real using Playwright MCP — not confirmed only by static
     analysis or mocked tests. If the tool isn't usable this session, say so explicitly
     rather than silently skipping this step or claiming it was done.
+[ ] Any UI surface was checked at mobile (~375–430px), tablet (~768px), and desktop
+    (~1200px+) — not desktop-only, even where the cited mockup only shows one width.
 [ ] memory/completed-work.md updated
 [ ] memory/decision-log.md updated (if applicable)
 [ ] memory/technical-debt.md updated (if applicable)

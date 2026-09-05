@@ -2,6 +2,67 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T1.5) — Responsive design made a standing rule mid-task; public/admin nav rebuilt as side-sliding drawers
+
+**Summary:** User interrupted mid-task to require that every UI surface be responsive from
+its first implementation, not deferred to a later pass — even though `ui/mockups/` is
+desktop-only wireframes with no mobile breakpoints shown anywhere. Codified as a new rule in
+CLAUDE.md's Code Conventions section (and a matching Task Completion Checklist line) rather
+than treated as a one-off request, since it changes how every future UI task must be built.
+User also specified the public-site mobile nav must be a side-sliding drawer, not a
+top-dropping panel. Implemented: `SiteHeader` now hides the inline nav/dropdown/CTA below
+`lg` (1024px — an engineering judgement call, no mockup addresses this) behind a hamburger
+that opens a right-sliding drawer (Core Offers flattened to a list with fee hints, then the
+five nav links, then the CTA, each closing the drawer on click). Applied the same drawer
+pattern to the admin shell for consistency: `AdminMobileSidebar` replaces the persistent
+sidebar below `lg` with a topbar + left-sliding drawer (left, since that's the sidebar's own
+docked edge), reusing `AdminSidebarNav` via a new optional `onNavigate` prop so the shared nav
+component can close the mobile drawer without affecting its desktop rendering. `SiteFooter`
+was already `grid-cols-2 md:grid-cols-4` from the original build, needing no change.
+**Related Documents:** CLAUDE.md (Code Conventions + Task Completion Checklist),
+`components/site-header.tsx`, `components/admin-mobile-sidebar.tsx`,
+`components/admin-sidebar-nav.tsx`, `memory/known-bugs.md` (the `nativeButton` fix found
+while building this).
+
+## 2026-09-05 (T1.5) — Fixed a route-naming inconsistency: T2.2 said `/services/[slug]`, everything else says `/offers/[slug]`
+
+**Summary:** While hard-coding `SiteHeader`/`SiteFooter`'s Core Offers links, checked every
+doc that names the core-offer-page route to make sure the hrefs would match what T2.2
+actually builds. `docs/features/core-offer-pages.md` (the data/interface contract — its own
+`GET /offers/[slug]` line), `docs/scope.md`, `docs/user-stories.md`, and
+`ui/screen-inventory.md` all agree on `/offers/[slug]`; only
+`docs/tasks/02-public-presentation.md`'s T2.2 build line said `/services/[slug]` — a lone
+inconsistency, not a considered alternative. Corrected T2.2 to `/offers/[slug]` rather than
+leaving it to surface as a real 404 mismatch once T2.2 ships and this task's hardcoded nav
+links (built to the feature doc's route) point somewhere T2.2 didn't build.
+**Related Documents:** `docs/tasks/02-public-presentation.md` (T2.2), `docs/features/
+core-offer-pages.md`, `ui/screen-inventory.md`, `components/site-header.tsx`,
+`components/site-footer.tsx`.
+
+## 2026-09-05 (T1.5) — Base UI's `nativeButton={false}` required when a Trigger/Close renders as a non-button element
+
+**Summary:** Building `SiteHeader`'s mobile drawer, every `DialogClose` rendered as
+`render={<Link href={...} />}` (so clicking a nav item both navigates and closes the drawer)
+threw a real console error surfaced by Next's dev overlay: "Base UI: A component that acts as
+a button expected a native `<button>` because the `nativeButton` prop is true... Use a real
+`<button>` in the `render` prop, or set `nativeButton` to `false`." Root cause: `DialogClose`
+(and any Base UI part typed with `NativeButtonProps`, default `true`) assumes its `render`
+target is a native `<button>` unless told otherwise — swapping to an `<a>` without setting
+`nativeButton={false}` leaves Base UI applying native-button assumptions (keyboard/role
+handling) to an anchor. `Menu.Item` (the `DropdownMenuItem` used for the desktop Core Offers
+dropdown, T1.4) never hit this because it's typed with `NonNativeButtonProps` instead
+(default `false`) — the two prop names look identical but default oppositely, so this isn't
+generalizable by "components with a `render` prop" alone; check which one a given Base UI
+part uses before assuming. Fixed by adding `nativeButton={false}` to every `DialogClose`
+rendered as a `Link` (three call sites in `site-header.tsx`); the plain icon-button
+`DialogClose` instances (no `render` override) were unaffected. Recorded here — alongside
+T1.4's `render` vs `asChild` and `MenuGroupContext` gotchas — as a Base UI composition
+pitfall future tasks should check for whenever swapping a Trigger/Close/Action-type
+component's rendered element.
+**Related Documents:** `components/site-header.tsx`, `node_modules/@base-ui/react/internals/
+types.d.ts` (`NativeButtonProps` vs `NonNativeButtonProps`), the T1.4 decision-log entries
+below on Base UI's `render` composition pattern.
+
 ## 2026-09-05 (T1.4) — shadcn CLI run with the `nova` preset, then its colour/font choices discarded in favour of T1.3's tokens
 
 **Summary:** The shadcn CLI's `init` command has no non-interactive way to skip its

@@ -16,6 +16,75 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T1.5 — Shared layout shell: SiteHeader, SiteFooter, admin shell skeleton
+**Summary:** Built `SiteHeader`, `SiteFooter`, `ScopeOfPracticeNote`, and an empty
+authenticated `/admin` shell (sidebar + placeholder content area), matching
+`ui/mockups/a-public-site/*.html`'s header/footer markup exactly — confirmed byte-identical
+across all eight public mockup pages via `md5sum`, so one build serves every page. `SiteHeader`
+composes T1.4's `DropdownMenu` (Base UI `Menu.Root`) for the Core Offers nav item, with fee
+hints hard-coded to the mockup's copy (`CORE_OFFERS` const, flagged for T2.2 to wire
+`offer.fee_amount_min`). `SiteFooter` takes `addressLine1`/`addressLine2`/`phonePrimary` as
+props (not hard-coded inline) so a future `site_settings` read can swap in without
+restructuring; `ScopeOfPracticeNote` extracted as its own component since
+`legal-and-compliance-pages.md` reuses it separately. Admin shell inferred from
+`ui/mockups/g-admin-content/admin-dashboard.html` per screen-inventory.md #25 — sidebar nav
+routes are inferred slugs (`/admin/articles`, etc.), only `/admin` itself resolves to a real
+(placeholder) page. Two `/dev/layout-shell/*` scratch pages built (mirroring T1.3/T1.4's
+`/dev/*` pattern) to exercise SiteHeader/SiteFooter in two different page contexts for the
+acceptance criteria. **Mid-task addition (user-directed):** responsive design was made
+mandatory from this task's first implementation rather than deferred — new CLAUDE.md rule
+added (see `memory/decision-log.md`) — and the public/admin nav were rebuilt as side-sliding
+drawers (`SiteHeader`'s mobile nav slides from the right; the new `AdminMobileSidebar`
+component's off-canvas drawer slides from the left, matching the sidebar's own docked edge)
+below the `lg` breakpoint, since none of the mockups address a narrower viewport at all. Found
+and fixed a real Base UI bug in the process (`nativeButton={false}` needed on every
+`DialogClose` rendered as a `Link` — see decision-log) and a route-naming inconsistency in
+`docs/tasks/02-public-presentation.md` (T2.2 said `/services/[slug]`, everything else says
+`/offers/[slug]` — corrected to match).
+**Files Changed:**
+
+- `components/site-header.tsx` — new: `SiteHeader`, responsive (`lg` breakpoint), desktop
+  inline nav + Core Offers `DropdownMenu`, mobile hamburger opening a right-sliding drawer
+  built directly on Base UI's Dialog primitive (not the `DialogContent` wrapper, to avoid
+  fighting its centred-modal positioning classes)
+- `components/site-footer.tsx` — new: `SiteFooter`, `FooterLinkColumn` sub-component,
+  `grid-cols-2 md:grid-cols-4` responsive from the start
+- `components/scope-of-practice-note.tsx` — new: `ScopeOfPracticeNote`
+- `components/admin-sidebar-nav.tsx` — new: `AdminSidebarNav`, shared between the persistent
+  desktop sidebar and the mobile drawer via an optional `onNavigate` prop
+- `components/admin-mobile-sidebar.tsx` — new: `AdminMobileSidebar`, mobile-only topbar +
+  left-sliding off-canvas drawer for the admin shell
+- `app/admin/layout.tsx` — new: the admin shell frame, `hidden lg:flex` persistent sidebar +
+  `AdminMobileSidebar` below `lg`, placeholder content area
+- `app/admin/page.tsx` — new: placeholder dashboard content
+- `app/dev/layout-shell/home/page.tsx`, `app/dev/layout-shell/about/page.tsx` — new: scratch
+  verification pages (T1.3/T1.4's `/dev/*` pattern)
+- `CLAUDE.md` — new "Responsive is built in from a component's first implementation" rule
+  under Code Conventions, plus a matching Task Completion Checklist line
+- `docs/tasks/02-public-presentation.md` — T2.2's route corrected `/services/[slug]` →
+  `/offers/[slug]`
+
+**Related Feature:** None owns `SiteHeader`/`SiteFooter`/`ScopeOfPracticeNote`/the admin shell
+directly — `ui/components.md`'s shared/global composite table is authoritative (see T1.5's own
+task prompt); `docs/features/core-offer-pages.md` is the route-naming authority the T2.2 fix
+was checked against.
+**Notes:** Playwright MCP (`.mcp.json`'s `verification` server) was not connected this session
+(same `CONNECT_TIMEOUT` as every prior session) — used `claude-in-chrome` per CLAUDE.md's
+explicit fallback. This sandbox's browser window could not actually be resized below its
+~1600px virtual-display width (`resize_window` silently capped), so the `lg`/`md` responsive
+breakpoints were verified two ways instead: (1) extracting the live compiled CSS's
+`@media (min-width: 64rem)`/`(min-width: 48rem)` rules via `document.styleSheets` to confirm
+the correct Tailwind breakpoints actually compiled, and (2) injecting temporary CSS overrides
+to force the mobile-layout branch visible at full width, then interacting with it for real
+(opened both drawers, clicked links, confirmed navigation + auto-close, confirmed no console
+errors) — the overrides were never written to any file, only injected into the live page for
+this test. `npm run test` — still nothing to run (no Vitest scaffold yet, unchanged gap; this
+task adds no `lib/` logic to unit-test, same reasoning as T1.3/T1.4).
+
+---
+
+## 2026-09-05
+
 **Task:** T1.4 — shadcn/ui + Base UI component scaffold
 **Summary:** Ran the shadcn CLI (`shadcn@4.21.0`) with `-b base` (Base UI, not Radix, per ADR 0010) and the `nova` preset (the only way to get a non-interactive init; presets only differ
 in starter colour/font choices, which get overwritten by our own tokens anyway). The CLI's
