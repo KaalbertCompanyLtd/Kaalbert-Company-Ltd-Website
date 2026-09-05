@@ -57,6 +57,12 @@ Document 13.03, Section 6).
 - `enquiry_record` — id, diagnostic_response set (relation), score summary, weakest
   dimensions, triage flag, contact details (nullable until step 5), marketing consent
   boolean, contact consent boolean, traffic source, campaign, landing page, created_at.
+  `message` (text) was added at T2.6 (`contact-and-enquiry.md`) for that feature's own
+  free-text form body — null for a diagnostic-originated enquiry. `traffic_source`/
+  `campaign`/`landing_page` are not yet modelled in `prisma/schema.prisma`: T2.6 found this
+  list disagrees with `measurement-and-attribution.md`'s own `attribution` entity (a separate
+  table with a foreign key, not inline columns here) and left resolving that inconsistency to
+  whichever task actually builds attribution (Milestone 5) — see `memory/decision-log.md`.
 
 ## Interfaces
 

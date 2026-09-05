@@ -298,3 +298,92 @@ model Author {
 
   @@map("author")
 }
+
+/// docs/features/content-management-admin.md "Data requirements" — the firm's single
+/// contact-details record (new at T2.6, first materialized here — see
+/// docs/tasks/02-public-presentation.md T2.6 and memory/decision-log.md). Same singleton
+/// `findFirst`/fixed-id pattern as `HomePageContent`/`AdvisoryRetainer`/`FirmStatement`. Read
+/// live by `SiteFooter`, `/contact`, and every `WhatsAppLinkButton` (CLAUDE.md's Recurring
+/// Patterns) — but T2.6 only wires this into `/contact` and `WhatsAppLinkButton`; every public
+/// page's existing `SiteFooter` call still passes literal hardcoded props (T1.5's own
+/// precedent, since this table didn't exist yet) — tracked as new technical debt
+/// (memory/technical-debt.md → "SiteFooter callers still pass hardcoded address/phone props
+/// instead of reading site_settings"), sequenced into T7.8 rather than fixed here.
+/// `responseTimeCommitment` is nullable: the firm hasn't confirmed a real commitment yet
+/// (contact-and-enquiry.md's business rule — content the firm supplies and must actually be
+/// able to keep), so `/contact` omits that panel entirely when null rather than rendering a
+/// dev-facing "pending" placeholder as if it were real copy (content-management-admin.md's
+/// edge case: a blank required field is omitted from the public display, not shown broken).
+/// `socialProfileUrls` is added now per T2.6's own architecture constraint (schema
+/// completeness for T2.8's SEO Organization schema `sameAs`), not exercised by this task.
+model SiteSettings {
+  id                     Int      @id @default(autoincrement())
+  phonePrimary           String   @map("phone_primary")
+  phoneSecondary         String?  @map("phone_secondary")
+  email                  String
+  whatsappNumber         String   @map("whatsapp_number")
+  address                String
+  responseTimeCommitment String?  @map("response_time_commitment")
+  socialProfileUrls      String[] @default([]) @map("social_profile_urls")
+  isPlaceholder          Boolean  @default(false) @map("is_placeholder")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
+/// Shared across `contact-and-enquiry.md` (this task, write-only from `/contact`'s form),
+/// `business-health-check-diagnostic.md` (Milestone 3, not yet built), and
+/// `enquiry-management.md` (Milestone 8, not yet built) — see
+/// docs/tasks/02-public-presentation.md T2.6's architecture constraints and
+/// memory/decision-log.md for the field-by-field scoping decision made at this task.
+///
+/// Only the fields this task's own contract actually populates are required:
+/// name/email/phone/message/serviceLine/contactConsent/marketingConsent/createdAt.
+/// `message` is a new field, not named in either feature doc's original "Data requirements"
+/// list — added here the same way T2.2 added `Offer.ctaLabel`/`tiers` beyond their feature
+/// doc's original field list, since the Input → Output contract requires a free-text form
+/// body with nowhere else to live; both feature docs are updated to name it (see
+/// memory/decision-log.md).
+///
+/// `scoreSummary`/`weakestDimensions`/`triageFlag` are business-health-check-diagnostic.md's
+/// documented diagnostic-specific fields, modelled now as nullable/empty so the column shape
+/// exists for Milestone 3 to populate, but left unpopulated by every contact-form-originated
+/// row this task creates (T2.6's own explicit allowance) — the `diagnostic_response` set
+/// relation that same doc names is deliberately NOT modelled yet, unlike these three: unlike
+/// `HomePageContent.featuredArticleIds` (a scalar array that can point at a not-yet-built
+/// table), a real Prisma relation field needs the related model to already exist, and
+/// `diagnostic_response` doesn't (Milestone 3) — Milestone 3's own task adds that relation.
+///
+/// `traffic_source`/`campaign`/`landing_page`, also named in
+/// business-health-check-diagnostic.md's Data requirements list, are deliberately NOT
+/// modelled here: `measurement-and-attribution.md`'s own Data requirements section describes
+/// per-enquiry attribution differently — a separate `attribution` entity (session id,
+/// utm_source/medium/campaign, landing_page, first_seen) with a foreign key from
+/// `enquiry_record`, not inline columns on this table. The two feature docs disagree on the
+/// real shape; T2.6 doesn't own either the diagnostic or measurement features, so it leaves
+/// this inconsistency for whichever future task actually builds attribution (Milestone 5,
+/// `docs/tasks/05-landing-and-measurement.md`) to resolve, rather than guessing a column shape
+/// now that would likely need replacing.
+///
+/// `enquiry-management.md`'s own extension (`status`, `assigned_partner_id`,
+/// `internal_notes`, `status_updated_at`) is Milestone 8 scope, not anticipated here — no
+/// precedent in this task's own architecture constraints for adding it early, unlike the
+/// diagnostic-specific fields above.
+model EnquiryRecord {
+  id                Int      @id @default(autoincrement())
+  name              String
+  email             String
+  phone             String?
+  message           String
+  serviceLine       String?  @map("service_line")
+  contactConsent    Boolean  @map("contact_consent")
+  marketingConsent  Boolean  @default(false) @map("marketing_consent")
+  /// Diagnostic-specific, null for every contact-form-originated row (see model doc-comment).
+  scoreSummary      Json?    @map("score_summary")
+  weakestDimensions String[] @default([]) @map("weakest_dimensions")
+  triageFlag        Boolean? @map("triage_flag")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("enquiry_record")
+}

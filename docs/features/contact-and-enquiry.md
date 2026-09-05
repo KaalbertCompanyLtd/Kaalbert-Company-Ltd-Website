@@ -41,6 +41,11 @@ line, if any) that the firm isn't starting cold (`user-stories.md`, Stories 4, 8
   `enquiry-management.md`: diagnostic-specific fields (responses, score) remain null for a
   contact-form-originated enquiry; `service_line` (nullable, from the query parameter) is
   populated here specifically.
+- `message` (text, required) — added at T2.6 (`docs/tasks/02-public-presentation.md`): the
+  form's free-text body ("What's going on with the business?"), not originally named in this
+  doc's data requirements list but required by this feature's own Input → Output contract.
+  Added the same way `core-offer-pages.md`'s `offer` entity gained `cta_label`/tiers beyond
+  its own original field list (see `memory/decision-log.md`).
 - Reads (does not own) `site_settings` — phone numbers, WhatsApp number, email, address,
   response_time_commitment — defined and edited in `content-management-admin.md`.
 

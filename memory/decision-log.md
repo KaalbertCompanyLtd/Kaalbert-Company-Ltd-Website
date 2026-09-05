@@ -2,6 +2,63 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T2.6, session 12) — `enquiry_record`/`site_settings` schema scoping, `message` field addition, Page model reuse
+
+**Summary:** T2.6 (Contact page) is the first task to materialize both `site_settings` and
+`enquiry_record`, both shared entities documented across multiple feature docs
+(`contact-and-enquiry.md`, `business-health-check-diagnostic.md`, `enquiry-management.md`,
+`content-management-admin.md`). Several scoping decisions were made, each following the
+task's own explicit architecture constraints rather than modelling every documented field
+immediately:
+
+1. **`message` added to `enquiry_record`.** Neither feature doc's original Data requirements
+   list names a free-text form body, but the task's own Input → Output contract requires one.
+   Added the same way T2.2 added `Offer.ctaLabel`/`tiers` beyond their feature doc's original
+   list — both `contact-and-enquiry.md` and `business-health-check-diagnostic.md` updated to
+   name it.
+2. **Diagnostic-specific fields (`scoreSummary`, `weakestDimensions`, `triageFlag`) modelled
+   now, nullable, unpopulated.** The task's own architecture constraint explicitly allows
+   this ("can stay nullable/unpopulated from this task"). The `diagnostic_response` set
+   relation that same list names is deliberately NOT modelled yet — unlike a scalar array
+   (`HomePageContent.featuredArticleIds`'s precedent), a real Prisma relation field needs its
+   related model to already exist, and `diagnostic_response` doesn't (Milestone 3).
+3. **`traffic_source`/`campaign`/`landing_page` deliberately NOT modelled.** These are named
+   in `business-health-check-diagnostic.md`'s `enquiry_record` Data requirements, but reading
+   `measurement-and-attribution.md`'s own Data requirements section turned up a real
+   inconsistency between the two docs: that doc describes per-enquiry attribution as a
+   separate `attribution` entity (session id, utm_source/medium/campaign, landing_page,
+   first_seen) with a foreign key from `enquiry_record`, not inline columns on this table.
+   T2.6 owns neither the diagnostic nor measurement features, so rather than guess a column
+   shape that would likely need replacing, this is left for Milestone 5
+   (`docs/tasks/05-landing-and-measurement.md`) to resolve when attribution is actually built.
+4. **`enquiry-management.md`'s own extension** (`status`, `assigned_partner_id`,
+   `internal_notes`, `status_updated_at`) is not anticipated here at all — no precedent in
+   this task's constraints for adding it early, unlike the diagnostic fields above.
+5. **`/contact` reuses the shared `Page` model** (slug `"contact"`) for its hero/meta fields,
+   same pattern as capabilities/our-method/about — `contact.html`'s hero section matches that
+   shape exactly (kicker/heading/lead), no `intro_copy` needed.
+6. **`site_settings.response_time_commitment` seeded `null`**, not carrying over the mockup's
+   own "Response-time commitment: pending." text — that's a mockup-authoring annotation, not
+   real visitor copy, same treatment as the photo-pending caption removed from `/about` at
+   T2.5 (session 11). `/contact` omits the response-time panel entirely while null, per
+   `content-management-admin.md`'s blank-required-field edge case. Tracked as technical debt,
+   `Trigger type: User-triggered`, sequenced into T7.8.
+7. **First real `dataLayer.push` pattern established** (`lib/data-layer.ts`'s
+   `pushDataLayerEvent`) — fires `enquiry_submitted` (the contact form) and `whatsapp_opened`
+   (the new shared `WhatsAppLinkButton` component, FR-7.8) — the mechanism later tasks (the
+   diagnostic's own events at Milestone 3, landing pages' `checklist_downloaded`) reuse rather
+   than inventing a second one.
+8. **`SiteFooter` callers not updated to read live `site_settings`** — logged as technical
+   debt (`memory/technical-debt.md`), sequenced into T7.8, per the task's own explicit
+   allowance ("not required as part of this task's own acceptance criteria, but the gap must
+   be logged").
+
+**Related Documents:** `prisma/schema.prisma` (`SiteSettings`, `EnquiryRecord`),
+`docs/features/contact-and-enquiry.md`, `docs/features/business-health-check-diagnostic.md`,
+`docs/features/measurement-and-attribution.md`, `docs/features/enquiry-management.md`,
+`docs/tasks/02-public-presentation.md` (T2.6), `docs/tasks/07-content-admin.md` (T7.8),
+`memory/technical-debt.md`.
+
 ## 2026-09-05 (T2.5, session 11 follow-up) — "What we are not" scope statement verified against real Company Docs, no change needed
 
 **Summary:** User challenged whether `FirmStatement.scopeBody` (seeded from

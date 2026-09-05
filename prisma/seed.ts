@@ -809,6 +809,68 @@ async function seedAuthors() {
   }
 }
 
+/**
+ * T2.6 (docs/tasks/02-public-presentation.md) — the contact page's own hero copy, via the
+ * shared `page` entity — same pattern as capabilities/our-method/about, decided at this task
+ * since `ui/mockups/a-public-site/contact.html`'s `<section class="page-hero">` matches that
+ * shape exactly. Sourced verbatim from the mockup. `metaTitle`/`metaDescription` aren't shown
+ * in the mockup (a bare `<title>` tag only) — written fresh, same treatment as
+ * `seedCapabilitiesPage`/`seedAboutPage`.
+ */
+async function seedContactPage() {
+  await prisma.page.upsert({
+    where: { slug: "contact" },
+    update: {},
+    create: {
+      slug: "contact",
+      heroKicker: "Contact",
+      heroHeading: "Tell us where the business is, and where you want it to be",
+      heroLead:
+        "A short form, or WhatsApp, phone and email if you'd rather talk directly. No fee, no obligation, for a first conversation.",
+      introCopy: null,
+      metaTitle: "Contact — Kaalbert & Company Ltd",
+      metaDescription:
+        "Reach Kaalbert & Company Ltd by form, WhatsApp, phone or email — no fee, no obligation, for a first conversation.",
+      isPlaceholder: false,
+    },
+  });
+}
+
+/**
+ * T2.6 — the `site_settings` singleton, first materialized at this task (see
+ * prisma/schema.prisma's `SiteSettings` doc-comment). Phone numbers, WhatsApp number, email
+ * and address sourced verbatim from `ui/mockups/a-public-site/contact.html`'s channel cards
+ * and footer, matching every other public-site mockup's footer content exactly (same numbers
+ * `components/site-footer.tsx`'s callers currently hardcode — see the technical-debt entry
+ * for why those callers aren't switched to read this row as part of this task).
+ * `whatsappNumber` is stored in the same digits-only, country-code-prefixed form the
+ * mockup's own `wa.me/233558480001` link uses, so `WhatsAppLinkButton` can build the link
+ * directly without reformatting. `responseTimeCommitment` is seeded `null` — the firm has not
+ * yet confirmed a response-time commitment it can actually keep (contact-and-enquiry.md's
+ * business rule); the mockup's own "Response-time commitment: pending." note is a
+ * mockup-authoring annotation, not real visitor copy, so it is not carried into the seed (same
+ * treatment as the photo-pending caption removed from `/about` at T2.5 — see
+ * memory/decision-log.md). `socialProfileUrls` stays empty — no firm social profiles supplied
+ * yet.
+ */
+async function seedSiteSettings() {
+  await prisma.siteSettings.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      phonePrimary: "0558 480 001",
+      phoneSecondary: "0257 784 686",
+      email: "kaalberto777@gmail.com",
+      whatsappNumber: "233558480001",
+      address: "House No. 13 Gbenjin Gbe Avenue\nEast Legon-ARS, Accra, Ghana",
+      responseTimeCommitment: null,
+      socialProfileUrls: [],
+      isPlaceholder: false,
+    },
+  });
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -823,6 +885,8 @@ async function main() {
   await seedAboutPage();
   await seedFirmStatement();
   await seedAuthors();
+  await seedContactPage();
+  await seedSiteSettings();
 }
 
 main()

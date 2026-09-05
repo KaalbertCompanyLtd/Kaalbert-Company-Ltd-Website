@@ -18,6 +18,62 @@ sequencing requirement:
 
 ---
 
+## `site_settings.response_time_commitment` has no real value yet — firm hasn't confirmed a number
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** T2.6 (`docs/tasks/02-public-presentation.md`) materialized the `site_settings`
+singleton and built `/contact` to read it live, but the firm has not yet supplied a
+response-time commitment it can actually keep (`contact-and-enquiry.md`'s business rule:
+"content the firm supplies and must actually be able to keep"). Seeded `null` rather than
+carrying over the mockup's own "Response-time commitment: pending." text, which is a
+mockup-authoring annotation, not real visitor copy (same treatment as the photo-pending
+caption removed from `/about` at T2.5).
+**Impact:** Low — `/contact` correctly omits the response-time panel entirely while null
+(`content-management-admin.md`'s edge case: a blank required field is omitted from the public
+display, not shown broken), so nothing renders incorrectly. The gap is simply that a real
+visitor sees no stated response-time commitment at all until the firm confirms one.
+**Priority:** Medium
+**Possible Fix/Fixes:** Once the firm states a real, keepable response-time commitment, set
+`site_settings.response_time_commitment` via T7.8's Site Settings admin screen (no code
+change required — this is a content edit, not a build task).
+**Trigger type:** User-triggered — do not fabricate a response-time commitment or treat
+reaching T7.8 as a cue to invent one; wait for the firm to state a real number first.
+**Sequenced into:** T7.8 (Site Settings singleton, `docs/tasks/07-content-admin.md`) —
+addendum added this session pointing back here.
+
+---
+
+## `SiteFooter` callers still pass hardcoded address/phone props instead of reading `site_settings`
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** T2.6 is the first task to materialize a real `site_settings` row, and wires it
+into `/contact`'s own channel cards and `WhatsAppLinkButton` — but every public page's
+`SiteFooter` call (T1.5's own precedent, `app/(public)/page.tsx`, `app/capabilities/page.tsx`,
+`app/our-method/page.tsx`, `app/about/page.tsx`, and this task's own `app/contact/page.tsx`)
+still passes `addressLine1`/`addressLine2`/`phonePrimary` as literal hardcoded strings, since
+no `site_settings` table existed when those callers were written. CLAUDE.md's Recurring
+Patterns rule ("SiteFooter, /contact, and every WhatsAppLinkButton all read the same record —
+never a second hard-coded copy anywhere") is now violated the moment this real row exists
+alongside those still-hardcoded props — flagged per this task's own architecture constraint
+rather than silently left unnoticed.
+**Impact:** Low today (the hardcoded values and the seeded `site_settings` row match exactly),
+but a future Site Settings edit (e.g. an office move, a phone number change) would update
+`/contact` and `WhatsAppLinkButton` everywhere while every page's footer silently kept
+showing the old value — a real staleness risk once T7.8 ships and a partner starts editing.
+**Priority:** Medium
+**Possible Fix/Fixes:** Change `SiteFooter`'s callers to fetch `getSiteSettings()` (or accept
+it as a prop threaded from each page's own already-fetched data) instead of passing literal
+strings — a mechanical change across five call sites, natural to do alongside T7.8's own
+Site Settings admin build, when the record becomes editable and staleness actually starts to
+matter.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.8 (Site Settings singleton, `docs/tasks/07-content-admin.md`) —
+addendum added this session pointing back here.
+
+---
+
 ## Funding-Readiness Pack's checklist cross-promo panel omitted from the offer detail page
 
 **Status:** Open

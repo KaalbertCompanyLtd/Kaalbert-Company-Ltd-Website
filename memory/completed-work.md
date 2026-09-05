@@ -16,6 +16,53 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T2.6 — Contact page
+**Summary:** Built `/contact` to `ui/mockups/a-public-site/contact.html`'s structure, reading
+the optional `?service=[slug]` param (resolved live against real `Offer`/`Capability` slugs
+plus the hardcoded `advisory-retainer` case — an unrecognised value falls back to no service)
+and the newly-materialized `site_settings` singleton (phone/WhatsApp/email/address/
+response-time). `POST /api/contact/submit` validates and creates a shared `enquiry_record`
+row (contact consent required and rejected if missing, separate from marketing consent);
+verified end-to-end via Playwright MCP — consent-unchecked rejection, a real submission
+persisted and queryable directly via Prisma, the unrecognised-service fallback, and both new
+`dataLayer` events (`enquiry_submitted` on submit, `whatsapp_opened` on the new shared
+`WhatsAppLinkButton`'s click) firing correctly. First task to materialize `SiteSettings` and
+`EnquiryRecord` — several deliberate schema-scoping decisions made (added `message`, deferred
+diagnostic-relation/attribution fields, left `enquiry-management.md`'s extension for
+Milestone 8) — see `memory/decision-log.md` for the full reasoning. Also the first real
+`dataLayer.push` call in the codebase (`lib/data-layer.ts`), a pattern later tasks (the
+diagnostic, landing pages) reuse.
+**Files Changed:**
+
+- `prisma/schema.prisma` — `SiteSettings`, `EnquiryRecord` models added.
+- `prisma/migrations/20260905151229_t2_6_site_settings_and_enquiry_record/` — migration.
+- `prisma/seed.ts` — `seedContactPage()`, `seedSiteSettings()`.
+- `lib/site-settings.ts` — `getSiteSettings`, `splitAddressLines`, `toTelHref` (new file).
+- `lib/contact.ts` — `resolveServiceContext`, `buildWhatsAppMessage` (new file).
+- `lib/enquiries.ts` — `createContactEnquiry`, `ContactValidationError` (new file).
+- `lib/data-layer.ts` — `pushDataLayerEvent`, the shared `dataLayer.push` mechanism (new file).
+- `app/api/contact/submit/route.ts` — `POST` handler (new file, first API route in the repo).
+- `app/contact/page.tsx` — the page itself (new file).
+- `components/contact-form.tsx` — client form component (new file).
+- `components/whatsapp-link-button.tsx` — the shared `WhatsAppLinkButton` (new file).
+- `docs/features/contact-and-enquiry.md`, `docs/features/business-health-check-diagnostic.md`
+  — `message` field documented; the `traffic_source`/`campaign`/`landing_page` scoping
+  decision noted.
+- `docs/tasks/07-content-admin.md` — T7.8 addendum for the two sequenced technical-debt items.
+- `memory/decision-log.md`, `memory/technical-debt.md` — this task's scoping decisions and
+  two new debt items (response-time commitment pending, `SiteFooter` callers not yet live).
+  **Related Feature:** `docs/features/contact-and-enquiry.md`.
+  **Notes:** Verified via Playwright MCP at mobile (390px), tablet (768px) and desktop
+  (1280px) — no console errors once the dev server was restarted to pick up the regenerated
+  Prisma client (same stale-client issue as T2.5's session-11 follow-up; not a real bug).
+  No test runner exists yet (`memory/technical-debt.md` → "Vitest never scaffolded",
+  sequenced into T3.2) — consistent with every other T2.x task, no automated tests added;
+  `lib/contact.ts`/`lib/enquiries.ts` are the first `lib/` functions in this epic with real
+  branching logic (consent validation, slug resolution) that would benefit from unit tests
+  once the scaffold exists. All quality gates (lint, format, typecheck) pass.
+
+---
+
 **Task:** T2.5 (follow-up fix) — Partner title/role visual distinction; live-page note removed
 **Summary:** User flagged two real gaps right after T2.5 shipped: only the featured Lead
 Partner card showed any rank at all (as one plain string with no visual split from their

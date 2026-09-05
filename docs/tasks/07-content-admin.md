@@ -149,6 +149,17 @@ blank required field causes the corresponding display to be omitted site-wide ra
 rendering broken.
 **Size:** S **Dependencies:** T6.3, T2.6, T2.8
 
+**Addendum (session 12, 2026-09-05):** Two items from `memory/technical-debt.md` land here:
+(1) "`SiteFooter` callers still pass hardcoded address/phone props instead of reading
+`site_settings`" — T2.6 materialized the real `site_settings` row and wired it into
+`/contact`, but every page's `SiteFooter` call (T1.5's own precedent) still passes literal
+strings; switch every caller to read `getSiteSettings()` (or thread it as a prop) as part of
+this task, so a Site Settings edit actually reaches the footer everywhere, not just
+`/contact`. (2) "`site_settings.response_time_commitment` has no real value yet" —
+`Trigger type: User-triggered`; do not fabricate a response-time commitment or treat reaching
+this task as a cue to invent one — only set it via this task's own form once the firm has
+actually stated a real, keepable number.
+
 ### T7.9 — Subscribers list
 
 **Build:** `ui/screen-inventory.md` #35a — `AdminDataTable` variant under Operations, listing
