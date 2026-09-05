@@ -38,6 +38,19 @@ requirement).
 - `app/layout.tsx` — untouched (the shadcn CLI's Geist-font edit to this file was reverted
   before being committed)
 - `memory/completed-work.md`, `memory/decision-log.md`, `memory/technical-debt.md` — updated
+  for the T1.4 work itself
+- `memory/technical-debt.md` — follow-up pass (two more commits, same session): fixed two
+  entries (ESLint 9→10, Prisma npm-audit) that had drifted into an orphaned
+  `Sequenced into: None yet` state after their T1.4 re-check, contrary to CLAUDE.md's rule
+  that this is a temporary state only, never a final one; and converted the undated
+  "Anticipated" placeholder (the `content-management-admin.md` two-partner simultaneous-edit
+  simplification) into a real, fully-fielded entry at the user's explicit request, rather
+  than waiting for T7.2/T7.3 implementation as the feature doc originally planned
+- `docs/tasks/03-diagnostic.md` — added a session-04 addendum to T3.2 re-checking the ESLint/
+  Prisma debt items (T3.2 is the next confirmed `package.json` touch after T1.4)
+- `docs/tasks/07-content-admin.md` — added session-04 addenda to both T7.2 and T7.3 pointing
+  at the last-write-wins debt entry, so whichever session builds those editors makes a
+  conscious, recorded call rather than the limitation landing silently
 
 ## Decisions Made
 
@@ -56,15 +69,32 @@ requirement).
   `eslint-plugin-react`. Reverted to `eslint@^9.39.5`. Re-checked the Prisma CLI npm-audit
   debt too — no patched release exists yet, left open. Both technical-debt entries updated
   with the concrete re-check findings rather than left stale.
+- Follow-up (user-flagged, same session): both of those re-checked entries had been left with
+  `Sequenced into: None yet`, which CLAUDE.md's memory rules treat as a bug in the memory
+  system itself if it's the final state. Grepped `docs/tasks/*.md` for the next real
+  `package.json` touch after T1.4 (T3.2 — already installing Vitest per an existing debt
+  entry) and re-sequenced both into it with a real addendum.
+- Follow-up (user-flagged, same session, separate request): converted the undated
+  "Anticipated" placeholder at the bottom of `memory/technical-debt.md` (the
+  `content-management-admin.md` last-write-wins simplification) into a real dated entry now,
+  at the user's explicit instruction, rather than leaving it for T7.2/T7.3 implementation
+  time as the feature doc originally specified. Sequenced into both T7.2 and T7.3 with
+  addenda in `docs/tasks/07-content-admin.md` — the entry requires a conscious decision at
+  that point, not a mandatory fix, since the feature doc already accepts last-write-wins for
+  Phase 1.
 
 ## Current State
 
 All 21 `ui/components.md` foundation-layer primitives are generated, themed correctly against
 the Kaalbert palette with no hand-patched colours, and verified working (including
-interactive states) on the `/dev/component-scaffold` scratch page. `npm run lint`,
-`npm run format:check`, and `npm run typecheck` all pass clean across the whole tree. Ready
-for T1.5 to build the real SiteHeader/SiteFooter/admin-shell components on top of this
-primitive layer.
+interactive states) on the `/dev/component-scaffold` scratch page. Three commits this
+session (`f3ad0e5` T1.4 itself, `98a3b48` and `b484736` the two memory/docs follow-ups above).
+`npm run lint`, `npm run format:check`, and `npm run typecheck` all re-verified passing clean
+across the whole tree as of the last commit; working tree is clean; no dev server left
+running. Every open `memory/technical-debt.md` entry with a real fix now has a concrete
+`Sequenced into:` target backed by an actual addendum in the named task file (spot-checked
+this session — no orphaned entries remain). Ready for T1.5 to build the real
+SiteHeader/SiteFooter/admin-shell components on top of this primitive layer.
 
 ## Blockers
 
