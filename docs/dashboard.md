@@ -3,7 +3,8 @@
 **Project Name:** kaalbert.com (Kaalbert & Company Ltd Website)
 **Current Phase:** Implementation — Milestone 1 (Foundation) and Milestone 2 (Public
 Presentation Layer) complete through T2.9; T2.10 (custom error pages) also confirmed built
-during T2.9's own audit. Next up: Milestone 3, `docs/tasks/03-diagnostic.md`.
+during T2.9's own audit. Milestone 3 (`docs/tasks/03-diagnostic.md`) underway: T3.1 (scoring
+engine data model) complete. Next up: T3.2 (server-side scoring function).
 
 ## Artifacts Produced
 

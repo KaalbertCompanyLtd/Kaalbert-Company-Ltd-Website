@@ -16,6 +16,45 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T3.1 — Scoring engine data model (session 16)
+**Summary:** Built the four diagnostic scoring tables per
+`docs/features/business-health-check-diagnostic.md`'s Data requirements section:
+`DiagnosticDimension` (name, weight — numeric, ready for T3.2's arithmetic), `DiagnosticQuestion`
+(promptText, a real FK to its dimension rather than an inline string, order unique per
+dimension, a `DiagnosticResponseType` enum for scale/boolean/choice, an `active` flag),
+`DiagnosticThreshold` (a nullable dimension FK expressing "dimension or overall", thresholdValue,
+triagePriorityLevel), and `DiagnosticResponse` (sessionId, a real FK to its question, answerValue,
+a nullable FK to `EnquiryRecord` since responses are written per-step before the owning enquiry
+exists at submission). Added the `diagnosticResponses` relation `EnquiryRecord`'s own doc-comment
+already flagged as deferred from T2.6. No values seeded (T3.3's job) — migration contains schema
+only. Proved the ADR 0005 acceptance criterion for real: wrote a throwaway script
+(`prisma/_t3_1_acceptance_check.ts`, deleted after use) that inserted a brand-new dimension +
+question + threshold purely via Prisma Client calls and read them back through a query shaped
+the way T3.2's scoring function will query (active questions joined to dimension weight, plus
+thresholds) — passed, confirmed no code change needed to pick up new config, then cleaned up the
+test rows and deleted the script.
+**Files Changed:**
+
+- `prisma/schema.prisma` — added `DiagnosticDimension`, `DiagnosticQuestion`,
+  `DiagnosticResponseType` enum, `DiagnosticThreshold`, `DiagnosticResponse` models; added
+  `EnquiryRecord.diagnosticResponses` relation.
+- `prisma/migrations/20260905212239_t3_1_diagnostic_scoring_tables/migration.sql` — new
+  migration, schema only, no seeded rows.
+- `generated/prisma/` — regenerated client (not committed; gitignored build artifact).
+  **Related Feature:** `docs/features/business-health-check-diagnostic.md`, ADR 0005
+  (`docs/adr/0005-diagnostic-engine-in-app-module.md`).
+  **Notes:** `diagnostic_response`'s feature-doc field "timestamp" is modelled as `createdAt`/
+  `created_at` (matching every other model's timestamp field in this schema, `EnquiryRecord`
+  included) rather than a literal `timestamp` column — documented in the model's own doc-comment,
+  same treatment as the doc's other descriptive-English field names ("active flag" → `active`,
+  "dimension or overall" → nullable `dimensionId`). No new technical debt or known bugs from this
+  task. Next: T3.2 — server-side scoring function (`lib/`), which is also where Vitest gets
+  scaffolded for the first time (per that task's own addendum in `docs/tasks/03-diagnostic.md`).
+
+---
+
+## 2026-09-05
+
 **Task:** T2.9 — Content migration/seed scripts (audit, session 15)
 **Summary:** Per this task's own addendum, every `seed*` function for this epic's entities was
 already written incrementally by T2.1–T2.7 — this session's real work was the three-part audit

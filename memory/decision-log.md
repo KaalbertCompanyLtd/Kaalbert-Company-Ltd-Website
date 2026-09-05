@@ -2,6 +2,34 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T3.1, session 16) — Diagnostic scoring tables built; `diagnostic_response.timestamp` mapped to `createdAt`; nullable FK used for "dimension or overall"
+
+**Summary:** Built `DiagnosticDimension`/`DiagnosticQuestion`/`DiagnosticThreshold`/
+`DiagnosticResponse` in `prisma/schema.prisma` per `business-health-check-diagnostic.md`'s Data
+requirements, plus the `EnquiryRecord.diagnosticResponses` relation that model's own doc-comment
+already flagged as deferred from T2.6. Two naming/shape decisions worth recording: (1) the
+feature doc's `diagnostic_response` field list is descriptive English ("session id", "answer
+value", "timestamp"), not literal snake_case identifiers the way `home-page.md`'s list is — so
+"timestamp" is modelled as `createdAt`/`created_at` to match every other model's timestamp field
+in this schema (including `EnquiryRecord.createdAt`) rather than introducing a one-off `timestamp`
+column; (2) `diagnostic_threshold`'s "dimension or overall" is modelled as a single nullable
+`dimensionId` FK (null = overall) rather than a separate scope discriminator column, mirroring
+this schema's existing nullable-FK precedents. `DiagnosticQuestion.dimensionId` is a real FK (not
+an inline string) specifically so ADR 0005's "more dimensions/questions than launch config ships
+with, no code change" requirement is satisfied structurally — proven for real with a throwaway
+script (inserted a new dimension+question+threshold via Prisma Client only, read them back
+through a query shaped like T3.2's future scoring lookup, passed, then deleted both the test rows
+and the script). `DiagnosticQuestion.active` lets a question retire without breaking historical
+`DiagnosticResponse` rows; `DiagnosticResponse.enquiryId` is nullable because responses are
+written per-step during the flow, before `POST /api/diagnostic/submit` (T3.5) creates the owning
+`EnquiryRecord`. No values seeded — that's T3.3's job, kept out of this migration per the task's
+own architecture constraint.
+**Related Documents:** `docs/tasks/03-diagnostic.md` (T3.1), `docs/features/business-health-
+check-diagnostic.md`, `docs/adr/0005-diagnostic-engine-in-app-module.md`,
+`prisma/schema.prisma`, `memory/completed-work.md`.
+
+---
+
 ## 2026-09-05 (T2.9, session 15) — Audit confirmed no new seed work needed; T2.10 already complete; dashboard drift fixed
 
 **Summary:** T2.9's addendum correctly predicted that every entity's `seed*` function was
