@@ -15,7 +15,7 @@ reachable. Fixed by adding `export const dynamic = "force-dynamic"` to
 `app/(public)/page.tsx` — not just a build workaround: this content is meant to be read live
 (and become admin-editable later), so it shouldn't have been eligible for static prerendering
 in the first place. Verified with a real local `npm run build` (previously untested locally
-since the local `DATABASE_URL` is Railway's *public* proxy, which is reachable during a local
+since the local `DATABASE_URL` is Railway's _public_ proxy, which is reachable during a local
 build, masking this Railway-build-specific failure). Any future page that reads live
 DB-backed content (offers, capabilities, etc.) needs the same treatment unless a deliberate
 ISR/ on-demand-revalidation strategy is designed instead.

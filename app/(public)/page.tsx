@@ -99,7 +99,7 @@ export default async function HomePage() {
               <span className="text-kicker text-brass-300 mb-2 block font-semibold tracking-[0.08em] uppercase">
                 Ghana-rooted · Globally benchmarked
               </span>
-              <h1 className="font-display text-primary-foreground mt-4 mb-6 text-[clamp(2.5rem,5vw,3.75rem)] leading-[1.08] tracking-[-0.01em]">
+              <h1 className="font-display text-primary-foreground mt-4 mb-6 text-[clamp(2.5rem,5vw,3.75rem)] leading-[1.08] font-bold tracking-[-0.01em]">
                 {content.heroStatement}
               </h1>
               <p className="text-lead text-primary-foreground/80 max-w-[500px] font-light">

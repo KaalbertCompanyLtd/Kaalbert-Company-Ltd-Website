@@ -141,7 +141,7 @@ memory/                 # persistent knowledge — see Knowledge Management Resp
   primitives exist specifically to make this achievable without hand-building ARIA/focus
   management; use them rather than a bare `<div>` for anything interactive.
 - **Any page/route that reads live database content must export `export const dynamic =
-  "force-dynamic"`.** Without it, Next.js may statically prerender the route at build time
+"force-dynamic"`.** Without it, Next.js may statically prerender the route at build time
   whenever it sees no dynamic API used (`cookies()`/`headers()`/`searchParams`) — Prisma
   calls aren't tracked by Next's fetch-cache heuristics, so a page can look static to Next.js
   even though it isn't. On Railway specifically this isn't just a staleness concern: the
