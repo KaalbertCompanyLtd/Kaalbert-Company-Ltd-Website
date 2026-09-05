@@ -15,7 +15,7 @@ back to the specific page, article, or advertisement that produced it.
 
 ```bash
 npm install
-cp .env.example .env    # fill in DATABASE_URL and the other values CLAUDE.local.md lists
+cp .env.example .env.local    # fill in DATABASE_URL and the other values CLAUDE.local.md lists
 npx prisma migrate dev
 npm run db:seed
 ```
@@ -64,9 +64,11 @@ npm run db:seed         # prisma db seed — run prisma/seed.ts
   it any time the schema changes; it also runs automatically via `postinstall`.
 
 Local development connects to Railway's Postgres over its public TCP proxy (`DATABASE_URL`
-in `.env`); the deployed app connects over Railway's private network instead (`DATABASE_URL`
-set on the `kaalbert-web` service as a reference to the `Postgres` service's own
-`DATABASE_URL` — no public exposure needed in production).
+in `.env.local`); the deployed app connects over Railway's private network instead
+(`DATABASE_URL` set on the `kaalbert-web` service as a reference to the `Postgres` service's
+own `DATABASE_URL` — no public exposure needed in production). `.env.production` exists only
+for testing a local production build (`npm run build && npm start`) — never read by the
+deployed app.
 
 ## Documentation
 
