@@ -1,6 +1,6 @@
 # Session 02 — Postgres Schema Baseline & Migration Tooling
 
-# Date: 2026-09-04
+# Date: 2026-09-04 to 2026-09-05
 
 # Tasks completed: T1.2
 
@@ -16,26 +16,52 @@ deploy hook, and a `.env.example`. The migration mechanism itself was proven end
 an isolated, fully-cleaned-up smoke test against the real database rather than left
 unverified or faked with a permanent placeholder table.
 
+**Follow-up (2026-09-05, same session):** at the user's request, split `.env` into
+`.env.local` (what Next.js/Prisma actually load first) and a gitignored `.env.production`
+for local production-build testing. While populating `.env.production` with a real
+`DATABASE_URL`, the harness's own disk-change diff preview exposed the live Postgres
+password into the conversation. Treated as compromised immediately: the user rotated it via
+a `!`-prefixed command (auto mode's classifier correctly blocked the agent from running the
+password change itself), the agent synced Railway's tracked `PGPASSWORD`/`POSTGRES_PASSWORD`
+variables and verified the new password works end-to-end. Full incident writeup in
+`memory/decision-log.md`, and a new durable lesson captured in the
+`feedback_never_print_embedded_credential_urls` memory file (outside this repo).
+
 ## Files Changed
 
-- prisma/schema.prisma, prisma/seed.ts, prisma7.config.ts — new
+- prisma/schema.prisma, prisma/seed.ts, prisma7.config.ts — new (prisma7.config.ts later
+  edited again in the follow-up to load `.env.local`/`.env.production`/`.env` in that
+  priority order, instead of bare `dotenv/config` which only reads `.env`)
 - lib/prisma.ts — new
 - package.json, package-lock.json — new deps/scripts (see `memory/completed-work.md` for
   the full list)
-- railway.json, .env.example — new
-- .gitignore, .prettierignore, eslint.config.mjs — `generated/` ignored in all three
-- README.md — new "Database & Migrations" section
+- railway.json, .env.example — new (`.env.example` edited again in the follow-up to mention
+  `.env.local`/`.env.production` instead of `.env`)
+- .gitignore, .prettierignore, eslint.config.mjs — `generated/` ignored in all three;
+  `.gitignore` further edited in the follow-up to add `.env.production` and drop a stray
+  `/lib/generated/prisma` line left over from a discarded experiment
+- README.md — new "Database & Migrations" section; edited again in the follow-up for the
+  `.env.local`/`.env.production` split
 - docs/tasks/01-foundation.md — addendum added to T1.4 (Prisma audit re-check)
 - memory/decision-log.md, memory/technical-debt.md, memory/completed-work.md — this
-  session's entries
-- CLAUDE.local.md (gitignored, not committed) — DATABASE_URL note updated
+  session's entries, including the follow-up's credential-rotation incident writeup
+- CLAUDE.local.md (gitignored, not committed) — DATABASE_URL note updated twice (provisioned,
+  then `.env` → `.env.local`)
 - `.claude/skills/prisma-*`, `skills-lock.json` — added by `prisma init` itself; the
-  duplicate `.windsurf/skills/`/`.agents/skills/` copies it also created were deleted
+  duplicate `.windsurf/skills/`/`.agents/skills/` copies it also created were deleted (and,
+  after a mistaken first deletion broke `.claude/skills/`'s symlinks into them, properly
+  dereferenced into real files before the second deletion)
+- .env (gitignored, not committed) — renamed to `.env.local`; `.env.production` added
+  (gitignored, not committed)
 - Railway project `kaalbert-web` (outside the repo): new `Postgres` service + TCP proxy;
-  `kaalbert-web` service's `DATABASE_URL` set to reference `Postgres`'s private-network URL
+  `kaalbert-web` service's `DATABASE_URL` set to reference `Postgres`'s private-network URL;
+  `Postgres` service's own password rotated, `PGPASSWORD`/`POSTGRES_PASSWORD` synced
 
 Full detail, including exactly what's committed vs. gitignored, in
 `memory/completed-work.md`'s entry for this session.
+
+Two commits this session: `c4a8a68` (schema/migration tooling baseline) and `03b2359`
+(env-file split + password rotation).
 
 ## Decisions Made
 
@@ -58,6 +84,18 @@ See `memory/decision-log.md`'s 2026-09-04 (T1.2) entry for full reasoning on eac
   dev-tooling dependency tree, not reachable from this project's runtime; the only "fix"
   `npm audit fix --force` offers is a downgrade to Prisma 6.x, rejected. Logged as technical
   debt, sequenced into T1.4's existing "recheck a pinned dependency" addendum.
+- `.env` split into `.env.local` (dev) + `.env.production` (local prod-build testing only),
+  at the user's request. `prisma7.config.ts` updated to load both explicitly, in
+  Next.js-matching priority order — a bare `dotenv/config` only reads `.env`, which would
+  have silently broken the CLI's DB connection the moment `.env` stopped existing.
+- **Credential exposure + rotation** (see `memory/decision-log.md`'s 2026-09-05 entry for
+  the full incident): populating `.env.production` with a real `DATABASE_URL` triggered the
+  harness's own disk-change diff preview, which printed the live Postgres password into the
+  conversation. Rotated immediately — auto mode's classifier blocked the agent from running
+  the password change or a `DATABASE_URL` variable update directly (correctly; these are
+  exactly the kind of live-production-credential actions that should need a human decision),
+  so the user ran the rotation via a `!`-prefixed command instead. New password verified
+  working before moving on.
 
 **Unrelated to project work, fully reverted, worth noting for continuity:** this session
 also ran `/doctor` (a Claude Code self-maintenance check unrelated to this project) partway
@@ -74,9 +112,11 @@ project file).
 
 T1.2 is complete: all Task Completion Checklist items pass (lint/format/typecheck clean,
 Prisma client generated, migration mechanism proven live, memory files updated). Postgres is
-live on Railway, `.env` has a working `DATABASE_URL`, and the repo is ready for T1.3 to
-start building on top of a working database layer whenever it needs one. Nothing has been
-committed yet — that's this session's next and final step before stopping.
+live on Railway with a freshly-rotated password, `.env.local` has a working `DATABASE_URL`,
+`.env.production` exists (gitignored) for local prod-build testing, and the repo is ready
+for T1.3 to start building on top of a working database layer whenever it needs one. Both
+commits (`c4a8a68`, `03b2359`) are made and not yet pushed — a human reviews with
+`git log --oneline` and pushes manually, per protocol.
 
 ## Blockers
 
