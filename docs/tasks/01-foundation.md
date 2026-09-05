@@ -109,3 +109,13 @@ configured yet.
 **Acceptance criteria:** GTM Preview mode confirms the container fires on page load with zero
 tags active (no premature/placeholder events sent).
 **Size:** S **Dependencies:** T1.1
+
+**Addendum (session 02, 2026-09-05):** While touching Railway env/deploy config for this
+task, also run `railway config migrate` to convert `railway.json` (added in T1.2, for the
+`deploy.startCommand` that runs `prisma migrate deploy && npm start`) to the newer
+`.railway/railway.ts` format — `railway status` now flags `railway.json`/`railway.toml` as
+deprecated Config as Code, in favour of Infrastructure as Code. See
+`memory/technical-debt.md` → "railway.json (Config as Code) is deprecated in favour of
+.railway/railway.ts." Existing `railway.json` keeps working until 2026-12-01 per Railway's
+own message, so this isn't urgent — but verify the migrated file still produces the same
+`deploy.startCommand` behaviour before considering it done.

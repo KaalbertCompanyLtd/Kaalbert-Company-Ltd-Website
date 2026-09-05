@@ -18,6 +18,27 @@ sequencing requirement:
 
 ---
 
+## railway.json (Config as Code) is deprecated in favour of .railway/railway.ts
+
+**Status:** Open
+**Date raised:** 2026-09-05
+**Reason:** `railway status` now prints: "Config as Code (railway.json / railway.toml) is
+deprecated. Prefer Infrastructure as Code (.railway/railway.ts)." T1.2 added `railway.json`
+(for the `deploy.startCommand` that runs `prisma migrate deploy && npm start`) before
+noticing this warning on a later `railway status` check.
+**Impact:** None yet — Railway's own message says existing `railway.json`/`railway.toml`
+files "keep working until 2026-12-01." No functional problem today.
+**Priority:** Low
+**Possible Fix/Fixes:** Run `railway config migrate` (per the CLI's own suggested command)
+to convert `railway.json` to `.railway/railway.ts` before the 2026-12-01 cutover, then
+verify the migrated file still produces the same `deploy.startCommand` behaviour.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T1.6 (Environment/secrets and GTM container stub) — see that task's
+addendum in `docs/tasks/01-foundation.md`, which already touches Railway env/deploy config
+for its own reason.
+
+---
+
 ## 4 high-severity npm audit vulnerabilities in Prisma CLI's dev-tooling tree
 
 **Status:** Open
