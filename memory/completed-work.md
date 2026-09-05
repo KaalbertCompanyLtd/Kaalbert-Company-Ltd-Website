@@ -16,6 +16,43 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T3.5 — `POST /api/diagnostic/submit` (session 20)
+**Summary:** Built the real endpoint per `business-health-check-diagnostic.md`'s Interfaces
+contract — `app/api/diagnostic/submit/route.ts` parses the bare-array request body, calls a
+new `lib/diagnostic-submit.ts`'s `submitDiagnosticResponses` (which calls T3.2's
+`scoreDiagnosticResponses` then creates the `enquiry_record` together with every
+`diagnostic_response` row in one write), and shapes the snake_case JSON response
+(`{score, dimension_scores, weakest_dimensions, indicative_cost_statement, enquiry_id}`).
+`DiagnosticValidationError` → 400, `DiagnosticConfigurationError` → clean 500 (already
+logged inside T3.2's own function). Hit a real, confirmed schema blocker along the way:
+`EnquiryRecord.name`/`email`/`message`/`contactConsent` were non-nullable (T2.6's own
+contact-form contract), but the diagnostic feature doc explicitly requires "contact details
+(nullable until step 5)" — migrated all four to nullable
+(`20260905231926_relax_enquiry_record_diagnostic_fields`), keeping `/contact`'s own
+required-field enforcement at the application layer (`lib/enquiries.ts`) instead, confirmed
+unchanged via a real smoke test of both its success and rejection paths after the migration.
+Verified for real against the running dev server: a full 15-question submission via curl
+(real seeded question ids) → real `201` + real `enquiry_id`; a second identical submission →
+independent second `enquiry_record` (no dedup, per the documented edge case); an incomplete
+set → `400`; a non-array body → `400`; and the full T3.4 client flow, driven through the real
+browser via Playwright MCP, now completes end to end and navigates to
+`/diagnostic/results?enquiry_id=<id>` (404 only because T3.6 doesn't exist yet). All test
+rows created during verification were deleted afterward.
+**Files Changed:** `app/api/diagnostic/submit/route.ts` (new), `lib/diagnostic-submit.ts`
+(new), `lib/diagnostic-submit.test.ts` (new, 2 tests), `prisma/schema.prisma`
+(`EnquiryRecord` fields relaxed + doc-comment corrected),
+`prisma/migrations/20260905231926_relax_enquiry_record_diagnostic_fields/` (new).
+**Related Feature:** `docs/features/business-health-check-diagnostic.md` (Interfaces, Edge
+cases), `docs/features/contact-and-enquiry.md` (the shared `EnquiryRecord` model this task's
+schema change also touches), `docs/tasks/03-diagnostic.md` (T3.5).
+**Notes:** Quality gates (`npm run lint`, `npm run format:check`, `npm run typecheck`,
+`npm run test`) all pass clean; `npx prisma generate` run after the migration. Full detail on
+the schema-relaxation decision and its verification is in `memory/decision-log.md`.
+
+---
+
+## 2026-09-05
+
 **Task:** T3.4 — Diagnostic flow — `/diagnostic` (session 19)
 **Summary:** Built the real `/diagnostic` multi-step client flow to `ui/mockups/c-diagnostic/
 diagnostic-flow.html`, reading T3.3's real seeded question set (5 dimensions, 15 questions)

@@ -338,8 +338,15 @@ model SiteSettings {
 /// docs/tasks/02-public-presentation.md T2.6's architecture constraints and
 /// memory/decision-log.md for the field-by-field scoping decision made at this task.
 ///
-/// Only the fields this task's own contract actually populates are required:
-/// name/email/phone/message/serviceLine/contactConsent/marketingConsent/createdAt.
+/// At T2.6, `name`/`email`/`message`/`contactConsent` were modelled as required — correct for
+/// that task's own contact-form contract, which always has them, but wrong once T3.5
+/// (`docs/tasks/03-diagnostic.md`) needed to create a diagnostic-originated row before any of
+/// them exist: `business-health-check-diagnostic.md`'s own Data requirements list says
+/// "contact details (nullable until step 5)" — the diagnostic's step 4 result screen must
+/// never require them (FR-2.3), and step 5's contact-consent ask (T3.7) is a later, separate
+/// event entirely. Relaxed to nullable at T3.5 to actually honor that rule; `lib/enquiries.ts`'s
+/// `createContactEnquiry` still enforces all four as required for a contact-form submission —
+/// at the application layer now, not the schema — so that path's own behavior is unchanged.
 /// `message` is a new field, not named in either feature doc's original "Data requirements"
 /// list — added here the same way T2.2 added `Offer.ctaLabel`/`tiers` beyond their feature
 /// doc's original field list, since the Input → Output contract requires a free-text form
@@ -372,12 +379,12 @@ model SiteSettings {
 /// diagnostic-specific fields above.
 model EnquiryRecord {
   id                  Int                  @id @default(autoincrement())
-  name                String
-  email               String
+  name                String?
+  email               String?
   phone               String?
-  message             String
+  message             String?
   serviceLine         String?              @map("service_line")
-  contactConsent      Boolean              @map("contact_consent")
+  contactConsent      Boolean?             @map("contact_consent")
   marketingConsent    Boolean              @default(false) @map("marketing_consent")
   /// Diagnostic-specific, null for every contact-form-originated row (see model doc-comment).
   scoreSummary        Json?                @map("score_summary")

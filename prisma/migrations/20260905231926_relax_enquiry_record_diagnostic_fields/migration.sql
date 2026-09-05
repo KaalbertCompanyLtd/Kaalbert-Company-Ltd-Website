@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "enquiry_record" ALTER COLUMN "name" DROP NOT NULL,
+ALTER COLUMN "email" DROP NOT NULL,
+ALTER COLUMN "message" DROP NOT NULL,
+ALTER COLUMN "contact_consent" DROP NOT NULL;

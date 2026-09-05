@@ -2,6 +2,46 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T3.5, session 20) — `EnquiryRecord.name`/`email`/`message`/`contactConsent` relaxed to nullable (migration); one-shot session id per diagnostic submission
+
+**Summary:** Building `POST /api/diagnostic/submit` hit a real, confirmed blocker: T2.6
+(`docs/tasks/02-public-presentation.md`) modelled `EnquiryRecord.name`/`email`/`message`/
+`contactConsent` as required (non-nullable) — correct for `/contact`'s own form, which always
+has them, but `business-health-check-diagnostic.md`'s own Data requirements list explicitly
+says "contact details (nullable until step 5)": a diagnostic submission (step 4) must create
+an `enquiry_record` before any of these exist at all — T3.7 (step 5, gated summary request)
+is a separate, later event. The schema and the feature doc's own stated business rule
+(FR-2.3: the result screen must never require contact details) were in direct conflict; no
+placeholder/fabricated value would resolve this correctly (an admin enquiry list later
+showing fake blank strings instead of real NULLs is worse, not better). Migrated
+(`20260905231926_relax_enquiry_record_diagnostic_fields`) all four columns to nullable.
+`lib/enquiries.ts`'s `createContactEnquiry` (T2.6) still enforces all four as required for a
+contact-form submission — at the application layer now, not the schema — confirmed
+unchanged via a real `/api/contact/submit` smoke test (both the success and the
+missing-consent-rejection paths) after the migration. `EnquiryRecord`'s own doc-comment in
+`prisma/schema.prisma` corrected to explain this.
+
+Also: `DiagnosticResponse.sessionId` (`NOT NULL`, no real visitor-session concept in this
+app's scope, ADR 0005/0007) is satisfied with one freshly generated `crypto.randomUUID()`
+per submission in `lib/diagnostic-submit.ts` — every row in a submission shares it, and each
+is linked directly to a real `enquiryId` at creation (not left null and connected later, per
+T3.4's own decision-log correction to `DiagnosticResponse`'s doc-comment). This is a
+synthetic-but-honest identifier (exactly what "session id" is meant to represent — one
+attempt), not fabricated content.
+
+Verified for real against the running dev server: a full 15-question submission via curl
+(using the real seeded question ids) returned a real `201` with the documented response
+shape and a real `enquiry_id`; submitting the same set again created a second, independent
+`enquiry_record` (no dedup, per the documented edge case); an incomplete set correctly
+returned `400` (not `500`); a non-array body correctly returned `400`; the full T3.4 client
+flow, driven through the real browser via Playwright MCP, now completes end to end and
+navigates to `/diagnostic/results?enquiry_id=<real id>` (404 only because T3.6 doesn't exist
+yet). All test rows created during verification were deleted afterward.
+**Related Documents:** `docs/tasks/03-diagnostic.md` (T3.5), `docs/features/business-health-
+check-diagnostic.md`, `docs/features/contact-and-enquiry.md`, `prisma/schema.prisma`,
+`prisma/migrations/20260905231926_relax_enquiry_record_diagnostic_fields/`,
+`lib/diagnostic-submit.ts`, `lib/enquiries.ts`, `app/api/diagnostic/submit/route.ts`.
+
 ## 2026-09-05 (T3.4, session 19) — `/diagnostic` client flow: no client-side scoring, `lib/diagnostic-flow.ts` split into a server-only and a client-safe file, mobile-safe option grid, `/diagnostic/results?enquiry_id=` as the T3.6 URL contract
 
 **Summary:** Built `app/diagnostic/page.tsx` + `components/diagnostic-flow.tsx` to
