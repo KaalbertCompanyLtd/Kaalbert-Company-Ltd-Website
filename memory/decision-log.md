@@ -2,6 +2,61 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T3.6, session 21) — `/diagnostic/results` reads T3.5's stored result via `searchParams`, never recomputes; FR-2.8's requirements-doc text used over the mockup's own paraphrase; the mockup's score-band labels not carried over
+
+**Summary:** Built `app/diagnostic/results/page.tsx` to `ui/mockups/c-diagnostic/diagnostic-
+results.html`, reading `?enquiry_id=` (T3.4's own chosen URL contract) via `searchParams` —
+not a `[id]` dynamic segment. A few decisions:
+
+1. **Never recompute a score.** Added `getDiagnosticResultByEnquiryId` to
+   `lib/diagnostic-submit.ts` — it reads `EnquiryRecord.scoreSummary` back as
+   `DiagnosticScoringResult` (the exact shape T3.5 wrote it in) and returns it as-is. This
+   page never calls `scoreDiagnosticResponses` itself; recomputing would duplicate business
+   logic outside `lib/` and could disagree with what a partner sees for the same enquiry
+   later (Milestone 8's enquiry management screen reads the same stored value).
+2. **The disclaimer is FR-2.8's exact requirements-doc wording, not the mockup's own
+   paraphrase.** The mockup's `.disclaimer-box` text ("This is an indicative self-assessment
+   based on information supplied by the user. It is not a professional opinion, and should
+   not be relied upon by any third party.") differs from `docs/requirements.md`'s FR-2.8
+   ("an indicative self-assessment based on user-supplied information, not a professional
+   opinion, not to be relied upon by any third party.") — this task's own acceptance
+   criterion says "matches FR-2.8 verbatim," so FR-2.8's sentence is what's rendered,
+   character for character (capitalized as a standalone sentence: "An indicative...").
+3. **The mockup's score-band labels/statements ("Strong Foundation," "Developing, With Real
+   Gaps," etc.) are not built** — that file's own comment already flags them as illustrative
+   placeholder content reserved to firm authorship, same as the question set. The real,
+   already-computed `scoreSummary.indicativeCostStatement` (T3.2's own output) is shown in
+   that screen position instead — real, threshold-driven, never fabricated.
+4. **This task does not build the "Get the full written summary by email" panel** — the
+   mockup's `.summary-panel` (name/email/phone/consent fields) is T3.7's own scope entirely
+   (T3.7's own task line: "Build: the ... offer on the results screen, and POST .../request-
+   summary" — the offer itself, not only its endpoint). Building any part of it here would
+   violate this task's own "zero contact-detail fields on this screen" acceptance criterion.
+5. **`diagnostic_completed` fires from a small new client component**
+   (`components/diagnostic-completed-event.tsx`, a `useEffect`-once wrapper) — the first
+   "fire once on page load" `dataLayer` pattern in this codebase (every existing usage before
+   this fired on a user interaction, e.g. form submit). T3.4 deliberately did not fire this
+   event on submit; the feature doc's own flow step 5 fires it specifically on reaching this
+   screen.
+6. **Missing/invalid/non-diagnostic `enquiry_id` is a real `notFound()`**, matching
+   `core-offer-pages.md`'s established precedent — never a silently-generated thin page.
+   `getDiagnosticResultByEnquiryId` returns `null` for a contact-form-originated enquiry too
+   (no `scoreSummary` stored), correctly 404ing rather than rendering a broken result.
+7. **`robots: {index: false, follow: false}`** — a personalized, non-shareable per-visitor
+   result page should never be indexed.
+
+Verified for real against the running dev server: submitted a full-marks and a zero-marks
+response set via the real `/api/diagnostic/submit` endpoint (T3.5), then loaded
+`/diagnostic/results?enquiry_id=<id>` for each via Playwright MCP — both rendered correctly
+and visibly differently (100%/no-breach vs. 0%/"High priority", correct weakest-dimension
+highlighting in each), confirmed `diagnostic_completed` fired with the real `enquiry_id` via
+`window.dataLayer`, confirmed a missing/invalid/absent `enquiry_id` all 404 correctly, and
+confirmed no horizontal overflow at 390px/768px/1280px. All test rows deleted afterward.
+**Related Documents:** `docs/tasks/03-diagnostic.md` (T3.6), `docs/features/business-health-
+check-diagnostic.md`, `docs/requirements.md` (FR-2.8), `ui/mockups/c-diagnostic/diagnostic-
+results.html`, `lib/diagnostic-submit.ts`, `app/diagnostic/results/page.tsx`,
+`components/diagnostic-completed-event.tsx`.
+
 ## 2026-09-05 (T3.5, session 20) — `EnquiryRecord.name`/`email`/`message`/`contactConsent` relaxed to nullable (migration); one-shot session id per diagnostic submission
 
 **Summary:** Building `POST /api/diagnostic/submit` hit a real, confirmed blocker: T2.6

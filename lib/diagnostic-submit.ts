@@ -56,3 +56,25 @@ export async function submitDiagnosticResponses(
 
   return { ...result, enquiryId: enquiry.id };
 }
+
+/**
+ * `/diagnostic/results` (T3.6) — resolves an `enquiry_id` to its already-computed,
+ * already-stored result. Reads `EnquiryRecord.scoreSummary` back as `DiagnosticScoringResult`
+ * (the exact shape `submitDiagnosticResponses` above wrote it in) rather than recomputing
+ * anything — this screen's whole job is displaying what was already scored, never
+ * re-deriving a score, both because that would duplicate business logic outside `lib/` and
+ * because it could disagree with what a partner later sees for the same enquiry in
+ * Milestone 8's enquiry management screen. Returns `null` for a missing id or a row with no
+ * stored `scoreSummary` (e.g. a contact-form-originated enquiry) — the caller (`app/
+ * diagnostic/results/page.tsx`) turns that into a real `notFound()`, never a silently
+ * rendered thin page.
+ */
+export async function getDiagnosticResultByEnquiryId(
+  enquiryId: number,
+): Promise<DiagnosticScoringResult | null> {
+  const enquiry = await prisma.enquiryRecord.findUnique({ where: { id: enquiryId } });
+  if (!enquiry?.scoreSummary) {
+    return null;
+  }
+  return enquiry.scoreSummary as unknown as DiagnosticScoringResult;
+}

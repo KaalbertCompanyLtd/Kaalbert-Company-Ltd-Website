@@ -16,6 +16,40 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T3.6 — `/diagnostic/results` (session 21)
+**Summary:** Built `app/diagnostic/results/page.tsx` to `ui/mockups/c-diagnostic/diagnostic-
+results.html`, reading `?enquiry_id=` via `searchParams` (T3.4's own chosen URL contract) and
+displaying T3.5's already-computed, already-stored result (score, per-dimension breakdown
+with weakest dimensions highlighted, the real `indicativeCostStatement`, FR-2.8's exact
+disclaimer text) — never recomputing a score. Added `getDiagnosticResultByEnquiryId` to
+`lib/diagnostic-submit.ts` for this. Deliberately omitted the mockup's "Get the full written
+summary by email" panel (T3.7's own scope) and its fabricated score-band labels (flagged
+placeholder content in the mockup's own comment, reserved to firm authorship) — used the
+real `indicativeCostStatement` in that position instead. Added
+`components/diagnostic-completed-event.tsx` (a `useEffect`-once wrapper) to fire
+`diagnostic_completed` on page load — the first "fire on load" `dataLayer` pattern in this
+codebase (every prior usage fires on a user interaction). Missing/invalid/non-diagnostic
+`enquiry_id` → real `notFound()`. `robots: {index:false, follow:false}` (personalized,
+non-shareable content). Verified for real: submitted a full-marks and a zero-marks response
+set via the real `/api/diagnostic/submit` endpoint, loaded both results pages via Playwright
+MCP — rendered correctly and visibly differently; confirmed `diagnostic_completed` fired with
+the real `enquiry_id` via `window.dataLayer`; confirmed a missing/invalid/absent `enquiry_id`
+all 404; confirmed no horizontal overflow at 390px/768px/1280px. Test rows deleted afterward.
+**Files Changed:** `app/diagnostic/results/page.tsx` (new),
+`components/diagnostic-completed-event.tsx` (new), `lib/diagnostic-submit.ts`
+(`getDiagnosticResultByEnquiryId` added).
+**Related Feature:** `docs/features/business-health-check-diagnostic.md` ("User flow" step 4,
+Business rules), `docs/requirements.md` (FR-2.8, this screen's exact disclaimer source),
+`docs/tasks/03-diagnostic.md` (T3.6).
+**Notes:** Quality gates (`npm run lint`, `npm run format:check`, `npm run typecheck`,
+`npm run test`) all pass clean; no schema change, so no `prisma generate` needed. Full
+reasoning for the FR-2.8-vs-mockup wording choice and the band-label omission is in
+`memory/decision-log.md`.
+
+---
+
+## 2026-09-05
+
 **Task:** T3.5 — `POST /api/diagnostic/submit` (session 20)
 **Summary:** Built the real endpoint per `business-health-check-diagnostic.md`'s Interfaces
 contract — `app/api/diagnostic/submit/route.ts` parses the bare-array request body, calls a
