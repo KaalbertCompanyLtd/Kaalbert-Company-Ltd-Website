@@ -147,10 +147,13 @@ export default async function LegalPage({ params }: LegalPageParams) {
   return (
     <>
       <OrganizationJsonLd />
-      <SiteHeader offerNavLinks={offerNavLinks} />
+      <SiteHeader hasHero={false} offerNavLinks={offerNavLinks} />
       <main className="pt-19">
         {/* No hero — ui/mockups/e-legal/*.html's plain <body>, per this task's own architecture
-            constraint. */}
+            constraint. `hasHero={false}` above matches: without it, SiteHeader defaults to
+            `hasHero: true` and renders transparent-until-scrolled against this page's plain
+            background — a real bug found and fixed at T3.4 (session 19), see
+            memory/known-bugs.md. */}
         <div className="border-border border-b px-4 pt-12 pb-8 sm:px-6">
           <div className="mx-auto max-w-[720px]">
             <span className="text-kicker text-accent mb-3 block font-semibold tracking-[0.08em] uppercase">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getActiveDiagnosticQuestionCount } from "@/lib/diagnostic-flow";
 import { getFeaturedArticles, getHomePageContent, getOfferCards } from "@/lib/home";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
@@ -88,10 +89,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [content, offers, offerNavLinks] = await Promise.all([
+  const [content, offers, offerNavLinks, diagnosticQuestionCount] = await Promise.all([
     getHomePageContent(),
     getOfferCards(),
     getOfferNavLinks(),
+    getActiveDiagnosticQuestionCount(),
   ]);
   const featuredArticles = await getFeaturedArticles(content.featuredArticleIds);
 
@@ -293,7 +295,7 @@ export default async function HomePage() {
               {content.primaryCtaLabel}
             </Link>
             <div className="text-body text-primary-foreground/80 mt-7 flex flex-wrap justify-center gap-8">
-              <span>15–20 questions</span>
+              <span>{diagnosticQuestionCount} questions</span>
               <span>Indication, not an assessment</span>
               <span>Your responses stay confidential</span>
             </div>

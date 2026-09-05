@@ -2,6 +2,64 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05 (T3.4, session 19) — `/diagnostic` client flow: no client-side scoring, `lib/diagnostic-flow.ts` split into a server-only and a client-safe file, mobile-safe option grid, `/diagnostic/results?enquiry_id=` as the T3.6 URL contract
+
+**Summary:** Built `app/diagnostic/page.tsx` + `components/diagnostic-flow.tsx` to
+`ui/mockups/c-diagnostic/diagnostic-flow.html`, reading T3.3's real seeded question set via a
+new `lib/diagnostic-flow.ts`. Several decisions:
+
+1. **No client-side scoring.** The mockup's own `scoreAndFinish()` computes a preview score
+   in the browser and writes it to `sessionStorage` — that's a UI prototype shortcut, not
+   this project's real scoring path. This flow only collects answers in client state and
+   POSTs the complete set to `POST /api/diagnostic/submit` on the final step; the real score
+   is computed server-side by `lib/diagnostic-scoring.ts` (T3.2, called from T3.5's route,
+   not yet built). No `DiagnosticResponse` rows are written per-step either — the whole set
+   goes in one request, which `prisma/schema.prisma`'s `DiagnosticResponse` doc-comment (from
+   T3.1) had assumed would happen incrementally; corrected that comment to describe the
+   simpler, actually-implemented design (T3.5 creates every response row together with the
+   `EnquiryRecord` in one write).
+2. **Found and fixed a real Turbopack bug**: a "use client" component importing a value
+   (not just a type) from a `lib/` file that also imports `@/lib/prisma` silently breaks the
+   dev compile with a misleading `ENOENT: ...build-manifest.json` error, never naming the
+   real cause. Fixed by splitting `lib/diagnostic-flow.ts` (server-only `getActiveDiagnosticFlow`)
+   from a new `lib/diagnostic-flow-options.ts` (client-safe types/constants, zero Prisma
+   import). Full bisection and reasoning in `memory/known-bugs.md`; the rule itself is now in
+   CLAUDE.md's Code Conventions so it isn't rediscovered the same way on a later task.
+3. **`choice`-type questions' option label→value mapping lives in
+   `lib/diagnostic-flow-options.ts`**, keyed by `${dimensionId}-${order}` (the same natural
+   key `prisma/seed.ts` upserts on) — carried over verbatim from that seed script's own
+   per-question comments (the only place this mapping is documented today; see
+   `memory/technical-debt.md`'s `diagnostic_question` `is_placeholder` gap for the same
+   underlying schema limitation this shares).
+4. **Mobile-safe option layout**: the mockup's own `.diag-options.row`/`.diag-scale` flex
+   layouts overflow horizontally at narrow widths (flex items don't shrink below their
+   content's intrinsic width by default) — switched to CSS Grid (`grid-cols-5` for scale,
+   `grid-cols-2` for boolean), which always divides the container's actual width evenly
+   regardless of content, plus responsive padding (`p-6 sm:p-10` on the question card).
+   Verified no horizontal scroll at 390px/768px/1280px via Playwright
+   (`document.documentElement.scrollWidth === clientWidth` at all three).
+5. **Left-aligned text for `choice` options, centered for `scale`/`boolean`** — matches the
+   mockup's own CSS exactly (`.diag-options .opt-label` has no text-align override, i.e.
+   left by default; `.diag-options.row`/`.diag-scale .opt-label` both set
+   `text-align: center`). Radio indicator sits beside the label text for all three response
+   types (a row layout), not stacked above it — an earlier pass stacked it for
+   `scale`/`boolean` while chasing the mobile-overflow fix above, which visibly enlarged
+   each option's height versus the mockup; reverted to a row layout once the real overflow
+   cause (flex vs. grid) was identified, since stacking was never the actual fix.
+6. **`/diagnostic/results?enquiry_id=<id>` is this flow's chosen URL contract for T3.6** —
+   neither the feature doc nor any task names an exact URL shape for how the results screen
+   receives its `enquiry_id`; a query param is the simplest, most conservative choice, and
+   T3.6 should read it via `searchParams` rather than inventing a different shape.
+7. **No `page` row for `/diagnostic`** — `docs/features/business-health-check-
+diagnostic.md` never names a hero/marketing-copy entity for this route (unlike
+   capabilities/our-method), and its on-screen copy is fixed template text tightly coupled
+   to the flow's own mechanics; `generateMetadata` uses plain hardcoded strings instead,
+   same treatment as `HomePageContent`'s non-editable template chrome (T2.1).
+   **Related Documents:** `docs/tasks/03-diagnostic.md` (T3.4), `docs/features/business-health-
+check-diagnostic.md`, `ui/mockups/c-diagnostic/diagnostic-flow.html`, `CLAUDE.md`,
+   `memory/known-bugs.md`, `prisma/schema.prisma`, `lib/diagnostic-flow.ts`,
+   `lib/diagnostic-flow-options.ts`, `components/diagnostic-flow.tsx`.
+
 ## 2026-09-05 (T3.3, session 18) — Fixed-id upsert convention for `DiagnosticDimension`/`DiagnosticThreshold`; real default weights/thresholds seeded; question wording carried verbatim from the mockup
 
 **Summary:** Seeded `DiagnosticDimension`/`DiagnosticQuestion`/`DiagnosticThreshold` in

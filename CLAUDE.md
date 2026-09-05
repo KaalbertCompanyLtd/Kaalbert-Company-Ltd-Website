@@ -151,6 +151,18 @@ memory/                 # persistent knowledge — see Knowledge Management Resp
   `memory/decision-log.md`). Apply this to every page/route built against seeded content
   (offers, capabilities, our-method, about, contact, insights, etc.) as it's built, not
   discovered again at each task's own deploy.
+- **Never let a `"use client"` component import a value (not just a type) from a `lib/`
+  file that also imports `@/lib/prisma`.** Doing so silently breaks Turbopack's dev
+  compile — the affected route 500s with a misleading `ENOENT: ...build-manifest.json`
+  error on its first compile attempt (never a real bundling error naming the actual cause),
+  and keeps failing on every later request until the whole dev server restarts (hit for
+  real at T3.4 — see `memory/known-bugs.md`). A `type`-only import from the same file is
+  safe (erased at compile time); any real value import is not, because it pulls the whole
+  module — including its `@/lib/prisma` chain, which builds a real `PrismaClient` at module
+  scope — into the client bundle. When a client component needs option/lookup data that
+  lives near a DB-querying `lib/` module, put that client-safe data in its own file
+  (`lib/<name>-options.ts` or similar) with zero import of `@/lib/prisma`, and have the
+  DB-querying file import/re-export shared types from there instead of the other way round.
 
 ## Quality Gates (must pass before every commit)
 

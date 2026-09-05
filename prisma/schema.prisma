@@ -476,19 +476,23 @@ model DiagnosticThreshold {
 /// answer to one question within a single diagnostic session. `sessionId` is a plain string
 /// (not a FK to any session/auth table — this diagnostic has no visitor account, per ADR
 /// 0005/0007's scope) correlating every response in one attempt before submission creates the
-/// owning `EnquiryRecord`; `enquiryId` is nullable specifically for that reason — a response
-/// is written as the visitor answers each step (T3.4's client flow), before `POST /api/
-/// diagnostic/submit` (T3.5) has created the `EnquiryRecord` those responses ultimately
-/// attach to. `answerValue` is a plain string (not `Json`/numeric) holding a number already
-/// normalized to 0–1, uniformly across every `responseType` — decided at T3.2
-/// (`lib/diagnostic-scoring.ts`), mirroring exactly how the accepted mockup
-/// (`ui/mockups/c-diagnostic/diagnostic-flow.html`) resolves every input's value client-side
-/// before submission: a boolean's Yes/No is `1`/`0`, a scale's 1–5 rating is `v / 5`, and each
-/// choice option carries its own pre-authored 0–1 value (e.g. "3–12 months" → `0.66`) — there
-/// is no column here to store a choice option's label-to-value mapping, so that mapping is
-/// authored once, client-side (T3.4), the same way the mockup authors it. `responseType`
-/// therefore only drives which input widget T3.4 renders, not how T3.2 interprets the
-/// resulting value. The feature doc's own field list is
+/// owning `EnquiryRecord`. `enquiryId` is nullable rather than required — T3.4's actual client
+/// flow (`components/diagnostic-flow.tsx`) holds every answer in client-side state only and
+/// POSTs the complete set in a single `POST /api/diagnostic/submit` request (T3.5), which
+/// creates every `DiagnosticResponse` row together with its owning `EnquiryRecord` in one
+/// write, so `enquiryId` is in practice always populated at creation time; nullability here is
+/// schema robustness (this column doesn't itself enforce "always populated"), not evidence of
+/// an incremental per-step write path that was never actually built. `answerValue` is a plain
+/// string (not `Json`/numeric) holding a number already normalized to 0–1, uniformly across
+/// every `responseType` — decided at T3.2 (`lib/diagnostic-scoring.ts`), mirroring exactly how
+/// the accepted mockup (`ui/mockups/c-diagnostic/diagnostic-flow.html`) resolves every input's
+/// value client-side before submission: a boolean's Yes/No is `1`/`0`, a scale's 1–5 rating is
+/// `v / 5`, and each choice option carries its own pre-authored 0–1 value (e.g. "3–12 months"
+/// → `0.66`) — there is no column here to store a choice option's label-to-value mapping, so
+/// that mapping lives in `lib/diagnostic-flow-options.ts` (T3.4), carried over verbatim from
+/// `prisma/seed.ts`'s own per-question comments. `responseType` therefore only drives which
+/// input widget T3.4 renders, not how T3.2 interprets the resulting value. The feature doc's
+/// own field list is
 /// descriptive English ("session id", "answer value"), not literal snake_case identifiers
 /// (contrast `home-page.md`'s literal `hero_statement` list) — same treatment as this file's
 /// `active flag` → `active` and `dimension or overall` → nullable `dimensionId` above. Its

@@ -16,6 +16,56 @@ Protocol):
 
 ## 2026-09-05
 
+**Task:** T3.4 — Diagnostic flow — `/diagnostic` (session 19)
+**Summary:** Built the real `/diagnostic` multi-step client flow to `ui/mockups/c-diagnostic/
+diagnostic-flow.html`, reading T3.3's real seeded question set (5 dimensions, 15 questions)
+live from the database. `app/diagnostic/page.tsx` (Server Component, `force-dynamic`) fetches
+the active question set via a new `lib/diagnostic-flow.ts` and renders
+`components/diagnostic-flow.tsx` ("use client"), which steps through one question at a time
+with no full page reload, gates Back/Next on the current question being answered, fires
+`diagnostic_started` via `lib/data-layer.ts` on the visitor's first interaction, and POSTs the
+complete `{question_id, answer}[]` set to `POST /api/diagnostic/submit` on the final step
+(the route itself is T3.5, not yet built, so this correctly hits a 404 today — the flow
+handles that as a graceful, retryable error state, answers preserved, never a crash). No
+scoring happens client-side — that's server-side only, per `lib/diagnostic-scoring.ts` (T3.2).
+Along the way: found and fixed a real Turbopack dev-compile bug (a client component importing
+a value from a `lib/` file that also imports `@/lib/prisma` broke the bundle silently, masked
+behind an unrelated manifest error) by splitting the client-safe option data into its own file,
+`lib/diagnostic-flow-options.ts`; and fixed a mobile-responsive bug of my own making (the
+mockup's flex-row option layout overflows horizontally at narrow widths) by switching to a
+CSS Grid layout, verified with no horizontal scroll at 390px/768px/1280px via Playwright MCP
+against the real running dev server. Full 15-question walkthrough (choice/scale/boolean
+response types, Back/Next gating, answer preservation across navigation) exercised for real,
+twice, before and after the responsive fix. Also fixed, at the user's prompting, two
+pre-existing bugs unrelated to this task's own build but caught while working in this area:
+(1) `app/legal/[slug]/page.tsx` called `SiteHeader` with no `hasHero` prop, silently
+defaulting it `true` and rendering the nav transparent-until-scrolled against legal pages'
+plain (no-hero) background — right next to a comment that already stated the correct intent,
+just never implemented; and (2) the home page hard-coded a stale `"15–20 questions"` fact
+instead of reading the real seeded question count — added `getActiveDiagnosticQuestionCount()`
+to `lib/diagnostic-flow.ts` and wired it in, confirmed no other page hard-codes a question
+count anywhere else on the site.
+**Files Changed:** `app/diagnostic/page.tsx` (new), `components/diagnostic-flow.tsx` (new),
+`lib/diagnostic-flow.ts` (new, server-only DB query + question-count helper),
+`lib/diagnostic-flow-options.ts` (new, client-safe types/option data), `prisma/schema.prisma`
+(`DiagnosticResponse` doc-comment corrected — no per-step write path was actually built,
+comment only, no migration), `CLAUDE.md` (new Code Conventions rule capturing the
+Turbopack/client-bundle gotcha), `app/legal/[slug]/page.tsx` (`hasHero={false}` fix),
+`app/(public)/page.tsx` (live diagnostic question count instead of a hard-coded range).
+**Related Feature:** `docs/features/business-health-check-diagnostic.md` ("User flow" steps
+1–3, "Edge cases" — abandonment creates no `enquiry_record`), `docs/tasks/03-diagnostic.md`
+(T3.4), ADR 0005/0006/0010.
+**Notes:** Full success-path verification (a real 200 from `/api/diagnostic/submit` and
+navigation to `/diagnostic/results?enquiry_id=...`) is deferred to T3.5/T3.6's existence —
+today's 404 is expected and correctly handled, not a bug. Quality gates (`npm run lint`,
+`npm run format:check`, `npm run typecheck`, `npm run test`) all pass clean; no schema field
+change, so no `prisma generate` needed. See `memory/known-bugs.md` and `memory/decision-log.md`
+for full detail on all bugs found/fixed this session.
+
+---
+
+## 2026-09-05
+
 **Task:** T3.3 — Diagnostic question-set seed (session 18)
 **Summary:** Added `seedDiagnosticDimensions`/`seedDiagnosticQuestions`/
 `seedDiagnosticThresholds` to `prisma/seed.ts`, called from `main()`. Seeded 5 dimensions
