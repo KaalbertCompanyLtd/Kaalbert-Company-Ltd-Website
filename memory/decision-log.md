@@ -19,10 +19,16 @@ mechanism). Several decisions:
    DNS-based domain verification would have blocked sending entirely. Verified this claim via
    live research (Brevo's own developer docs and community forum) before building against it,
    matching this project's established research convention for infrastructure choices.
-   Real credentials (`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`) don't exist yet
-   as of this session — added to `.env.example`/`CLAUDE.local.md`, and the user was asked to
-   provision them; the send path is fully built and tested against a missing-config state
-   (see point 3) but not yet against a real, delivered email.
+   Real credentials (`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`) didn't exist at
+   first — added to `.env.example`/`CLAUDE.local.md`, and the user was asked to provision them.
+   **Update, same session (2026-09-06):** the user provisioned real credentials in
+   `.env.local`; delivery confirmed for real — a direct `sendTransactionalEmail` call
+   succeeded with no exception, and the full integrated `/api/diagnostic/submit` →
+   `/api/diagnostic/request-summary` route also completed with no error logged (unlike the
+   earlier missing-credentials test, which correctly logged and swallowed the failure).
+   Credential values were checked only for presence/length (via `process.env.KEY.length`,
+   never the value itself) and never printed to any command output, per the user's explicit
+   instruction not to let them leak into the conversation. All test data deleted afterward.
 2. **A second request-summary call for the same `enquiry_id` updates the row in place and
    re-sends the email — it is never rejected as a duplicate.** This task's own acceptance
    criteria don't call for rejecting a resend (e.g. the visitor corrects a typo'd email

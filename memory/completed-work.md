@@ -51,12 +51,17 @@ route.ts` (new), `components/diagnostic-summary-request-form.tsx` (new),
 FR-6.2, "User flow" steps 5–6), `docs/architecture.md` (the Meta CAPI fire-and-forget
 precedent this follows), `docs/tasks/03-diagnostic.md` (T3.7 — the diagnostic epic's last
 task).
-**Notes:** Real end-to-end email delivery (an actual message landing in an inbox) is still
-unverified — awaiting real `BREVO_API_KEY`/`BREVO_SENDER_EMAIL` credentials from the user;
-everything else in this task's own acceptance criteria is verified for real. Quality gates
-(`npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test`) all pass clean.
-This closes Milestone 3 (the Business Health Check Diagnostic epic) in full. Full reasoning
-in `memory/decision-log.md`.
+**Notes:** Real end-to-end email delivery confirmed 2026-09-06, same session, once the user
+provisioned real Brevo credentials in `.env.local`: a direct `sendTransactionalEmail` call
+succeeded with no exception, and the full integrated route
+(`/api/diagnostic/submit` → `/api/diagnostic/request-summary`) also completed with no error
+logged (vs. the earlier missing-credentials test, which correctly logged and swallowed the
+failure) — this task's acceptance criteria are now verified for real end to end. Credential
+values were never printed to any command output or file content shown in the session, per
+the user's explicit request; only presence/length were checked. Test data deleted afterward.
+Quality gates (`npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test`)
+all pass clean. This closes Milestone 3 (the Business Health Check Diagnostic epic) in full,
+with no remaining open verification items. Full reasoning in `memory/decision-log.md`.
 
 ---
 

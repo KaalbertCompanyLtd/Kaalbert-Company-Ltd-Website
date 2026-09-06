@@ -59,18 +59,17 @@ through T3.7 are all built and verified end to end for real.
 
 ## Current State
 
-Milestone 3 is complete. Real end-to-end email delivery (an actual message landing in an
-inbox) is the one piece still unverified — awaiting real Brevo credentials from the user.
-Everything else in T3.7's acceptance criteria is verified for real against the running dev
-server.
+Milestone 3 is complete. Real end-to-end email delivery was confirmed later the same
+session, once the user provisioned real Brevo credentials in `.env.local`: a direct
+`sendTransactionalEmail` call succeeded with no exception, and the full integrated
+`/api/diagnostic/submit` → `/api/diagnostic/request-summary` route also completed with no
+error logged. Every acceptance criterion in T3.7 (and the epic as a whole) is now verified
+for real — no open verification items remain.
 
 ## Blockers
 
-- **Real Brevo credentials not yet provisioned.** `BREVO_API_KEY`/`BREVO_SENDER_EMAIL` are
-  documented in `.env.example`/`CLAUDE.local.md` but not yet real values — the user was asked
-  to create a Brevo account, verify a sender email, and provide these. Once they exist, a
-  real send should be tested against the running app to confirm actual delivery (this
-  session only verified the code path's behavior when credentials are absent).
+None. (The real-credentials gap noted when this file was first written has since been
+resolved the same session — see `memory/decision-log.md`'s update to the T3.7 entry.)
 
 ## Next Task
 
