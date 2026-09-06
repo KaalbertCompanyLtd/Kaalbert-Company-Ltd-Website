@@ -303,9 +303,65 @@ been met; it is a read of data the site is already collecting.
 
 ---
 
+### P2-8 Subscriber Outreach via Brevo Campaigns
+
+**Not from Document 13.03** — every other item in this Phase 2 list traces to Document
+13.03, Section 14. This one doesn't: it surfaced during Phase 1 build itself, at T4.5
+(Insights subscription capture), once a real `subscriber` table existed with real people's
+consent in it and no plan anywhere — not in Document 13.03, not in any feature doc — for
+actually reaching them again. Kept in this same gated, evidence-triggered list rather than
+the ungated "Bonus additions" section below, because unlike the Performance Dashboards
+bonus, this one genuinely shouldn't be built before there's a real list worth mailing.
+
+**Trigger:** The Insights subscriber list reaches a size where composing and sending a
+campaign by hand in Brevo's own dashboard is worth a partner's time. Until then, the
+firm's two-articles-a-month cadence (Document 13.03, Section 7) is distributed through the
+channels already in Phase 1 scope — the site itself, LinkedIn, and WhatsApp — and a
+`subscriber` row is simply held, opted in, for the day this trigger is met.
+
+**What it replaces:** Nothing currently live. Today, a `subscriber` row (T4.5) is captured,
+stored, and sent exactly one email — its own subscription confirmation — and never contacted
+again. This capability is what closes that gap; there is no existing method it displaces.
+
+**What it includes:**
+
+- The site's own `subscriber` table stays the sole system of record for consent — a
+  subscriber opted in (or out) through the site's own dedicated, unticked capture form and
+  one-click unsubscribe link (`insights-engine.md`'s FR-6.2 separation principle), never
+  through Brevo's own signup mechanism.
+- A one-way sync (site → Brevo) on every subscribe, re-confirmation, and unsubscribe, pushing
+  the subscriber into a dedicated Brevo contact list via Brevo's own Contacts API — the same
+  Brevo account already integrated for transactional email (T3.7), not a second provider
+  relationship.
+- One inbound webhook from Brevo, catching an unsubscribe, bounce, or spam complaint that
+  happens on Brevo's own side (a real possibility — Brevo's own campaign emails carry
+  Brevo's own required unsubscribe link too) and reflecting it back into the site's own
+  `subscriber.unsubscribed_at`, so the two systems can never silently diverge either way.
+- The actual campaign — composing the email, deciding when to send it, and reading its own
+  open/click/unsubscribe performance — happens entirely inside Brevo's own dashboard, by a
+  partner, never rebuilt inside kaalbert.com's own admin (ADR 0012). Reproducing a mature
+  campaign editor, sender-reputation management, and compliance-required unsubscribe
+  handling inside a hand-built admin is a large, ongoing undertaking for something this firm
+  would use at most twice a month.
+- The existing admin Subscribers list (T7.9, `content-management-admin.md`) gains a small
+  "last synced to Brevo" indicator per row — a status view confirming the list is current
+  before a partner composes a send in Brevo, not a compose/send interface of its own (the
+  same pattern CRM Integration's `GET /admin/crm-sync-status` already establishes).
+- No new measurement event: a Brevo campaign send/open/click/unsubscribe never touches a
+  kaalbert.com page, so there is no `dataLayer` moment for GTM to observe. Brevo's own
+  campaign statistics are the record of that activity, not GA4.
+
+**What Phase 1 must keep open for this:** Nothing further. T4.5's `subscriber` model
+(`email`, `consent`, `unsubscribe_token`, `subscribed_at`, `unsubscribed_at`) already carries
+every field this sync needs — this capability is a pure additive integration layer once its
+trigger is met, not a reason to change anything already shipped.
+
+---
+
 Any Phase 2 item beyond the Business Health Check integration requires a fresh decision and
-fresh funding to schedule, per Document 13.03, Section 14 — but none of them requires fresh
-planning. That work is done above.
+fresh funding to schedule, per Document 13.03, Section 14 (P2-1 through P2-7) or, for P2-8
+specifically, the same standing rule applied by this project's own convention rather than
+that document — but none of them requires fresh planning. That work is done above.
 
 ## Bonus additions beyond Document 13.03
 

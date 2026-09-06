@@ -136,3 +136,12 @@ confidentiality/security review complete — Document 13.03's "highest-risk item
 
 **Trigger:** Evidence the free diagnostic converts — "evaluated first" among all Phase 2
 capabilities (Document 13.03). **Epic:** `tasks/16-paid-diagnostic-suite.md`
+
+### Milestone 17: Subscriber Outreach via Brevo Campaigns — P2-8
+
+**Goal:** Give the firm an actual way to reach the people who subscribe to Insights (T4.5)
+— not from Document 13.03, surfaced during Phase 1 build once real subscriber consent
+existed with no distribution mechanism planned; see `scope.md`'s P2-8 for the full account.
+**Trigger:** The subscriber list reaches a size where composing and sending a campaign by
+hand in Brevo's own dashboard is worth a partner's time. **Epic:**
+`tasks/17-subscriber-outreach.md`

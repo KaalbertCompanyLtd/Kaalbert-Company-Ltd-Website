@@ -71,7 +71,10 @@ Section 7).
   Operations group (`content-management-admin.md`), inferred from the same `AdminDataTable`
   pattern as the Enquiries list — a real, distinct list of real people's data, not folded
   into Enquiries, since a subscriber and an enquiry are different relationships with the
-  firm.
+  firm. This entity captures and stores consent only — Phase 1 never actually emails this
+  list beyond the one-time subscription confirmation (T4.5). Actually reaching subscribers
+  is `docs/features/subscriber-outreach.md` (P2-8), a gated Phase 2 capability, not this
+  task's or this milestone's scope.
 
 ## Interfaces
 

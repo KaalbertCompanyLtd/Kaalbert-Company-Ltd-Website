@@ -310,3 +310,22 @@ just the business-and-financial preview.
 - **Then** they answer the deeper question set across all four instruments, receive a report
   covering all four scored dimensions, and a follow-up call with a partner is offered as
   part of the product
+
+---
+
+### 23. Actually reach the people who signed up for Insights
+
+_Gated on: FR-16, the subscriber list reaching a size worth a partner's hand-composed send._
+
+As a partner who has just published a new Insight, I want to send it to everyone who
+subscribed, without re-keying the list anywhere or building a bulk-email tool myself, so
+that a subscriber actually hears from the firm again after the day they signed up, not just
+once.
+
+- **Given** a visitor has subscribed (or unsubscribed) through the site's own Insights
+  capture form or one-click link
+- **When** that consent state changes
+- **Then** it is reflected in a Brevo contact list automatically, so a partner composing a
+  campaign in Brevo's own dashboard is always working from the site's current, real list —
+  never a stale export, and never someone who unsubscribed through the site still receiving
+  a send

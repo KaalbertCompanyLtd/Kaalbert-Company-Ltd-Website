@@ -227,3 +227,8 @@ removal action → `unsubscribed_at` set (never a hard delete, consistent with
 removal here has the identical effect as a visitor's own one-click unsubscribe link (same
 underlying update, not a second code path).
 **Size:** S **Dependencies:** T6.3, T4.5
+
+**Addendum (session 28, 2026-09-06):** This screen gains a per-row "last synced to Brevo"
+status column at Milestone 17 (`docs/tasks/17-subscriber-outreach.md`, T17.3) — Phase 2,
+gated, not built now. Nothing about this task's own build needs to anticipate that column
+structurally; it's a straightforward later addition to an existing table.

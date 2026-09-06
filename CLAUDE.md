@@ -206,9 +206,10 @@ This is a **web app** — the configured verification tool is **Playwright MCP**
 - Do not store a fee as a single amount or as free text — always the structured min/max +
   currency + scope-cap shape.
 - Do not build a Phase 2 (gated) capability — Booking, Case Studies, Client Portal, Payment,
-  Training, CRM, Paid Diagnostic Suite — until `docs/roadmap.md`/`scope.md` confirms its
-  specific evidence trigger has actually been met and the user has said to proceed. They are
-  fully planned in `docs/tasks/10-16*.md`; planned is not the same as scheduled.
+  Training, CRM, Paid Diagnostic Suite, Subscriber Outreach via Brevo Campaigns — until
+  `docs/roadmap.md`/`scope.md` confirms its specific evidence trigger has actually been met
+  and the user has said to proceed. They are fully planned in `docs/tasks/10-17*.md`; planned
+  is not the same as scheduled.
 - Do not design or test the application as portable to a second hosting provider (ADR 0008)
   — ordinary env-var-based configuration is fine; actively building dual-host support is not.
 - Do not hand-roll TOTP/password cryptography — use the vetted library named in

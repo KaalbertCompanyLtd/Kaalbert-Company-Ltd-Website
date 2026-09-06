@@ -2,6 +2,48 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 29) — New Phase 2 capability scoped and sequenced: Subscriber Outreach via Brevo Campaigns (P2-8)
+
+**Summary:** After T4.5 shipped, the user asked directly whether the system had any plan to
+actually use the subscriber emails it now collects (from the Insights form, and from the
+Contact/diagnostic-summary forms' `marketing_consent` checkboxes this same session wired
+into the same table) — beyond the one-time confirmation email. Researched every planning
+document, including Document 13.03 itself, directly: confirmed there is **no plan anywhere**
+for the firm to actually email this list. This is a genuine, previously-unnoticed gap, not
+an intentional omission — nothing in the source material ever said "don't build this," it
+simply never came up until real subscriber rows existed to surface the question.
+
+The user asked for this to be scoped as a proper feature and sequenced into Phase 2,
+following this project's existing evidence-gated pattern (P2-1 through P2-7), and separately
+raised that Brevo (already the firm's transactional-email provider since T3.7) has its own
+full campaign-composition/sending dashboard as part of its platform — asking how that could
+be used alongside whatever gets built on the site itself.
+
+**Decision:** P2-8, "Subscriber Outreach via Brevo Campaigns" — the site keeps `subscriber`
+as the sole system of record for consent and pushes a one-way sync to a dedicated Brevo
+contact list on every subscribe/re-confirm/unsubscribe (from all three consent-collection
+points, not just the dedicated Insights form), with one inbound webhook path back for a
+Brevo-side unsubscribe/bounce/complaint. The actual campaign — composing, sending, and
+reading open/click/unsubscribe performance — happens entirely inside Brevo's own separate
+dashboard, by a partner, never rebuilt inside kaalbert.com's own admin. Recorded as ADR 0012,
+reasoning by direct analogy to ADR 0001's own infrastructure exception (a managed platform
+running one well-scoped job is not the same as a product owning the admin/data model/routes)
+and to ADR 0006's GTM decision (a mature external tool for a narrow job the firm's own scale
+doesn't justify reproducing).
+
+**Where this lives:** `docs/requirements.md` FR-16, `docs/user-stories.md` Story 23,
+`docs/scope.md` P2-8 (explicitly marked "not from Document 13.03" — every other Phase 2 item
+traces to Document 13.03 §14; this one doesn't, and says so), `docs/roadmap.md` Milestone 17,
+`docs/features/subscriber-outreach.md`, `docs/tasks/17-subscriber-outreach.md` (T17.1–T17.3),
+`docs/adr/0012-brevo-campaigns-for-subscriber-outreach.md`. Also closed a small pre-existing
+gap found while here: `docs/architecture.md`'s External Dependencies table never listed
+Brevo at all, even for its already-live transactional role (T3.7) — added, covering both the
+live use and the Phase 2 extension. Cross-referenced from `docs/tasks/07-content-admin.md`
+(T7.9 addendum) and `docs/features/insights-engine.md` (subscriber entity note). `CLAUDE.md`'s
+Phase 2 capability list updated to include this eighth item.
+**Related Documents:** All files listed above; memory/completed-work.md (session 28, T4.5)
+for the subscriber-capture work that surfaced this gap.
+
 ## 2026-09-06 (session 28) — Subscription capture (T4.5): schema/interface decisions, a real redirect bug caught by Playwright, and closing a pre-existing promise gap in two other forms
 
 **Summary:** Several judgment calls and one real bug this task's own verification caught:

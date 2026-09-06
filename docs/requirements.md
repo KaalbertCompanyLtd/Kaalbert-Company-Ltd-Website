@@ -220,6 +220,33 @@ so a future feature spec in `features/` can reference a stable FR number.
    already produced by FR-2.6 and FR-7.3 at Phase 1 launch — no additional instrumentation
    is required to evaluate whether the trigger has been met.
 
+### FR-16 Subscriber Outreach via Brevo Campaigns — gated on the subscriber list reaching a size worth a partner's hand-composed send
+
+_Not named in Document 13.03 — surfaced during Phase 1 build (T4.5, Insights subscription
+capture) once real subscriber rows existed with no distribution mechanism to reach them._
+
+1. The system shall keep its own `subscriber` record as the sole system of record for
+   consent — a subscriber's opt-in and unsubscribe both happen through the site's own
+   dedicated capture form and one-click link (FR-6.2's separation principle), never through a
+   third-party platform's own signup flow.
+2. The system shall sync each subscribe, re-confirmation, and unsubscribe one-way (site to
+   Brevo) into a dedicated Brevo contact list, using the same Brevo account already
+   integrated for transactional email (T3.7) — not a second email-provider relationship.
+3. The system shall receive Brevo's own unsubscribe/bounce/spam-complaint webhook events and
+   reflect them back into the site's own `subscriber.unsubscribed_at`, so the two systems
+   cannot silently diverge in either direction.
+4. The system shall not attempt to reproduce bulk-campaign composition, sending, or
+   open/click tracking inside kaalbert.com's own admin — a partner composes and sends the
+   actual campaign natively inside Brevo's own dashboard, a deliberate build-vs-buy choice
+   (ADR 0012), reusing that product's own deliverability handling and compliance-required
+   unsubscribe link rather than rebuilding it.
+5. The system shall show a per-subscriber "last synced to Brevo" status in the existing
+   admin Subscribers list (`content-management-admin.md`), so a partner can confirm the list
+   is current before composing a send — a status view, not a compose/send interface.
+6. The system shall not fire a new measurement/`dataLayer` event for a Brevo campaign send,
+   open, click, or unsubscribe — none of those happen on a kaalbert.com page for GTM to
+   observe; Brevo's own campaign statistics are the record of that activity, not GA4.
+
 ## Non-Functional Requirements
 
 - **NFR-1 Performance** — Largest Contentful Paint under 2.5 seconds on a mid-range Android
