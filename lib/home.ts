@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { shapeArticleCard } from "@/lib/insights";
+import type { InsightsArticleCard } from "@/lib/insights";
 
 /**
  * The home page is a singleton (`docs/features/home-page.md`) — exactly one row is ever
@@ -35,13 +37,17 @@ export async function getOfferCards() {
  * admin's own pin order (never the database's arbitrary row order) — an unpublished or
  * deleted pin is silently dropped, satisfying home-page.md's "pinned but later unpublished
  * falls back to most-recent automatically" edge case. Any remaining slots (fewer than 3 pins
- * resolved, or `featuredArticleIds` empty) are filled with the most recently published
- * articles not already included. Returns `category` as a plain string (the page's own render,
- * `app/(public)/page.tsx`, expects a string, not `lib/insights.ts`'s `{name, slug} | null`
- * shape) — empty string for an uncategorized article, matching insights-engine.md's edge case
- * that such an article is still eligible to be featured, just without a category tag to show.
+ * resolved, or `featuredArticleIds` is empty) are filled with the most recently published
+ * articles not already included. Returns the same `InsightsArticleCard` shape `lib/insights.ts`
+ * uses everywhere else (revised at T2.1 follow-up, session 27, from an earlier `category`-as-
+ * plain-string shape — that divergence is exactly what let Home's own card render drift into a
+ * visually different, unlinked component from the real Insights index; see
+ * memory/decision-log.md, session 27) — this is what lets Home reuse the exact same shared
+ * `ArticleCard` component (`components/insights-article-card.tsx`) the index itself renders.
  */
-export async function getFeaturedArticles(featuredArticleIds: number[]) {
+export async function getFeaturedArticles(
+  featuredArticleIds: number[],
+): Promise<InsightsArticleCard[]> {
   const FEATURED_COUNT = 3;
 
   const pinnedRows =
@@ -71,12 +77,5 @@ export async function getFeaturedArticles(featuredArticleIds: number[]) {
         })
       : [];
 
-  return [...pinned, ...fallback].map((article) => ({
-    slug: article.slug,
-    title: article.title,
-    excerpt: article.excerpt,
-    category: article.category?.name ?? "",
-    authorName: article.author.name,
-    authorPracticeArea: article.author.practiceArea,
-  }));
+  return [...pinned, ...fallback].map(shapeArticleCard);
 }

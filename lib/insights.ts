@@ -103,7 +103,7 @@ export async function getInsightsIndex({
   return { articles, categories, page: clampedPage, totalPages, totalCount };
 }
 
-interface ArticleCardRow {
+export interface ArticleCardRow {
   slug: string;
   title: string;
   excerpt: string;
@@ -112,8 +112,13 @@ interface ArticleCardRow {
   author: { name: string; practiceArea: string };
 }
 
-/** Shared row → `InsightsArticleCard` shaping, used by both the index and related articles. */
-function shapeArticleCard(row: ArticleCardRow): InsightsArticleCard {
+/**
+ * Shared row → `InsightsArticleCard` shaping, used by the index, related articles, and (T2.1
+ * follow-up, session 27) `lib/home.ts`'s featured-Insights section — exported so Home's own
+ * query can produce a card in exactly the same shape the shared `ArticleCard` component
+ * (`components/insights-article-card.tsx`) expects, rather than a second, drifting shape.
+ */
+export function shapeArticleCard(row: ArticleCardRow): InsightsArticleCard {
   return {
     slug: row.slug,
     title: row.title,

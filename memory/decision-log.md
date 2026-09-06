@@ -2,6 +2,67 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 27) — Article content seed (T4.4): the real 8 articles, found and seeded; plus a real Home card bug found once real content existed
+
+**Summary:** T4.4 initially looked headed for an "empty state" resolution: Document 13.03
+§13 names 8 real Insights articles as "already written" but cites no locatable file, and a
+search of every sibling planning folder at the time found none — only the ownership/tracking
+table. The user then located and supplied the real source: `Company Docs/11 Thought
+Leadership/11.01`–`11.10`, two editorial volumes (Volume One: 4 foundational essays; Volume
+Two: 4 shorter pieces on cash/pricing/evidence/people), exactly matching §7's own "eight
+completed articles under two editorial volumes" line.
+
+Extracted all 8 articles' real text (Word paragraph styles parsed programmatically —
+`Heading2` → subheading blocks — to avoid manual transcription errors) and seeded them
+verbatim as real, non-placeholder `Article` rows (`isPlaceholder: false`). Two things Document
+13.03 §13 itself flagged as still outstanding were resolved as this task's own editorial
+judgement calls, not fabrication:
+
+1. **Author attribution** — the source text is attributed generically to "Kaalbert & Company
+   Ltd," not a named partner (§13: "Requires web formatting, author attribution..."). Assigned
+   each of the 8 articles to one of the firm's 5 real partners by subject-matter fit against
+   their real practice areas (e.g. "Structure Is the Real Capital" → Evans Agyemang, Financial
+   Control & Compliance; "Speaking the Language of Capital" → Albert Kwakye Amponsah, whose
+   Lead Consultant role already owns the Funding-Readiness Pack per 13.03 §13's own content-
+   ownership table), spread roughly evenly (2/2/2/1/1) rather than clustered.
+2. **Categories** — consolidated the 8 articles' own stated "Theme" metadata into 6 real
+   category rows (e.g. "Structure & Formalisation," "Growth & Strategy") rather than 8
+   one-article categories or the mockup's fictional two-category split, grouping by genuine
+   thematic overlap (e.g. Pricing joined Growth & Strategy; two "leadership" pieces from
+   different volumes joined Leadership & Team).
+
+`previewImage` stays null on every row — §13 lists "preview images" as still outstanding (a
+photography/design deliverable this task can't produce) — falling back to the site's default
+OG image until real ones exist. `nextStepCta` per article was adapted (condensed, not
+invented) from that same article's own real "How Kaalbert can help" closing section in the
+source document, mapped to a real core offer where one directly fits (Funding-Readiness Pack,
+Financial Clarity Pack) and to the free Business Health Check otherwise — the same "soft
+re-engagement" default the three core offer pages themselves already use.
+`publishedAt` dates are spread biweekly (2026-06-01 to 2026-09-01), matching §7's stated
+"two articles per month" cadence, even though all 8 were seeded in one batch.
+
+**A real bug found once real content existed, fixed in the same session:** viewing the real
+seeded content surfaced two problems the earlier synthetic/throwaway test data (T4.2/T4.3
+sessions) never exercised enough to reveal. (1) `lib/about.ts`'s `getInitials` (built and
+verified for person names) produced "L&" for a category thumbnail fallback on a name like
+"Leadership & Team," since its naive first-and-second-word split treats a bare "&" as a word
+— fixed with a small local `categoryInitials` helper that skips symbol-only words. (2) The
+user then flagged, correctly, that Home's own featured-Insights cards (`app/(public)/
+page.tsx`) had drifted into a visually different, unlinked `<div>` with no path to the article
+_or_ to `/insights` itself — a real regression nobody had reason to notice while
+`getFeaturedArticles` returned `[]` (T2.1's original stub) or synthetic test rows. Root cause:
+`getFeaturedArticles` returned its own ad hoc shape (`category` as a plain string) instead of
+`lib/insights.ts`'s shared `InsightsArticleCard` shape, so Home's card markup necessarily
+diverged from the real Insights index's own card. Fixed by extracting the index's card into a
+shared `components/insights-article-card.tsx` (`ArticleCard`, plus the `categoryInitials`
+helper), exporting `lib/insights.ts`'s internal `shapeArticleCard` row-shaping function so
+`getFeaturedArticles` produces the identical shape, and adding a "See all Insights →" link
+next to the section heading. Home and the Insights index now render literally the same
+component for an article card, so this class of drift can't recur.
+**Related Documents:** Document 13.03 §7/§13, `Company Docs/11 Thought Leadership/11.01`–
+`11.10`, docs/features/insights-engine.md, prisma/seed.ts, lib/insights.ts, lib/home.ts,
+components/insights-article-card.tsx, memory/completed-work.md (session 27)
+
 ## 2026-09-06 (session 26) — Article template (T4.3): schema/design decisions made building against the mockup
 
 **Summary:** Several real design gaps surfaced building `/insights/[slug]` against

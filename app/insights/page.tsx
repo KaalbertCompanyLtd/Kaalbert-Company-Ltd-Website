@@ -3,12 +3,11 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
-import { getInitials } from "@/lib/about";
 import { getInsightsIndex } from "@/lib/insights";
-import type { InsightsArticleCard } from "@/lib/insights";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { ArticleCard } from "@/components/insights-article-card";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -77,41 +76,6 @@ export async function generateMetadata(): Promise<Metadata> {
     description: resolveMetaDescription(page.metaDescription, page.heroLead),
     path: "/insights",
   });
-}
-
-function ArticleCard({ article }: { article: InsightsArticleCard }) {
-  return (
-    <Link
-      href={`/insights/${article.slug}`}
-      className="border-border bg-card group flex flex-col overflow-hidden rounded-md border shadow-sm transition-shadow hover:shadow-md"
-    >
-      <div className="from-pine-700 to-pine-500 relative flex h-[140px] w-full items-center justify-center overflow-hidden bg-gradient-to-br">
-        {article.previewImage ? (
-          // eslint-disable-next-line @next/next/no-img-element -- previewImage is admin-supplied, arbitrary-origin content, not a static local asset next/image's optimizer is meant for.
-          <img src={article.previewImage} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className="font-display text-2xl text-white/85">
-            {getInitials(article.category?.name ?? article.title)}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-2.5 p-5">
-        {article.category && (
-          <span className="text-caption text-accent font-semibold tracking-[0.06em] uppercase">
-            {article.category.name}
-          </span>
-        )}
-        <h3 className="font-display text-primary text-[1.0625rem] leading-snug font-bold group-hover:underline">
-          {article.title}
-        </h3>
-        <p className="text-body text-muted-foreground mb-0 flex-1">{article.excerpt}</p>
-        <div className="border-border text-caption text-muted-foreground border-t pt-3">
-          <strong className="text-foreground">{article.authorName}</strong> ·{" "}
-          {article.authorPracticeArea}
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 export default async function InsightsPage({ searchParams }: InsightsPageProps) {

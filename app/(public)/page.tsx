@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ArticleCard } from "@/components/insights-article-card";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -261,22 +262,19 @@ export default async function HomePage() {
                 </span>
                 <h2 className={H2}>Recent thinking</h2>
               </div>
+              {/* Same shared card component the real Insights index (T4.2) renders — see
+                  memory/decision-log.md (session 27): this section previously used its own
+                  unlinked `<div>` card, a real regression once real content existed (no path
+                  from here to the article, or to the index itself). */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {featuredArticles.map((article) => (
-                  <div
-                    key={article.slug}
-                    className="border-border bg-card rounded-md border p-6 shadow-sm"
-                  >
-                    <span className="text-kicker text-accent mb-2.5 block font-semibold tracking-[0.08em] uppercase">
-                      {article.category}
-                    </span>
-                    <h4 className={H3}>{article.title}</h4>
-                    <p className="text-body text-foreground">{article.excerpt}</p>
-                    <div className="text-caption text-muted-foreground mt-3">
-                      {article.authorName}, Partner, {article.authorPracticeArea}
-                    </div>
-                  </div>
+                  <ArticleCard key={article.slug} article={article} />
                 ))}
+              </div>
+              <div className="mt-8 text-center">
+                <Link href="/insights" className="text-primary font-bold hover:underline">
+                  See all Insights →
+                </Link>
               </div>
             </div>
           </section>

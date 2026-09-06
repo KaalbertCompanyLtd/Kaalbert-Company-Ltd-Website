@@ -14,6 +14,46 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 27)
+
+**Task:** T4.4 — Article content seed
+**Summary:** Seeded the firm's real 8 Insights articles, found (after an initial dead end and
+a user-directed search) at `Company Docs/11 Thought Leadership/11.01`–`11.10` — Document
+13.03 §7/§13's "eight completed articles under two editorial volumes." Parsed each `.docx`'s
+paragraph styles programmatically (`Heading2` → subheading blocks) to seed real body content
+without manual transcription, as real (`isPlaceholder: false`) `Article` rows across 6 real
+categories (consolidated from the 8 articles' own stated themes). Assigned each article to
+one of the firm's 5 real partners by subject-matter fit (author attribution was explicitly
+left open by the source document) and adapted each article's own "How Kaalbert can help"
+section into its `nextStepCta`, pointing at a real core offer where one fits and the free
+Business Health Check otherwise. `previewImage` stays null (photography not yet produced,
+per the source document itself) — falls back to the site default OG image.
+**Files Changed:** prisma/seed.ts (`seedInsightsContent`, `INSIGHTS_ARTICLES`,
+`INSIGHTS_CATEGORIES`); app/insights/page.tsx (`ArticleCard`/`categoryInitials` extracted
+out); lib/insights.ts (`shapeArticleCard` exported); lib/home.ts (`getFeaturedArticles`
+returns the shared `InsightsArticleCard` shape); app/(public)/page.tsx (uses the shared card,
+adds a "See all Insights" link); components/insights-article-card.tsx (new, shared
+`ArticleCard`); lib/home.test.ts (updated for the new return shape); memory/decision-log.md
+**Related Feature:** docs/features/insights-engine.md
+**Notes:** The user caught a real regression during review that neither T4.2's nor T4.3's own
+verification had surfaced (both used synthetic throwaway test data, never real content at
+volume): Home's featured-Insights cards had drifted into a visually different, unlinked
+`<div>` — no link to the article, no link to `/insights` from the section at all. Root cause
+was `getFeaturedArticles` returning its own one-off shape instead of `lib/insights.ts`'s
+shared card shape. Fixed by extracting one shared `ArticleCard` component both Home and the
+real index now render, so the two can no longer visually diverge. Also fixed, found the same
+way: `lib/about.ts`'s person-name-only `getInitials` produced "L&" for a category named
+"Leadership & Team" (its naive word-split treats a bare "&" as a word) — replaced with a
+purpose-built `categoryInitials` helper for card thumbnails, leaving `getInitials` itself
+untouched for its real, verified use (partner avatars). Verified for real via Playwright:
+`/insights` index and 2 full article pages render the real content correctly (all body block
+kinds, pull quotes, real bylines, next-step CTAs pointing at real offers, related articles),
+Home's featured section now uses real linked cards with a working "See all Insights" link,
+OG/JSON-LD tags carry the real title/excerpt/`og:type: article`. Full quality gate run clean:
+lint, format:check, typecheck, and the Vitest suite (41 tests) all pass.
+
+---
+
 ## 2026-09-06 (session 26)
 
 **Task:** T4.3 — Article template — `/insights/[slug]`

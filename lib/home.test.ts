@@ -27,12 +27,13 @@ function row(
     slug: overrides.slug ?? "article-slug",
     title: overrides.title ?? "Article Title",
     excerpt: overrides.excerpt ?? "Article excerpt.",
+    previewImage: null,
     category:
       overrides.categoryName === undefined
-        ? { name: "Financial Control" }
+        ? { name: "Financial Control", slug: "financial-control" }
         : overrides.categoryName === null
           ? null
-          : { name: overrides.categoryName },
+          : { name: overrides.categoryName, slug: overrides.categoryName.toLowerCase() },
     author: {
       name: overrides.authorName ?? "Evans Agyemang",
       practiceArea: overrides.authorPracticeArea ?? "Financial Control & Compliance",
@@ -90,11 +91,11 @@ describe("getFeaturedArticles", () => {
     expect(args.take).toBe(3);
   });
 
-  it("returns an empty string category (never null/undefined) for an uncategorized article", async () => {
+  it("returns a null category (the shared ArticleCard's own shape) for an uncategorized article", async () => {
     findManyMock.mockResolvedValueOnce([row({ id: 1, categoryName: null })] as never);
 
     const result = await getFeaturedArticles([]);
 
-    expect(result[0].category).toBe("");
+    expect(result[0].category).toBeNull();
   });
 });
