@@ -2,7 +2,7 @@
 
 # Date: 2026-09-06
 
-# Tasks completed: T4.2
+# Tasks completed: T4.2, plus a same-session T2.1 follow-up (see Decisions Made)
 
 ## What Was Built
 
@@ -14,6 +14,12 @@ anywhere. Also closed two small, directly-related gaps discovered while building
 the `Article.excerpt` field the mockup's cards actually need, and wired the now-real `article`
 table into the sitemap.
 
+Separately, mid-session, the user challenged a process misstep (see Decisions Made): a
+technical-debt entry had deferred Home's featured-Insights stub onto the already-shipped
+T2.1 via an inert addendum. Corrected by fixing `lib/home.ts`'s `getFeaturedArticles()` for
+real, same session, as a "T2.1 follow-up" (this project's established pattern from session
+23's "T3.7 follow-up") — Home's "Recent thinking" section now reads real published articles.
+
 ## Files Changed
 
 - app/insights/page.tsx — the index route (hero, category filter, search, article grid,
@@ -21,13 +27,18 @@ table into the sitemap.
 - lib/insights.ts — `getInsightsCategories`, `getInsightsIndex` (query/filter/paginate/shape)
 - lib/insights.test.ts — 7 unit tests on the query-shaping logic
 - lib/seo.ts — `getSitemapEntries()` now includes published articles
+- lib/home.ts — `getFeaturedArticles()` rewritten from a hardcoded-`[]` stub to a real query
+  (T2.1 follow-up)
+- lib/home.test.ts — 4 new unit tests for `getFeaturedArticles` (T2.1 follow-up)
 - prisma/schema.prisma — added `Article.excerpt` (required `String`)
 - prisma/migrations/20260906043727_add_article_excerpt/migration.sql — new migration
 - prisma/seed.ts — `seedInsightsPage()` (the shared `page` entity's `"insights"` row, hero
   copy sourced verbatim from the mockup), wired into `main()`
+- CLAUDE.md — added a clarifying note to the debt-sequencing section (see Decisions Made)
 - memory/completed-work.md, memory/decision-log.md, memory/technical-debt.md — this session's
-  entries
-- docs/tasks/02-public-presentation.md — addendum on T2.1 (see Decisions Made)
+  entries (T4.2's, plus the T2.1 follow-up's, plus the correction itself)
+- docs/tasks/02-public-presentation.md — the T2.1 addendum was added, then reverted (see
+  Decisions Made) — net no change to this file
 
 ## Decisions Made
 
@@ -49,10 +60,16 @@ table into the sitemap.
 - Wired the `article` table into `lib/seo.ts`'s sitemap (published only) — directly closing
   that function's own "table doesn't exist yet" comment, and required by
   `seo-and-search-foundation.md`'s own Interfaces section.
-- Left `lib/home.ts`'s `getFeaturedArticles()` stub untouched — Home's featured-Insights
-  section is a different route/task boundary than T4.2's own `/insights`-only contract.
-  Logged in `memory/technical-debt.md` with an addendum on T2.1 (`docs/tasks/02-public-
-  presentation.md`) so it isn't lost.
+- **Process correction, prompted by the user**: initially left `lib/home.ts`'s
+  `getFeaturedArticles()` stub untouched, deferring it via a `memory/technical-debt.md` entry
+  with an addendum on T2.1's entry in `docs/tasks/02-public-presentation.md`. The user asked
+  why this was deferred onto an already-shipped task instead of just fixed — correct
+  challenge: an addendum on a completed task is inert, since this project's task IDs only
+  move forward and nothing ever "reaches" T2.1 again. Reverted the addendum, marked the
+  technical-debt entry `Resolved`, and fixed `getFeaturedArticles` for real in this same
+  session as a "T2.1 follow-up" — this project's own established pattern (session 23's "T3.7
+  follow-up"). Added a clarifying note to CLAUDE.md's debt-sequencing section so this isn't
+  repeated. Full reasoning in `memory/decision-log.md`.
 - Noted for T4.3: the epic file (`docs/tasks/04-insights.md`) names a stale mockup path
   (`ui/mockups/a-public-site/insights-article.html`); the real file is
   `ui/mockups/b-insights/insight-owner-drawings.html`.
@@ -70,11 +87,13 @@ table into the sitemap.
 
 `/insights` is live and fully functional against real (if currently empty) `article`/
 `category` data — verified with a temporary, since-deleted dataset (2 categories, 5 articles
-including one draft and one uncategorized) at mobile/tablet/desktop. The real database has
-zero Insights content right now (by design — T4.4's job), so the index currently renders its
-"No articles published yet" empty state in production/dev until either T4.3 unblocks nothing
-further or T4.4 seeds real content. `/insights/[slug]` does not exist yet (404s via the
-generic not-found page) — that's T4.3.
+including one draft and one uncategorized) at mobile/tablet/desktop. Home's "Recent thinking"
+section is also now live (T2.1 follow-up), verified separately with its own temporary dataset
+(4 published articles, no pins) confirming the 3-most-recent fallback and the "omit the
+section entirely" empty state both work. The real database has zero Insights content right
+now (by design — T4.4's job), so both `/insights` and Home's featured section currently show
+their respective empty states until T4.4 seeds real content. `/insights/[slug]` does not
+exist yet (404s via the generic not-found page) — that's T4.3.
 
 ## Blockers
 

@@ -24,22 +24,59 @@ export async function getOfferCards() {
 }
 
 /**
- * home-page.md's featured-Insights section resolves `featured_article_ids` with a
- * most-recent fallback once articles exist. No `article` table exists yet
- * (`docs/features/insights-engine.md` is Milestone 4, not built yet as of T2.1) — so this
- * always returns no articles for now, which correctly triggers the page's own "no Insights
- * articles published yet: omit the section entirely" edge case rather than rendering
- * anything broken. Replace this stub with a real query (pinned ids first, most-recent
- * fallback for unpublished/missing pins) once Milestone 4 adds the `article` model.
+ * T2.1 follow-up (session 25) — home-page.md's featured-Insights section, resolving
+ * `featured_article_ids` with a most-recent fallback, now that `article` exists (Milestone 4,
+ * T4.1/T4.2). The original T2.1 build shipped this as a stub returning `[]` (no `article`
+ * table existed yet) — replaced here rather than left as deferred technical debt, following
+ * the same same-session "task follow-up" precedent as T3.7 (session 23, see
+ * memory/completed-work.md and memory/technical-debt.md).
+ *
+ * Pinned ids are resolved first, filtered to published only and re-ordered to match the
+ * admin's own pin order (never the database's arbitrary row order) — an unpublished or
+ * deleted pin is silently dropped, satisfying home-page.md's "pinned but later unpublished
+ * falls back to most-recent automatically" edge case. Any remaining slots (fewer than 3 pins
+ * resolved, or `featuredArticleIds` empty) are filled with the most recently published
+ * articles not already included. Returns `category` as a plain string (the page's own render,
+ * `app/(public)/page.tsx`, expects a string, not `lib/insights.ts`'s `{name, slug} | null`
+ * shape) — empty string for an uncategorized article, matching insights-engine.md's edge case
+ * that such an article is still eligible to be featured, just without a category tag to show.
  */
-export async function getFeaturedArticles(_featuredArticleIds: number[]) {
-  void _featuredArticleIds;
-  return [] as Array<{
-    slug: string;
-    title: string;
-    excerpt: string;
-    category: string;
-    authorName: string;
-    authorPracticeArea: string;
-  }>;
+export async function getFeaturedArticles(featuredArticleIds: number[]) {
+  const FEATURED_COUNT = 3;
+
+  const pinnedRows =
+    featuredArticleIds.length > 0
+      ? await prisma.article.findMany({
+          where: { id: { in: featuredArticleIds }, publishedAt: { not: null } },
+          include: { author: true, category: true },
+        })
+      : [];
+
+  const pinned = featuredArticleIds
+    .map((id) => pinnedRows.find((row) => row.id === id))
+    .filter((row): row is (typeof pinnedRows)[number] => row !== undefined)
+    .slice(0, FEATURED_COUNT);
+
+  const remaining = FEATURED_COUNT - pinned.length;
+  const fallback =
+    remaining > 0
+      ? await prisma.article.findMany({
+          where: {
+            publishedAt: { not: null },
+            id: { notIn: pinned.map((row) => row.id) },
+          },
+          orderBy: { publishedAt: "desc" },
+          take: remaining,
+          include: { author: true, category: true },
+        })
+      : [];
+
+  return [...pinned, ...fallback].map((article) => ({
+    slug: article.slug,
+    title: article.title,
+    excerpt: article.excerpt,
+    category: article.category?.name ?? "",
+    authorName: article.author.name,
+    authorPracticeArea: article.author.practiceArea,
+  }));
 }

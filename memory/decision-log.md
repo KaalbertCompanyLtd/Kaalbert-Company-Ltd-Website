@@ -2,6 +2,40 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 25) — Corrected a misapplied debt-sequencing addendum: fixed Home's featured-Insights stub immediately instead of leaving a note on the already-shipped T2.1
+
+**Summary:** While building T4.2, noticed `lib/home.ts`'s `getFeaturedArticles()` stub could
+now be replaced with a real query (its own comment said so, once Milestone 4 landed
+`article`). First pass handled this per CLAUDE.md's debt-sequencing rule at face value: wrote
+a `memory/technical-debt.md` entry and attached an "Addendum" block to T2.1's entry in
+`docs/tasks/02-public-presentation.md`, with `Sequenced into: T2.1`. The user asked why a gap
+was deferred onto an already-shipped task rather than just fixed — a fair challenge. On
+reflection, the addendum was inert: the debt-sequencing rule exists so "whichever session
+reaches this task in the normal course of work" does the fix, but task IDs in this project's
+`/task` workflow only ever move forward — nothing ever "reaches" T2.1 again, so a note left
+there would never resurface. The rule's "if an existing task is the natural home" branch
+means a task a future session will actually execute, not merely the module that historically
+owns the code.
+
+This project already has the right pattern for exactly this situation: session 23's "T3.7
+follow-up" revisited an already-shipped task in the same session the gap was found, fixed it
+immediately, and committed under that original task's identity (see
+`memory/completed-work.md`, session 23, and `memory/technical-debt.md`'s diagnostic-summary-
+email entry). Corrected course to match: reverted the T2.1 addendum, marked the technical-
+debt entry `Resolved` (rather than deleting it — keeping an honest record of both the gap and
+the process correction), and fixed `getFeaturedArticles` for real in the same session, logged
+as "T2.1 follow-up" in `memory/completed-work.md`.
+
+**Takeaway for future sessions:** when a debt/bug fix is small enough to do immediately and
+the "owning" task has already shipped, do it now as a same-session task follow-up (T3.7's
+pattern) — don't reach for the technical-debt.md + epic-addendum mechanism, which is for
+fixes that must wait for a *future* task to actually be reached. Reserve that mechanism for
+fixes that genuinely can't happen now (need a task not yet reached, a decision not yet made,
+or a user action not yet taken).
+**Related Documents:** CLAUDE.md ("Debt/bug fixes must be sequenced into a task, never left
+orphaned"), memory/technical-debt.md, memory/completed-work.md (sessions 23 and 25),
+docs/tasks/02-public-presentation.md
+
 ## 2026-09-06 (session 25) — Insights index (T4.2): `Article.excerpt` added, and the mockup's pill-shaped filters corrected to the design system's own radius rule
 
 **Summary:** Two real gaps surfaced building `/insights` against `ui/mockups/b-insights/

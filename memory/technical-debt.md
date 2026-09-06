@@ -20,30 +20,35 @@ sequencing requirement:
 
 ## Home's featured-Insights section still returns a hardcoded empty list, even though `article` now exists
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-06 (T4.2, session 25 — `lib/home.ts`'s `getFeaturedArticles()` stub
 was written at T2.1 with an explicit comment: "Replace this stub with a real query … once
-Milestone 4 adds the `article` model." T4.1/T4.2 (Milestone 4) have now done exactly that.)
-**Reason:** T4.2's own task scope is `/insights` only (Input → Output: `GET /insights` and
-`GET /insights?category=&q=`) — Home's featured section is a different route
-(`app/(public)/page.tsx`) with its own content-shape questions (which articles are "featured"
-— pinned vs. most-recent fallback per `home-page.md`'s edge case) not covered by this task's
-acceptance criteria, so wiring it here would be scope creep beyond what T4.2 asked for.
-**Impact:** Home's "featured Insights" section keeps rendering nothing (via `home-page.md`'s
-own "no Insights articles published yet" edge case) even once real articles exist and are
-live on `/insights` — a visitor never sees the featured-Insights band on Home until this stub
-is replaced.
-**Priority:** Medium
-**Possible Fix/Fixes:** Replace `getFeaturedArticles`'s body with a real query against
-`prisma.article` — resolve `featuredArticleIds` first (pinned, published, in that order),
-then fall back to the `INSIGHTS_PAGE_SIZE`-independent "most recent 3 published" query when
-fewer than 3 pins resolve or `featuredArticleIds` is empty (`home-page.md`'s own edge case:
-"pinned but later unpublished falls back to most-recent automatically"). `lib/insights.ts`'s
-`getInsightsIndex`/`InsightsArticleCard` shape (T4.2) is directly reusable for the row
-shaping (`excerpt`, `authorName`, `authorPracticeArea`, `category` already match).
+Milestone 4 adds the `article` model." T4.1/T4.2 (Milestone 4) had just done exactly that.)
+**Date resolved:** 2026-09-06 (same session — user asked why this was deferred onto an
+already-shipped task instead of just being fixed, which was the right question: see
+Reason below)
+**Reason:** T4.2's own task scope is `/insights` only, so wiring Home's featured section
+wasn't done as part of that task. First attempt at handling the gap added an "Addendum" block
+to T2.1's entry in `docs/tasks/02-public-presentation.md` and left this entry `Sequenced
+into: T2.1` — mishandled: CLAUDE.md's debt-sequencing rule exists so "whichever session
+reaches this task in the normal course of work" does the fix, but no session ever "reaches"
+an already-completed task again — task IDs only move forward, so a note left on T2.1 would
+never surface in any future `/task` invocation. The correct model already exists in this
+project's own history: session 23's "T3.7 follow-up" (see the diagnostic-summary-email entry
+below) revisited an already-shipped task in the same session it was discovered and fixed it
+immediately, committed under that same task ID. Followed that model here instead: reverted
+the inert T2.1 addendum and fixed `getFeaturedArticles` directly, same session, same
+conversation, as a "T2.1 follow-up."
+**Impact:** None remaining — Home's featured-Insights section now reads real published
+`article` rows (see Possible Fix/Fixes below for what shipped).
+**Priority:** Medium (before the fix)
+**Possible Fix/Fixes:** ~~Replace `getFeaturedArticles`'s body with a real query...~~ Done:
+resolves `featuredArticleIds` first (published only, in the admin's own pinned order), falls
+back to the 3-most-recent-published query for any remaining slots (`home-page.md`'s own edge
+case: "pinned but later unpublished falls back to most-recent automatically") — see
+`memory/completed-work.md`'s "T2.1 follow-up" entry, session 25.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T2.1 (see this session's addendum in `docs/tasks/02-public-
-presentation.md`)
+**Sequenced into:** T2.1 (closed out same-session as a follow-up, not deferred — see Reason)
 
 ---
 

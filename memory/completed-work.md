@@ -16,6 +16,36 @@ Protocol):
 
 ## 2026-09-06 (session 25)
 
+**Task:** T2.1 follow-up — wire Home's featured-Insights section to real `article` data
+**Summary:** User questioned why the "Home featured-Insights stub" gap was deferred via a
+technical-debt entry + an addendum on the already-shipped T2.1, rather than just fixed (T2.1
+can never be "reached" again by a future `/task` invocation, so a note left there was
+effectively inert — see memory/technical-debt.md's corrected entry and memory/decision-
+log.md for the full reasoning, and the reverted addendum in docs/tasks/02-public-
+presentation.md). Followed this project's own session-23 "T3.7 follow-up" precedent instead:
+fixed it immediately, same session, under the original task's own identity. Rewrote
+`lib/home.ts`'s `getFeaturedArticles()` — previously a hardcoded stub returning `[]` — to
+resolve `home_page_content.featured_article_ids` first (published only, re-ordered to match
+the admin's own pin order), then fall back to the 3 most-recently-published articles for any
+unfilled slots, satisfying `home-page.md`'s "pinned but later unpublished falls back to
+most-recent automatically" edge case. Added `lib/home.test.ts` (4 tests: pin ordering, a
+dropped/unpublished pin falling back correctly, the fully-empty-ids case, and the
+uncategorized-article case). Verified for real: seeded 4 temporary published articles (no
+pins set), confirmed via Playwright that Home's "Recent thinking" section shows exactly the 3
+most recent by title/category/author, then deleted the temporary rows and reconfirmed the
+section correctly disappears again (`home-page.md`'s "no Insights articles published yet:
+omit entirely" edge case) with zero regressions.
+**Files Changed:** lib/home.ts; lib/home.test.ts; docs/tasks/02-public-presentation.md
+(addendum reverted); memory/technical-debt.md; memory/decision-log.md
+**Related Feature:** docs/features/home-page.md, docs/features/insights-engine.md
+**Notes:** No schema change needed — this reused `Article.excerpt`/`Category` exactly as
+T4.2 had just built them. Full quality gate run clean: lint, format:check, typecheck, and the
+Vitest suite (26 tests total) all pass.
+
+---
+
+## 2026-09-06 (session 25)
+
 **Task:** T4.2 — Insights index — `/insights`
 **Summary:** Built the real `/insights` route: `lib/insights.ts` (`getInsightsCategories`,
 `getInsightsIndex`) queries live `article`/`category`/`author` rows, filtering strictly on
