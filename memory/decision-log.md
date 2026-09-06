@@ -2,6 +2,62 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-05/06 (T3.7, session 22) — Brevo chosen for transactional email (user decision); a second request-summary call updates in place and re-sends rather than rejecting; a failed email send never rolls back or blocks the enquiry update
+
+**Summary:** Built the gated summary-request step: the "Get the full written summary by
+email" panel on `/diagnostic/results` (`components/diagnostic-summary-request-form.tsx`),
+`POST /api/diagnostic/request-summary` (`app/api/diagnostic/request-summary/route.ts`), its
+own business logic (`lib/diagnostic-request-summary.ts`), and the shared transactional email
+utility this task's own note calls for building once, here, as its first consumer
+(`lib/email.ts`, reused later by Milestone 4/8 rather than each re-implementing a send
+mechanism). Several decisions:
+
+1. **Brevo (`@getbrevo/brevo`, npm's current `6.0.3`) chosen for transactional email — the
+   user's own decision, made specifically because Brevo supports single-sender verification
+   (a 6-digit code to the sender's own inbox) as an alternative to full domain authentication
+   — `kaalbert.com` isn't registered yet (`memory/technical-debt.md`), so a provider requiring
+   DNS-based domain verification would have blocked sending entirely. Verified this claim via
+   live research (Brevo's own developer docs and community forum) before building against it,
+   matching this project's established research convention for infrastructure choices.
+   Real credentials (`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`) don't exist yet
+   as of this session — added to `.env.example`/`CLAUDE.local.md`, and the user was asked to
+   provision them; the send path is fully built and tested against a missing-config state
+   (see point 3) but not yet against a real, delivered email.
+2. **A second request-summary call for the same `enquiry_id` updates the row in place and
+   re-sends the email — it is never rejected as a duplicate.** This task's own acceptance
+   criteria don't call for rejecting a resend (e.g. the visitor corrects a typo'd email
+   address, or asks again), and silently failing a second, well-intentioned attempt would be
+   worse than sending twice. `enquiry_id` identifies the exact row T3.5 already created;
+   `prisma.enquiryRecord.update` is used throughout, never `create` — the acceptance
+   criterion this does satisfy ("the `enquiry_record` created in T3.5 is updated in place,
+   not duplicated") is met by construction.
+3. **A failed email send is logged, never thrown back to the visitor or rolled back.** The
+   real, durable outcome — the firm now has this visitor's contact details on the enquiry
+   record — already succeeded regardless of email deliverability, the same fire-and-forget
+   treatment this project already gives the Meta Conversions API call
+   (`docs/architecture.md`'s External dependencies table: "a failed call is logged, not
+   retried inline"). Verified for real: submitted the real form against the running dev
+   server with no Brevo credentials configured yet — the server logged
+   `BREVO_SENDER_EMAIL is not set` and still returned `200`, the client showed "Summary on
+   its way," and the `enquiry_record` was confirmed updated in place with the real name/
+   email/`contactConsent: true` matching the on-screen result exactly.
+4. **The summary email is plain server-rendered HTML, not a shared React component with the
+   results page** — an email client renders neither React nor most CSS, and this task's own
+   acceptance criterion ("the resulting email ... matches the on-screen result data") is
+   about the _data_ matching (both read the identical stored `scoreSummary`), not the
+   markup matching. Every user-supplied value (the visitor's own `name`) is HTML-escaped
+   before being embedded in the email body.
+
+Also verified for real: client-side consent gating (submitting with the checkbox unticked is
+blocked before any request is sent, matching `components/contact-form.tsx`'s established
+precedent), and no horizontal overflow at 390px/1280px. Test data deleted afterward.
+**Related Documents:** `docs/tasks/03-diagnostic.md` (T3.7), `docs/features/business-health-
+check-diagnostic.md` (Interfaces, FR-6.2), `docs/architecture.md` (External dependencies —
+the Meta CAPI fire-and-forget precedent this follows), `.env.example`, `CLAUDE.local.md`,
+`lib/email.ts`, `lib/diagnostic-request-summary.ts`,
+`components/diagnostic-summary-request-form.tsx`,
+`app/api/diagnostic/request-summary/route.ts`.
+
 ## 2026-09-05 (session 22) — Retrofitted `/diagnostic/results` with real score-band labels: a new `DiagnosticScoreBand` model, not an extension of `DiagnosticThreshold`
 
 **Summary:** User asked whether the mockup's score-band labels/statements ("Strong

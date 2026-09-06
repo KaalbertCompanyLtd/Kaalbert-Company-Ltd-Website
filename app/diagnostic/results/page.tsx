@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { NOT_FOUND_METADATA } from "@/app/not-found";
 import { DiagnosticCompletedEvent } from "@/components/diagnostic-completed-event";
+import { DiagnosticSummaryRequestForm } from "@/components/diagnostic-summary-request-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getScoreBand } from "@/lib/diagnostic-flow";
@@ -117,6 +118,10 @@ export default async function DiagnosticResultsPage({ searchParams }: Diagnostic
 
         <div className="bg-muted border-accent mx-auto mb-10 max-w-[720px] rounded-sm border-l-[3px] p-5">
           <p className="text-caption text-muted-foreground">{DISCLAIMER_TEXT}</p>
+        </div>
+
+        <div className="mb-10">
+          <DiagnosticSummaryRequestForm enquiryId={enquiryId} />
         </div>
 
         <div className="mx-auto max-w-[560px] text-center">

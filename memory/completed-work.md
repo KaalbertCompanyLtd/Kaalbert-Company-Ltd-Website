@@ -14,6 +14,52 @@ Protocol):
 
 ---
 
+## 2026-09-06
+
+**Task:** T3.7 — Gated summary request (session 22)
+**Summary:** Built the diagnostic epic's final task. `components/diagnostic-summary-request-
+form.tsx` (the "Get the full written summary by email" panel, `ui/mockups/c-diagnostic/
+diagnostic-results.html`'s `.summary-panel`) with two independent, unticked-by-default
+consent checkboxes (FR-6.2), added to `/diagnostic/results` (T3.6) in the gap that task
+deliberately left. `POST /api/diagnostic/request-summary` + `lib/diagnostic-request-
+summary.ts` validate consent, update the existing `enquiry_record` in place (never create a
+second row), and send the full summary email built from the exact same stored `scoreSummary`
+the results screen itself reads. Added `lib/email.ts`, the shared transactional-email send
+utility this task's own note calls for building once (reused later by Milestone 4/8). Brevo
+(`@getbrevo/brevo`) chosen by the user specifically because it supports single-sender
+verification without a registered domain — verified this via live research before building
+against it. A failed email send is logged, never rolled back or surfaced to the visitor,
+mirroring this project's existing Meta CAPI fire-and-forget pattern — the `enquiry_record`
+update is the real, durable outcome regardless of delivery. Also retrofitted, at the user's
+request before starting this task: a new `DiagnosticScoreBand` model + seed + display,
+closing a gap the user caught where the mockup's score-band labels ("Strong Foundation" etc.)
+were neither built nor planned as admin-editable anywhere (separate commit, see below).
+Verified for real against the running dev server: submitted a real diagnostic response,
+loaded the results page, filled and submitted the summary-request form with no Brevo
+credentials configured yet — server logged the expected "not configured" error and still
+returned success, client showed "Summary on its way," and the `enquiry_record` was confirmed
+updated in place with real contact details matching the on-screen result. Client-side
+consent gating (blocked before any request when unticked) and no horizontal overflow at
+390px/1280px also verified. Test data deleted afterward. 5 new unit tests
+(`lib/diagnostic-request-summary.test.ts`), all passing alongside the existing 8.
+**Files Changed:** `lib/email.ts` (new), `lib/diagnostic-request-summary.ts` (new),
+`lib/diagnostic-request-summary.test.ts` (new), `app/api/diagnostic/request-summary/
+route.ts` (new), `components/diagnostic-summary-request-form.tsx` (new),
+`app/diagnostic/results/page.tsx` (panel wired in), `.env.example`/`CLAUDE.local.md`
+(`BREVO_*` documented), `package.json`/`package-lock.json` (`@getbrevo/brevo` added).
+**Related Feature:** `docs/features/business-health-check-diagnostic.md` (Interfaces,
+FR-6.2, "User flow" steps 5–6), `docs/architecture.md` (the Meta CAPI fire-and-forget
+precedent this follows), `docs/tasks/03-diagnostic.md` (T3.7 — the diagnostic epic's last
+task).
+**Notes:** Real end-to-end email delivery (an actual message landing in an inbox) is still
+unverified — awaiting real `BREVO_API_KEY`/`BREVO_SENDER_EMAIL` credentials from the user;
+everything else in this task's own acceptance criteria is verified for real. Quality gates
+(`npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test`) all pass clean.
+This closes Milestone 3 (the Business Health Check Diagnostic epic) in full. Full reasoning
+in `memory/decision-log.md`.
+
+---
+
 ## 2026-09-05
 
 **Task:** T3.6 — `/diagnostic/results` (session 21)
