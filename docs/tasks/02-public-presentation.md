@@ -21,6 +21,16 @@ source.
 same epic once the epic completes).
 **Size:** M **Dependencies:** T1.5, T2.9 (seed data)
 
+**Addendum (session 25, 2026-09-06):** `lib/home.ts`'s `getFeaturedArticles()` stub (written
+here at T2.1, before `article` existed) can now be replaced with a real query —
+`docs/tasks/04-insights.md`'s T4.1 (schema) and T4.2 (`lib/insights.ts`'s query/shaping
+patterns) both landed this session. See `memory/technical-debt.md` → "Home's featured-Insights
+section still returns a hardcoded empty list, even though `article` now exists" for the full
+fix shape (resolve `featuredArticleIds` first, most-recent-3-published fallback per
+`home-page.md`'s edge case). Not done as part of T4.2 itself — out of that task's own
+Input → Output contract (`/insights` only) — pick this up whenever `app/(public)/page.tsx`
+is next touched, or as its own small task.
+
 ### T2.2 — Core Offer pages (×3)
 
 **Build:** `/offers/[slug]` dynamic route to `ui/mockups/a-public-site/offer-*.html`,

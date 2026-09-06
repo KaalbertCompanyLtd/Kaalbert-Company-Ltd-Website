@@ -669,11 +669,23 @@ model Category {
 /// FR-3.4's "never a generic contact us" rule is an app-layer/content rule, not a schema one.
 ///
 /// `@@index` on `publishedAt` and `categoryId` exist now for T4.2's 100+-article performance
-/// requirement (FR-3.6), even though this task itself builds no query against them.
+/// requirement (FR-3.6), even though T4.1 itself built no query against them.
+///
+/// `excerpt` was added at T4.2, beyond `insights-engine.md`'s original Data requirements list
+/// — same "discovered once actually building against the mockup" precedent as `Offer.
+/// ctaLabel`/`tiers` (T2.2) and `MethodStage.whatHappens` (T2.4): `ui/mockups/b-insights/
+/// insights-index.html`'s article cards (and `home-page.md`'s featured-Insights cards, same
+/// card shape) show a short, purpose-authored teaser distinct from the card's title and from
+/// `body`'s full rich content — not something safe to auto-derive from `body` by truncation,
+/// since `body` is structured blocks (tables/quotes/figures), not plain prose. Required
+/// (`String`, not nullable) since a card with no excerpt has nothing to show in that slot;
+/// unlike `previewImage`, there's no documented "admin publish flow enforces this, schema
+/// doesn't" split for it, so it follows the same required-scalar precedent as `title`.
 model Article {
   id              Int               @id @default(autoincrement())
   slug            String            @unique
   title           String
+  excerpt         String
   /// Ordered rich-content blocks — see model doc-comment.
   body            Json
   authorId        Int               @map("author_id")

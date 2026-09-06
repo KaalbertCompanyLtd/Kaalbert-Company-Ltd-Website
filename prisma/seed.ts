@@ -1396,6 +1396,34 @@ async function seedDiagnosticScoreBands() {
   }
 }
 
+/**
+ * T4.2 — the Insights index's own hero copy, via the shared `page` entity (same pattern as
+ * capabilities/our-method/about/contact — CLAUDE.md's Recurring Patterns: "the home for a
+ * marketing page's own copy when it has no other entity to attach to"). Sourced verbatim from
+ * `ui/mockups/b-insights/insights-index.html`'s `.page-hero` section — treated as accepted
+ * real copy, not placeholder, same as every other page-hero seeded so far. This task seeds no
+ * `article`/`category`/`author` content itself (T4.4's own job); this is only the static
+ * hero/meta chrome around the (possibly still-empty) article list.
+ */
+async function seedInsightsPage() {
+  await prisma.page.upsert({
+    where: { slug: "insights" },
+    update: {},
+    create: {
+      slug: "insights",
+      heroKicker: "Insights",
+      heroHeading: "What we'd tell you in a first meeting — written down",
+      heroLead:
+        "Analysis from the partners themselves, on the specific problems that bring a founder to us in the first place. Not generic advice — the questions this market actually asks.",
+      introCopy: null,
+      metaTitle: "Insights — Kaalbert & Company Ltd",
+      metaDescription:
+        "Analysis from Kaalbert & Company's own partners on the specific problems that bring a founder to an advisory firm in the first place.",
+      isPlaceholder: false,
+    },
+  });
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -1418,6 +1446,7 @@ async function main() {
   await seedDiagnosticQuestions();
   await seedDiagnosticThresholds();
   await seedDiagnosticScoreBands();
+  await seedInsightsPage();
 }
 
 main()

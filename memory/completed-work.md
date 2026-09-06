@@ -14,6 +14,52 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 25)
+
+**Task:** T4.2 — Insights index — `/insights`
+**Summary:** Built the real `/insights` route: `lib/insights.ts` (`getInsightsCategories`,
+`getInsightsIndex`) queries live `article`/`category`/`author` rows, filtering strictly on
+`publishedAt: { not: null }` (T4.1's sole visibility rule — no `is_published` flag anywhere),
+with independent category (via `category.slug`) and case-insensitive title/excerpt search
+filters, paginated at `INSIGHTS_PAGE_SIZE = 6` (matching the mockup) with out-of-range pages
+clamped rather than thrown. `app/insights/page.tsx` renders the index to `ui/mockups/
+b-insights/insights-index.html`'s structure, reading its hero copy from the shared `page`
+entity (slug `"insights"`, newly seeded in `prisma/seed.ts`'s `seedInsightsPage()`). Category
+filter and search are both real `GET` query params (`?category=&q=&page=`) via plain `<Link>`
+navigation and a GET `<form>` — no client-only filter state, satisfying the task's own
+shareable-URL acceptance criterion. Empty search/filter results show a documented empty
+state with a "Clear filters" link; a genuinely empty index (no articles at all yet) shows a
+distinct "No articles published yet" message rather than reusing the search-miss wording.
+Discovered two real gaps building against the mockup: added `Article.excerpt` (required
+`String`, migration `20260906043727_add_article_excerpt`) since the mockup's cards need a
+short teaser the feature doc never named; and built category filter chips as `rounded-sm`,
+not the mockup's `border-radius: 999px` pills, since `ui/design-system.md`'s own Radius
+section explicitly rules pill shapes out. Also wired the now-existing `article` table into
+`lib/seo.ts`'s `getSitemapEntries()` (published articles only), closing that function's own
+"table doesn't exist yet" comment. Verified for real: seeded a temporary throwaway
+category/article set (2 categories, 3 published + 1 draft + 1 no-category article) via a
+local, uncommitted script, exercised the live page through Playwright at mobile (390px),
+tablet (768px), and desktop (1280px) — category filtering, free-text search (both hit and
+miss), the empty-state message, and draft-article exclusion all behaved correctly — then
+deleted the throwaway rows so the real database is back to zero Insights content, matching
+T4.1/T4.2's own "no content seeded" contract (T4.4's job). Added `lib/insights.test.ts` (7
+tests) covering the query-shaping logic Playwright can't easily assert on (exact `where`
+clauses, pagination clamping, zero-result `totalPages: 1`).
+**Files Changed:** app/insights/page.tsx; lib/insights.ts; lib/insights.test.ts; lib/seo.ts;
+prisma/schema.prisma; prisma/migrations/20260906043727_add_article_excerpt/migration.sql;
+prisma/seed.ts; memory/completed-work.md; memory/decision-log.md; memory/technical-debt.md;
+docs/tasks/02-public-presentation.md
+**Related Feature:** docs/features/insights-engine.md
+**Notes:** Had to restart the dev server mid-session — it had been running since before this
+session's schema changes, so its in-memory Prisma client predated `Article`/`Category`
+entirely and threw `Cannot read properties of undefined (reading 'count')` on first request;
+restarting picked up the freshly generated client. Full quality gate run clean: lint,
+format:check, typecheck, and the Vitest suite (22 tests total) all pass. `lib/home.ts`'s
+`getFeaturedArticles()` stub was deliberately left unwired (out of T4.2's own scope) — logged
+in memory/technical-debt.md with an addendum on T2.1. Next up: T4.3 (Article template).
+
+---
+
 ## 2026-09-06 (session 24)
 
 **Task:** T4.1 — Data model: `article`, `author`, `category`, `article_resource`

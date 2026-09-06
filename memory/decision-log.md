@@ -2,6 +2,46 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 25) — Insights index (T4.2): `Article.excerpt` added, and the mockup's pill-shaped filters corrected to the design system's own radius rule
+
+**Summary:** Two real gaps surfaced building `/insights` against `ui/mockups/b-insights/
+insights-index.html`. (1) The mockup's article cards show a short, purpose-authored teaser
+distinct from the title and from the rich `body` content — `insights-engine.md`'s Data
+requirements section never named this field. Added `Article.excerpt` (required `String`) via
+its own migration (`20260906043727_add_article_excerpt`), same "discovered once actually
+building the real page" precedent as `Offer.ctaLabel`/`tiers` (T2.2) and `MethodStage.
+whatHappens` (T2.4) — logged in `prisma/schema.prisma`'s own `Article` doc-comment. (2) The
+mockup's `.filter-pill` category chips use `border-radius: 999px` (a true pill shape), but
+`ui/design-system.md`'s Radius section explicitly rules pill shapes out ("restraint in this
+brand system means no decorative excess (no pill shapes, no exaggerated rounding)") — a
+corrective note the design system itself added after reviewing an earlier built mockup.
+Built the filter chips at `rounded-sm` instead, same structure (a row of clickable category
+filters, active state highlighted) with the token-compliant radius substituted in — the
+accepted design-system document overrides the static wireframe tool's own default shape here,
+per CLAUDE.md's "do not introduce a … radius outside that token set" rule.
+
+Also deliberately did **not** carry over the mockup's "X min read" byline text (no such field
+exists or is derivable without first defining `body`'s exact rich-content-block shape, which
+is T4.3's job, not T4.1/T4.2's) — same "mockup chrome that isn't part of the real data
+contract" precedent as `HomePageContent`'s fixed hero-facts sidebar (T2.1). Category filter
+"pills" also render a single fixed brand-gradient thumbnail (not the mockup's two
+hardcoded per-category gradient colours) since `Category` is a real admin-manageable,
+open-ended list (`content-management-admin.md`), not the mockup's fixed two-category set —
+hardcoding colours per category slug wouldn't generalize.
+
+Separately, closed a small, directly-related gap while here: `lib/seo.ts`'s
+`getSitemapEntries()` had an explicit code comment saying `article` wasn't queried because
+"the table doesn't exist yet" (Milestone 4) — now that it does and `/insights` reads it live,
+added published articles into the sitemap, per `seo-and-search-foundation.md`'s own
+Interfaces section ("every published Insights article"). Left `lib/home.ts`'s
+`getFeaturedArticles()` stub untouched — that's Home's own content block (a separate route,
+needing an excerpt-length teaser this task already added but no more work than that), out of
+this task's own Input → Output contract — see `memory/technical-debt.md`'s new entry, sequenced
+into an addendum on T2.1.
+**Related Documents:** docs/features/insights-engine.md, ui/design-system.md,
+ui/mockups/b-insights/insights-index.html, docs/features/seo-and-search-foundation.md,
+docs/tasks/04-insights.md (T4.2), prisma/schema.prisma, lib/insights.ts, lib/seo.ts
+
 ## 2026-09-06 (session 24) — Insights data model (T4.1): field shapes not spelled out literally by insights-engine.md
 
 **Summary:** `insights-engine.md`'s Data requirements section names `article` fields close to

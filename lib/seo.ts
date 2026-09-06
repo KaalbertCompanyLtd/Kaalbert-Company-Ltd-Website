@@ -154,20 +154,29 @@ export async function getOrganizationJsonLd(): Promise<OrganizationJsonLdData> {
 
 /**
  * `GET /sitemap.xml`'s content, gathered from every published-content table T2.1–T2.7
- * introduced. `article` and `landing_page` aren't queried here — neither table exists yet
- * (insights-engine.md is Milestone 4, landing-page-template.md is Milestone 5) — this
- * degrades gracefully to "not yet queryable" for both, per this task's own architecture
- * constraint, rather than erroring; whichever milestone adds each table also adds its own
- * query here.
+ * introduced, plus `article` as of T4.2 (insights-engine.md is Milestone 4 — `article` didn't
+ * exist before then). `landing_page` still isn't queried here — that table doesn't exist yet
+ * (landing-page-template.md is Milestone 5) — this degrades gracefully to "not yet queryable"
+ * for it, per this task's own architecture constraint, rather than erroring; whichever
+ * milestone adds that table also adds its own query here, same as this task just did for
+ * `article`.
  */
 export async function getSitemapEntries(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
 
-  const [home, offers, pages, legalPages] = await Promise.all([
+  const [home, offers, pages, legalPages, articles] = await Promise.all([
     prisma.homePageContent.findFirst({ orderBy: { id: "asc" }, select: { updatedAt: true } }),
     prisma.offer.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.page.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.legalPage.findMany({ select: { slug: true, updatedAt: true } }),
+    // seo-and-search-foundation.md's own edge case: "the sitemap includes only published,
+    // public pages — a draft article ... never appears in it" — `publishedAt: { not: null }`
+    // is the same, only visibility check `lib/insights.ts` uses (T4.1's sole-source-of-truth
+    // rule).
+    prisma.article.findMany({
+      where: { publishedAt: { not: null } },
+      select: { slug: true, updatedAt: true },
+    }),
   ]);
 
   const entries: MetadataRoute.Sitemap = [];
@@ -188,6 +197,12 @@ export async function getSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     entries.push({
       url: `${baseUrl}/legal/${legalPage.slug}`,
       lastModified: legalPage.updatedAt,
+    });
+  }
+  for (const article of articles) {
+    entries.push({
+      url: `${baseUrl}/insights/${article.slug}`,
+      lastModified: article.updatedAt,
     });
   }
 
