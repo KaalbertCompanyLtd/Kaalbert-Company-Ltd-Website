@@ -14,6 +14,48 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 28)
+
+**Task:** T4.5 — Subscription capture
+**Summary:** Added the `Subscriber` model (email `@unique`, `consent`, an opaque `@default(cuid())`
+`unsubscribeToken` — deliberately not the row's own `id`, since this token backs an
+unauthenticated, third-party-clickable link — `subscribedAt`, nullable `unsubscribedAt`).
+Built `lib/insights-subscription.ts` (`subscribeToInsights`, `unsubscribeFromInsights`,
+mirroring `lib/enquiries.ts`'s validate-in-`lib/`-not-the-route pattern) and the two routes
+(`POST /api/insights/subscribe`; `/api/insights/unsubscribe` implementing both `GET`, for the
+real emailed one-click link, and `POST`, for the doc's literal interface). Subscribing sends
+a confirmation email (via T3.7's `sendTransactionalEmail`) containing the required unsubscribe
+link. Built one shared `InsightsSubscribeForm` component (email + one unticked consent
+checkbox, no `pushDataLayerEvent` call anywhere — this task's own explicit "don't invent a
+seventh measurement event" rule) rendered at the foot of both `/insights` and every
+`/insights/[slug]`, since no dedicated mockup exists for this form at all.
+**Files Changed:** prisma/schema.prisma (`Subscriber`); prisma/migrations/
+20260906071300_add_subscriber/; lib/insights-subscription.ts (+ .test.ts);
+app/api/insights/subscribe/route.ts; app/api/insights/unsubscribe/route.ts;
+components/insights-subscribe-form.tsx; app/insights/page.tsx (form + unsubscribe
+confirmation banner); app/insights/[slug]/page.tsx (form); lib/enquiries.ts (+ .test.ts,
+new); lib/diagnostic-request-summary.ts (+ new tests); memory/decision-log.md
+**Related Feature:** docs/features/insights-engine.md
+**Notes:** Real Playwright verification caught a genuine bug before it could ship: the `GET`
+unsubscribe handler's redirect used `getSiteUrl()` (falls back to the unregistered production
+domain), so clicking the real link produced `net::ERR_NAME_NOT_RESOLVED` in the browser — fixed
+by redirecting relative to the request's own origin instead. Also closed a real, pre-existing
+gap in two already-shipped forms once this task made it fixable: `components/contact-form.tsx`
+(T2.6) and `components/diagnostic-summary-request-form.tsx` (T3.7) have always had a
+`marketingConsent` checkbox specifically promising "occasional Insights articles," but no
+`subscriber` row existed to honour it — wired both to the same `subscribeToInsights` this
+task built, fire-and-forget, verified for real via `curl` (a checked Contact-form submission
+now creates a real, confirmed `subscriber` row). Verified for real via Playwright: subscribe →
+confirmation-state UI → real DB row with a real `cuid()` token; the emailed unsubscribe link
+(constructed with the real token) → redirects to `/insights?unsubscribed=1` → visible
+confirmation banner → `unsubscribedAt` set; re-subscribing the same email → exactly one row,
+`unsubscribedAt` cleared back to `null` (no duplicate); missing-consent and missing-email both
+return a real 400 with a clear message. Full quality gate run clean: lint, format:check,
+typecheck, and the Vitest suite (56 tests total) all pass. This closes out Milestone 4
+(Insights) entirely.
+
+---
+
 ## 2026-09-06 (session 27)
 
 **Task:** T4.4 — Article content seed

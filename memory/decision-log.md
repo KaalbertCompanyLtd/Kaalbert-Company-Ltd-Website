@@ -2,6 +2,57 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 28) — Subscription capture (T4.5): schema/interface decisions, a real redirect bug caught by Playwright, and closing a pre-existing promise gap in two other forms
+
+**Summary:** Several judgment calls and one real bug this task's own verification caught:
+
+1. **`Subscriber.unsubscribeToken`, not the row's own `id`, identifies a one-click
+   unsubscribe.** A sequential integer `id` would let anyone enumerate/unsubscribe another
+   visitor by guessing a small number — this is a real, unauthenticated, third-party-clickable
+   link, unlike most of this project's other internal-use identifiers. Used Prisma's native
+   `@default(cuid())`, no new dependency.
+2. **Both `GET` and `POST` implemented on `/api/insights/unsubscribe`.**
+   `insights-engine.md` names the interface as `POST`, but describes its use as "a one-click
+   link in every sent email" — a plain `<a href>` a mail client renders can only ever issue a
+   `GET`. Built both, sharing the same `unsubscribeFromInsights` call: `GET` is what the real
+   emailed link points to (redirecting to a visible `/insights` confirmation), `POST` exists
+   for the literal documented interface (e.g. a future "manage your subscription" page).
+3. **A confirmation email is sent on every subscribe/re-confirm**, via `lib/email.ts`'s
+   `sendTransactionalEmail` (T3.7) — this is what "reusing T3.7's email utility" in the task's
+   own dependency line actually means in practice, since no bulk-newsletter-sending feature
+   exists yet to otherwise carry the required unsubscribe link.
+4. **Real bug caught by this session's own Playwright verification**: the `GET` unsubscribe
+   handler's redirect originally used `getSiteUrl()` (falls back to the hardcoded production
+   domain, `kaalbert.com` — not registered yet, per CLAUDE.local.md) as the redirect base.
+   Clicking the link in a real browser produced `net::ERR_NAME_NOT_RESOLVED`, since the
+   browser tried to follow the redirect to a domain with no DNS record. Fixed by building the
+   redirect from the _request's own_ origin (`new URL(path, request.url)`) instead — a
+   redirect after following a link must land back on whichever host actually served the
+   request (dev, a Railway preview, or production), never an unconditional hardcoded domain.
+   `getSiteUrl()` remains correct for the _emailed_ unsubscribe link itself (an email must
+   point at the real public domain regardless of which environment generated it) — the bug was
+   specifically in reusing that same helper for an in-browser redirect, a different context
+   with a different correct answer.
+5. **Closed a real, pre-existing promise gap in two already-shipped forms** (T2.6's
+   `ContactForm`, T3.7's `DiagnosticSummaryRequestForm`): both forms' own `marketingConsent`
+   checkbox copy has always said, specifically, "I'd also like occasional Insights articles
+   and updates from Kaalbert & Company" — but no `subscriber` row existed to honour that until
+   this task built one, so a checked box silently did nothing toward Insights. Wired both
+   (`lib/enquiries.ts`'s `createContactEnquiry`, `lib/diagnostic-request-summary.ts`'s
+   `requestDiagnosticSummary`) to call the same `subscribeToInsights` this task's own
+   `/api/insights/subscribe` uses, fire-and-forget (a failure here must never undo the
+   enquiry/summary-request that already succeeded). This is not scope creep into unrelated
+   forms — it is the concrete, previously-unfulfillable half of a promise those forms already
+   made, now fulfillable because this task built the missing piece; same "fix now, same
+   session, when a gap is small and this task is exactly what unblocks it" pattern already
+   established at T2.1/T3.7 (sessions 23, 25) — not deferred as technical debt, since nothing
+   would ever "reach" T2.6/T3.7 again to pick it up (the same lesson from session 25's own
+   corrected mistake).
+   **Related Documents:** docs/features/insights-engine.md, components/contact-form.tsx,
+   components/diagnostic-summary-request-form.tsx, lib/enquiries.ts,
+   lib/diagnostic-request-summary.ts, lib/insights-subscription.ts,
+   app/api/insights/unsubscribe/route.ts, memory/completed-work.md (session 28)
+
 ## 2026-09-06 (session 27) — Article content seed (T4.4): the real 8 articles, found and seeded; plus a real Home card bug found once real content existed
 
 **Summary:** T4.4 initially looked headed for an "empty state" resolution: Document 13.03

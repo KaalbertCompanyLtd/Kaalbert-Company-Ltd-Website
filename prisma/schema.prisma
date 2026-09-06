@@ -742,3 +742,31 @@ model ArticleResource {
   @@unique([articleId, sortOrder])
   @@map("article_resource")
 }
+
+/// docs/features/insights-engine.md "Data requirements" — T4.5. A visitor's opt-in to the
+/// Insights mailing list, one of exactly two documented secondary capture routes (Document
+/// 13.03 Section 6 — "lighter commitments for a visitor not yet ready for the diagnostic").
+/// `email` is `@unique` — this is what makes "an already-subscribed email subscribes again:
+/// no duplicate record" (insights-engine.md's own edge case) enforceable at the database
+/// layer, not only by `lib/insights-subscription.ts`'s own upsert-by-email application logic.
+/// `consent` has no default — every real row is created with an explicit `true` (the app
+/// layer rejects anything else, T4.5's own acceptance criterion); there is deliberately no
+/// separate "contact consent" field here, per insights-engine.md's business rule that the
+/// signup itself is the marketing communication being consented to. `unsubscribeToken` is a
+/// separate opaque unique value (`cuid()`, not the row's own sequential `id`) so a one-click
+/// unsubscribe link can't be used to enumerate or unsubscribe a different visitor by guessing
+/// a small integer — a deliberate choice over the simpler "use `id`" alternative, made because
+/// this is a real, unauthenticated, third-party-clickable link. `unsubscribedAt` is nullable
+/// and re-subscribing clears it back to `null` rather than the row ever being deleted, so a
+/// visitor's subscription history is never silently lost (same "never destructive, always
+/// reversible" precedent as `EnquiryRecord`).
+model Subscriber {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  consent          Boolean
+  unsubscribeToken String    @unique @default(cuid()) @map("unsubscribe_token")
+  subscribedAt     DateTime  @default(now()) @map("subscribed_at")
+  unsubscribedAt   DateTime? @map("unsubscribed_at")
+
+  @@map("subscriber")
+}

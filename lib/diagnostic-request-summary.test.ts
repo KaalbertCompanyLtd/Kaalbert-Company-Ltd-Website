@@ -15,8 +15,13 @@ vi.mock("@/lib/email", () => ({
   sendTransactionalEmail: vi.fn(),
 }));
 
+vi.mock("@/lib/insights-subscription", () => ({
+  subscribeToInsights: vi.fn(),
+}));
+
 import { getScoreBand } from "@/lib/diagnostic-flow";
 import { EmailSendError, sendTransactionalEmail } from "@/lib/email";
+import { subscribeToInsights } from "@/lib/insights-subscription";
 import { prisma } from "@/lib/prisma";
 import {
   DiagnosticSummaryRequestValidationError,
@@ -27,6 +32,7 @@ const findUniqueMock = vi.mocked(prisma.enquiryRecord.findUnique);
 const updateMock = vi.mocked(prisma.enquiryRecord.update);
 const getScoreBandMock = vi.mocked(getScoreBand);
 const sendEmailMock = vi.mocked(sendTransactionalEmail);
+const subscribeMock = vi.mocked(subscribeToInsights);
 
 const STUB_SCORE_SUMMARY = {
   score: 62,
@@ -49,9 +55,11 @@ beforeEach(() => {
   updateMock.mockReset();
   getScoreBandMock.mockReset();
   sendEmailMock.mockReset();
+  subscribeMock.mockReset();
   getScoreBandMock.mockResolvedValue(null);
   updateMock.mockResolvedValue({} as never);
   sendEmailMock.mockResolvedValue(undefined);
+  subscribeMock.mockResolvedValue(undefined);
 });
 
 describe("requestDiagnosticSummary", () => {
@@ -141,6 +149,33 @@ describe("requestDiagnosticSummary", () => {
     expect(updateMock).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledTimes(1);
 
+    consoleError.mockRestore();
+  });
+
+  it("does not subscribe to Insights when marketing consent is absent", async () => {
+    findUniqueMock.mockResolvedValue({ id: 5, scoreSummary: STUB_SCORE_SUMMARY } as never);
+
+    await requestDiagnosticSummary(VALID_INPUT);
+
+    expect(subscribeMock).not.toHaveBeenCalled();
+  });
+
+  it("subscribes to Insights when marketing consent is checked — same form copy/promise as the Contact form", async () => {
+    findUniqueMock.mockResolvedValue({ id: 5, scoreSummary: STUB_SCORE_SUMMARY } as never);
+
+    await requestDiagnosticSummary({ ...VALID_INPUT, marketingConsent: true });
+
+    expect(subscribeMock).toHaveBeenCalledWith({ email: "ama@example.com", consent: true });
+  });
+
+  it("still sends the summary email even if the Insights subscription call fails", async () => {
+    findUniqueMock.mockResolvedValue({ id: 5, scoreSummary: STUB_SCORE_SUMMARY } as never);
+    subscribeMock.mockRejectedValue(new Error("db down"));
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await requestDiagnosticSummary({ ...VALID_INPUT, marketingConsent: true });
+
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
     consoleError.mockRestore();
   });
 });

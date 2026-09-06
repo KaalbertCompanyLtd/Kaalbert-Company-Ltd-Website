@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getScoreBand, type DiagnosticScoreBand } from "@/lib/diagnostic-flow";
 import type { DiagnosticScoringResult } from "@/lib/diagnostic-scoring";
 import { EmailSendError, sendTransactionalEmail } from "@/lib/email";
+import { subscribeToInsights } from "@/lib/insights-subscription";
 
 /** Thrown for a structurally-present-but-invalid request — the route maps this to a 400. */
 export class DiagnosticSummaryRequestValidationError extends Error {}
@@ -196,6 +197,8 @@ export async function requestDiagnosticSummary(
     );
   }
 
+  const marketingConsent = input.marketingConsent ?? false;
+
   await prisma.enquiryRecord.update({
     where: { id: input.enquiryId },
     data: {
@@ -203,9 +206,23 @@ export async function requestDiagnosticSummary(
       email,
       phone: phone || null,
       contactConsent: true,
-      marketingConsent: input.marketingConsent ?? false,
+      marketingConsent,
     },
   });
+
+  // T4.5 follow-up (session 28) — same gap and same fix as `lib/enquiries.ts`'s Contact form:
+  // `components/diagnostic-summary-request-form.tsx`'s own `marketingConsent` checkbox copy
+  // has always specifically named Insights articles, but no `subscriber` row existed to
+  // honour that promise until this task built one. Fire-and-forget, same as this function's
+  // own email send below — the diagnostic summary request itself already succeeded and must
+  // not be undone by a failure in this secondary action.
+  if (marketingConsent) {
+    try {
+      await subscribeToInsights({ email, consent: true });
+    } catch (error) {
+      console.error(`[diagnostic-request-summary] Insights subscription failed: ${error}`);
+    }
+  }
 
   const result = enquiry.scoreSummary as unknown as DiagnosticScoringResult;
   const band = await getScoreBand(result.score);

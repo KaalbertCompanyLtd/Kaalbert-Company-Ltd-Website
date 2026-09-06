@@ -15,6 +15,7 @@ import type { ArticleBodyBlock, ArticleResourceItem } from "@/lib/insights";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata, getSiteUrl, resolveMetaDescription } from "@/lib/seo";
 import { ArticleJsonLd } from "@/components/article-json-ld";
+import { InsightsSubscribeForm } from "@/components/insights-subscribe-form";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -356,6 +357,15 @@ export default async function ArticlePage({ params }: ArticlePageParams) {
                 {article.nextStepCta.label}
               </Link>
             </div>
+          </div>
+        </section>
+
+        {/* Subscribe form at the foot of every article (insights-engine.md's own placement,
+            same shared component the index renders — see components/insights-subscribe-
+            form.tsx's doc-comment for why this is one component, not two). */}
+        <section className="border-border border-t px-4 py-12 sm:px-6">
+          <div className="mx-auto max-w-[560px]">
+            <InsightsSubscribeForm />
           </div>
         </section>
 

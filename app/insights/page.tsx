@@ -8,6 +8,7 @@ import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
 import { ArticleCard } from "@/components/insights-article-card";
+import { InsightsSubscribeForm } from "@/components/insights-subscribe-form";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -39,6 +40,7 @@ interface InsightsPageProps {
     category?: string | string[];
     q?: string | string[];
     page?: string | string[];
+    unsubscribed?: string | string[];
   }>;
 }
 
@@ -83,6 +85,7 @@ export default async function InsightsPage({ searchParams }: InsightsPageProps) 
   const category = firstValue(params.category);
   const q = firstValue(params.q);
   const requestedPage = Number.parseInt(firstValue(params.page) ?? "1", 10);
+  const justUnsubscribed = firstValue(params.unsubscribed) === "1";
 
   const [page, offerNavLinks, index] = await Promise.all([
     getPageBySlug("insights"),
@@ -120,6 +123,16 @@ export default async function InsightsPage({ searchParams }: InsightsPageProps) 
 
         <section className="px-4 py-12 sm:px-6">
           <div className="mx-auto max-w-[1100px]">
+            {/* Confirms a real GET click on the emailed unsubscribe link
+                (app/api/insights/unsubscribe/route.ts) — a bare JSON response would be all a
+                real visitor's browser ever showed them otherwise. */}
+            {justUnsubscribed && (
+              <div className="border-border bg-muted text-body text-foreground mb-8 rounded-sm border px-4 py-3">
+                You&apos;ve been unsubscribed from Kaalbert Insights. You won&apos;t receive any
+                further emails.
+              </div>
+            )}
+
             {/* Category filter + search — both real navigations (GET query params), never
                 client-only state, so a filtered/searched view has its own shareable URL. */}
             <div className="mb-8 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
@@ -214,6 +227,10 @@ export default async function InsightsPage({ searchParams }: InsightsPageProps) 
                 </PaginationLink>
               </nav>
             )}
+
+            <div className="mx-auto mt-14 max-w-[560px]">
+              <InsightsSubscribeForm />
+            </div>
           </div>
         </section>
       </main>
