@@ -18,6 +18,38 @@ sequencing requirement:
 
 ---
 
+## Diagnostic summary email had no admin edit screen yet for its new `emailDetail` content
+
+**Status:** Open
+**Date raised:** 2026-09-06 (T3.7 follow-up, session 23 — user asked whether the emailed
+summary's content was admin-editable and, on inspection, whether it was genuinely fuller
+than the on-screen result; it was neither)
+**Reason:** The user's real complaint wasn't the email's subject/intro/closing chrome (those
+are fine as plain copy) — it was that `buildSummaryEmailHtml` (`lib/diagnostic-request-
+summary.ts`) reused `DiagnosticScoreBand.statement`, the exact same short sentence
+`/diagnostic/results` already shows on screen. A "full written summary" that repeats the
+screen verbatim isn't actually fuller. Fixed by adding a new `DiagnosticScoreBand.emailDetail`
+column (migration `20260906023106_add_diagnostic_score_band_email_detail`) — a separate,
+longer, multi-paragraph narrative used only by the email, never by the results screen —
+seeded with real (placeholder-flagged) detailed copy per band, verified end-to-end via a real
+`/api/diagnostic/submit` call against the running dev server (confirmed `getScoreBand`
+returns the new field, the email HTML renders it as real paragraphs, and `/diagnostic/results`
+itself is unchanged — still shows only the short `statement`, screenshotted to confirm no
+regression). Full reasoning in `memory/decision-log.md`.
+**Impact:** Low today (the email now genuinely is fuller, and the content lives in the DB
+ready to be edited) but no `/admin` screen exists yet to let a partner actually change it —
+same gap `DiagnosticScoreBand.statement`/`.label` already carry, now also true for
+`.emailDetail`.
+**Priority:** Medium
+**Possible Fix/Fixes:** Extend T7.7's Diagnostic Configuration editor to expose all three
+score-band content fields (label, statement, emailDetail) — emailDetail needs a multi-line
+textarea, not a single-line input, since it supports blank-line-separated paragraphs.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.7 (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — see
+that task's session-23 addendum for the exact field list this editor still needs to add.
+
+---
+
 ## Diagnostic results screen has no score-band label/statement (e.g. "Strong Foundation") — not seeded, not admin-editable, not planned anywhere
 
 **Status:** Resolved

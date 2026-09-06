@@ -50,7 +50,11 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
 8. **Adjust the diagnostic**: a partner with the right role edits question text, order, and
    active flag, dimension weights, and triage thresholds — the exact configuration data named
    in `business-health-check-diagnostic.md` (FR-2.2). The underlying scoring algorithm stays
-   developer-owned per FR-8's scope; this screen edits values, not logic.
+   developer-owned per FR-8's scope; this screen edits values, not logic. The same screen also
+   edits each `diagnostic_score_band`'s label, on-screen `statement`, and the separate, longer
+   `email_detail` narrative sent only in the summary email (T3.7) — two distinct fields, not
+   one, so the firm can keep the results screen short while writing a genuinely fuller version
+   for the email (added at T3.6/T3.7; see Data requirements below).
 9. **Update site settings**: a partner edits the firm's phone numbers, WhatsApp number,
    email, office address, and the Contact page's response-time commitment — a single
    settings record read by the footer, the Contact page, and every `WhatsAppLinkButton`
@@ -106,6 +110,12 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
   one active question) before it can be published — this is the same check named as a launch
   edge case in that feature doc, now given an owner: this admin screen, not a database
   migration.
+- A score band's `statement` (on-screen) and `email_detail` (emailed) are edited as two
+  separate fields, never collapsed into one — the results screen is deliberately a teaser
+  (FR-2.3: no contact details required for the on-screen result) and the email is the
+  genuinely fuller follow-up the firm offers in exchange for contact details; editing only
+  one field would either shorten the email to match the screen or bloat the screen to match
+  the email, defeating the reason the two exist separately.
 - Site Settings holds exactly one record (there is one firm, one set of contact details) —
   this is a singleton edit form, not a list. Every place that displays a phone number,
   WhatsApp number, email, or address (the footer, `/contact`, every `WhatsAppLinkButton`)
@@ -126,8 +136,8 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
 Shares the schema of the features it edits (`article`, `category`, `page`, `legal_page`,
 `offer` with structured fee fields, `advisory_retainer` with the same fee-field discipline,
 `landing_page`, `author`, `diagnostic_question`, `diagnostic_dimension`,
-`diagnostic_threshold`) — this feature is the UI and authorization layer over that data, not
-a separate data model. `author`
+`diagnostic_threshold`, `diagnostic_score_band`) — this feature is the UI and authorization
+layer over that data, not a separate data model. `author`
 — id, admin_user_id (FK), name, photo_url, title (string, added session 11 — the partner's
 rank, e.g. "Lead Partner"/"Partner", rendered as a badge distinct from practice_area),
 practice_area, credentials, personal_statement, bio, order (int, added at T2.5 — display
@@ -146,7 +156,8 @@ response_time_commitment, social_profile_urls (list, nullable —
 - `PATCH /api/admin/articles/[id]`, `PATCH /api/admin/pages/[id]`, `PATCH
 /api/admin/offers/[id]`, `POST /api/admin/landing-pages`, `PATCH /api/admin/authors/[id]`,
   `PATCH /api/admin/diagnostic-questions/[id]`, `PATCH /api/admin/diagnostic-dimensions/[id]`,
-  `PATCH /api/admin/diagnostic-thresholds/[id]`, `PATCH /api/admin/site-settings`, `POST
+  `PATCH /api/admin/diagnostic-thresholds/[id]`, `PATCH /api/admin/diagnostic-score-bands/[id]`
+  (label/statement/email_detail), `PATCH /api/admin/site-settings`, `POST
 /api/admin/categories`, `PATCH /api/admin/categories/[id]` — all requiring a valid
   authenticated session with the appropriate role. Photo upload reuses the same media
   pipeline as an article's required preview image (Cloudflare R2, per ADR 0004) — no separate

@@ -54,7 +54,15 @@ export async function getActiveDiagnosticQuestionCount(): Promise<number> {
 
 export interface DiagnosticScoreBand {
   label: string;
+  /** Short, on-screen version — `/diagnostic/results` shows this, never `emailDetail`. */
   statement: string;
+  /**
+   * Fuller narrative, sent only in the "full written summary" email
+   * (`lib/diagnostic-request-summary.ts`) — deliberately never rendered on the results
+   * screen, so the on-screen result stays a teaser and the email is the genuinely fuller
+   * follow-up it's advertised as.
+   */
+  emailDetail: string;
 }
 
 /**
@@ -69,5 +77,7 @@ export interface DiagnosticScoreBand {
 export async function getScoreBand(score: number): Promise<DiagnosticScoreBand | null> {
   const bands = await prisma.diagnosticScoreBand.findMany({ orderBy: { minScore: "desc" } });
   const band = bands.find((b) => score >= b.minScore);
-  return band ? { label: band.label, statement: band.statement } : null;
+  return band
+    ? { label: band.label, statement: band.statement, emailDetail: band.emailDetail }
+    : null;
 }

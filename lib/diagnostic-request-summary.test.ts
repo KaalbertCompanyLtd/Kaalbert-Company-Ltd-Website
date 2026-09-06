@@ -102,6 +102,36 @@ describe("requestDiagnosticSummary", () => {
     expect(call.htmlContent).toContain("Overall score 62/100.");
   });
 
+  it("sends the band's fuller emailDetail text, not the short on-screen statement", async () => {
+    findUniqueMock.mockResolvedValue({ id: 5, scoreSummary: STUB_SCORE_SUMMARY } as never);
+    getScoreBandMock.mockResolvedValue({
+      label: "Developing, With Real Gaps",
+      statement: "Short on-screen version.",
+      emailDetail: "Paragraph one of the fuller narrative.\n\nParagraph two, with more detail.",
+    });
+
+    await requestDiagnosticSummary(VALID_INPUT);
+
+    const call = sendEmailMock.mock.calls[0][0];
+    expect(call.htmlContent).toContain("Paragraph one of the fuller narrative.");
+    expect(call.htmlContent).toContain("Paragraph two, with more detail.");
+    expect(call.htmlContent).not.toContain("Short on-screen version.");
+  });
+
+  it("falls back to the short statement when a band has no emailDetail authored yet", async () => {
+    findUniqueMock.mockResolvedValue({ id: 5, scoreSummary: STUB_SCORE_SUMMARY } as never);
+    getScoreBandMock.mockResolvedValue({
+      label: "Developing, With Real Gaps",
+      statement: "Short on-screen version.",
+      emailDetail: "",
+    });
+
+    await requestDiagnosticSummary(VALID_INPUT);
+
+    const call = sendEmailMock.mock.calls[0][0];
+    expect(call.htmlContent).toContain("Short on-screen version.");
+  });
+
   it("does not throw when the email fails to send — the enquiry_record update already succeeded", async () => {
     findUniqueMock.mockResolvedValue({ id: 5, scoreSummary: STUB_SCORE_SUMMARY } as never);
     sendEmailMock.mockRejectedValue(new EmailSendError("BREVO_API_KEY is not set."));

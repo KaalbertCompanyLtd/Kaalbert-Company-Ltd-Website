@@ -73,9 +73,24 @@ export function buildSummaryEmailHtml(
     })
     .join("");
 
+  // The email's own, fuller narrative — never `band.statement` (the short version already
+  // shown on `/diagnostic/results`) — so the email is genuinely more detailed than the
+  // screen, not a copy of it. Falls back to `statement` only if no detail has been authored
+  // yet (a fresh/placeholder row). Split on a blank line so a multi-paragraph narrative
+  // renders as real paragraphs, not one run-on block.
+  const detailParagraphs = (band?.emailDetail || band?.statement || "")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map(
+      (paragraph) =>
+        `<p style="margin:0 0 14px;font-family:${BRAND.body};font-size:14px;line-height:1.6;color:${BRAND.ink600};max-width:420px;margin-left:auto;margin-right:auto;">${escapeHtml(paragraph)}</p>`,
+    )
+    .join("");
+
   const bandHtml = band
     ? `<div style="font-family:${BRAND.display};font-size:17px;font-weight:700;color:${BRAND.brass};margin:2px 0 6px;">${escapeHtml(band.label)}</div>
-       <p style="margin:0 0 20px;font-family:${BRAND.body};font-size:14px;line-height:1.6;color:${BRAND.ink600};max-width:420px;margin-left:auto;margin-right:auto;">${escapeHtml(band.statement)}</p>`
+       ${detailParagraphs}`
     : "";
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.muted};padding:32px 16px;">

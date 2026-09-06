@@ -150,3 +150,13 @@ Low priority — skip either or both without blocking this task if nothing's cha
 update both `memory/technical-debt.md` entries either way (a "still open, re-checked" note is
 itself real due diligence, not a no-op), and re-sequence `Sequenced into:` to whichever task
 next touches `package.json` if this one doesn't resolve them either.
+
+**Addendum (session 23, 2026-09-06):** This task's own acceptance criterion — "the resulting
+email ... matches the on-screen result data" — refers to the score/dimension _data_ (score,
+dimension percentages, weakest-dimension flags), which still match exactly. It does not, and
+was never intended to, mean the email's narrative text is identical to the screen's: the user
+pointed out the email should be genuinely _fuller_ than the results screen, not a copy of it
+("get the full detail... in the email"), since the screen is deliberately a teaser (FR-2.3).
+Fixed by giving `DiagnosticScoreBand` a separate `emailDetail` field (longer, multi-paragraph)
+distinct from `statement` (the short on-screen version) — see `docs/tasks/07-content-
+admin.md`'s T7.7 session-23 addendum for the full change, and `memory/decision-log.md`.

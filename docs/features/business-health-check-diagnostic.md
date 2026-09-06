@@ -25,7 +25,11 @@ Document 13.03, Section 6).
    contact details and explicit, separate marketing consent (unticked by default).
 6. The visitor receives the full summary by email. The firm receives the complete response
    set, the visitor's contact details, the traffic source/campaign/landing page that produced
-   the session, and a triage flag.
+   the session, and a triage flag. The emailed summary is deliberately fuller than the
+   on-screen result: each score band carries a short, on-screen `statement` and a separate,
+   longer `emailDetail` narrative used only in the email — the results screen stays a teaser
+   by design (see Business rules), and the email is where "full written summary" is actually
+   true.
 
 ## Business rules
 
@@ -53,6 +57,11 @@ Document 13.03, Section 6).
   choice), active flag.
 - `diagnostic_dimension` — id, name, weight.
 - `diagnostic_threshold` — id, dimension or overall, threshold value, triage priority level.
+- `diagnostic_score_band` — id, min_score, label, statement (short, on-screen version shown
+  on `/diagnostic/results`), email_detail (longer, multi-paragraph narrative sent only in the
+  T3.7 summary email — never shown on screen), is_placeholder. Added at T3.6/T3.7 (session
+  22–23) once the mockup's own illustrative band content ("Strong Foundation" etc.) turned
+  out not to be modelled anywhere; not in the original launch schema.
 - `diagnostic_response` — id, session id, question id, answer value, timestamp.
 - `enquiry_record` — id, diagnostic_response set (relation), score summary, weakest
   dimensions, triage flag, contact details (nullable until step 5), marketing consent

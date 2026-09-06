@@ -2,6 +2,49 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 23) — Split the score band's emailed content from its on-screen statement into two separate, independently admin-editable fields
+
+**Summary:** The user asked whether the summary email's content was admin-editable, since it
+felt thin. Digging in: the subject/intro/closing wording is fine as plain copy (no feature doc
+ever claimed it was database-driven), and the disclaimer/footer legal text is _deliberately_
+hardcoded verbatim (FR-2.8 and the site-wide scope-of-practice statement, both matched
+exactly elsewhere in the codebase — not a gap). The real problem was narrower and more
+specific: the user clarified they meant the email is supposed to be the "full detail" version
+but `buildSummaryEmailHtml` was rendering `DiagnosticScoreBand.statement` — the identical
+short sentence `/diagnostic/results` already shows on screen. So the email wasn't actually
+fuller than the screen at all, despite being introduced to the visitor as "the full written
+summary."
+
+Considered reusing `statement` and just writing it longer, but that would make the on-screen
+result longer too (both read the same field) — directly against FR-2.3's design intent that
+the on-screen result stays a teaser and the email is the real payoff for handing over contact
+details. Instead added a fourth column to `DiagnosticScoreBand`: `emailDetail`, a separate,
+longer, multi-paragraph narrative (paragraphs split on a blank line) read only by
+`buildSummaryEmailHtml`, never by `/diagnostic/results`. Seeded real (placeholder-flagged, per
+CLAUDE.md's fabrication rule) detailed copy for all four bands — genuinely more substantive
+than the one-liner `statement`, written to read like what a partner would actually want a
+prospect to receive by email. Falls back to `statement` if a row's `emailDetail` is ever
+blank, so a freshly-added band never renders an empty section.
+
+Verified for real, not just via unit tests: submitted a live diagnostic response through the
+running dev server's own `/api/diagnostic/submit`, fetched the resulting real `enquiry_record`
+and its DB-backed `DiagnosticScoreBand` row, and rendered the actual production
+`buildSummaryEmailHtml` function against that real data — confirmed two genuine paragraphs of
+new content in the output, correct HTML-escaping, and a real Playwright screenshot of
+`/diagnostic/results` confirming the results screen itself is untouched (still shows only the
+short `statement`, no regression). Test rows deleted afterward via the same cleanup pattern
+used in prior sessions.
+
+No `/admin` screen exists yet to edit this (or the `label`/`statement` fields either) —
+Milestone 7 hasn't been built. Logged as technical debt sequenced into T7.7, same as the
+original score-band gap; this session only extends the data model, seed, and email-read path,
+consistent with how the original `DiagnosticScoreBand` model itself was introduced ahead of
+its own admin screen.
+
+**Related Documents:** `docs/features/business-health-check-diagnostic.md`,
+`docs/features/content-management-admin.md`, `docs/tasks/03-diagnostic.md` (T3.7 addendum),
+`docs/tasks/07-content-admin.md` (T7.7 addendum), `memory/technical-debt.md`.
+
 ## 2026-09-06 (session 22) — Rebuilt the summary email's HTML on the real brand tokens (Pine Green/Antique Brass, Georgia/Calibri), table-layout for email-client compatibility
 
 **Summary:** The user asked whether the summary email was actually styled/branded — it

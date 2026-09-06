@@ -500,6 +500,14 @@ model DiagnosticScoreBand {
   minScore      Int      @map("min_score")
   label         String
   statement     String
+  /// The band's fuller narrative, sent only in the "full written summary" email
+  /// (`lib/diagnostic-request-summary.ts`) — deliberately separate from `statement` (the short
+  /// version `/diagnostic/results` shows on screen) so the two can diverge: the results screen
+  /// stays a teaser by design (FR-2.3 — value delivered before any contact ask, but not the
+  /// full picture), and the emailed version is what actually earns the name "full written
+  /// summary." Supports multiple paragraphs (split on a blank line) for a genuinely longer
+  /// narrative than the one-line on-screen statement.
+  emailDetail   String   @default("") @map("email_detail")
   isPlaceholder Boolean  @default(true) @map("is_placeholder")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

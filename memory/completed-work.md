@@ -14,6 +14,39 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 23)
+
+**Task:** T3.7 follow-up — genuinely fuller summary-email content, admin-editable
+**Summary:** User asked whether the summary email's content was admin-editable, since it read
+thin. On inspection, the subject/intro/closing chrome was fine, but the email's own band
+narrative was reusing `DiagnosticScoreBand.statement` — the exact same short sentence already
+shown on `/diagnostic/results` — so the "full written summary" wasn't actually fuller than
+the on-screen result. Added `DiagnosticScoreBand.emailDetail` (migration
+`20260906023106_add_diagnostic_score_band_email_detail`), a separate, longer, multi-paragraph
+narrative used only by `buildSummaryEmailHtml`, never rendered on the results screen. Seeded
+real (placeholder-flagged) detailed copy per band. `lib/diagnostic-flow.ts`'s
+`DiagnosticScoreBand` type and `getScoreBand` extended to carry the new field;
+`buildSummaryEmailHtml` now splits it on blank lines into real `<p>` paragraphs, falling back
+to `statement` only if a row has no detail authored yet. Verified for real: submitted a live
+score-65 response via the running dev server, fetched the real DB-backed band, and rendered
+the actual production HTML — confirmed the email carries the new, genuinely fuller paragraphs
+while `/diagnostic/results` (screenshotted) is unchanged, still showing only the short
+statement. Test enquiry rows cleaned up afterward. Updated the published email-preview
+Artifact with the new content (same URL as T3.7's original preview).
+**Files Changed:** `prisma/schema.prisma` (+ migration
+`20260906023106_add_diagnostic_score_band_email_detail`), `prisma/seed.ts` (real detailed
+copy per band), `lib/diagnostic-flow.ts` (`emailDetail` field + `getScoreBand`),
+`lib/diagnostic-request-summary.ts` (`buildSummaryEmailHtml` paragraph rendering),
+`lib/diagnostic-request-summary.test.ts` (2 new tests), `docs/features/business-health-check-
+diagnostic.md`, `docs/features/content-management-admin.md`, `docs/tasks/03-diagnostic.md`,
+`docs/tasks/07-content-admin.md`, `memory/technical-debt.md`, `memory/decision-log.md`.
+**Related Feature:** `business-health-check-diagnostic.md`, `content-management-admin.md`
+**Notes:** No `/admin` screen exists yet to edit any of this (Milestone 7 not built) — the
+data model, seed, and email-side read path are done; the admin editor itself is sequenced
+into T7.7 (see `memory/technical-debt.md`).
+
+---
+
 ## 2026-09-06
 
 **Task:** T3.7 — Gated summary request (session 22)

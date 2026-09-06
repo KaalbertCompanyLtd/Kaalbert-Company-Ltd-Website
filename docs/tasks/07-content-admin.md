@@ -156,6 +156,21 @@ still this task's own job: extend this editor to cover `diagnostic_score_band` r
 rows — see `memory/technical-debt.md` → "Diagnostic results screen has no score-band label/
 statement" for the full history.
 
+**Addendum (session 23, 2026-09-06):** `DiagnosticScoreBand` gained a fourth content field,
+`emailDetail` (migration `20260906023106_add_diagnostic_score_band_email_detail`) — the
+user pointed out that T3.7's summary email was reusing the same short `statement` the results
+screen already shows, so a "full written summary" wasn't actually fuller than the screen.
+`emailDetail` is a separate, longer, multi-paragraph (blank-line-separated) narrative sent
+only by `lib/diagnostic-request-summary.ts`'s `buildSummaryEmailHtml`, never rendered on
+`/diagnostic/results` — that screen still reads only `statement`. This task's editor must
+therefore expose **three** score-band content fields per row (label, statement, emailDetail),
+not two — a textarea long enough for multi-paragraph prose for `emailDetail` specifically,
+distinct from the single-line `statement` input. Seeded with real (placeholder-flagged)
+detailed copy per band in `prisma/seed.ts`; verified end-to-end via a real
+`/api/diagnostic/submit` call against the running dev server, confirming `getScoreBand`
+returns the new field and `/diagnostic/results` itself is unchanged (still shows only the
+short `statement`) — screenshotted at desktop width, no regression.
+
 ### T7.8 — Site Settings (singleton)
 
 **Build:** Single settings form — phone_primary/secondary, email, whatsapp_number, address,

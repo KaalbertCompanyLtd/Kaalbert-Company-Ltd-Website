@@ -1340,6 +1340,7 @@ const DIAGNOSTIC_SCORE_BANDS: Array<{
   minScore: number;
   label: string;
   statement: string;
+  emailDetail: string;
 }> = [
   {
     id: 1,
@@ -1347,6 +1348,8 @@ const DIAGNOSTIC_SCORE_BANDS: Array<{
     label: "Strong Foundation",
     statement:
       "This is a business whose numbers could support a serious conversation with a lender or investor today. The firm's attention here would sharpen the edges, not rebuild the foundation.",
+    emailDetail:
+      "Structure, records and cash control are all above the mark that typically satisfies a lender or investor's opening questions. That doesn't mean every gap is closed — it usually means the remaining ones are specific rather than structural: a missing management account for the current quarter, an owner-dependence issue that only shows up once someone tries to step away, or a funding application that would move faster with one or two documents already prepared.\n\nA partner reviewing this result would usually start with whichever dimension scored lowest above, since that is almost always where the next real question comes from — not from a business that looks weak overall, but from the one specific area a due-diligence process would test first.",
   },
   {
     id: 2,
@@ -1354,6 +1357,8 @@ const DIAGNOSTIC_SCORE_BANDS: Array<{
     label: "Developing, With Real Gaps",
     statement:
       "The basics are mostly in place, but at least one area — often exactly the one flagged below — is the kind of gap a lender or credit committee tests first.",
+    emailDetail:
+      "A score in this range usually means the day-to-day running of the business is sound, but the paperwork and structure a lender, investor or serious buyer would ask for hasn't caught up to how the business actually operates.\n\nThis is the range where the same conversation repeats itself most often: an owner who knows every number in their head, but can't yet hand over a document that proves it to someone else. The weakest dimension flagged above is typically the one that surfaces first in a facility application or a buyer's due-diligence request — closing that specific gap is usually a matter of weeks of focused work, not a rebuild of the business.",
   },
   {
     id: 3,
@@ -1361,6 +1366,8 @@ const DIAGNOSTIC_SCORE_BANDS: Array<{
     label: "Workable, Not Yet Provable",
     statement:
       "The business runs day to day, but several of the things a lender, investor or serious buyer would ask for aren't yet in a form you could hand over.",
+    emailDetail:
+      "The business functions — sales happen, obligations get met, decisions get made — but much of what makes it functional currently depends on the owner's own knowledge and judgement rather than a record or process a third party could review.\n\nAt this range, a lender, investor or credit committee would typically stop at the first request for evidence, not because the business is unhealthy, but because nothing yet demonstrates that health independently of the person running it. The dimensions flagged above are usually the fastest, highest-leverage places to start — not because they're the only gaps, but because they're the ones most likely to be asked about next.",
   },
   {
     id: 4,
@@ -1368,6 +1375,8 @@ const DIAGNOSTIC_SCORE_BANDS: Array<{
     label: "Running on Memory",
     statement:
       "Common, and fixable — but right now, much of what keeps this business running exists in memory rather than in a record anyone else could pick up.",
+    emailDetail:
+      "This range is common, and rarely a sign the business itself is in trouble — it usually means the business has grown past the point where memory and informal habit can keep up, and the systems around it haven't caught up yet.\n\nThe risk isn't today's operations; it's what happens the first time someone outside the business — a lender, a new partner, a buyer, even a key employee's sudden absence — needs something the business currently can't produce on paper. The dimensions flagged above are the ones creating the most exposure right now, and are usually where a firm would start.",
   },
 ];
 
@@ -1379,6 +1388,7 @@ async function seedDiagnosticScoreBands() {
         minScore: band.minScore,
         label: band.label,
         statement: band.statement,
+        emailDetail: band.emailDetail,
         isPlaceholder: true,
       },
       create: { ...band, isPlaceholder: true },
