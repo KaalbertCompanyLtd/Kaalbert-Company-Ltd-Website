@@ -82,5 +82,18 @@ prose summary.
   actually followed (superseding ADR, updated artifacts, `memory/decision-log.md` entry) —
   not just implemented silently.
 
+## 8. Debt/bug and decision-log entry hygiene
+
+- Any `memory/technical-debt.md`/`memory/known-bugs.md` entry logged this session with a
+  possible/planned fix has both `Trigger type` and `Sequenced into` filled in — flag an
+  orphaned fix (described but not sequenced into a task or marked `User-triggered`) as a
+  finding.
+- Any `memory/technical-debt.md`/`memory/known-bugs.md` entry resolved this session has its
+  `Status` flipped in place (`Open` → `Resolved`/`Fixed`), not left `Open` and not duplicated
+  as a new entry.
+- Any `memory/decision-log.md`/`memory/architecture-decisions.md` entry reversed this session
+  has its original entry's `Status` flipped to `Superseded` in place (never deleted),
+  alongside the new entry recording the reversal.
+
 Report every failing item explicitly. Do not mark the review complete if any hard gate (lint,
 type-check, tests, or a missing required memory update) is failing.

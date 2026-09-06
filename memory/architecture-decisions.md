@@ -2,6 +2,8 @@
 
 ## Custom-Built Application, No CMS Platform
 
+**Status:** Active
+
 Date: Phase 3 planning
 Related ADR: 0001
 
@@ -16,6 +18,8 @@ list).
 
 ## Next.js + TypeScript as the Application Framework
 
+**Status:** Active
+
 Date: Phase 3 planning
 Related ADR: 0002
 
@@ -29,6 +33,8 @@ solved infrastructure for no real gain in customness.
 
 ## Railway for Application Hosting and Database
 
+**Status:** Active
+
 Date: Phase 3 planning
 Related ADR: 0003
 
@@ -40,6 +46,8 @@ Trade-offs: Neon's free scale-to-zero tier was seriously considered and rejected
 cold-start risk.
 
 ## Cloudflare as CDN/Proxy Layer
+
+**Status:** Active
 
 Date: Phase 3 planning
 Related ADR: 0004
@@ -53,6 +61,8 @@ unreachable, since DNS itself routes through it) — accepted given Cloudflare's
 and a documented manual DNS-fallback path.
 
 ## Diagnostic Engine as an In-App, Data-Driven Module
+
+**Status:** Active
 
 Date: Phase 3 planning
 Related ADR: 0005
@@ -69,6 +79,8 @@ record/measurement stack, the latter reintroduces a second system to host and se
 
 ## Google Tag Manager as the Single Measurement Container
 
+**Status:** Active
+
 Date: Phase 3 planning
 Related ADR: 0006
 
@@ -80,6 +92,8 @@ Trade-offs: One more account on the Account Ownership Register — negligible co
 never needing a code deploy to change which tags fire.
 
 ## TOTP for Administrative Two-Factor Authentication
+
+**Status:** Active
 
 Date: Phase 3 planning
 Related ADR: 0007
@@ -93,6 +107,8 @@ Trade-offs: A one-time authenticator-app setup per partner, smaller than recurri
 per-login email-code friction. Backup codes generated at setup prevent permanent lockout.
 
 ## Single Deploy Target — No Dual-Host Portability Design
+
+**Status:** Active
 
 Date: Phase 3 planning
 Related ADR: 0008
@@ -108,6 +124,8 @@ low-stakes regardless of code portability, so little was actually being bought b
 for it.
 
 ## Phase 2 Client-Portal Auth Extends the Existing System (Preliminary)
+
+**Status:** Active
 
 Date: Phase 3 planning
 Related ADR: 0009
@@ -125,6 +143,8 @@ Rollback/Revision Protocol.
 
 ## Tailwind CSS v4 + shadcn/ui on Base UI + Lucide Icons
 
+**Status:** Active
+
 Date: Phase 3 planning
 Related ADR: 0010
 
@@ -138,6 +158,8 @@ accessibility from scratch.
 Trade-offs: None significant — confirmed via live research, not an assumption.
 
 ## Backup Retention and Restore-Test Policy
+
+**Status:** Active
 
 Date: Phase 6 planning (closed a documentation gap found during the pre-Phase-6 audit)
 Related ADR: 0011

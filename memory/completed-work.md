@@ -14,6 +14,38 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 30)
+
+**Task:** process — align project with the updated `PROJECT_PLANNING_FRAMEWORK.md`
+**Summary:** Read the updated external planning framework in full, diffed it against this
+project's actual state, and reported findings before changing anything. Implemented the four
+changes the user approved: (1) split CLAUDE.md's MCP Server Setup, Session Management, and
+Git Commit Protocol sections out into `.claude/skills/`, bringing CLAUDE.md from 42,606 to
+35,133 characters, back under the framework's ~40,000-character threshold; (2) backfilled a
+`Status` field onto all 55 `memory/decision-log.md` entries and all 11
+`memory/architecture-decisions.md` entries (`Standing`/`Active` by default, `Superseded` on
+the one entry already genuinely reversed — T1.3's brand-tone decision); (3) added a
+debt/bug/decision-log entry-hygiene section to `.claude/commands/review.md`; (4) built and
+wired `.claude/hooks/validate-commit-message.py`, a `PreToolUse` hook mechanically enforcing
+the commit message format and the no-`Co-Authored-By` rule (resolving a live conflict
+between that rule and the current session's own attribution default, per the user's explicit
+choice to keep the project rule). Discovered mid-session that the hook's first cut only
+accepted the `T##-##` task-ID form, which would have newly blocked this project's existing
+`P#-#` (Phase-2-capability scoping) convention and had no valid form at all for this
+session's own commit — added a documented third `process` ID form to cover framework/
+tooling-only sessions like this one.
+**Files Changed:** CLAUDE.md; `.claude/skills/mcp-server-setup/SKILL.md` (new);
+`.claude/skills/session-management/SKILL.md` (new);
+`.claude/skills/git-commit-protocol/SKILL.md` (new);
+`.claude/hooks/validate-commit-message.py` (new); `.claude/settings.json`;
+`.claude/commands/review.md`; `memory/decision-log.md`; `memory/architecture-decisions.md`;
+`docs/sessions/session-30-planning-framework-alignment.md` (new)
+**Related Feature:** None — process/tooling only, no `docs/features/*.md` affected.
+**Notes:** No code, schema, or task in `docs/tasks/*.md` was touched. Milestone/task sequence
+is unchanged; next real task is still T5.1 (unchanged since session 28/29).
+
+---
+
 ## 2026-09-06 (session 28)
 
 **Task:** T4.5 — Subscription capture

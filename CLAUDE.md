@@ -344,7 +344,14 @@ Fixed rules, followed exactly by every session, no exceptions:
   technical debt, when a planned fix exists).
 - **`memory/completed-work.md`** entry shape: `**Task:**`, `**Summary:**`,
   `**Files Changed:**`, `**Related Feature:**`, `**Notes:**`.
-- **`memory/decision-log.md`** entry shape: `**Summary:**`, `**Related Documents:**`.
+- **`memory/decision-log.md`** entry shape: `**Status:** Standing | Superseded` (first
+  field, immediately under the heading), `**Summary:**`, `**Related Documents:**`. A decision
+  reversed via the Rollback/Revision Protocol gets its original entry's `Status` flipped to
+  `Superseded` in place — never deleted, never left `Standing` once something newer replaces
+  it.
+- **`memory/architecture-decisions.md`** entry shape: `**Status:** Active | Superseded`
+  (first field, immediately under the heading), `Date:`, `Related ADR:`, `Decision:`,
+  `Reasoning:`, `Trade-offs:`. Same supersede-in-place rule as `decision-log.md` above.
 
 ### Debt/bug fixes must be sequenced into a task, never left orphaned
 
@@ -421,7 +428,11 @@ When a previous decision needs to be reversed or significantly changed during im
    - Explanation of why the original decision is being reversed
    - New decision and reasoning
 2. Update all affected artifacts (architecture.md, relevant feature specs, etc.)
-3. Add an entry in `memory/decision-log.md` explaining the reversal and why
+3. Add a new entry in `memory/decision-log.md` explaining the reversal and why, **and**
+   update the original decision's own entry — the one being reversed — with
+   `**Status:** Superseded` (never delete it; the record of what was originally decided and
+   why stays, it's just no longer current). If the reversed decision also has a
+   `memory/architecture-decisions.md` entry, flip its `Status` to `Superseded` too.
 4. If the change affects tasks already completed, add a note to `memory/technical-debt.md` unless the work is being re-done immediately
 
 Example ADR supersedence format:
@@ -492,6 +503,10 @@ Before marking work complete:
 [ ] memory/decision-log.md updated (if applicable)
 [ ] memory/technical-debt.md updated (if applicable)
 [ ] memory/known-bugs.md updated (if applicable)
+[ ] Any technical-debt.md/known-bugs.md entry logged this session with a possible/planned
+    fix has Trigger type and Sequenced into filled in — never left blank
+[ ] Any technical-debt.md/known-bugs.md entry resolved this session has its Status flipped
+    in place (Open → Resolved/Fixed), not left Open and not duplicated as a new entry
 [ ] Session summary written to docs/sessions/session-NN-<topic>.md
 [ ] "Paste This to Continue" block in session summary contains full /task [NEXT_TASK_ID] output
 [ ] git commit made with format: <type>(T##-##): <short description>
@@ -501,271 +516,49 @@ Work is not complete until all applicable items are addressed.
 
 ## Git Commit Protocol
 
-### When to commit
+Commit once per completed task, after every Task Completion Checklist item passes. Never
+commit mid-task, never commit untested code, never commit to fix a previous broken commit.
 
-Commit once per completed task — after every item in the Task Completion
-Checklist above has been satisfied. Never commit mid-task, never commit
-untested code, never commit to fix a previous broken commit.
+**Non-negotiable rules (see the `git-commit-protocol` skill for the exact message format,
+examples, and what-to-stage list):**
 
-The commit sequence for every task is:
-
-1. All checklist items pass
-2. `git add` only the files changed by this task
-3. `git commit` with the message format below
-4. Write the session summary file
-5. Stop — do not begin the next task in the same session
-
-### Commit message format
-
-```
-<type>(T##-##): <short description>
-```
-
-Types: `feat` (feature/capability), `chore` (setup/config/scaffolding),
-`fix` (bug fix), `test` (tests only), `docs` (memory/session files),
-`refactor` (restructuring without behaviour change).
-
-Examples:
-
-```
-chore(T01-01): scaffold Next.js app and deploy pipeline
-feat(T03-05): add diagnostic submit endpoint with server-side scoring
-test(T03-02): add scoring engine unit tests for threshold edge cases
-docs(T02-01): update memory/completed-work.md for session 03
-chore(T01-02): regenerate Prisma client after schema migration
-```
-
-### Co-authorship trailer
-
-Never add `Co-Authored-By:` trailers to commit messages. Commit messages
-contain only the type, task ID, and description. Nothing else.
-
-### What to include in the commit
-
-Include only files directly produced by this task: implementation files,
-test files, migration files, memory file updates, session summary file.
-Any generated artifacts (Prisma client, etc.) get their own separate commit,
-e.g. `chore(T##-##): regenerate Prisma client and migration`.
-
-### What never gets committed
-
-Secrets and local-only files (`.env`, `.env.local`, `CLAUDE.local.md`) and build/dependency
-artifacts (`node_modules/`, `.next/`, `dist/`, `build/`, `coverage/`) — all covered by
-`.gitignore`. Never include files from a different task in the same commit.
-
-### Pushing to remote
-
-`git push` must be blocked in `.claude/settings.json`. Claude Code commits
-locally only. The developer reviews with `git log --oneline` and pushes
-manually. This is the review gate between agent work and the remote repo.
+- Never add `Co-Authored-By:` trailers to commit messages — type, task ID, description only.
+  This applies in this repo regardless of any attribution default a given session otherwise
+  carries; a `.claude/hooks/validate-commit-message.py` `PreToolUse` hook mechanically
+  enforces it.
+- `git push` must be blocked in `.claude/settings.json`. Claude Code commits locally only —
+  never override this from inside a session. The developer reviews with
+  `git log --oneline` and pushes manually. This is the review gate between agent work and
+  the remote repo.
 
 ## MCP Server Setup
 
-This project uses MCP (Model Context Protocol) servers to extend agent capabilities.
+This project uses MCP (Model Context Protocol) servers to extend agent capabilities,
+configured in **`.mcp.json` at the repository root** — not anywhere under `.claude/`; Claude
+Code does not read that directory for server registration, and a project whose config lives
+at the wrong path has every server silently fail to appear with no error surfaced.
 
-**Config file location — do not get this wrong:** Claude Code's actual project-scope MCP
-config file is **`.mcp.json` at the repository root.** It is _not_ `.claude/mcp.json` or
-anything else under `.claude/` — Claude Code does not read any file in that directory for
-server registration. A project whose config lives at the wrong path will have every server
-silently fail to appear, with no error surfaced to the agent.
+**Essential, always enabled — do not disable:** Filesystem, GitHub (once a real remote/token
+exist), Database (PostgreSQL — this project is DB-backed throughout), and Playwright MCP
+(this project's verification tool for every real page/flow, per
+`docs/research/verification-tooling.md`).
 
-**Verify the file is actually being read** as part of setup: run `claude mcp list` in a
-plain terminal, not nested inside an agent's own Bash tool. A correctly-registered server
-shows as connected or **"⏸ Pending approval (run `claude` to approve)"**; a server absent
-from the list entirely means the file is in the wrong place or isn't valid JSON.
+**MCP Discipline:**
 
-**Newly added or changed servers need two things before they're usable:** a session
-restart, _and_ explicit approval at the resulting startup prompt — an editing agent cannot
-do either from inside its own session, so both fall to the human operator every time this
-file changes.
-
-### Essential Servers (Always Enabled)
-
-These servers are configured in the root `.mcp.json` and should remain enabled:
-
-- **Filesystem**: Required for reading and writing project files. Do not disable.
-- **GitHub**: Required for version control operations (once the repo has a GitHub remote —
-  omit/remove this server's block from `.mcp.json` until then, since it needs a real
-  `GITHUB_PERSONAL_ACCESS_TOKEN`). Do not disable once added.
-- **Database (PostgreSQL)**: Schema inspection and debugging against Railway's Postgres.
-  Keep enabled — this project is DB-backed throughout.
-- **Playwright MCP**: Verifies every real page/flow for real — the diagnostic's multi-step
-  flow, the admin CMS usability bar (AC-6), cross-browser functional walkthroughs (AC-8).
-  On by default per `docs/research/verification-tooling.md` — this project's stated,
-  non-optional choice for a web app, over the deprecated Puppeteer MCP server.
-
-### Visual & Interactive Verification (Always Enabled)
-
-This is a web app (server-rendered/SPA via Next.js). "It typechecks and the unit tests
-pass" is not the same claim as "I ran it and watched it work" — every task that touches a
-real page, form, or admin screen must be exercised through Playwright MCP before being
-called done (see Task Completion Checklist above).
-
-**Setup:**
-
-- Present in `.mcp.json` by default (see below) — no extra setup step for an agent to
-  remember to turn it on.
-- Points at a browser already installed on the build host via `--executable-path`, rather
-  than assuming a fresh Chromium download succeeds in every sandboxed environment. If no
-  system browser is available, fall back to `npx playwright install chromium` once, ahead of
-  time, and drop `--executable-path`.
-- **Adding/changing this server takes effect only after a session restart AND human
-  approval at the startup prompt** — an agent that just edited `.mcp.json` cannot use the new
-  tool in that same conversation; fall back to `curl`/direct shell invocation for the current
-  task and leave the tool ready for the next session.
-- Core operations an agent will use most: navigate to a URL, click, type/fill a form,
-  snapshot the accessibility tree, screenshot a region for visual claims — see the tool's own
-  descriptions when it's loaded; don't re-derive its interface from scratch each session.
-
-### Optional Servers (Enable When Needed)
-
-Not present in `.mcp.json` today. Add each one's real JSON block only at the point it's
-actually needed, then restart + approve:
-
-- **Sequential Thinking**: for complex architectural decisions or multi-step refactoring.
-- **Fetch**: for reading external documentation or API references.
-- **Linear** or **Jira**: for issue tracking integration, if the firm/vendor adopts one.
-- **Figma**: for design token/spec reading, if mockups ever move into Figma instead of
-  staying as the HTML files under `ui/mockups/`.
-
-### Server Setup Instructions
-
-**Filesystem Server:**
-
-```bash
-npm install -g @modelcontextprotocol/server-filesystem
-```
-
-No additional configuration required.
-
-**GitHub server** (once a remote exists):
-
-```bash
-npm install -g @modelcontextprotocol/server-github
-```
-
-Set `GITHUB_PERSONAL_ACCESS_TOKEN` in your real shell environment (`~/.bashrc`/`~/.zshrc`),
-then reference it in `.mcp.json` via `${GITHUB_PERSONAL_ACCESS_TOKEN}` — never a literal
-token value or placeholder string.
-
-**Database Server (PostgreSQL):**
-
-```bash
-npm install -g @modelcontextprotocol/server-postgres
-```
-
-Set `DATABASE_URL` in your real shell environment and reference it as `${DATABASE_URL}` in
-`.mcp.json` — same rule as above.
-
-**Playwright MCP:**
-
-```bash
-# No global install needed — .mcp.json runs it via npx, e.g.:
-npx -y @playwright/mcp@latest --browser chrome --executable-path <path-to-installed-browser> --headless --isolated
-```
-
-Adjust `--browser`/`--executable-path` to whatever browser is actually installed on the
-build host.
-
-### When to Use MCP Servers
-
-- Always start with the Filesystem server enabled.
-- Enable the GitHub server once this repo has a real remote and PRs are in play.
-- Enable the Database server when debugging data issues or inspecting schema state.
-- Use Playwright MCP whenever a task's completion checklist calls for confirming a change
-  actually works — it's enabled by default, no extra setup needed.
-- Enable other (Optional) servers only when their specific capabilities are required.
-
-### MCP Discipline
-
-- Remove servers not actively in use from `.mcp.json` entirely to reduce context noise —
-  except Filesystem and Playwright MCP, which stay present by default.
 - Never use MCP servers to modify production data or infrastructure.
 - Prefer reading from the Filesystem over relying on conversation history.
+- A newly-added or changed server needs a session restart **and** explicit human approval at
+  the resulting startup prompt before it's usable — neither step can be done from inside the
+  session that just edited `.mcp.json`.
+
+See the `mcp-server-setup` skill for the config-file verification steps (`claude mcp list`),
+how to verify a change against the real running project via Playwright MCP, per-server
+install instructions, and the optional-servers list (Sequential Thinking, Fetch, Linear/
+Jira, Figma).
 
 ## Session Management
 
-At the end of every working session — or when a conversation is getting long — automatically produce a session summary file without being asked.
-
-### When to Write a Session File
-
-- After completing one or more tasks
-- When switching to a significantly different area of the codebase
-- When the conversation context is becoming long
-- When stopping work for the day
-
-### How to Name the File
-
-```
-docs/sessions/session-NN-<short-topic>.md
-```
-
-Where `NN` is the next sequential number (check existing files in `docs/sessions/` to determine it) and `<short-topic>` is 2–4 words describing what was done.
-
-Examples:
-
-- `session-01-django-init.md`
-- `session-02-user-model-auth.md`
-- `session-03-project-milestone-api.md`
-
-### Session File Format
-
-````md
-# Session NN — [Topic]
-
-# Date: YYYY-MM-DD
-
-# Tasks completed: T##-## [, T##-##]
-
-## What Was Built
-
-[2–3 sentences describing what was implemented this session.]
-
-## Files Changed
-
-- path/to/file.<ext> — what was added or changed
-- path/to/another — what was added or changed
-- ...
-
-## Decisions Made
-
-- [Any deviation from the plan, or choice between options, with one-line reasoning]
-- [If none: "No deviations from plan."]
-
-## Current State
-
-[One sentence describing where the project stands, e.g. "Core module scaffolded and unit-tested, ready for T01-03."]
-
-## Blockers
-
-[Any unresolved issues, or "None."]
-
-## Next Task
-
-T##-## — [Task title]
-File: docs/tasks/[epic-file].md
-
-## Paste This to Continue
-
-```
-[Output of /task T##-## goes here — the full generated prompt for the next task,
-not a bare instruction. Run /task [NEXT_TASK_ID] and paste its entire output here.]
-```
-
-### Rules for Session Files
-
-- Write the session file **before** ending the conversation — not after
-- The "Paste This to Continue" block must contain the full output of `/task [NEXT_TASK_ID]` — not a bare "read CLAUDE.md and continue" line. Run the `/task` command for the next task and paste its complete output into the block.
-- A new Claude Code session pasting the block gets full task context, architecture constraints, acceptance criteria, coding standards, and documentation requirements — everything needed to begin immediately without reading additional files first.
-- Never rely on the conversation history to carry context between sessions; the session file is the handoff
-- If multiple tasks were completed in one session, list all of them under "Tasks completed" and summarize all files changed
-- **The session file is a living document for the rest of that session, not a one-time
-  write.** Once it exists, re-sync it — in the same turn, without being asked — every time
-  something happens that would make it stale: a new commit, a resolved or newly-discovered
-  blocker, a decision made, a file touched that isn't yet listed, a `memory/*.md` update.
-  Concretely: after every commit past the first one in a session, check whether "What Was
-  Built," "Files Changed," "Decisions Made," "Current State," and "Blockers" still match
-  reality, and fix whichever don't — don't let the file freeze at whatever the state was
-  when it was first written. A session file that only reflects the session's opening state
-  is functionally the same as not having one, for anything that happened after.
-````
+At the end of every working session — or when a conversation is getting long — automatically
+produce a session summary file (`docs/sessions/session-NN-<short-topic>.md`) without being
+asked, **before** ending the conversation, not after. See the `session-management` skill for
+the naming convention, the exact markdown template, and the "Paste This to Continue" rules.

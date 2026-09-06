@@ -2,7 +2,86 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 30) — Project aligned with the updated PROJECT_PLANNING_FRAMEWORK.md; commit-message hook added; Status field backfilled onto decision-log.md/architecture-decisions.md
+
+**Status:** Standing
+
+**Summary:** The user pointed at an updated version of `PROJECT_PLANNING_FRAMEWORK.md`
+(external to this repo, under `Planning framework and trigger/`) and asked what had changed
+since this project's own planning was completed, and how it could improve this project.
+Read the full 1,563-line updated framework and diffed it against this project's actual
+state (file sizes, `.claude/` contents, memory-file contents) rather than assuming. Reported
+findings before changing anything, per the user's explicit request, then implemented the
+four changes the user approved.
+
+**Findings:** The framework's memory-file sequencing discipline (`Trigger type`/`Sequenced
+into` on technical-debt/known-bugs, evidence-gated Phase 2 roadmap) was already correctly
+implemented in this project — no gap there. The genuine gaps were: (1) root `CLAUDE.md` had
+grown to 42,606 characters, past the framework's new ~40,000-character "Phase 7 closing
+check" threshold, because the framework's newer "keep CLAUDE.md lean" doctrine (move
+single-trigger-point detail into `.claude/skills/`) hadn't been applied — MCP Server Setup,
+Session Management, and Git Commit Protocol were still fully inline; (2) the framework's now-
+required commit-message-format hook didn't exist — enforcement of `<type>(id): description`
+and no-`Co-Authored-By` was prose-only; (3) `memory/decision-log.md` (55 entries) and
+`memory/architecture-decisions.md` (11 entries) had no `Status` field on any entry, so the
+existing Rollback/Revision Protocol had no field to actually flip when a decision is
+reversed; (4) `/review` didn't check for orphaned technical-debt/known-bugs fixes or
+un-flipped Status fields.
+
+**Conflict surfaced and resolved:** The framework's required hook blocks any commit
+containing a `Co-Authored-By` trailer — the same rule this project's own CLAUDE.md already
+stated. But the session's own harness-level instructions (session-specific, not a durable
+project rule) called for adding a `Co-Authored-By: Claude Sonnet 5` trailer to every commit.
+Surfaced this directly to the user rather than silently picking a side; the user chose to
+keep this project's existing no-trailer rule and override the session default for this repo.
+
+**Decisions made:**
+
+- Extracted `.claude/skills/mcp-server-setup/SKILL.md`, `.claude/skills/session-management/
+  SKILL.md`, and `.claude/skills/git-commit-protocol/SKILL.md` from CLAUDE.md's inline
+  sections, leaving short pointer versions in CLAUDE.md (now 35,133 characters). AGENTS.md
+  is untouched — it has no skill-loading mechanism and must stay fully self-contained for
+  non-Claude-Code tools.
+- Backfilled `**Status:** Standing` onto all 55 `memory/decision-log.md` entries and
+  `**Status:** Active` onto all 11 `memory/architecture-decisions.md` entries. While doing
+  this, found one entry that had genuinely already been reversed (T1.3's "globals.css kept
+  to design-system.md's token set exactly" decision, reversed by the very next entry above
+  it in the file) and marked it `Superseded` rather than defaulting it to `Standing` — the
+  first real use of this field, applied retroactively and correctly rather than rubber-
+  stamped. Documented the field in CLAUDE.md's "Memory file format and ordering" section and
+  the Rollback/Revision Protocol.
+- Added a "Debt/bug and decision-log entry hygiene" section to `.claude/commands/review.md`
+  checking for orphaned fixes and un-flipped Status fields.
+- Built `.claude/hooks/validate-commit-message.py` (a `PreToolUse` hook on `Bash`, wired into
+  `.claude/settings.json`), enforcing the commit message format and the no-`Co-Authored-By`
+  rule mechanically. Pipe-tested against synthesized payloads (valid message, wrong-format
+  header, `Co-Authored-By` trailer, non-commit command, `--amend`) before trusting it; did
+  **not** test it via a real `git commit` in the same session that just wired it into
+  `.claude/settings.json`, since a hook change (like an MCP server change) only takes effect
+  after a session restart — running a real commit against the *old*, not-yet-reloaded
+  settings could have created an unwanted commit if the hook silently wasn't active yet.
+- **New commit-ID convention, discovered as a side effect of writing this very entry's own
+  commit**: the hook as first built only accepted the `T##-##` task-ID form, but this
+  project's own git history already used a `P#-#` form for pre-task Phase-2-capability
+  scoping work (e.g. `docs(P2-8): ...`, session 29) — a legitimate, pre-existing exception
+  the strict hook would have newly blocked. This session's own commit (framework/tooling
+  alignment, no task or capability attachment) had no valid ID under either form. Rather
+  than invent a fake task ID, added a third, explicit form: the literal `process` token, for
+  sessions that change project process/tooling/scaffolding itself. Documented all three
+  forms (`T##-##`, `P#-#`, `process`) in the `git-commit-protocol` skill and the hook's own
+  error message, so the three-way convention is discoverable, not just inferred from one
+  commit.
+
+**Related Documents:** CLAUDE.md, `.claude/skills/mcp-server-setup/SKILL.md`,
+`.claude/skills/session-management/SKILL.md`, `.claude/skills/git-commit-protocol/SKILL.md`,
+`.claude/hooks/validate-commit-message.py`, `.claude/settings.json`,
+`.claude/commands/review.md`, `memory/architecture-decisions.md`,
+`Planning framework and trigger/PROJECT_PLANNING_FRAMEWORK.md` (external reference, not part
+of this repo).
+
 ## 2026-09-06 (session 29) — New Phase 2 capability scoped and sequenced: Subscriber Outreach via Brevo Campaigns (P2-8)
+
+**Status:** Standing
 
 **Summary:** After T4.5 shipped, the user asked directly whether the system had any plan to
 actually use the subscriber emails it now collects (from the Insights form, and from the
@@ -45,6 +124,8 @@ Phase 2 capability list updated to include this eighth item.
 for the subscriber-capture work that surfaced this gap.
 
 ## 2026-09-06 (session 28) — Subscription capture (T4.5): schema/interface decisions, a real redirect bug caught by Playwright, and closing a pre-existing promise gap in two other forms
+
+**Status:** Standing
 
 **Summary:** Several judgment calls and one real bug this task's own verification caught:
 
@@ -96,6 +177,8 @@ for the subscriber-capture work that surfaced this gap.
    app/api/insights/unsubscribe/route.ts, memory/completed-work.md (session 28)
 
 ## 2026-09-06 (session 27) — Article content seed (T4.4): the real 8 articles, found and seeded; plus a real Home card bug found once real content existed
+
+**Status:** Standing
 
 **Summary:** T4.4 initially looked headed for an "empty state" resolution: Document 13.03
 §13 names 8 real Insights articles as "already written" but cites no locatable file, and a
@@ -158,6 +241,8 @@ components/insights-article-card.tsx, memory/completed-work.md (session 27)
 
 ## 2026-09-06 (session 26) — Article template (T4.3): schema/design decisions made building against the mockup
 
+**Status:** Standing
+
 **Summary:** Several real design gaps surfaced building `/insights/[slug]` against
 `ui/mockups/b-insights/insight-owner-drawings.html`, flagged in advance by session 25's own
 handoff note:
@@ -210,6 +295,8 @@ lib/insights.ts, lib/seo.ts, memory/technical-debt.md
 
 ## 2026-09-06 (session 25) — Corrected a misapplied debt-sequencing addendum: fixed Home's featured-Insights stub immediately instead of leaving a note on the already-shipped T2.1
 
+**Status:** Standing
+
 **Summary:** While building T4.2, noticed `lib/home.ts`'s `getFeaturedArticles()` stub could
 now be replaced with a real query (its own comment said so, once Milestone 4 landed
 `article`). First pass handled this per CLAUDE.md's debt-sequencing rule at face value: wrote
@@ -243,6 +330,8 @@ orphaned"), memory/technical-debt.md, memory/completed-work.md (sessions 23 and 
 docs/tasks/02-public-presentation.md
 
 ## 2026-09-06 (session 25) — Insights index (T4.2): `Article.excerpt` added, and the mockup's pill-shaped filters corrected to the design system's own radius rule
+
+**Status:** Standing
 
 **Summary:** Two real gaps surfaced building `/insights` against `ui/mockups/b-insights/
 insights-index.html`. (1) The mockup's article cards show a short, purpose-authored teaser
@@ -284,6 +373,8 @@ docs/tasks/04-insights.md (T4.2), prisma/schema.prisma, lib/insights.ts, lib/seo
 
 ## 2026-09-06 (session 24) — Insights data model (T4.1): field shapes not spelled out literally by insights-engine.md
 
+**Status:** Standing
+
 **Summary:** `insights-engine.md`'s Data requirements section names `article` fields close to
 literally (`author_id`, `published_at`, `preview_image`, `next_step_cta`), unlike some other
 feature docs' descriptive-English lists — so most fields mapped straight across. A few needed
@@ -305,6 +396,8 @@ at schema-creation time per T4.1's own explicit instruction (not deferred as a r
 admin.md, docs/tasks/04-insights.md (T4.1), prisma/schema.prisma
 
 ## 2026-09-06 (session 23) — Split the score band's emailed content from its on-screen statement into two separate, independently admin-editable fields
+
+**Status:** Standing
 
 **Summary:** The user asked whether the summary email's content was admin-editable, since it
 felt thin. Digging in: the subject/intro/closing wording is fine as plain copy (no feature doc
@@ -349,6 +442,8 @@ its own admin screen.
 
 ## 2026-09-06 (session 22) — Rebuilt the summary email's HTML on the real brand tokens (Pine Green/Antique Brass, Georgia/Calibri), table-layout for email-client compatibility
 
+**Status:** Standing
+
 **Summary:** The user asked whether the summary email was actually styled/branded — it
 wasn't; `buildSummaryEmailHtml` (T3.7) was a plain unbranded `<div>` with arbitrary colors.
 Rebuilt it using `ui/design-system.md`'s own fixed tokens verbatim (Pine Green `#0E2A22`,
@@ -370,6 +465,8 @@ tests assert on text content, not markup, so the redesign didn't break them).
 `memory/completed-work.md` (T3.7 entry).
 
 ## 2026-09-05/06 (T3.7, session 22) — Brevo chosen for transactional email (user decision); a second request-summary call updates in place and re-sends rather than rejecting; a failed email send never rolls back or blocks the enquiry update
+
+**Status:** Standing
 
 **Summary:** Built the gated summary-request step: the "Get the full written summary by
 email" panel on `/diagnostic/results` (`components/diagnostic-summary-request-form.tsx`),
@@ -433,6 +530,8 @@ the Meta CAPI fire-and-forget precedent this follows), `.env.example`, `CLAUDE.l
 
 ## 2026-09-05 (session 22) — Retrofitted `/diagnostic/results` with real score-band labels: a new `DiagnosticScoreBand` model, not an extension of `DiagnosticThreshold`
 
+**Status:** Standing
+
 **Summary:** User asked whether the mockup's score-band labels/statements ("Strong
 Foundation," "Running on Memory," etc.) were already built or planned as admin-editable —
 neither was true (see `memory/technical-debt.md`) — and asked to fix it now rather than defer
@@ -460,6 +559,8 @@ addendum), `ui/mockups/c-diagnostic/diagnostic-results.html`, `prisma/schema.pri
 `prisma/seed.ts`, `lib/diagnostic-flow.ts`, `app/diagnostic/results/page.tsx`.
 
 ## 2026-09-05 (T3.6, session 21) — `/diagnostic/results` reads T3.5's stored result via `searchParams`, never recomputes; FR-2.8's requirements-doc text used over the mockup's own paraphrase; the mockup's score-band labels not carried over
+
+**Status:** Standing
 
 **Summary:** Built `app/diagnostic/results/page.tsx` to `ui/mockups/c-diagnostic/diagnostic-
 results.html`, reading `?enquiry_id=` (T3.4's own chosen URL contract) via `searchParams` —
@@ -516,6 +617,8 @@ results.html`, `lib/diagnostic-submit.ts`, `app/diagnostic/results/page.tsx`,
 
 ## 2026-09-05 (T3.5, session 20) — `EnquiryRecord.name`/`email`/`message`/`contactConsent` relaxed to nullable (migration); one-shot session id per diagnostic submission
 
+**Status:** Standing
+
 **Summary:** Building `POST /api/diagnostic/submit` hit a real, confirmed blocker: T2.6
 (`docs/tasks/02-public-presentation.md`) modelled `EnquiryRecord.name`/`email`/`message`/
 `contactConsent` as required (non-nullable) — correct for `/contact`'s own form, which always
@@ -555,6 +658,8 @@ check-diagnostic.md`, `docs/features/contact-and-enquiry.md`, `prisma/schema.pri
 `lib/diagnostic-submit.ts`, `lib/enquiries.ts`, `app/api/diagnostic/submit/route.ts`.
 
 ## 2026-09-05 (T3.4, session 19) — `/diagnostic` client flow: no client-side scoring, `lib/diagnostic-flow.ts` split into a server-only and a client-safe file, mobile-safe option grid, `/diagnostic/results?enquiry_id=` as the T3.6 URL contract
+
+**Status:** Standing
 
 **Summary:** Built `app/diagnostic/page.tsx` + `components/diagnostic-flow.tsx` to
 `ui/mockups/c-diagnostic/diagnostic-flow.html`, reading T3.3's real seeded question set via a
@@ -614,6 +719,8 @@ check-diagnostic.md`, `ui/mockups/c-diagnostic/diagnostic-flow.html`, `CLAUDE.md
 
 ## 2026-09-05 (T3.3, session 18) — Fixed-id upsert convention for `DiagnosticDimension`/`DiagnosticThreshold`; real default weights/thresholds seeded; question wording carried verbatim from the mockup
 
+**Status:** Standing
+
 **Summary:** Seeded `DiagnosticDimension`/`DiagnosticQuestion`/`DiagnosticThreshold` in
 `prisma/seed.ts` (`seedDiagnosticDimensions`/`seedDiagnosticQuestions`/
 `seedDiagnosticThresholds`, called from `main()`). Three decisions:
@@ -659,6 +766,8 @@ check-diagnostic.md`, `ui/mockups/c-diagnostic/diagnostic-flow.html`, `prisma/se
 `lib/diagnostic-scoring.ts`, `memory/technical-debt.md`, `memory/completed-work.md`.
 
 ## 2026-09-05 (T3.2, session 17) — Scoring algorithm decisions: uniform 0–1 answer convention, threshold-band resolution, no-fabricated-numbers cost statement; `@types/node` bumped to unblock Vitest
+
+**Status:** Standing
 
 **Summary:** Four real algorithmic decisions made building `lib/diagnostic-scoring.ts`
 (docs/tasks/03-diagnostic.md's own architecture constraint: "the algorithm ... is this task's
@@ -707,6 +816,8 @@ check-diagnostic.md`, `ui/mockups/c-diagnostic/diagnostic-flow.html`, `prisma/sc
 
 ## 2026-09-05 (T3.1, session 16) — Diagnostic scoring tables built; `diagnostic_response.timestamp` mapped to `createdAt`; nullable FK used for "dimension or overall"
 
+**Status:** Standing
+
 **Summary:** Built `DiagnosticDimension`/`DiagnosticQuestion`/`DiagnosticThreshold`/
 `DiagnosticResponse` in `prisma/schema.prisma` per `business-health-check-diagnostic.md`'s Data
 requirements, plus the `EnquiryRecord.diagnosticResponses` relation that model's own doc-comment
@@ -735,6 +846,8 @@ check-diagnostic.md`, `docs/adr/0005-diagnostic-engine-in-app-module.md`,
 
 ## 2026-09-05 (T2.9, session 15) — Audit confirmed no new seed work needed; T2.10 already complete; dashboard drift fixed
 
+**Status:** Standing
+
 **Summary:** T2.9's addendum correctly predicted that every entity's `seed*` function was
 already written incrementally by T2.1–T2.7; this session's audit against all three
 acceptance criteria (fresh-DB run, citation completeness, `isPlaceholder`/dashboard sync)
@@ -756,6 +869,8 @@ next task is Milestone 3's first task (`docs/tasks/03-diagnostic.md`), not T2.10
 ---
 
 ## 2026-09-05 (T2.8, session 14) — Organization JSON-LD placed per-page, not in root layout; `NEXT_PUBLIC_SITE_URL` fallback; `social_profile_urls` confirmed still empty; address flattened to one `streetAddress`
+
+**Status:** Standing
 
 **Summary:** T2.8 (SEO foundation, `docs/tasks/02-public-presentation.md`) made four choices
 worth recording:
@@ -797,6 +912,8 @@ worth recording:
 ---
 
 ## 2026-09-05 (T2.7, session 13) — Epic-file mockup path discrepancy; `legal_page.body` modelled as ordered content blocks; `isPlaceholder` defaults `true`; `footer_content` materialized but left unwired
+
+**Status:** Standing
 
 **Summary:** T2.7 (Legal & compliance pages, `docs/tasks/02-public-presentation.md`) surfaced
 several things worth recording:
@@ -847,6 +964,8 @@ Policy.docx` text already verified and seeded into `FirmStatement.scopeBody`/
    `memory/technical-debt.md`, `docs/tasks/07-content-admin.md` (T7.8).
 
 ## 2026-09-05 (T2.6, session 12) — `enquiry_record`/`site_settings` schema scoping, `message` field addition, Page model reuse
+
+**Status:** Standing
 
 **Summary:** T2.6 (Contact page) is the first task to materialize both `site_settings` and
 `enquiry_record`, both shared entities documented across multiple feature docs
@@ -905,6 +1024,8 @@ immediately:
 
 ## 2026-09-05 (T2.5, session 11 follow-up) — "What we are not" scope statement verified against real Company Docs, no change needed
 
+**Status:** Standing
+
 **Summary:** User challenged whether `FirmStatement.scopeBody` (seeded from
 `ui/mockups/a-public-site/about.html`'s "What we are not" panel) was actually sourced from
 real Company Docs, given it reads as odd next to two partners' seeded "Chartered Accountant"
@@ -929,6 +1050,8 @@ doesn't exist) before editing or flagging it as a placeholder/error.
 `../Company Docs/07.10 Scope of Practice and Regulatory Boundary Policy.docx`.
 
 ## 2026-09-05 (T2.5, session 11 follow-up) — `Author.title` split from `practiceArea`; visitor-facing photo-pending note removed from the live page
+
+**Status:** Standing
 
 **Summary:** After T2.5 shipped, the user flagged two real gaps: (1) only the featured Lead
 Partner card showed any rank/title text at all ("Lead Partner · Lead Consultant" as one
@@ -969,6 +1092,8 @@ mockup's own equivalent note is left as-is (it's wireframe/planning commentary, 
 
 ## 2026-09-05 (T2.5, session 11) — Partner photo readiness no longer gates `published`; initials avatar instead
 
+**Status:** Standing
+
 **Summary:** `about-and-partners-page.md`'s original edge case said a partner's `author` row
 stays `published: false`, entry hidden entirely, until a real photo exists. Before building
 T2.5, I confirmed no partner photography exists anywhere in the repo (`public/`, `ui/mockups/
@@ -993,6 +1118,8 @@ the only visual identity a visitor sees for each partner. All 5 seeded partners 
 
 ## 2026-09-05 (T2.5, session 11) — `firm_statement` decomposed into named fields; `Page` model reused for the hero
 
+**Status:** Standing
+
 **Summary:** `about-and-partners-page.md` names `firm_statement` as one entity holding
 "founding statement, values, standard (rich content)" with no sub-field breakdown. The
 mockup's actual content needs four numbered value cards and two distinct panels (forward
@@ -1008,6 +1135,8 @@ updated to name both.
 `prisma/seed.ts` (`seedAboutPage`, `seedFirmStatement`), `docs/features/about-and-partners-page.md`.
 
 ## 2026-09-05 (T2.5, session 11) — `personalStatement`/`bio` seeded identically; `credentials` left null where not literally sourced
+
+**Status:** Standing
 
 **Summary:** `about-and-partners-page.md` names both `personal_statement` (this page's own
 "in their own voice" field) and `bio` (shared with the not-yet-built `insights-engine.md`'s
@@ -1025,6 +1154,8 @@ inventing one (CLAUDE.md's fabrication rule).
 
 ## 2026-09-05 (T1.5, follow-up) — Nav active-state added even though no mockup shows one
 
+**Status:** Standing
+
 **Summary:** User pointed out `SiteHeader`'s nav has no current-page indicator on either
 desktop or mobile. Checked every public-site mockup's `<nav>` markup first — confirmed the
 gap genuinely stems from the mockups themselves (all of them render byte-for-byte identical
@@ -1039,6 +1170,8 @@ consistent with the existing hover treatment instead of adding a fourth nav-link
 **Related Documents:** `components/site-header.tsx`, `ui/design-system.md`.
 
 ## 2026-09-05 (T2.4, correction) — Intro-copy paragraph's offer-name links restored; dropping them was wrong
+
+**Status:** Standing
 
 **Summary:** The entry directly below this one decided to seed `Page.introCopy` as fully
 plain text, un-linking the mockup's two `<a>` tags around offer names, reasoning that a
@@ -1060,6 +1193,8 @@ raise, not a decision to make silently.
 **Related Documents:** `app/our-method/page.tsx`, `prisma/seed.ts` (`seedOurMethodPage`).
 
 ## 2026-09-05 (T2.4) — `MethodStage.whatHappens` added beyond the feature doc's original field list; intro-copy paragraph seeded as plain text without its mockup's inline offer links
+
+**Status:** Standing
 
 **Summary:** `our-method-page.md`'s original Data requirements named only
 description/client_sees/decision_point as `method_stage`'s content fields, but
@@ -1083,6 +1218,8 @@ in a `page`/`method_stage` field, that's a real schema decision to make then (e.
 
 ## 2026-09-05 (T2.3) — Shared `Page` model designed with T2.4's `intro_copy` field from the start; Advisory Retainer modelled as a true singleton, not a third fee shape bolted onto `Offer`
 
+**Status:** Standing
+
 **Summary:** `capabilities-page.md` and `our-method-page.md` both point at the same generic
 `page` entity (CLAUDE.md's Recurring Patterns: "the home for a marketing page's own copy when
 it has no other entity to attach to"). Rather than create a capabilities-specific model and
@@ -1101,6 +1238,8 @@ Standard/Full tiers too, that's a schema change to make then, not one to anticip
 
 ## 2026-09-05 (T2.10) — Custom error pages must not depend on a live database read, discovered by hitting a real transient DNS failure in-session
 
+**Status:** Standing
+
 **Summary:** Built `app/not-found.tsx` reading live `getOfferNavLinks()` for `SiteHeader`'s
 nav fee hints, same pattern as every other real page. While verifying it via Playwright MCP,
 a genuine transient DNS failure against Railway's public Postgres proxy
@@ -1117,6 +1256,8 @@ the thing it's a fallback for, not the same ones.
 `components/site-header.tsx`.
 
 ## 2026-09-05 (T2.2) — Business Health Check's two-tier pricing modelled as a new `OfferTier` relation, not a schema change to `Offer` itself
+
+**Status:** Standing
 
 **Summary:** Resolved the "Business Health Check's two-tier pricing has no real data model
 yet" gap (`memory/technical-debt.md`, flagged at T2.1) with a new `OfferTier` model
@@ -1143,6 +1284,8 @@ genuinely different strings, not one derivable from the other.
 
 ## 2026-09-05 (T2.2) — `Offer.indicativeTimeline` for the two single-tier offers sourced from `Company Docs/05.04 Rate Card.docx`, not the mockups
 
+**Status:** Standing
+
 **Summary:** FR-4.1 requires an "indicative timeline" section on every core offer page, but
 `ui/mockups/a-public-site/offer-financial-clarity-pack.html` and
 `offer-funding-readiness-pack.html` don't surface one visually (Business Health Check's own
@@ -1159,6 +1302,8 @@ same underlying source. Added a small new section to `app/offers/[slug]/page.tsx
 
 ## 2026-09-05 (T2.2) — `components/site-header.tsx`'s Core Offers fee hints now take an optional live `offerNavLinks` prop instead of a hard-coded constant
 
+**Status:** Standing
+
 **Summary:** Per T1.5/T2.1's own deferred note, wired the nav dropdown/mobile-menu fee hints
 to read `Offer.feeAmountMin` live once the field existed. Made the new `offerNavLinks` prop
 **optional** (falling back to the old hard-coded array, renamed `FALLBACK_CORE_OFFERS`) rather
@@ -1170,6 +1315,8 @@ passes it down explicitly.
 `app/(public)/page.tsx`, `app/offers/[slug]/page.tsx`.
 
 ## 2026-09-05 (T1.5) — Nav dropdowns need Base UI's `MenuTrigger` `openOnHover`, not the default click-to-open
+
+**Status:** Standing
 
 **Summary:** User caught that `SiteHeader`'s Core Offers dropdown (built T1.5) didn't open on
 hover like `ui/mockups/_shared.css`'s `.nav-dropdown:hover .nav-dropdown-menu` rule — Base
@@ -1184,6 +1331,8 @@ should use the same two props.
 **Related Documents:** `components/site-header.tsx`, `components/ui/dropdown-menu.tsx`.
 
 ## 2026-09-05 (T2.1) — Railway production build failed: `next build` can't reach `postgres.railway.internal`; fixed by marking `/` dynamic
+
+**Status:** Standing
 
 **Summary:** The first real Railway deploy of `/` failed at `npm run build` with a Prisma
 `P1001`/`DatabaseNotReachable` error against `postgres.railway.internal` — Railway's private
@@ -1204,6 +1353,8 @@ ISR/ on-demand-revalidation strategy is designed instead.
 
 ## 2026-09-05 (T2.1) — Railway's public Postgres proxy needs `ssl.rejectUnauthorized: false`, and `sslmode=require` in the URL overrides it
 
+**Status:** Standing
+
 **Summary:** `prisma/seed.ts` failed with `P1011`/`self-signed certificate in certificate
 chain` on its very first real query — the first time any code path actually exercised
 `lib/prisma.ts`'s driver adapter against a real query (T1.2's own seed run had nothing to
@@ -1220,6 +1371,8 @@ Not a portability compromise (ADR 0003/0008 — Railway is the sole hosting targ
 **Related Documents:** `lib/db-adapter.ts`, `lib/prisma.ts`, `prisma/seed.ts`.
 
 ## 2026-09-05 (T2.1) — Only `home-page.md`'s named Data-requirements fields are database-backed; the rest of the mockup's copy is fixed template chrome
+
+**Status:** Standing
 
 **Summary:** `docs/features/home-page.md`'s Data requirements section names exactly 7 fields
 (`hero_statement`, `primary_cta_label/href`, `senior_attention_copy`, `featured_article_ids`,
@@ -1240,6 +1393,8 @@ line. If a future session decides more of this copy should be partner-editable, 
 
 ## 2026-09-05 (T2.1) — Added `Offer.teaser`; scoped `Offer`/`HomePageContent` schemas to only what T2.1 needs
 
+**Status:** Standing
+
 **Summary:** `core-offer-pages.md`'s documented `offer` entity has no field for the short
 card blurb the home page (and later Capabilities) mockups show — only the fuller
 `problem_statement` meant for the offer's own detail page. Added `teaser` to both the
@@ -1257,6 +1412,8 @@ model yet", `docs/tasks/02-public-presentation.md` (T2.2 addendum).
 
 ## 2026-09-05 (T1.6) — GTM container built against a placeholder, not a real container ID
 
+**Status:** Standing
+
 **Summary:** Asked the user whether a real GTM container already existed for kaalbert.com
 before implementing, since T1.6's acceptance criterion depends on GTM Preview mode against a
 real container. User confirmed no account exists yet and chose the placeholder-plus-deferred-
@@ -1271,6 +1428,8 @@ criterion closure logged as user-triggered debt sequenced into T5.3 — see
 measurement.md` T5.3, ADR 0006.
 
 ## 2026-09-05 (T1.5) — Responsive design made a standing rule mid-task; public/admin nav rebuilt as side-sliding drawers
+
+**Status:** Standing
 
 **Summary:** User interrupted mid-task to require that every UI surface be responsive from
 its first implementation, not deferred to a later pass — even though `ui/mockups/` is
@@ -1294,6 +1453,8 @@ while building this).
 
 ## 2026-09-05 (T1.5) — Fixed a route-naming inconsistency: T2.2 said `/services/[slug]`, everything else says `/offers/[slug]`
 
+**Status:** Standing
+
 **Summary:** While hard-coding `SiteHeader`/`SiteFooter`'s Core Offers links, checked every
 doc that names the core-offer-page route to make sure the hrefs would match what T2.2
 actually builds. `docs/features/core-offer-pages.md` (the data/interface contract — its own
@@ -1308,6 +1469,8 @@ core-offer-pages.md`, `ui/screen-inventory.md`, `components/site-header.tsx`,
 `components/site-footer.tsx`.
 
 ## 2026-09-05 (T1.5) — Base UI's `nativeButton={false}` required when a Trigger/Close renders as a non-button element
+
+**Status:** Standing
 
 **Summary:** Building `SiteHeader`'s mobile drawer, every `DialogClose` rendered as
 `render={<Link href={...} />}` (so clicking a nav item both navigates and closes the drawer)
@@ -1333,6 +1496,8 @@ below on Base UI's `render` composition pattern.
 
 ## 2026-09-05 (T1.4) — shadcn CLI run with the `nova` preset, then its colour/font choices discarded in favour of T1.3's tokens
 
+**Status:** Standing
+
 **Summary:** The shadcn CLI's `init` command has no non-interactive way to skip its
 preset-selection prompt (`-p custom` doesn't exist despite "Custom" appearing in the
 interactive list) — every preset (Nova, Vega, Maia, …) ships its own starter colour palette
@@ -1353,6 +1518,8 @@ require to animate correctly, confirmed by reading the package's source rather t
 
 ## 2026-09-05 (T1.4) — used shadcn's `field` component in place of `ui/components.md`'s "Form"
 
+**Status:** Standing
+
 **Summary:** `ui/components.md`'s foundation-layer list names "Form (field wrapper +
 validation display)" as one of the 21 primitives to scaffold. The current shadcn registry's
 `form` component returns as an empty placeholder (`{"name": "form", "type": "registry:ui"}`,
@@ -1369,6 +1536,8 @@ of shadcn's foundation layer, not a contract pinned to react-hook-form.
 
 ## 2026-09-05 (T1.4) — Base UI's `render` prop used instead of Radix's `asChild` for composed triggers
 
+**Status:** Standing
+
 **Summary:** Base UI (the primitive library ADR 0010 mandates over Radix) does not support
 the `asChild` composition pattern at all — `tsc` rejects it outright (`Property 'asChild'
 does not exist`) on every Trigger component (`DialogTrigger`, `AlertDialogTrigger`,
@@ -1383,6 +1552,8 @@ it's the library's real pattern, not a one-off.
 **Related Documents:** ADR 0010, `components/ui/dialog.tsx` and siblings.
 
 ## 2026-09-05 (T1.3 follow-up) — reversed: added the four extra brand tones to both design-system.md and globals.css
+
+**Status:** Standing
 
 **Summary:** User reviewed the judgment call below (keep `globals.css` to
 `design-system.md`'s published token block, omitting `--pine-700`/`--pine-500`/
@@ -1403,6 +1574,8 @@ disconnected mid-session and a screenshot re-check wasn't reliably available.
 immediately below.
 
 ## 2026-09-05 (T1.3) — globals.css kept to design-system.md's token set exactly (no extra brand tokens added for mockup hover-state fidelity)
+
+**Status:** Superseded
 
 **Summary:**
 
@@ -1442,6 +1615,8 @@ immediately below.
 `ui/design-system.md`, `docs/tasks/01-foundation.md` (T1.3)
 
 ## 2026-09-05 (T1.2 follow-up) — railway.json never applied; migrated to Infrastructure as Code
+
+**Status:** Standing
 
 **Summary:**
 
@@ -1487,6 +1662,8 @@ DATABASE_URL`, `railway config migrate --apply`, `railway config apply`, even a 
 
 ## 2026-09-05 (T1.2 follow-up) — Postgres password exposure and rotation
 
+**Status:** Standing
+
 **Summary:**
 
 - **Env file convention changed**: `.env` renamed to `.env.local` (Next.js's own precedence
@@ -1529,6 +1706,8 @@ DATABASE_URL`, `railway config migrate --apply`, `railway config apply`, even a 
   reflects content already known to be in context rather than a first exposure.
 
 ## 2026-09-04 (T1.2)
+
+**Status:** Standing
 
 **Summary:**
 
@@ -1581,6 +1760,8 @@ postgres`), attached to the existing `kaalbert-web` project — per ADR 0003, co
 
 ## 2026-09-04
 
+**Status:** Standing
+
 Multi-account git credential workflow established; GitHub-connected Railway auto-deploy
 wired and verified. Closes out T1.1 (except the still-open Cloudflare/domain item — see
 `memory/technical-debt.md`).
@@ -1627,6 +1808,8 @@ wired and verified. Closes out T1.1 (except the still-open Cloudflare/domain ite
 - CLAUDE.md (Knowledge Management Responsibilities section)
 
 ## 2026-09-04
+
+**Status:** Standing
 
 T1.1 implementation decisions, made while scaffolding the repo/app/deploy pipeline.
 
@@ -1680,6 +1863,8 @@ T1.1 implementation decisions, made while scaffolding the repo/app/deploy pipeli
 
 ## 2026-09-04
 
+**Status:** Standing
+
 Two engineering-authority decisions made during Phase 6 task planning, closing items each
 feature doc had explicitly deferred to "Phase 6 task planning" rather than left silently
 unresolved:
@@ -1699,6 +1884,8 @@ unresolved:
 - docs/tasks/06-admin-auth.md
 
 ## 2026-09-04
+
+**Status:** Standing
 
 Project initialized.
 
