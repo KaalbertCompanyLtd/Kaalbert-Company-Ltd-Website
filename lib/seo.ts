@@ -67,18 +67,41 @@ interface PageMetadataInput {
   description: string;
   /** Path relative to the site root, e.g. "/", "/offers/business-health-check". */
   path: string;
+  /**
+   * Overrides the default logo OG/Twitter image — T4.3's own acceptance criterion that a
+   * shared article link shows *the article's own* `previewImage`, not the site-wide default.
+   * Relative to the site root (resolved the same way `path` is) or a full URL.
+   */
+  imageUrl?: string;
+  /**
+   * `openGraph.type` — `"website"` (default) for every ordinary page; `"article"` for an
+   * Insights article, so link-preview tools render it as article content rather than a
+   * generic page (seo-and-search-foundation.md's OG rule doesn't distinguish these, but
+   * `insights-engine.md`'s FR-3.5 "correctly-dimensioned preview image" intent is best served
+   * by the accurate type).
+   */
+  type?: "website" | "article";
 }
 
 /**
  * The shared per-page `<title>`/description/OG/Twitter shape every T2.1–T2.7 route builds
  * against (CLAUDE.md's "every public page type carries meta_title/meta_description ... OG/
  * Twitter tags" rule) — one function rather than seven near-identical literals, since every
- * caller needs the exact same shape with only title/description/path varying.
+ * caller needs the exact same shape with only title/description/path (and, since T4.3, image/
+ * type) varying.
  */
-export function buildPageMetadata({ title, description, path }: PageMetadataInput): Metadata {
+export function buildPageMetadata({
+  title,
+  description,
+  path,
+  imageUrl: imageOverride,
+  type = "website",
+}: PageMetadataInput): Metadata {
   const baseUrl = getSiteUrl();
   const url = new URL(path, baseUrl).toString();
-  const imageUrl = new URL("/brand/logo-primary.png", baseUrl).toString();
+  const imageUrl = imageOverride
+    ? new URL(imageOverride, baseUrl).toString()
+    : new URL("/brand/logo-primary.png", baseUrl).toString();
 
   return {
     title,
@@ -91,7 +114,7 @@ export function buildPageMetadata({ title, description, path }: PageMetadataInpu
       siteName: FIRM_NAME,
       images: [{ url: imageUrl }],
       locale: "en_GH",
-      type: "website",
+      type,
     },
     twitter: {
       card: "summary",
@@ -147,6 +170,64 @@ export async function getOrganizationJsonLd(): Promise<OrganizationJsonLdData> {
   // `sameAs` entirely rather than rendering a placeholder or broken URL.
   if (settings.socialProfileUrls.length > 0) {
     data.sameAs = settings.socialProfileUrls;
+  }
+
+  return data;
+}
+
+export interface ArticleJsonLdData {
+  "@context": "https://schema.org";
+  "@type": "Article";
+  headline: string;
+  author: { "@type": "Person"; name: string; jobTitle: string };
+  publisher: {
+    "@type": "Organization";
+    name: string;
+    logo: { "@type": "ImageObject"; url: string };
+  };
+  datePublished: string;
+  dateModified: string;
+  image?: string;
+}
+
+/**
+ * T4.3 — `schema.org/Article` structured data (NFR-5, `insights-engine.md`'s FR-3.5), rendered
+ * once per article page in addition to (never instead of) the site-wide `OrganizationJsonLd`
+ * every page already carries — this is the per-article structured data that rule assumed but
+ * didn't itself define (`seo-and-search-foundation.md`'s own "What this is not" section).
+ * `dateModified` falls back to `publishedAt` when the article has never been revised post-
+ * publish (`Article.revisedAt` is null in that case, per its own doc-comment). `image` is
+ * included only when the article has a `previewImage` — omitted, not a broken/placeholder
+ * URL, otherwise (same "omit rather than fake" precedent as `getOrganizationJsonLd`'s
+ * `sameAs`). Pure/sync — unlike `getOrganizationJsonLd`, every input is already in hand from
+ * `getArticleBySlug`, so there's no reason for this to be async or to re-fetch anything.
+ */
+export function getArticleJsonLd(article: {
+  title: string;
+  authorName: string;
+  authorPracticeArea: string;
+  publishedAt: Date;
+  revisedAt: Date | null;
+  previewImage: string | null;
+}): ArticleJsonLdData {
+  const baseUrl = getSiteUrl();
+
+  const data: ArticleJsonLdData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    author: { "@type": "Person", name: article.authorName, jobTitle: article.authorPracticeArea },
+    publisher: {
+      "@type": "Organization",
+      name: FIRM_NAME,
+      logo: { "@type": "ImageObject", url: new URL("/brand/logo-primary.png", baseUrl).toString() },
+    },
+    datePublished: article.publishedAt.toISOString(),
+    dateModified: (article.revisedAt ?? article.publishedAt).toISOString(),
+  };
+
+  if (article.previewImage) {
+    data.image = new URL(article.previewImage, baseUrl).toString();
   }
 
   return data;

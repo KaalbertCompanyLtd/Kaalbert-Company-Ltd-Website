@@ -663,10 +663,16 @@ model Category {
 /// flow* must require a preview image before allowing publication, not that the column itself
 /// is `NOT NULL` — mirroring `EnquiryRecord`'s precedent of app-layer-enforced-required over
 /// schema-required for a field a row may not have yet while still a draft. `nextStepCta` is
-/// the feature doc's own single named field (`next_step_cta`) modelled as one `Json`
-/// `{label, href}` object rather than two scalar columns, since the doc names it as one field
-/// (contrast `Offer.ctaHref`/`ctaLabel`, two fields in that feature doc from the start) —
-/// FR-3.4's "never a generic contact us" rule is an app-layer/content rule, not a schema one.
+/// the feature doc's own single named field (`next_step_cta`) modelled as one `Json` object
+/// rather than several scalar columns, since the doc names it as one field (contrast `Offer.
+/// ctaHref`/`ctaLabel`, two fields in that feature doc from the start) — FR-3.4's "never a
+/// generic contact us" rule is an app-layer/content rule, not a schema one. Shaped
+/// `{heading, body, label, href}` (revised at T4.3 from T4.1's original `{label, href}` —
+/// see `lib/insights.ts`'s `ArticleNextStepCta` type and `memory/decision-log.md`, session
+/// 26: the accepted mockup's next-step panel has its own heading and lead paragraph above the
+/// CTA button, not just a link). No migration was needed for this revision — `Json` columns
+/// have no fixed shape at the database layer, so widening the shape this application expects
+/// is a pure TypeScript/documentation change, unlike a real scalar column.
 ///
 /// `@@index` on `publishedAt` and `categoryId` exist now for T4.2's 100+-article performance
 /// requirement (FR-3.6), even though T4.1 itself built no query against them.

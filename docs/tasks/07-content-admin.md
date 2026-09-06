@@ -44,6 +44,16 @@ add the lightweight `updated_at`/version staleness check described in that debt 
 already building the handler. Either is acceptable; silently doing neither (i.e., not even
 considering it) is the thing to avoid.
 
+**Addendum (session 26, 2026-09-06):** When building preview-image/resource upload here (the
+"R2 media pipeline" this task and T7.6 both reference), read `memory/technical-debt.md` →
+"Article download-resource availability is checked via a live per-request HEAD fetch, not a
+real object-storage capability." `app/insights/[slug]/page.tsx` (T4.3) currently checks a
+resource's existence by fetching its own `fileUrl` directly at render time, since no object
+storage existed at T4.3 to answer this more cheaply. Once this task wires up real R2 uploads,
+replace that live check with a real existence guarantee at the storage layer (e.g. only ever
+generate/store a `fileUrl` for an object R2 confirms exists, or query R2 directly) rather than
+leaving the interim live-fetch check in place indefinitely.
+
 ### T7.3 — Pages editor (marketing pages incl. Capabilities, Our Method; legal pages)
 
 **Build:** One Pages content area editing the shared `page` entity (hero_kicker/

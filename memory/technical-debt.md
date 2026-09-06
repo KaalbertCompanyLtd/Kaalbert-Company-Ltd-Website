@@ -18,6 +18,33 @@ sequencing requirement:
 
 ---
 
+## Article download-resource availability is checked via a live per-request HEAD fetch, not a real object-storage capability
+
+**Status:** Open
+**Date raised:** 2026-09-06 (T4.3, session 26)
+**Reason:** `insights-engine.md`'s edge case requires a removed `article_resource` file to
+"fail gracefully with a clear message, not a dead link." No object storage (Cloudflare R2,
+ADR 0004) is provisioned yet — "added once media volume justifies it," not day one — so
+there's no cheaper way to answer "does this file still exist" than asking the file's own host
+directly. `lib/insights.ts`'s `isResourceReachable` does a live `HEAD` request (3s timeout)
+against each resource's `fileUrl` on every article page render.
+**Impact:** Adds real latency to every article-page render that has resources (up to ~3s per
+resource if the host is slow/unreachable, though resources run in parallel via `Promise.all`
+with the rest of the page's data fetching) — acceptable for a low-traffic content site with
+typically 0–1 resources per article, but a real cost that scales badly if an article ever has
+many resources, and a real dependency on every linked host staying responsive.
+**Priority:** Low
+**Possible Fix/Fixes:** Once Cloudflare R2 is provisioned (ADR 0004, T7.2's own "R2 media
+pipeline" for article previews/resources), replace the live HEAD check with R2's own
+existence signal — e.g. generate resource URLs only for objects confirmed to exist at
+publish time (T7.2's admin editor), or query R2's API directly, either of which is cheaper
+and more reliable than a live network round-trip per resource per visitor.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.2 (Articles editor + Categories, `docs/tasks/07-content-admin.md`) —
+see that task's session-26 addendum.
+
+---
+
 ## Home's featured-Insights section still returns a hardcoded empty list, even though `article` now exists
 
 **Status:** Resolved

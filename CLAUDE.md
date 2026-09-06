@@ -353,7 +353,7 @@ must be attached to a real place in `docs/tasks/*.md` in the same session the en
 written, not left floating in memory alone:
 
 **If the fix is small and the "owning" task has already shipped, just fix it now instead —
-don't addend a closed task.** "An existing task is the natural home" means a task a *future*
+don't addend a closed task.** "An existing task is the natural home" means a task a _future_
 `/task` invocation will actually execute — this project's task IDs only ever move forward, so
 an addendum on an already-completed task is inert: no session will ever "reach" it again to
 read the note. (Caught for real at T4.2, session 25 — see `memory/decision-log.md`.) When a
@@ -362,7 +362,7 @@ established "task follow-up" pattern instead (first used at T3.7, session 23): f
 same session, log it in `memory/completed-work.md` as `T##-## follow-up`, and commit under
 that original task's identity — don't create a technical-debt entry for something you're
 about to fix in the next five minutes. Reserve the addendum/technical-debt mechanism below for
-fixes that genuinely can't happen now: they need a *future*, not-yet-reached task, a decision
+fixes that genuinely can't happen now: they need a _future_, not-yet-reached task, a decision
 only the user can make, or a user action not yet taken.
 
 - If an existing task is the natural home (the debt is a loose end from that task, or the

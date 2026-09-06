@@ -14,6 +14,56 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 26)
+
+**Task:** T4.3 — Article template — `/insights/[slug]`
+**Summary:** Built the real article template at `app/insights/[slug]/page.tsx`, matching
+`ui/mockups/b-insights/insight-owner-drawings.html`'s structure: category tag + title +
+byline header, rich body content (paragraphs, `<h2>` subheadings, a pull-quote, a bulleted
+list, a data table — `lib/insights.ts`'s new `ArticleBodyBlock` discriminated union), a fixed
+"Take the Health Check" callout, a downloads section for `article_resource` rows (each
+checked live for reachability before rendering a working link vs. a graceful "currently
+unavailable — contact us" message), a WhatsApp/LinkedIn/Facebook share row, the full author
+bio panel (photo/initials, title, practice area, bio), the contextual next-step CTA
+(`Article.nextStepCta`, widened this task from `{label, href}` to `{heading, body, label,
+href}` — no migration needed, `Json` column), and a related-articles grid (same category
+first, most-recent-published fallback, per `insights-engine.md`'s edge case for an
+uncategorized article). `getArticleBySlug` returns `null` for both a missing slug and a draft
+(`publishedAt: null`), so a draft 404s exactly as if it never existed, same contract as
+`lib/offers.ts`'s `getOfferBySlug`. Added `Article` JSON-LD (`lib/seo.ts`'s new
+`getArticleJsonLd` + `components/article-json-ld.tsx`, alongside the existing
+`OrganizationJsonLd`) and extended `buildPageMetadata` with optional `imageUrl`/`type` params
+so the article's own `previewImage` becomes the OG/Twitter image (falling back to the site
+logo when null) and `og:type` is `"article"`. Added 15 new unit tests across
+`lib/insights.test.ts` (getArticleBySlug, getRelatedArticles, buildArticleShareLinks,
+isResourceReachable) and a new `lib/seo.test.ts` (buildPageMetadata's image/type behaviour,
+getArticleJsonLd).
+**Files Changed:** app/insights/[slug]/page.tsx; components/article-json-ld.tsx; lib/insights.ts;
+lib/insights.test.ts; lib/seo.ts; lib/seo.test.ts; prisma/schema.prisma (doc-comment only, no
+migration); docs/tasks/07-content-admin.md (addendum); memory/decision-log.md;
+memory/technical-debt.md
+**Related Feature:** docs/features/insights-engine.md, docs/features/seo-and-search-foundation.md
+**Notes:** Real Playwright verification caught a genuine anomaly worth recording: my first two
+attempts at seeding a "reachable" test resource used URLs that weren't actually live
+(`https://www.kaalbert.com/...` — that domain isn't registered yet, per CLAUDE.local.md) and,
+separately, a seed-script bug (`upsert`'s `update: {}` never replacing already-created
+`article_resource` rows on re-seed) meant a later fix to the seed script's URLs never actually
+reached the database. Diagnosed with temporary debug logging in `isResourceReachable` itself
+(removed before commit) — the real code was correct throughout; both issues were in my own
+verification script, not the shipped implementation. Fixed by seeding against a genuinely
+reachable external URL and rewriting the resource-reseeding logic to delete-then-recreate.
+Full quality gate run clean: lint, format:check, typecheck, and the Vitest suite (41 tests
+total) all pass. Verified for real via Playwright: draft-article 404 (identical to an unknown
+slug), all six body block kinds rendering correctly, both the reachable and gracefully-failed
+download states, OG/Twitter meta tags (`view-source`, correct `og:type: article` and
+`previewImage`-or-fallback image), both JSON-LD blocks present and correctly shaped
+(`dateModified` omitted image when `previewImage` is null), and mobile/tablet/desktop
+responsive layouts — then all temporary verification data and scripts were deleted, leaving
+the database exactly as before (T4.4's job to seed real content). Next up: T4.4 (Article
+content seed).
+
+---
+
 ## 2026-09-06 (session 25)
 
 **Task:** T2.1 follow-up — wire Home's featured-Insights section to real `article` data

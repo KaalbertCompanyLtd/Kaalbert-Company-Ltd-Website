@@ -2,6 +2,58 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 26) — Article template (T4.3): schema/design decisions made building against the mockup
+
+**Summary:** Several real design gaps surfaced building `/insights/[slug]` against
+`ui/mockups/b-insights/insight-owner-drawings.html`, flagged in advance by session 25's own
+handoff note:
+
+1. **`Article.nextStepCta` widened from `{label, href}` to `{heading, body, label, href}`** —
+   the mockup's next-step panel has its own heading and lead paragraph above the CTA button,
+   not just a link (FR-3.4's "contextual next step specific to its subject" needs real prose,
+   not just a button). No migration was needed — `nextStepCta` is a `Json` column with no
+   fixed database-layer shape, so this was a pure type/documentation change (see
+   `prisma/schema.prisma`'s `Article` doc-comment and `npx prisma migrate dev`'s own "already
+   in sync" confirmation after the doc-comment-only edit).
+2. **`Article.body`'s block shape defined for the first time** (T4.1 deferred this on
+   purpose) — `lib/insights.ts`'s `ArticleBodyBlock`, a `kind`-discriminated union mirroring
+   `lib/legal.ts`'s `LegalPageBlock` convention exactly: `paragraph`, `heading`, `quote`,
+   `list`, `table` — covering exactly what the mockup's article body actually uses.
+3. **The mockup's `.resource-callout` (generic Health Check CTA) and `.share-row` treated as
+   fixed template chrome**, not per-article data — no field for either exists in
+   `insights-engine.md`'s Data requirements, and the share row specifically must NOT reuse
+   `components/whatsapp-link-button.tsx` (that component fires the fixed `whatsapp_opened`
+   conversion event for contacting the firm; sharing an article link is a different action
+   with no target number and no event of its own).
+4. **A removed `article_resource` file's "fail gracefully" requirement implemented as a live
+   per-request `HEAD` check** (`lib/insights.ts`'s `isResourceReachable`) since no object
+   storage (R2, ADR 0004) exists yet to answer this more cheaply — logged as technical debt
+   (`memory/technical-debt.md`, sequenced into T7.2) to replace once R2 is provisioned, not a
+   permanent design.
+5. **Share buttons use `rounded-full` despite T4.2's own "no pill shapes" correction** — a
+   deliberate, narrow exception: T4.2 corrected _wide, text-label_ filter chips from a true
+   pill (`border-radius: 999px`) to `rounded-sm`, per `ui/design-system.md`'s rule against
+   "decorative excess." A perfect circle sized for exactly one glyph (these share buttons) is
+   a different, common, restrained shape — not the wide-pill excess that rule targets — so it
+   was kept as `rounded-full`, documented inline in `app/insights/[slug]/page.tsx` so a future
+   reader doesn't read this as an inconsistency with T4.2's fix.
+6. **`buildPageMetadata` (`lib/seo.ts`) extended with optional `imageUrl`/`type` params**
+   rather than a separate article-specific metadata function — every other caller keeps
+   working unchanged (both default to the existing logo/`"website"` behaviour), and the
+   article page is the only caller that needs `previewImage`/`"article"` — avoids duplicating
+   the whole OG/Twitter shape for one varying case.
+7. **A new `getArticleJsonLd` (`lib/seo.ts`) + `ArticleJsonLd` component**, rendered alongside
+   (never instead of) the existing `OrganizationJsonLd` every page already carries — per
+   `seo-and-search-foundation.md`'s own "What this is not" section, which explicitly left
+   per-article structured data to this feature/task.
+8. **No "X min read" byline text** — confirmed at T4.2 already (not re-litigated): not a real
+   field, not safely derivable without a much heavier body-parsing pass than this task's scope
+   warrants.
+
+**Related Documents:** docs/features/insights-engine.md, ui/mockups/b-insights/
+insight-owner-drawings.html, docs/tasks/04-insights.md (T4.3), prisma/schema.prisma,
+lib/insights.ts, lib/seo.ts, memory/technical-debt.md
+
 ## 2026-09-06 (session 25) — Corrected a misapplied debt-sequencing addendum: fixed Home's featured-Insights stub immediately instead of leaving a note on the already-shipped T2.1
 
 **Summary:** While building T4.2, noticed `lib/home.ts`'s `getFeaturedArticles()` stub could
@@ -29,7 +81,7 @@ as "T2.1 follow-up" in `memory/completed-work.md`.
 **Takeaway for future sessions:** when a debt/bug fix is small enough to do immediately and
 the "owning" task has already shipped, do it now as a same-session task follow-up (T3.7's
 pattern) — don't reach for the technical-debt.md + epic-addendum mechanism, which is for
-fixes that must wait for a *future* task to actually be reached. Reserve that mechanism for
+fixes that must wait for a _future_ task to actually be reached. Reserve that mechanism for
 fixes that genuinely can't happen now (need a task not yet reached, a decision not yet made,
 or a user action not yet taken).
 **Related Documents:** CLAUDE.md ("Debt/bug fixes must be sequenced into a task, never left
