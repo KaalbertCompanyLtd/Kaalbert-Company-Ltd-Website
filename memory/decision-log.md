@@ -2,6 +2,28 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 24) — Insights data model (T4.1): field shapes not spelled out literally by insights-engine.md
+
+**Summary:** `insights-engine.md`'s Data requirements section names `article` fields close to
+literally (`author_id`, `published_at`, `preview_image`, `next_step_cta`), unlike some other
+feature docs' descriptive-English lists — so most fields mapped straight across. A few needed
+a judgment call: (1) `next_step_cta` is modelled as one `Json` `{label, href}` column, not two
+scalar fields like `Offer.ctaHref`/`ctaLabel`, since the doc names it as a single field this
+time and there's no admin editor yet to need per-field editing. (2) `preview_image` is
+nullable at the schema layer even though the feature doc's edge case requires the admin
+publish flow to demand one before publication — enforcement belongs at the app layer (same
+precedent as `EnquiryRecord`'s progressively-filled contact fields), not a `NOT NULL`
+constraint that would make an in-progress draft impossible to save. (3) `category` (singular,
+in the doc's field list) is modelled as the nullable FK `categoryId`/`Category?`, with
+`onDelete: SetNull` — implementing `content-management-admin.md`'s explicit rule that
+retiring a category never deletes or orphans its articles, they just fall back to "no
+category." (4) `Category` itself gained an `isPlaceholder` column beyond the feature doc's
+literal id/name/slug list, same precedent as `Capability`/`MethodStage`/`Page` — needed
+because T4.4 seeds both real and illustrative categories. `Article.isPlaceholder` was added
+at schema-creation time per T4.1's own explicit instruction (not deferred as a retrofit).
+**Related Documents:** docs/features/insights-engine.md, docs/features/content-management-
+admin.md, docs/tasks/04-insights.md (T4.1), prisma/schema.prisma
+
 ## 2026-09-06 (session 23) — Split the score band's emailed content from its on-screen statement into two separate, independently admin-editable fields
 
 **Summary:** The user asked whether the summary email's content was admin-editable, since it

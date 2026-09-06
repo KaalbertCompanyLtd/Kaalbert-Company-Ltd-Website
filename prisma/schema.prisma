@@ -280,21 +280,26 @@ model FirmStatement {
 /// every partner uniformly. Defaults to `"Partner"` — a reasonable prefill for a newly
 /// onboarded partner's profile once T7.6's Team editor exists; the lead/featured entry's row
 /// overrides it to `"Lead Partner"`.
+///
+/// `articles` is the back-relation added at T4.1 (`insights-engine.md`) — this task reuses
+/// this existing model as-is for article bylines rather than creating a second author entity
+/// (see that task's own note); no other field here changes.
 model Author {
-  id                Int      @id @default(autoincrement())
-  adminUserId       Int?     @map("admin_user_id")
+  id                Int       @id @default(autoincrement())
+  adminUserId       Int?      @map("admin_user_id")
   name              String
-  photoUrl          String?  @map("photo_url")
-  title             String   @default("Partner")
-  practiceArea      String   @map("practice_area")
+  photoUrl          String?   @map("photo_url")
+  title             String    @default("Partner")
+  practiceArea      String    @map("practice_area")
   credentials       String?
-  personalStatement String   @map("personal_statement")
+  personalStatement String    @map("personal_statement")
   bio               String
   order             Int
-  published         Boolean  @default(false)
-  isPlaceholder     Boolean  @default(false) @map("is_placeholder")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  published         Boolean   @default(false)
+  isPlaceholder     Boolean   @default(false) @map("is_placeholder")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  articles          Article[]
 
   @@map("author")
 }
@@ -607,4 +612,115 @@ model FooterContent {
   updatedAt                  DateTime @updatedAt @map("updated_at")
 
   @@map("footer_content")
+}
+
+/// docs/features/insights-engine.md "Data requirements" — T4.1 (Milestone 4, Insights). One
+/// of the fixed, admin-manageable taxonomy tags an `article` may carry ("Managed via
+/// content-management-admin.md's Categories area — a partner creates and retires categories
+/// directly, not limited to a developer-seeded list"). `isPlaceholder` is added beyond the
+/// feature doc's literal id/name/slug list, same precedent as `Capability`/`MethodStage`/
+/// `Page` elsewhere in this schema, since T4.4 seeds both real and illustrative categories and
+/// both need to be queryable/distinguishable. No `active`/`retired` flag: content-management-
+/// admin.md's own business rule is that retiring a category is a real delete of this row, not
+/// a soft-hide — `Article.categoryId`'s `onDelete: SetNull` below is what implements
+/// "retiring a category does not delete its articles; they fall back to no assigned category"
+/// at the schema layer.
+model Category {
+  id            Int       @id @default(autoincrement())
+  name          String
+  slug          String    @unique
+  isPlaceholder Boolean   @default(false) @map("is_placeholder")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  articles      Article[]
+
+  @@map("category")
+}
+
+/// docs/features/insights-engine.md "Data requirements" — T4.1. The firm's authority-
+/// instrument content unit (Document 13.03, Section 7). `publishedAt` is the single, sole
+/// source of truth for visibility (null = draft) per this task's own build instruction and the
+/// feature doc's business rules — there is deliberately no separate `is_published` boolean
+/// anywhere on this model to fall out of sync with it; every later query (T4.2's index/filter/
+/// search, T4.3's article route, Home's featured-Insights section) must filter on this field
+/// directly, never a second flag. `revisedAt` is a distinct, business-meaning field from the
+/// standard `updatedAt` audit column below: `updatedAt` changes on every save (including a
+/// still-draft edit), while `revisedAt` is the "content substantively revised after first
+/// publish" fact the feature doc names — left null for an article never revised post-publish,
+/// populated by the admin publish flow (Milestone 7), not a database trigger.
+///
+/// `authorId` is a required FK into the existing `Author` table (T2.5, not a new entity here —
+/// see this task's own note): every article has exactly one named partner author (FR-3.3),
+/// `onDelete: Restrict` so a partner record can't be deleted out from under published bylines.
+/// `categoryId` is nullable per the documented "article with no assigned category" edge case;
+/// `onDelete: SetNull` implements content-management-admin.md's "retiring a category does not
+/// delete its articles" rule directly.
+///
+/// `body` is an ordered array of rich-content blocks (tables, pull quotes, figures, per T4.3's
+/// build note), `Json`, same "no admin editor yet to justify full relational modelling"
+/// precedent as `LegalPage.body`/`Offer.methodStages`/`Offer.faqs`. `previewImage` is nullable
+/// at the schema layer — content-management-admin.md's edge case is that the *admin publish
+/// flow* must require a preview image before allowing publication, not that the column itself
+/// is `NOT NULL` — mirroring `EnquiryRecord`'s precedent of app-layer-enforced-required over
+/// schema-required for a field a row may not have yet while still a draft. `nextStepCta` is
+/// the feature doc's own single named field (`next_step_cta`) modelled as one `Json`
+/// `{label, href}` object rather than two scalar columns, since the doc names it as one field
+/// (contrast `Offer.ctaHref`/`ctaLabel`, two fields in that feature doc from the start) —
+/// FR-3.4's "never a generic contact us" rule is an app-layer/content rule, not a schema one.
+///
+/// `@@index` on `publishedAt` and `categoryId` exist now for T4.2's 100+-article performance
+/// requirement (FR-3.6), even though this task itself builds no query against them.
+model Article {
+  id              Int               @id @default(autoincrement())
+  slug            String            @unique
+  title           String
+  /// Ordered rich-content blocks — see model doc-comment.
+  body            Json
+  authorId        Int               @map("author_id")
+  author          Author            @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  categoryId      Int?              @map("category_id")
+  category        Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  publishedAt     DateTime?         @map("published_at")
+  revisedAt       DateTime?         @map("revised_at")
+  previewImage    String?           @map("preview_image")
+  metaTitle       String            @map("meta_title")
+  metaDescription String            @map("meta_description")
+  /// `{label, href}` — see model doc-comment.
+  nextStepCta     Json              @map("next_step_cta")
+  isPlaceholder   Boolean           @default(false) @map("is_placeholder")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  resources       ArticleResource[]
+
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@map("article")
+}
+
+/// docs/features/insights-engine.md "Data requirements" — T4.1. One downloadable attachment on
+/// an article (T4.3's "downloadable resources"). No `isPlaceholder` here, same precedent as
+/// `OfferTier` (a child row under a parent content entity doesn't carry its own placeholder
+/// flag — the parent `Article.isPlaceholder` already covers it). `fileUrl` is required, not
+/// nullable: a resource row only ever exists once a real file has been attached (no "resource
+/// draft with no file yet" state in the feature doc, unlike `Article.previewImage`) — T4.3's
+/// own edge case, a file removed after publication, is a storage-layer/app-layer failure (the
+/// row and its `fileUrl` remain; the referenced object is simply gone), not a schema
+/// nullability concern. `label` is added beyond the feature doc's generic "file reference"
+/// description (descriptive English, not a literal field name — same precedent as
+/// `DiagnosticResponse`'s own doc-comment) since a download link needs real display text
+/// distinct from its URL. `sortOrder` follows this schema's established `order`/`sortOrder`
+/// precedent (`OfferTier.sortOrder`) for admin-controlled ordering of multiple resources on one
+/// article.
+model ArticleResource {
+  id        Int      @id @default(autoincrement())
+  articleId Int      @map("article_id")
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  label     String
+  fileUrl   String   @map("file_url")
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([articleId, sortOrder])
+  @@map("article_resource")
 }

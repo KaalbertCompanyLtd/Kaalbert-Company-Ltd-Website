@@ -14,6 +14,42 @@ Protocol):
 
 ---
 
+## 2026-09-06 (session 24)
+
+**Task:** T4.1 — Data model: `article`, `author`, `category`, `article_resource`
+**Summary:** First task of Milestone 4 (Insights). Added `Category`, `Article`, and
+`ArticleResource` models to `prisma/schema.prisma` per `docs/features/insights-engine.md`'s
+Data requirements section; `Author` (existing since T2.5) got only a back-relation
+(`articles Article[]`) added, not a second author entity, per the task's own note.
+`Article.publishedAt` is nullable and is the sole visibility field — no `is_published` flag
+exists anywhere on the model, satisfying this task's specific acceptance criterion.
+`Article.categoryId` is nullable with `onDelete: SetNull` (retiring a category falls the
+article back to "no assigned category," per `content-management-admin.md`'s business rule,
+never deleting or orphaning the article); `Article.authorId` is required with
+`onDelete: Restrict` (every article has exactly one named partner author, FR-3.3).
+`Article.body` and `Article.nextStepCta` are `Json` (ordered rich-content blocks, and a
+`{label, href}` object respectively) — same "no admin editor yet" precedent as
+`LegalPage.body`/`Offer.methodStages`. `Article.previewImage` is nullable at the schema layer
+(app-layer/admin-publish-flow enforced, per the feature doc's own edge case), while
+`metaTitle`/`metaDescription` are required, matching every other public-page-type model in
+this schema. `Article.isPlaceholder` added at schema-creation time per this task's explicit
+architecture constraint (not deferred as a retrofit, the way `DiagnosticQuestion`'s gap was).
+`@@index([publishedAt])` and `@@index([categoryId])` added now for T4.2's 100+-article
+performance requirement (FR-3.6), even though this task itself runs no query against them.
+`Category` also got its own `isPlaceholder` (T4.4 seeds both real and illustrative
+categories). `ArticleResource` has no `isPlaceholder` of its own (a child row under
+`Article`, same precedent as `OfferTier`). Migration
+`20260906042143_insights_data_model` applied and Prisma client regenerated; this task seeds
+no data (empty tables only, per its own Input → Output contract).
+**Files Changed:** prisma/schema.prisma;
+prisma/migrations/20260906042143_insights_data_model/migration.sql
+**Related Feature:** docs/features/insights-engine.md
+**Notes:** No route/UI in this task, so no Playwright verification applies — confirmed
+instead via `npx prisma validate`, `npx prisma migrate dev`, and inspecting the generated
+migration SQL directly (no `is_published`-style column exists; FKs/indexes match the design
+above). Full quality gate run clean: lint, format:check, typecheck, and the Vitest suite all
+pass. Next up: T4.2 (Insights index).
+
 ## 2026-09-06 (session 23)
 
 **Task:** T3.7 follow-up — genuinely fuller summary-email content, admin-editable
