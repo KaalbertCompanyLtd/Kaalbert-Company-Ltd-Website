@@ -25,48 +25,116 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Plain server-rendered HTML — not a shared React component with `app/diagnostic/results/
- * page.tsx`, since an email client renders neither React nor most CSS; this task's own
- * acceptance criterion ("the resulting email ... matches the on-screen result data") is about
- * the *data* matching, not the markup. Every user-supplied value is escaped (`name`, embedded
- * directly into HTML) — this is emailed content, not owner-authored copy.
+ * ui/design-system.md's own fixed brand tokens (09.01/09.02) — literal hex values, not CSS
+ * custom properties, since email clients don't reliably support `var()`. Georgia (display) /
+ * Calibri (body) is that same doc's fixed typeface pairing (both system fonts, no web-font
+ * loading needed — safe for email, which can't fetch stylesheets anyway).
  */
-function buildSummaryEmailHtml(
+const BRAND = {
+  pine: "#0E2A22",
+  brass: "#8C6E33",
+  ink: "#121317",
+  ink600: "#3C414A",
+  ivory: "#FCFAF5",
+  paper: "#FFFFFF",
+  muted: "#F4F1E8",
+  rule: "#C9C1AE",
+  display: "Georgia, 'Times New Roman', serif",
+  body: "Calibri, Arial, sans-serif",
+};
+
+/**
+ * Plain server-rendered HTML (table-based layout, inline styles throughout — the only markup
+ * pattern that survives Outlook's Word rendering engine as well as modern webmail) — not a
+ * shared React component with `app/diagnostic/results/page.tsx`, since an email client
+ * renders neither React nor a linked stylesheet; this task's own acceptance criterion ("the
+ * resulting email ... matches the on-screen result data") is about the *data* matching, not
+ * the markup. Every user-supplied value is escaped (`name`, embedded directly into HTML) —
+ * this is emailed content, not owner-authored copy. Exported so a local preview script can
+ * render the exact same HTML a real send uses, with no risk of the two drifting apart.
+ */
+export function buildSummaryEmailHtml(
   name: string,
   result: DiagnosticScoringResult,
   band: DiagnosticScoreBand | null,
 ): string {
   const weakest = new Set(result.weakestDimensions);
   const rows = result.dimensionScores
-    .map((dimension) => {
+    .map((dimension, index) => {
       const isWeak = weakest.has(dimension.name);
+      const borderTop = index === 0 ? "" : `border-top:1px solid ${BRAND.rule};`;
       const label = isWeak
-        ? `${escapeHtml(dimension.name)} <span style="color:#a9853f;">— weakest</span>`
+        ? `${escapeHtml(dimension.name)} <span style="color:${BRAND.brass};font-size:12px;">— weakest</span>`
         : escapeHtml(dimension.name);
-      return `<tr><td style="padding:6px 0;">${label}</td><td style="padding:6px 0;text-align:right;">${dimension.score}%</td></tr>`;
+      return `<tr>
+        <td style="padding:10px 0;${borderTop}font-family:${BRAND.body};font-size:14px;color:${BRAND.ink};">${label}</td>
+        <td style="padding:10px 0;${borderTop}font-family:${BRAND.body};font-size:14px;color:${BRAND.ink600};text-align:right;font-variant-numeric:tabular-nums;">${dimension.score}%</td>
+      </tr>`;
     })
     .join("");
 
   const bandHtml = band
-    ? `<p style="font-weight:700;color:#a9853f;margin:0 0 4px;">${escapeHtml(band.label)}</p>
-       <p style="margin:0 0 16px;">${escapeHtml(band.statement)}</p>`
+    ? `<div style="font-family:${BRAND.display};font-size:17px;font-weight:700;color:${BRAND.brass};margin:2px 0 6px;">${escapeHtml(band.label)}</div>
+       <p style="margin:0 0 20px;font-family:${BRAND.body};font-size:14px;line-height:1.6;color:${BRAND.ink600};max-width:420px;margin-left:auto;margin-right:auto;">${escapeHtml(band.statement)}</p>`
     : "";
 
-  return `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#0e2a22;">
-      <p>Hi ${escapeHtml(name)},</p>
-      <p>Here is the full result from your Business Health Check.</p>
-      <h1 style="font-size:2.5rem;margin:16px 0 4px;">${result.score}%</h1>
-      ${bandHtml}
-      <p>${escapeHtml(result.indicativeCostStatement)}</p>
-      <table style="width:100%;border-collapse:collapse;margin:16px 0;">${rows}</table>
-      <p style="font-size:0.8125rem;color:#6b6b6b;">
-        An indicative self-assessment based on user-supplied information, not a professional
-        opinion, not to be relied upon by any third party.
-      </p>
-      <p>A partner will be in touch to discuss this result.</p>
-    </div>
-  `;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.muted};padding:32px 16px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:${BRAND.paper};border:1px solid ${BRAND.rule};border-radius:6px;overflow:hidden;">
+        <tr>
+          <td style="background:${BRAND.pine};padding:26px 32px;text-align:center;border-bottom:3px solid ${BRAND.brass};">
+            <span style="font-family:${BRAND.display};font-size:15px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.ivory};">Kaalbert &amp; Company Ltd</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px 8px;">
+            <p style="margin:0 0 12px;font-family:${BRAND.body};font-size:15px;line-height:1.6;color:${BRAND.ink};">Hi ${escapeHtml(name)},</p>
+            <p style="margin:0 0 28px;font-family:${BRAND.body};font-size:15px;line-height:1.6;color:${BRAND.ink};">Here is the full result from your Business Health Check.</p>
+            <div style="text-align:center;margin-bottom:24px;">
+              <span style="font-family:${BRAND.body};font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${BRAND.brass};">Your result</span>
+              <div style="font-family:${BRAND.display};font-size:52px;font-weight:700;color:${BRAND.pine};line-height:1;margin:8px 0 10px;">${result.score}%</div>
+              ${bandHtml}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 28px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 28px;">
+            <p style="margin:0;font-family:${BRAND.body};font-size:14px;line-height:1.6;color:${BRAND.ink600};">${escapeHtml(result.indicativeCostStatement)}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.muted};border-left:3px solid ${BRAND.brass};border-radius:4px;">
+              <tr>
+                <td style="padding:16px 18px;font-family:${BRAND.body};font-size:12px;line-height:1.6;color:${BRAND.ink600};">
+                  An indicative self-assessment based on user-supplied information, not a professional opinion, not to be relied upon by any third party.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 36px;">
+            <p style="margin:0;font-family:${BRAND.body};font-size:15px;line-height:1.6;color:${BRAND.ink};">A partner will be in touch to discuss this result.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:${BRAND.muted};border-top:1px solid ${BRAND.rule};padding:20px 32px;text-align:center;">
+            <p style="margin:0;font-family:${BRAND.body};font-size:11px;line-height:1.6;color:${BRAND.ink600};">
+              Kaalbert &amp; Company Ltd is a business advisory firm. It is not a licensed audit, tax or legal practice, and connects clients to licensed practitioners where such work is required.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
 }
 
 /**

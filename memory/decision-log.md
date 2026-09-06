@@ -2,6 +2,28 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-06 (session 22) — Rebuilt the summary email's HTML on the real brand tokens (Pine Green/Antique Brass, Georgia/Calibri), table-layout for email-client compatibility
+
+**Summary:** The user asked whether the summary email was actually styled/branded — it
+wasn't; `buildSummaryEmailHtml` (T3.7) was a plain unbranded `<div>` with arbitrary colors.
+Rebuilt it using `ui/design-system.md`'s own fixed tokens verbatim (Pine Green `#0E2A22`,
+Antique Brass `#8C6E33`, Ink/Ink 600, Ivory/Paper/Muted/Rule) and its fixed typeface pairing
+(Georgia display / Calibri body, both system fonts — no web-font loading needed, which email
+can't do reliably anyway). Switched to a `<table>`-based layout with inline styles throughout
+(the pattern that survives Outlook's Word rendering engine as well as modern webmail, unlike
+flex/grid) — a dark Pine header band with the wordmark, a white body card with the score/
+band/dimension breakdown/disclaimer, and a muted footer band carrying the same scope-of-
+practice line the real site's own footer uses. `buildSummaryEmailHtml` was also exported
+(previously module-private) specifically so a preview script can render the exact same HTML
+a real send uses, with zero risk of the preview drifting from production. Rendered two real
+profiles (a 60%/"Developing, With Real Gaps" case exercising weakest-dimension highlighting,
+and a 92%/"Strong Foundation" case) via that exported function and published them as a
+Claude Artifact (an iframe-isolated, theme-aware preview page) for the user to review visually
+without needing another real send. All 13 existing unit tests still pass unchanged (the
+tests assert on text content, not markup, so the redesign didn't break them).
+**Related Documents:** `ui/design-system.md`, `lib/diagnostic-request-summary.ts`,
+`memory/completed-work.md` (T3.7 entry).
+
 ## 2026-09-05/06 (T3.7, session 22) — Brevo chosen for transactional email (user decision); a second request-summary call updates in place and re-sends rather than rejecting; a failed email send never rolls back or blocks the enquiry update
 
 **Summary:** Built the gated summary-request step: the "Get the full written summary by
