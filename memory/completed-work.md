@@ -1453,7 +1453,7 @@ migrate deploy` and `npm run db:seed` both run for real against the live Railway
 ## 2026-09-04
 
 **Task:** T1.1 — Repo, Next.js app, and deploy pipeline
-**Summary:** Initialized the git repo at `Website Build/` (the actual repo root — the
+**Summary:** Initialized the git repo at `Kaalbert Website/` (the actual repo root — the
 sibling `Company Docs`/`Planning framework and trigger`/`Vendor Response` folders stay out of
 version control). Scaffolded a Next.js 16.3.4/TypeScript/App Router app (no Tailwind yet —
 that's T1.3's job), merged it against the pre-existing docs/config scaffolding without

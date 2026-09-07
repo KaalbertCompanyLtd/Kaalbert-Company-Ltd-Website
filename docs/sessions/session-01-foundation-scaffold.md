@@ -6,7 +6,7 @@
 
 ## What Was Built
 
-Initialized the git repo (confirmed `Website Build/` itself is the repo root, not its parent
+Initialized the git repo (confirmed `Kaalbert Website/` itself is the repo root, not its parent
 folder), scaffolded a Next.js 16.3.4/TypeScript/App Router app against the pre-existing
 docs/config scaffolding without clobbering the project's custom ESLint rule or Prettier
 config, and made `npm run lint` / `npm run typecheck` / `npm run format:check` real, passing
@@ -60,7 +60,7 @@ explicitly user-triggered (blocked on domain registration) — see Current State
 
 ## Decisions Made
 
-- Confirmed `Website Build/` (not its parent folder) is the repo root — the sibling
+- Confirmed `Kaalbert Website/` (not its parent folder) is the repo root — the sibling
   `Company Docs`/`Planning framework and trigger`/`Vendor Response` folders are business
   material that should never reach GitHub. See `memory/decision-log.md`.
 - Next.js 16.3.4 (latest stable) chosen over an older pinned major — greenfield scaffold,

@@ -1815,7 +1815,7 @@ T1.1 implementation decisions, made while scaffolding the repo/app/deploy pipeli
 
 **Summary:**
 
-- **Repo root confirmed as `Website Build/`**, not its parent folder — the sibling
+- **Repo root confirmed as `Kaalbert Website/`**, not its parent folder — the sibling
   `Company Docs`/`Planning framework and trigger`/`Vendor Response` folders are business/
   admin material with no reason to ever reach GitHub, even privately.
 - **Next.js 16.3.4** (latest stable at the time, not an older pinned major) — chosen since
