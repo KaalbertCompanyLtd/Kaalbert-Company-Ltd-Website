@@ -24,6 +24,8 @@ export const dynamic = "force-dynamic";
 
 const BTN_ACCENT =
   "inline-flex items-center justify-center gap-2 rounded-sm bg-accent px-6 py-3 text-body font-semibold text-accent-foreground transition-colors hover:bg-brass-500";
+const BTN_SECONDARY =
+  "inline-flex items-center justify-center gap-2 rounded-sm border border-border bg-secondary px-6 py-3 text-body font-semibold text-secondary-foreground transition-colors hover:bg-muted";
 const H3 = "font-display mb-1 text-h3 font-bold text-primary";
 
 const KICKER = "text-kicker text-accent mb-3 block font-semibold tracking-[0.08em] uppercase";
@@ -283,6 +285,34 @@ export default async function OfferPage({ params }: OfferPageParams) {
             </div>
           </div>
         </section>
+
+        {/* Funding-Readiness Pack only: the free checklist lead-magnet cross-promo
+            (ui/mockups/a-public-site/offer-funding-readiness-pack.html's `.checklist-panel`,
+            between the fee panel and the out-of-scope note) — omitted at T2.2 because
+            `/lp/funding-readiness-checklist` didn't exist yet (memory/technical-debt.md),
+            added back now that T5.2 has seeded that landing page for real. Not one of
+            FR-4.1's 10 fixed fields, so it's fixed chrome keyed on the offer's slug, same
+            precedent as `FINAL_CTA_COPY` below. */}
+        {offer.slug === "funding-readiness-pack" ? (
+          <section className="border-border border-b px-4 py-12 sm:px-6">
+            <div className="mx-auto max-w-[760px]">
+              <div className="bg-card border-border flex flex-wrap items-center justify-between gap-5 rounded-md border p-6 shadow-sm">
+                <div>
+                  <strong className="text-primary font-display mb-1 block text-[1.0625rem] font-bold">
+                    Not ready to talk yet?
+                  </strong>
+                  <span className="text-body text-muted-foreground">
+                    Download the free Funding-Readiness Checklist — what a lender actually asks for,
+                    before you apply.
+                  </span>
+                </div>
+                <Link href="/lp/funding-readiness-checklist" className={BTN_SECONDARY}>
+                  Get the checklist
+                </Link>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {/* 8. Out-of-scope items and referral path (FR-4.1, FR-5.3) */}
         <section className="border-border border-b px-4 py-12 sm:px-6">

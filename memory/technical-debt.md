@@ -18,6 +18,47 @@ sequencing requirement:
 
 ---
 
+## Funding-Readiness Checklist landing page has no real downloadable asset yet
+
+**Status:** Open
+**Date raised:** 2026-09-10
+**Reason:** `ui/mockups/d-landing-pages/landing-funding-readiness-checklist.html`'s own
+design gates an actual PDF checklist behind an inline name/email capture form. No such real,
+firm-authored checklist file exists yet, and fabricating one would violate CLAUDE.md's
+"do not fabricate ... any firm-supplied content" rule — a 12-item professional advisory
+checklist is exactly the kind of real-expertise document only the firm can supply or approve,
+same category as legal text or diagnostic question wording. Building an email-gated capture
+mechanism is also new scope: `landing_page` (`landing-page-template.md`) has no capture-form
+fields, and this task (T5.2) was sized S, not sized for a new capture entity + endpoint. T5.2
+seeded this landing page instance with real copy from the mockup, but pointed its `ctaHref` at
+the real `/contact?service=funding-readiness-pack` enquiry route instead of a fake download
+link — a working, honest destination for the same underlying offer, not a broken link or
+fabricated asset.
+**Impact:** Medium — the landing page is live and functional, but its CTA doesn't yet deliver
+the "instant free download" experience its own headline/kicker ("Free Download") promises;
+a visitor gets routed into the contact form instead. Also blocks the "checklist_downloaded"
+`dataLayer` event (`lib/data-layer.ts`, one of T5.3's six named GTM events) from ever having a
+real trigger to hang off — there is currently no download action anywhere on the site for that
+event to fire from.
+**Priority:** Medium
+**Possible Fix/Fixes:** Once the firm supplies the real checklist document: (1) add it as a
+real static asset (or a proper downloadable-resource entity, mirroring `ArticleResource`'s
+`{label, fileUrl}` shape if more than one such lead magnet ever exists), (2) point this
+landing page's `ctaHref` at it directly, and (3) wire a client-side `pushDataLayerEvent
+("checklist_downloaded")` call on that link's click — this is the piece T5.3's own contract
+assumes already exists ("dataLayer.push(...) calls already present at each event's source")
+and currently doesn't, for this one event specifically.
+**Trigger type:** User-triggered — this depends on the firm actually authoring and
+supplying the real checklist content; do not fabricate placeholder checklist content or build
+a capture mechanism speculatively. Wait for the user/firm to supply the real document before
+touching this.
+**Sequenced into:** T5.3 (GTM container: six conversion events + consent mode,
+`docs/tasks/05-landing-and-measurement.md`) — that task is the next one that needs this
+event's real source to exist before it can wire the tag around it; flagged here so it isn't
+silently assumed done.
+
+---
+
 ## Article download-resource availability is checked via a live per-request HEAD fetch, not a real object-storage capability
 
 **Status:** Open
@@ -252,8 +293,9 @@ addendum added this session pointing back here.
 
 ## Funding-Readiness Pack's checklist cross-promo panel omitted from the offer detail page
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
+**Date resolved:** 2026-09-10
 **Reason:** `ui/mockups/a-public-site/offer-funding-readiness-pack.html` has a
 `.checklist-panel` section between the fee panel and the out-of-scope note, promoting a free
 "Funding-Readiness Checklist" download and linking to

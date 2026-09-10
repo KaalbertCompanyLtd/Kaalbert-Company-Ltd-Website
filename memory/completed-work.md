@@ -14,6 +14,44 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T5.2)
+
+**Task:** T5.2 — Three landing page instances, seeded
+**Summary:** Seeded the three named launch `landing_page` rows into T5.1's template —
+`business-health-check`, `funding-readiness-checklist`, `financial-clarity-pack` — via a new
+`seedLandingPages()` function in `prisma/seed.ts`, following the same
+idempotent-`upsert`-per-`seed<Area>()` convention every other entity uses. Copy is sourced
+directly from the three accepted mockups (`ui/mockups/d-landing-pages/*.html`) and marked
+`isPlaceholder: false` throughout — same "mockup copy is real, shipped copy" precedent
+`seedOffers`/`seedHomePageContent` already established. Each instance's `bodyContent` maps to
+T5.1's block kinds: `business-health-check` → `stats` + `paragraph`;
+`funding-readiness-checklist` → `heading` + `list`; `financial-clarity-pack` → `stats`
+(one item, the fee band) + `steps` + `paragraph`. `financial-clarity-pack`'s and
+`funding-readiness-checklist`'s `ctaHref` mirror their corresponding offer's own `ctaHref`
+exactly (`/contact?service=<slug>`); `business-health-check`'s is `/diagnostic`. Also added
+back the Funding-Readiness Pack offer page's `.checklist-panel` cross-promo section
+(`app/offers/[slug]/page.tsx`, conditional on `offer.slug === "funding-readiness-pack"`),
+resolving the technical-debt entry T2.2 left open pending this landing page's existence.
+Verified all three routes live via Playwright MCP (distinct headline/body/CTA per instance,
+correct `ctaHref` values, no horizontal overflow at 390px/768px), the cross-promo link on
+the offer page pointing to the now-real `/lp/funding-readiness-checklist` route and absent
+from the other two offer pages, and the existing `/lp/does-not-exist` 404 still holding.
+**Files Changed:** `prisma/seed.ts` (new `seedLandingPages()`, called from `main()`; new
+`LandingPageBodyBlock` type import), `app/offers/[slug]/page.tsx` (checklist cross-promo
+section + `BTN_SECONDARY`), `memory/completed-work.md`, `memory/decision-log.md`, `memory/
+technical-debt.md` (new Open entry; existing cross-promo entry flipped to Resolved).
+**Related Feature:** `docs/features/landing-page-template.md`, `docs/features/
+core-offer-pages.md`.
+**Notes:** The Funding-Readiness Checklist instance's `ctaHref` is a deliberate interim —
+routes through the real `/contact?service=funding-readiness-pack` enquiry path rather than a
+fabricated download link, since no real checklist PDF exists yet. See `memory/decision-
+log.md`'s T5.2 entry and the new `memory/technical-debt.md` entry ("Funding-Readiness
+Checklist landing page has no real downloadable asset yet," `Trigger type: User-triggered`,
+`Sequenced into: T5.3`) for the full reasoning — do not build a capture mechanism or
+fabricate checklist content without the user/firm explicitly supplying the real asset first.
+
+---
+
 ## 2026-09-10 (T5.1)
 
 **Task:** T5.1 — Landing page template — `/lp/[slug]`

@@ -2,6 +2,33 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T5.2) — Funding-Readiness Checklist's CTA routes through `/contact`, not a fabricated download, until the firm supplies the real asset
+
+**Status:** Standing
+
+**Summary:** Seeding the three real landing page instances surfaced a genuine gap:
+`landing-funding-readiness-checklist.html`'s own mockup gates an actual PDF checklist behind
+an inline name/email capture form, but no such real, firm-authored checklist document exists,
+and `landing_page` (`landing-page-template.md`) has no capture-form fields to model one with
+— building a new capture entity/endpoint was also well beyond this task's Size:S scope.
+Fabricating a placeholder checklist PDF was rejected outright: CLAUDE.md's "do not fabricate
+... any firm-supplied content" rule treats a real advisory document the same way it treats
+legal text or diagnostic wording — something only the firm can author or approve, not
+something to invent to make an acceptance criterion pass. Decided instead: seed this
+instance's headline/body copy faithfully from the accepted mockup (real, not placeholder —
+same `isPlaceholder: false` precedent `seedOffers`/`seedHomePageContent` already established
+for mockup-sourced copy), but point its `ctaHref` at the real, already-working
+`/contact?service=funding-readiness-pack` enquiry route — the same underlying offer, reached
+through a real destination rather than a fake or missing one. Logged as an Open,
+User-triggered technical-debt entry (`memory/technical-debt.md` → "Funding-Readiness
+Checklist landing page has no real downloadable asset yet") sequenced into T5.3, since that
+task's own contract assumes a real "checklist_downloaded" event source already exists, which
+currently doesn't for this one event.
+
+**Related Documents:** `docs/tasks/05-landing-and-measurement.md` (T5.2), `memory/
+technical-debt.md`, `memory/completed-work.md` (2026-09-10 (T5.2) entry), `prisma/seed.ts`
+(`seedLandingPages`).
+
 ## 2026-09-10 (T5.1) — Landing page's "no navigation" rule scoped to the header only; `SiteFooter` reused unmodified, nav columns included
 
 **Status:** Standing

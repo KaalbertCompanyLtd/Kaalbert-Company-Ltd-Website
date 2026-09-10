@@ -19,6 +19,7 @@
 import { DiagnosticResponseType, Prisma, PrismaClient } from "../generated/prisma/client";
 import { createDatabaseAdapter } from "../lib/db-adapter";
 import type { ArticleBodyBlock } from "../lib/insights";
+import type { LandingPageBodyBlock } from "../lib/landing-pages";
 import type { LegalPageBlock } from "../lib/legal";
 
 const adapter = createDatabaseAdapter(process.env.DATABASE_URL);
@@ -2077,6 +2078,142 @@ async function seedInsightsContent() {
   }
 }
 
+/**
+ * T5.2 — the three named launch landing page instances (`docs/tasks/05-landing-and-
+ * measurement.md`, `SM/2026-09`). Sourced directly from the three accepted mockups
+ * (`ui/mockups/d-landing-pages/*.html`) — `isPlaceholder: false` throughout, same "mockup
+ * copy is real, shipped copy" precedent as `seedOffers`/`seedHomePageContent`, not draft text.
+ *
+ * `funding-readiness-checklist`'s `ctaHref` is the one real deviation from its own mockup:
+ * that mockup shows an inline name/email capture form gating an actual PDF download, but no
+ * such downloadable checklist file exists yet (real firm-authored content, not something to
+ * fabricate — CLAUDE.md's "do not fabricate ... any firm-supplied content" rule), and building
+ * an email-gated capture mechanism is new scope beyond this task's own `landing_page` entity
+ * (no capture-form fields exist on it) and beyond a Size:S task. Routes through the real
+ * `/contact?service=funding-readiness-pack` enquiry path instead — a real, working
+ * destination for the same underlying offer — until the firm supplies the real checklist
+ * asset. See `memory/technical-debt.md` → "Funding-Readiness Checklist landing page has no
+ * real downloadable asset yet" and `memory/decision-log.md` (T5.2 entry) for the full
+ * reasoning.
+ */
+async function seedLandingPages() {
+  const landingPages: Array<{
+    slug: string;
+    kicker: string;
+    headline: string;
+    openingParagraph: string;
+    bodyContent: LandingPageBodyBlock[];
+    ctaLabel: string;
+    ctaHref: string;
+    campaignReference: string;
+    metaTitle: string;
+    metaDescription: string;
+  }> = [
+    {
+      slug: "business-health-check",
+      kicker: "Free Business Health Check",
+      headline: "Know exactly where your business stands — in under six minutes",
+      openingParagraph:
+        "Answer 15 straightforward questions in plain language and get an honest score across five dimensions, plus the two or three things most worth fixing first. No contact details needed to see your result.",
+      bodyContent: [
+        {
+          kind: "stats",
+          items: [
+            { value: "6 min", label: "Typical completion time, start to result" },
+            { value: "Free", label: "No fee, no obligation, no card details" },
+            { value: "5", label: "Dimensions scored, not just one headline number" },
+          ],
+        },
+        {
+          kind: "paragraph",
+          text: "This is an indicative self-assessment, not a professional opinion — see your result, then decide if you want to talk to a partner.",
+        },
+      ],
+      ctaLabel: "Take the free Business Health Check",
+      ctaHref: "/diagnostic",
+      campaignReference: "SM/2026-09",
+      metaTitle: "Free Business Health Check — Kaalbert & Company Ltd",
+      metaDescription:
+        "Answer 15 plain-language questions and get an honest score across five dimensions — no contact details needed to see your result.",
+    },
+    {
+      slug: "funding-readiness-checklist",
+      kicker: "Free Download",
+      headline: "What a lender actually asks for, before you apply",
+      openingParagraph:
+        "A practical checklist of the records, statements and documents lenders and funders request first — so you find the gaps before a credit committee does, not after.",
+      bodyContent: [
+        {
+          kind: "heading",
+          text: "Drawn from what the firm actually asks every funding-readiness client for",
+        },
+        {
+          kind: "list",
+          items: [
+            'Twelve months of bank and mobile money statements — what "complete" actually means to a lender',
+            "Sales, purchase and expense records — and what to do if yours aren't in that form yet",
+            "Receivables and payables — why an approximate list beats no list",
+            "Owner drawings — the single item most funding applications trip over",
+            "What's optional versus what actually blocks an application from moving",
+          ],
+        },
+      ],
+      ctaLabel: "Request the Funding-Readiness Checklist",
+      ctaHref: "/contact?service=funding-readiness-pack",
+      campaignReference: "SM/2026-09",
+      metaTitle: "The Funding-Readiness Checklist — Kaalbert & Company Ltd",
+      metaDescription:
+        "A practical checklist of the records, statements and documents lenders and funders request first — find the gaps before a credit committee does.",
+    },
+    {
+      slug: "financial-clarity-pack",
+      kicker: "Core Offer",
+      headline: "Your numbers exist somewhere, but not in a form anyone would trust",
+      openingParagraph:
+        "Not you, not a lender, not a board. The Financial Clarity Pack turns records into a monthly management accounts pack you can actually run the business on.",
+      bodyContent: [
+        {
+          kind: "stats",
+          items: [{ value: "GHS 4,500 – 9,500", label: "Published fee band" }],
+        },
+        {
+          kind: "steps",
+          items: [
+            { title: "Discover", description: "Map your records as they exist today" },
+            { title: "Diagnose", description: "Find exactly where they break down" },
+            { title: "Design", description: "Rebuild on one consistent basis" },
+            { title: "Deliver", description: "A pack you can maintain yourself" },
+          ],
+        },
+        {
+          kind: "paragraph",
+          text: "Not sure this is the right starting point? The free Business Health Check is a faster first step.",
+        },
+      ],
+      ctaLabel: "Start a conversation",
+      ctaHref: "/contact?service=financial-clarity-pack",
+      campaignReference: "SM/2026-09",
+      metaTitle: "Management Accounts You Can Trust — Kaalbert & Company Ltd",
+      metaDescription:
+        "The Financial Clarity Pack turns your records into a monthly management accounts pack you can actually run the business on. Fee band GHS 4,500–9,500.",
+    },
+  ];
+
+  for (const landingPage of landingPages) {
+    const { bodyContent, ...rest } = landingPage;
+    const data = {
+      ...rest,
+      bodyContent: bodyContent as unknown as Prisma.InputJsonValue,
+      isPlaceholder: false,
+    };
+    await prisma.landingPage.upsert({
+      where: { slug: landingPage.slug },
+      update: data,
+      create: data,
+    });
+  }
+}
+
 async function main() {
   // Later epics add their seedX() calls here, in dependency order, as their tables
   // are added to prisma/schema.prisma.
@@ -2101,6 +2238,7 @@ async function main() {
   await seedDiagnosticScoreBands();
   await seedInsightsPage();
   await seedInsightsContent();
+  await seedLandingPages();
 }
 
 main()
