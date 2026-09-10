@@ -53,7 +53,10 @@ line, if any) that the firm isn't starting cold (`user-stories.md`, Stories 4, 8
 
 - `GET /contact` — the page screen, reading the optional `service` query parameter.
 - `POST /api/contact/submit` — request: `{name, email, phone?, message, service?,
-contact_consent}`; response: `{status, enquiry_id}`. Fires `enquiry_submitted`.
+contact_consent, marketing_consent?, attribution?}` (`attribution` added at T5.4 — the
+  untrusted client payload from `lib/attribution-client.ts`'s `getStoredAttribution()`,
+  resolved server-side to a real `attribution_id`, see `measurement-and-attribution.md`);
+  response: `{status, enquiry_id}`. Fires `enquiry_submitted`.
 
 ## Edge cases
 

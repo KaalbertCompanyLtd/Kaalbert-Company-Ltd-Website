@@ -402,6 +402,19 @@ model EnquiryRecord {
   /// doc-comment above). Empty for every contact-form-originated row, same as
   /// `scoreSummary`/`weakestDimensions`/`triageFlag`.
   diagnosticResponses DiagnosticResponse[]
+  /// Added at T5.4 — the foreign key `measurement-and-attribution.md`'s Data requirements
+  /// section names ("every enquiry_record carries a foreign key to its originating
+  /// attribution row"), deferred at T2.6 because `Attribution` didn't exist yet (see
+  /// `memory/decision-log.md`, T2.6). Nullable: a row created before this task shipped, or a
+  /// submission where attribution capture failed/was unavailable (e.g. localStorage
+  /// disabled), has no attribution — this must never block enquiry creation, per this task's
+  /// own edge case. `onDelete: SetNull`, not `Cascade` or `Restrict` — the 90-day retention
+  /// job deletes the `Attribution` row itself once it's old enough and unreferenced; an
+  /// `EnquiryRecord` that still exists at that point already has no other Attribution to lose
+  /// (the job explicitly skips referenced rows), but `SetNull` is the correct, defensive
+  /// choice regardless of deletion order.
+  attributionId       Int?                 @map("attribution_id")
+  attribution         Attribution?         @relation(fields: [attributionId], references: [id], onDelete: SetNull)
 
   @@map("enquiry_record")
 }
@@ -820,4 +833,37 @@ model LandingPage {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   @@map("landing_page")
+}
+
+/// docs/features/measurement-and-attribution.md "Data requirements" — T5.4. First-touch
+/// campaign attribution for one browsing session, captured client-side
+/// (`lib/attribution-client.ts`) the moment a visitor first lands (any page, not only
+/// `/lp/[slug]` — Document 13.03's own examples include a shared article and a direct
+/// campaign URL, not just paid landing pages) and sent along with whichever `enquiry_record`
+/// that same browsing session eventually produces. `sessionId` is a client-generated
+/// (`crypto.randomUUID()`), `localStorage`-persisted id — a different concept from
+/// `DiagnosticResponse.sessionId` (that one has "no real visitor-session concept to draw
+/// on," per its own doc-comment; this one does, deliberately, as the whole point of this
+/// model) — `@unique` so a resend from the same browser session resolves to the same row
+/// (upsert-by-sessionId) rather than creating a duplicate. `utmSource`/`utmMedium`/
+/// `utmCampaign` are nullable — this row is still created for a direct/organic visitor with
+/// no campaign parameters at all (`landingPage`/`firstSeen` are always real), matching this
+/// task's own edge case ("a session with no campaign parameters stores null/direct, never
+/// blocking the flow") — the fields being null *is* how "direct" is represented, not a
+/// missing row. `firstSeen` is the row's own meaningful timestamp (when the visitor actually
+/// first landed, captured client-side) — the 90-day retention job
+/// (`lib/attribution-cleanup.ts`) ages off this field, not `createdAt`, though in practice
+/// the two are captured within moments of each other.
+model Attribution {
+  id          Int             @id @default(autoincrement())
+  sessionId   String          @unique @map("session_id")
+  utmSource   String?         @map("utm_source")
+  utmMedium   String?         @map("utm_medium")
+  utmCampaign String?         @map("utm_campaign")
+  landingPage String          @map("landing_page")
+  firstSeen   DateTime        @map("first_seen")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  enquiries   EnquiryRecord[]
+
+  @@map("attribution")
 }

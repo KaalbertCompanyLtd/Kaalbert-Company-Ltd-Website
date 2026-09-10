@@ -14,6 +14,72 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T5.4, session 36)
+
+**Task:** T5.4 — Attribution capture, persistence, and 90-day retention job
+**Summary:** Built the `Attribution` model (`session_id` `@unique`, `utm_source`/
+`utm_medium`/`utm_campaign` nullable, `landing_page`, `first_seen`) and an `EnquiryRecord.
+attributionId` foreign key (`onDelete: SetNull`), resolving the T2.6-era inconsistency
+between `business-health-check-diagnostic.md`'s original inline-column wording and
+`measurement-and-attribution.md`'s own separate-entity design (`memory/decision-log.md`,
+T2.6). Since no server-side session mechanism exists anywhere in this codebase (confirmed by
+searching — no `proxy.ts`/`middleware.ts`, no session cookie, and `DiagnosticResponse.
+sessionId` explicitly has "no real visitor-session concept to draw on" per its own
+doc-comment), attribution capture is entirely client-driven: `lib/attribution-client.ts`
+(no `@/lib/prisma` import, same client/server split precedent as `lib/
+diagnostic-flow-options.ts`) captures first-touch attribution once per browser
+(`crypto.randomUUID()` + `localStorage`, parsing `utm_source`/`utm_medium`/`utm_campaign`
+from the current URL and the current path as `landing_page`) via a new
+`AttributionCapture` component mounted site-wide in `app/layout.tsx` (same pattern as
+`ConsentBanner`) — so it runs on whichever page a visitor actually lands on first, not only
+`/lp/[slug]`, per the feature doc's own examples (a shared article, a direct campaign URL).
+`lib/attribution.ts`'s `resolveAttributionId` (server-side) defensively parses the
+untrusted client payload and upserts by `sessionId`, returning `null` for anything
+missing/malformed/failed — wired into both `lib/enquiries.ts`'s `createContactEnquiry` and
+`lib/diagnostic-submit.ts`'s `submitDiagnosticResponses` (which also changed
+`POST /api/diagnostic/submit`'s wire shape from a bare array to
+`{answers, attribution?}` to carry the new payload — updated `components/diagnostic-flow.tsx`
+and the feature doc's Interfaces section to match). `lib/attribution-cleanup.ts`'s
+`deleteExpiredAttributionRows` implements the epic's own already-decided 90-day retention
+window (ages off `firstSeen`, never deletes a row referenced by any real
+`enquiry_record`), runnable via `npm run attribution:cleanup` (`scripts/
+cleanup-attribution.ts`) — not yet wired to an actual Railway Cron Job schedule, which is a
+dashboard action for the user to take at their discretion (`memory/technical-debt.md`).
+Verified end-to-end for real against the live dev server and database: a UTM-tagged landing
+→ `/diagnostic` navigation → real `POST /api/diagnostic/submit` call correctly produced an
+`enquiry_record` whose `attribution` relation carried the exact original UTM values; a
+direct visit (no UTM params) correctly stored an attribution row with null utm fields
+(never blocking submission); a deliberately malformed attribution payload also never
+blocked submission (`attributionId` simply came back `null`); and the retention job,
+exercised against three seeded rows (expired+unreferenced, expired+referenced,
+recent+referenced), deleted exactly the one row that should be deleted and correctly
+preserved both others — including the referenced-regardless-of-age case, this task's own
+explicit acceptance criterion. All test/scratch rows were deleted afterward.
+**Files Changed:** `prisma/schema.prisma` (`Attribution` model, `EnquiryRecord.
+attributionId`), `prisma/migrations/20260910143644_t5_4_attribution/`, `lib/
+attribution-client.ts` (new), `lib/attribution.ts` (new), `lib/attribution-cleanup.ts` (new),
+`lib/attribution.test.ts` (new), `lib/attribution-cleanup.test.ts` (new), `scripts/
+cleanup-attribution.ts` (new), `package.json` (`attribution:cleanup` script), `lib/
+enquiries.ts` + `lib/enquiries.test.ts`, `lib/diagnostic-submit.ts` + `lib/
+diagnostic-submit.test.ts`, `app/api/contact/submit/route.ts`, `app/api/diagnostic/submit/
+route.ts`, `components/contact-form.tsx`, `components/diagnostic-flow.tsx`, `components/
+attribution-capture.tsx` (new), `app/layout.tsx`, `docs/features/
+business-health-check-diagnostic.md`, `docs/features/contact-and-enquiry.md`, `docs/
+features/measurement-and-attribution.md`.
+**Related Feature:** `docs/features/measurement-and-attribution.md`,
+`docs/features/business-health-check-diagnostic.md`, `docs/features/contact-and-enquiry.md`.
+**Notes:** A real bug caught and fixed during this task's own verification, worth flagging:
+the first version of `scripts/cleanup-attribution.ts` statically imported `lib/prisma`
+alongside its own `dotenv` `config()` calls, textually placed after the config calls — but
+ES module `import` statements are hoisted above all other top-level code regardless of
+source order, so `lib/prisma.ts` read `process.env.DATABASE_URL` before `config()` ever ran,
+throwing "DATABASE_URL is not set" every time. Fixed with `await import(...)` inside `main()`
+instead of a static import — documented in the script's own comment so the next person
+touching it doesn't reintroduce it. Railway Cron Job scheduling for this script is flagged
+as a new, User-triggered technical-debt entry, not built speculatively.
+
+---
+
 ## 2026-09-10 (T5.3, session 35)
 
 **Task:** T5.3 — GTM container: six conversion events + consent mode

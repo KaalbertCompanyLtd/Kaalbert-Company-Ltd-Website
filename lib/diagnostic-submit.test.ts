@@ -13,12 +13,18 @@ vi.mock("@/lib/diagnostic-scoring", async () => {
   return { ...actual, scoreDiagnosticResponses: vi.fn() };
 });
 
+vi.mock("@/lib/attribution", () => ({
+  resolveAttributionId: vi.fn(),
+}));
+
+import { resolveAttributionId } from "@/lib/attribution";
 import { prisma } from "@/lib/prisma";
 import { scoreDiagnosticResponses, type DiagnosticScoringResult } from "@/lib/diagnostic-scoring";
 import { submitDiagnosticResponses } from "@/lib/diagnostic-submit";
 
 const scoreMock = vi.mocked(scoreDiagnosticResponses);
 const createMock = vi.mocked(prisma.enquiryRecord.create);
+const resolveAttributionIdMock = vi.mocked(resolveAttributionId);
 
 const STUB_RESULT: DiagnosticScoringResult = {
   score: 62,
@@ -31,6 +37,8 @@ const STUB_RESULT: DiagnosticScoringResult = {
 beforeEach(() => {
   scoreMock.mockReset();
   createMock.mockReset();
+  resolveAttributionIdMock.mockReset();
+  resolveAttributionIdMock.mockResolvedValue(null);
 });
 
 describe("submitDiagnosticResponses", () => {
@@ -70,6 +78,30 @@ describe("submitDiagnosticResponses", () => {
     // Every row in one submission shares the same sessionId.
     expect(responseCreates[0].sessionId).toBe(responseCreates[1].sessionId);
     expect(typeof responseCreates[0].sessionId).toBe("string");
+  });
+
+  it("resolves and links the enquiry to its attribution row when a payload is supplied (T5.4)", async () => {
+    scoreMock.mockResolvedValue(STUB_RESULT);
+    createMock.mockResolvedValue({ id: 42 } as never);
+    resolveAttributionIdMock.mockResolvedValue(7);
+
+    const rawAttribution = { sessionId: "abc", landingPage: "/", firstSeen: "2026-09-01" };
+    await submitDiagnosticResponses([{ questionId: 101, answer: "1" }], rawAttribution);
+
+    expect(resolveAttributionIdMock).toHaveBeenCalledWith(rawAttribution);
+    const createArgs = createMock.mock.calls[0][0] as { data: { attributionId: number | null } };
+    expect(createArgs.data.attributionId).toBe(7);
+  });
+
+  it("links no attribution (null) when the payload is absent or resolution fails — never blocks submission", async () => {
+    scoreMock.mockResolvedValue(STUB_RESULT);
+    createMock.mockResolvedValue({ id: 42 } as never);
+    resolveAttributionIdMock.mockResolvedValue(null);
+
+    await submitDiagnosticResponses([{ questionId: 101, answer: "1" }]);
+
+    const createArgs = createMock.mock.calls[0][0] as { data: { attributionId: number | null } };
+    expect(createArgs.data.attributionId).toBeNull();
   });
 
   it("propagates DiagnosticValidationError/DiagnosticConfigurationError from scoreDiagnosticResponses uncaught, for the route to map", async () => {

@@ -18,6 +18,37 @@ sequencing requirement:
 
 ---
 
+## Attribution's 90-day retention job has no real schedule triggering it
+
+**Status:** Open
+**Date raised:** 2026-09-10 (T5.4, session 36)
+**Reason:** `lib/attribution-cleanup.ts`'s `deleteExpiredAttributionRows` and its runner
+(`scripts/cleanup-attribution.ts`, `npm run attribution:cleanup`) are fully built, tested
+(`lib/attribution-cleanup.test.ts`), and verified against real seeded rows in the live
+database — the _logic_ is done and correct. Nothing in this project actually calls it on a
+schedule yet. Railway's own Cron Job feature (a schedule set on a service via the Railway
+dashboard, running this same command) is the natural mechanism per this project's hosting
+stack (ADR 0003), but configuring one is a dashboard action — creating/configuring a Railway
+service's cron schedule is an external action only the user can take, same category as every
+other external-account/dashboard step this project already defers (GTM/GA4 account creation
+at T5.3, domain registration at T1.1).
+**Impact:** Low today — `attribution` rows are brand new (this task), so none are anywhere
+near 90 days old yet. Will become real (unbounded table growth, past the documented FR-6.4
+retention policy) the longer this stays unscheduled, but there's no urgency at launch.
+**Priority:** Low
+**Possible Fix/Fixes:** In the Railway dashboard, add a Cron Job schedule (e.g. daily) to the
+`kaalbert-web` service (or a small dedicated service) running `npm run attribution:cleanup`.
+No code change needed — the script already works standalone; this is purely a Railway
+configuration step.
+**Trigger type:** User-triggered — do not create or configure a Railway Cron Job, or treat
+reaching any future task as a cue to do so; wait for the user to say the schedule has been
+set up (or ask them to set it up) before treating this as resolved.
+**Sequenced into:** T5.4 (this same task, `docs/tasks/05-landing-and-measurement.md`) — no
+later task in any epic currently touches scheduling/cron, so there is no future task to defer
+to; this stays open until the user takes the dashboard action themselves.
+
+---
+
 ## Landing Pages admin (T7.5) needs to expose `downloadFileUrl`, wired to the R2 media pipeline
 
 **Status:** Open

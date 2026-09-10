@@ -6,6 +6,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getStoredAttribution } from "@/lib/attribution-client";
 import { pushDataLayerEvent } from "@/lib/data-layer";
 
 const BTN_PRIMARY =
@@ -56,6 +57,7 @@ export function ContactForm({ serviceSlug }: ContactFormProps) {
           service: serviceSlug ?? undefined,
           contact_consent: contactConsent,
           marketing_consent: marketingConsent,
+          attribution: getStoredAttribution(),
         }),
       });
       const data: { status: string; enquiry_id?: number; message?: string } = await response.json();

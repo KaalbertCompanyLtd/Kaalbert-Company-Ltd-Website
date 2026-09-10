@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { FieldLabel } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getStoredAttribution } from "@/lib/attribution-client";
 import {
   DIAGNOSTIC_BOOLEAN_OPTIONS,
   DIAGNOSTIC_SCALE_OPTIONS,
@@ -95,7 +96,10 @@ export function DiagnosticFlow({ questions }: DiagnosticFlowProps) {
       const response = await fetch("/api/diagnostic/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(questions.map((q) => ({ question_id: q.id, answer: answers[q.id] }))),
+        body: JSON.stringify({
+          answers: questions.map((q) => ({ question_id: q.id, answer: answers[q.id] })),
+          attribution: getStoredAttribution(),
+        }),
       });
 
       if (!response.ok) {

@@ -2,6 +2,52 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T5.4, session 36) — Attribution capture is entirely client-driven (`localStorage`, first-touch); `POST /api/diagnostic/submit`'s wire shape changed to carry it; retention job ages off `firstSeen`, checked against real seeded rows, not just unit-mocked
+
+**Status:** Standing
+
+**Summary:** No server-side visitor-session mechanism exists anywhere in this codebase —
+confirmed by searching for `proxy.ts`/`middleware.ts` (neither exists) and any cookie-based
+session (none), and `DiagnosticResponse.sessionId`'s own doc-comment explicitly says it "has
+no real visitor-session concept to draw on." `measurement-and-attribution.md`'s own user flow
+requires attribution to survive from a first landing (any page, not only `/lp/[slug]`)
+through the entire diagnostic flow and into whichever enquiry eventually gets created —
+across multiple full page navigations. Decided: capture happens entirely client-side via
+`localStorage` (first-touch, `crypto.randomUUID()` session id), never a server session,
+mounted site-wide via a new `AttributionCapture` component in `app/layout.tsx` (same "render
+nothing, just run a side effect on mount" pattern as `ConsentBanner`). Every write path that
+creates an `EnquiryRecord` (`createContactEnquiry`, `submitDiagnosticResponses`) accepts the
+untrusted client payload and resolves it server-side (`lib/attribution.ts`'s
+`resolveAttributionId`, upsert-by-`sessionId`, defensively returns `null` for anything
+malformed rather than throwing) — this is the entire mechanism that makes "never blocking the
+flow" (the task's own edge case) actually true: a missing/broken attribution payload simply
+means `attributionId: null` on the enquiry, not a failed submission.
+
+**A real, deliberate interface change**: `POST /api/diagnostic/submit`'s request body changed
+from T3.4/T3.5's original bare JSON array to `{answers: [...], attribution?}`, since a bare
+array has no room for a second field. Updated `components/diagnostic-flow.tsx`'s POST call,
+the route handler, and `business-health-check-diagnostic.md`'s own Interfaces section
+together, in the same change — never left the doc and the code to drift.
+
+**Verification note**: rather than trust the retention job's unit test alone, ran it against
+three real seeded rows in the live database (expired+unreferenced, expired+referenced,
+recent) and confirmed exactly the one that should be deleted was deleted, and — critically —
+that the expired-but-referenced row survived regardless of its own age, which is the task's
+own explicit acceptance criterion and the one case a unit test with a mocked Prisma client
+can assert but not truly prove against Prisma's actual relation-filter semantics
+(`enquiries: { none: {} }`). Also caught and fixed a real bug in `scripts/
+cleanup-attribution.ts` during this same verification: a static `import` of `lib/prisma`
+executed (per ES module hoisting rules) before the script's own `dotenv` `config()` calls,
+regardless of their textual order, throwing "DATABASE_URL is not set" every time — fixed
+with `await import(...)` inside `main()` instead.
+
+**Related Documents:** `docs/tasks/05-landing-and-measurement.md` (T5.4), `docs/features/
+measurement-and-attribution.md`, `docs/features/business-health-check-diagnostic.md`,
+`docs/features/contact-and-enquiry.md`, `memory/completed-work.md` (2026-09-10 (T5.4) entry),
+`memory/technical-debt.md` (new Railway Cron Job scheduling entry), `lib/attribution.ts`,
+`lib/attribution-client.ts`, `lib/attribution-cleanup.ts`, `components/
+attribution-capture.tsx`.
+
 ## 2026-09-10 (T5.3, session 35) — GTM container populated: GA4 config + six event tags via one shared `{{GA4 Measurement ID}}` constant, Consent Default via Custom HTML on the Consent Initialization trigger, container-level Consent Overview (BETA) enabled
 
 **Status:** Standing

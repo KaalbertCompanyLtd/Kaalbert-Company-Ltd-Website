@@ -4,30 +4,33 @@ import { DiagnosticConfigurationError, DiagnosticValidationError } from "@/lib/d
 import { submitDiagnosticResponses } from "@/lib/diagnostic-submit";
 
 /**
- * business-health-check-diagnostic.md's `POST /api/diagnostic/submit` — request: a bare JSON
- * array of `{question_id, answer}` (not wrapped in an object — matches
- * `components/diagnostic-flow.tsx`'s own POST body exactly); response: `{score,
- * dimension_scores, weakest_dimensions, indicative_cost_statement, enquiry_id}`. Parses the
- * request body and shapes the response only; scoring and the `enquiry_record`/
- * `diagnostic_response` writes live in `lib/diagnostic-submit.ts` (CLAUDE.md).
+ * business-health-check-diagnostic.md's `POST /api/diagnostic/submit` — request:
+ * `{answers: [{question_id, answer}], attribution?}` (revised at T5.4 from T3.4/T3.5's
+ * original bare JSON array — wrapping was the smallest change that let this same request
+ * also carry the untrusted `attribution` payload from `lib/attribution-client.ts`'s
+ * `getStoredAttribution()`, matching `components/diagnostic-flow.tsx`'s own POST body
+ * exactly); response: `{score, dimension_scores, weakest_dimensions,
+ * indicative_cost_statement, enquiry_id}`. Parses the request body and shapes the response
+ * only; scoring and the `enquiry_record`/`diagnostic_response` writes live in
+ * `lib/diagnostic-submit.ts` (CLAUDE.md).
  */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
 
-  if (!Array.isArray(body)) {
+  if (!body || typeof body !== "object" || !Array.isArray(body.answers)) {
     return NextResponse.json(
       { status: "error", message: "Invalid request body." },
       { status: 400 },
     );
   }
 
-  const answers = body.map((item: { question_id?: unknown; answer?: unknown }) => ({
+  const answers = body.answers.map((item: { question_id?: unknown; answer?: unknown }) => ({
     questionId: Number(item?.question_id),
     answer: String(item?.answer ?? ""),
   }));
 
   try {
-    const result = await submitDiagnosticResponses(answers);
+    const result = await submitDiagnosticResponses(answers, body.attribution);
 
     return NextResponse.json(
       {

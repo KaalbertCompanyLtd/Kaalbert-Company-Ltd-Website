@@ -14,12 +14,18 @@ vi.mock("@/lib/insights-subscription", () => ({
   subscribeToInsights: vi.fn(),
 }));
 
+vi.mock("@/lib/attribution", () => ({
+  resolveAttributionId: vi.fn(),
+}));
+
+import { resolveAttributionId } from "@/lib/attribution";
 import { subscribeToInsights } from "@/lib/insights-subscription";
 import { prisma } from "@/lib/prisma";
 import { ContactValidationError, createContactEnquiry } from "@/lib/enquiries";
 
 const createMock = vi.mocked(prisma.enquiryRecord.create);
 const subscribeMock = vi.mocked(subscribeToInsights);
+const resolveAttributionIdMock = vi.mocked(resolveAttributionId);
 
 const VALID_INPUT = {
   name: "Ama Owusu",
@@ -33,6 +39,8 @@ beforeEach(() => {
   subscribeMock.mockReset();
   subscribeMock.mockResolvedValue(undefined);
   createMock.mockResolvedValue({ id: 1 } as never);
+  resolveAttributionIdMock.mockReset();
+  resolveAttributionIdMock.mockResolvedValue(null);
 });
 
 describe("createContactEnquiry", () => {
@@ -61,5 +69,23 @@ describe("createContactEnquiry", () => {
     await expect(createContactEnquiry({ ...VALID_INPUT, marketingConsent: true })).resolves.toEqual(
       { id: 1 },
     );
+  });
+
+  it("resolves and links the enquiry to its attribution row when a payload is supplied (T5.4)", async () => {
+    resolveAttributionIdMock.mockResolvedValue(7);
+    const rawAttribution = { sessionId: "abc", landingPage: "/", firstSeen: "2026-09-01" };
+
+    await createContactEnquiry({ ...VALID_INPUT, attribution: rawAttribution });
+
+    expect(resolveAttributionIdMock).toHaveBeenCalledWith(rawAttribution);
+    const createArgs = createMock.mock.calls[0][0] as { data: { attributionId: number | null } };
+    expect(createArgs.data.attributionId).toBe(7);
+  });
+
+  it("links no attribution (null) when the payload is absent — never blocks submission", async () => {
+    await createContactEnquiry(VALID_INPUT);
+
+    const createArgs = createMock.mock.calls[0][0] as { data: { attributionId: number | null } };
+    expect(createArgs.data.attributionId).toBeNull();
   });
 });

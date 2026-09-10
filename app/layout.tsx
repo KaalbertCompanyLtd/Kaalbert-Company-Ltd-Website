@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AttributionCapture } from "@/components/attribution-capture";
 import { ConsentBanner } from "@/components/consent-banner";
 import {
   GoogleTagManagerBodyFrame,
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       {gtmContainerId ? <GoogleTagManagerHeadScript containerId={gtmContainerId} /> : null}
       <body>
         {gtmContainerId ? <GoogleTagManagerBodyFrame containerId={gtmContainerId} /> : null}
+        <AttributionCapture />
         {children}
         <ConsentBanner />
       </body>

@@ -84,9 +84,14 @@ From a visitor's perspective:
   consent mode degrades measurement gracefully rather than erroring; the site itself must
   still function fully.
 - Campaign parameters present on the very first page but the visitor navigates away and
-  returns days later: attribution persistence duration is a defined retention window (set in
-  Phase 6 task planning), not indefinite, consistent with the documented retention policy
-  required under FR-6.4.
+  returns days later: attribution persistence duration is a defined retention window — 90
+  days (decided in `docs/tasks/05-landing-and-measurement.md`'s opening note; implemented at
+  T5.4 as `lib/attribution-cleanup.ts`'s `deleteExpiredAttributionRows`), not indefinite,
+  consistent with the documented retention policy required under FR-6.4. Client-side capture
+  (`lib/attribution-client.ts`) is first-touch and `localStorage`-persisted independently of
+  this server-side window — a returning visitor's browser still has the original attribution
+  as long as `localStorage` itself hasn't been cleared, but the server-side row backing it
+  ages off after 90 days regardless, per this same policy.
 - Server-side Conversions API call fails (network error, Meta outage): logged, not retried
   inline, and never surfaced to the visitor — see `architecture.md`, Section 5.
 - A conversion event fires twice due to a client-side double-submit: the event ID used for

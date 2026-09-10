@@ -65,18 +65,21 @@ Document 13.03, Section 6).
 - `diagnostic_response` — id, session id, question id, answer value, timestamp.
 - `enquiry_record` — id, diagnostic_response set (relation), score summary, weakest
   dimensions, triage flag, contact details (nullable until step 5), marketing consent
-  boolean, contact consent boolean, traffic source, campaign, landing page, created_at.
+  boolean, contact consent boolean, attribution (relation), created_at.
   `message` (text) was added at T2.6 (`contact-and-enquiry.md`) for that feature's own
   free-text form body — null for a diagnostic-originated enquiry. `traffic_source`/
-  `campaign`/`landing_page` are not yet modelled in `prisma/schema.prisma`: T2.6 found this
-  list disagrees with `measurement-and-attribution.md`'s own `attribution` entity (a separate
-  table with a foreign key, not inline columns here) and left resolving that inconsistency to
-  whichever task actually builds attribution (Milestone 5) — see `memory/decision-log.md`.
+  `campaign`/`landing_page` (this doc's own original wording) were resolved at T5.4: per
+  `measurement-and-attribution.md`'s own Data requirements, these are not inline columns on
+  this table but a separate `attribution` entity with a foreign key
+  (`enquiry_record.attribution_id`) — see `memory/decision-log.md` (T2.6, T5.4).
 
 ## Interfaces
 
-- `POST /api/diagnostic/submit` — request: array of `{question_id, answer}`; response:
-  `{score, dimension_scores, weakest_dimensions, indicative_cost_statement, enquiry_id}`.
+- `POST /api/diagnostic/submit` — request: `{answers: [{question_id, answer}], attribution?}`
+  (revised at T5.4 from the original bare array — `attribution` is the untrusted client
+  payload `lib/attribution-client.ts`'s `getStoredAttribution()` produces, resolved server-side
+  to a real `attribution_id` in `lib/attribution.ts`); response: `{score, dimension_scores,
+weakest_dimensions, indicative_cost_statement, enquiry_id}`.
 - `POST /api/diagnostic/request-summary` — request: `{enquiry_id, name, email, phone?,
 contact_consent, marketing_consent}`; response: `{status}`. Triggers the transactional
   email and the `summary_requested` measurement event.
@@ -91,8 +94,10 @@ contact_consent, marketing_consent}`; response: `{status}`. Triggers the transac
 - Visitor completes the diagnostic twice in one session: each submission creates its own
   `enquiry_record`; deduplication is explicitly deferred to Phase 2 (FR-14.2, CRM sync) and
   not attempted at launch.
-- Campaign attribution missing (organic/direct visitor): `traffic_source` fields are stored
-  as null/direct rather than blocking submission.
+- Campaign attribution missing (organic/direct visitor), or the attribution payload is
+  absent/malformed for any reason (e.g. `localStorage` disabled): the resulting
+  `enquiry_record.attribution_id` is `null` — implemented at T5.4, `lib/attribution.ts`'s
+  `resolveAttributionId` returns `null` rather than throwing, never blocking submission.
 - Result computation encounters a dimension with no active questions (a configuration error):
   the API returns a 500 and logs it; this must be caught in the admin's configuration
   validation before publishing question-set changes, not surfaced to a visitor mid-flow.

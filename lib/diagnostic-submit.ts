@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { Prisma } from "../generated/prisma/client";
+import { resolveAttributionId } from "@/lib/attribution";
 import { prisma } from "@/lib/prisma";
 import {
   scoreDiagnosticResponses,
@@ -34,9 +35,12 @@ export interface DiagnosticSubmitResult extends DiagnosticScoringResult {
  */
 export async function submitDiagnosticResponses(
   answers: DiagnosticAnswerInput[],
+  /** Untrusted client payload — see `lib/attribution.ts`'s `resolveAttributionId`. */
+  attribution?: unknown,
 ): Promise<DiagnosticSubmitResult> {
   const result = await scoreDiagnosticResponses(answers);
   const sessionId = randomUUID();
+  const attributionId = await resolveAttributionId(attribution);
 
   const enquiry = await prisma.enquiryRecord.create({
     data: {
@@ -44,6 +48,7 @@ export async function submitDiagnosticResponses(
       scoreSummary: result as unknown as Prisma.InputJsonValue,
       weakestDimensions: result.weakestDimensions,
       triageFlag: result.overallTriageFlag,
+      attributionId,
       diagnosticResponses: {
         create: answers.map((answer) => ({
           sessionId,

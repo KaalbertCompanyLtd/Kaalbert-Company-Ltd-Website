@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { resolveAttributionId } from "@/lib/attribution";
 import { resolveServiceContext } from "@/lib/contact";
 import { subscribeToInsights } from "@/lib/insights-subscription";
 
@@ -13,6 +14,8 @@ export interface ContactSubmissionInput {
   service?: string;
   contactConsent: boolean;
   marketingConsent?: boolean;
+  /** Untrusted client payload — see `lib/attribution.ts`'s `resolveAttributionId`. */
+  attribution?: unknown;
 }
 
 /**
@@ -62,6 +65,7 @@ export async function createContactEnquiry(input: ContactSubmissionInput) {
 
   const serviceContext = await resolveServiceContext(input.service);
   const marketingConsent = input.marketingConsent ?? false;
+  const attributionId = await resolveAttributionId(input.attribution);
 
   const enquiry = await prisma.enquiryRecord.create({
     data: {
@@ -72,6 +76,7 @@ export async function createContactEnquiry(input: ContactSubmissionInput) {
       serviceLine: serviceContext?.slug ?? null,
       contactConsent: true,
       marketingConsent,
+      attributionId,
     },
   });
 
