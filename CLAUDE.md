@@ -333,6 +333,8 @@ When work changes project knowledge:
 - Update relevant feature specifications when requirements evolve
 - Update memory/technical-debt.md when shortcuts or compromises are introduced
 - Update memory/known-bugs.md when unresolved issues remain
+- Update `docs/user-guide.md` (and republish its Artifact mirror) whenever a task changes
+  what the firm can do, see, or must monitor — see "Firm-Facing Documentation" below.
 
 Do not rely on conversation history as project memory.
 
@@ -538,6 +540,11 @@ Before marking work complete:
     fix has Trigger type and Sequenced into filled in — never left blank
 [ ] Any technical-debt.md/known-bugs.md entry resolved this session has its Status flipped
     in place (Open → Resolved/Fixed), not left Open and not duplicated as a new entry
+[ ] docs/user-guide.md updated, and its Artifact mirror republished, if this task changed
+    what the firm can do/see/must monitor (see "Firm-Facing Documentation" below) — if this
+    task changed nothing firm-visible, note that explicitly rather than skipping silently
+[ ] If this task completed a milestone/epic, or made a major architectural/process change,
+    the "Website Build Status" Artifact was updated too (see "Firm-Facing Documentation")
 [ ] Session summary written to docs/sessions/session-NN-<topic>.md
 [ ] "Paste This to Continue" block in session summary contains full /task [NEXT_TASK_ID] output
 [ ] git commit made with format: <type>(T##-##): <short description>
@@ -593,3 +600,29 @@ At the end of every working session — or when a conversation is getting long �
 produce a session summary file (`docs/sessions/session-NN-<short-topic>.md`) without being
 asked, **before** ending the conversation, not after. See the `session-management` skill for
 the naming convention, the exact markdown template, and the "Paste This to Continue" rules.
+
+## Firm-Facing Documentation
+
+Two documents exist purely for the firm (not for a future engineer), each mirrored as a
+private Artifact page. **Both are built incrementally, task-by-task and milestone-by-
+milestone, as this decision was made explicitly (session 36+, 2026-09-10, see
+`memory/decision-log.md`) specifically to avoid a big end-of-project documentation audit** —
+never let either one go stale and plan to "catch it up later."
+
+- **`docs/user-guide.md`** — the operational manual: what the platform can do today, what to
+  monitor (external accounts/dashboards, retention jobs, caching gotchas), and what a
+  partner can/can't yet do about it. Artifact mirror:
+  <https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc>. **Update rule:
+  every task** that changes what a partner can do, see, or must monitor — republish the
+  Artifact in the same session the file changes, so the two never drift apart.
+- **"Website Build Status"** Artifact —
+  <https://claude.ai/code/artifact/a26811bf-998b-4899-b3ad-0d03ce7c828f> — a short,
+  plain-language progress report for the firm (milestone ledger, what's usable today, open
+  items waiting on the firm). No corresponding file in `docs/` — it's Artifact-only,
+  intentionally lighter than the user guide. **Update rule: only at milestone/epic
+  completion, or a major architectural/process change** — never on every task; that
+  distinction from `docs/user-guide.md`'s per-task cadence is deliberate, so the firm's own
+  progress report doesn't get noisy.
+
+Publishing either Artifact update requires reading its current live version first (the
+Artifact tool enforces this) — never redeploy from a stale local copy.

@@ -2,6 +2,41 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (session 36+) — Two firm-facing documentation artifacts established, updated incrementally instead of audited at the end
+
+**Status:** Standing
+
+**Summary:** The user asked to start a full user guide/manual for the firm now, covering
+everything the platform can do, what to monitor, and what actions are available — and
+explicitly to make it a durable rule to keep updating it as tasks complete, rather than
+waiting until everything is built and then running one big audit to reconstruct it. Two
+artifacts now exist, each with a distinct cadence so the firm's own progress report doesn't
+get noisy while the operational manual still stays current:
+
+- **`docs/user-guide.md`** (new file) — the operational manual: what's live, what to
+  monitor, what a partner can/can't do yet, organized by capability, plus a change log.
+  Mirrored as an Artifact — <https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc>
+  — kept in exact content sync with the file on every update. **Update rule: every task**
+  that changes what a partner can do, see, or must monitor.
+- **"Website Build Status"** Artifact (pre-existing, owned by the user, URL supplied by the
+  user this session: <https://claude.ai/code/artifact/a26811bf-998b-4899-b3ad-0d03ce7c828f>)
+  — a short, plain-language milestone progress report. Read before this session's update
+  (per the Artifact tool's own rule), then republished in place to reflect Milestone 5's
+  completion (T5.1–T5.4 live, T5.5 deferred before Milestone 9, next up Milestone 6) — the
+  first real use of the new rule: **update only at milestone/epic completion or a major
+  change**, not every task.
+
+Both rules are now codified in CLAUDE.md's new "Firm-Facing Documentation" section (added
+this same session) and in `docs/user-guide.md`'s own "How this guide is maintained" section,
+so a future session doesn't need this decision-log entry to know the rule — it's load-bearing
+process now, not a one-off request.
+
+**Related Documents:** `docs/user-guide.md`, CLAUDE.md ("Firm-Facing Documentation" section,
+Knowledge Management Responsibilities, Task Completion Checklist), the two Artifact URLs
+above.
+
+---
+
 ## 2026-09-10 (session 36+) — T5.5 resequenced to run immediately before Milestone 9 instead of right after T5.4; Milestone 5 marked complete on that basis
 
 **Status:** Standing

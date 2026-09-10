@@ -14,6 +14,42 @@ Protocol):
 
 ---
 
+## 2026-09-10 (process, session 36+)
+
+**Task:** Start `docs/user-guide.md` (firm operational manual) and its Artifact mirror;
+establish the incremental-update rule; update the pre-existing "Website Build Status"
+Artifact for Milestone 5's completion
+**Summary:** The user asked to begin a full user guide/manual for the firm now — covering
+everything the platform can do, what to monitor, and what actions are available — with an
+explicit durable rule to keep it updated task-by-task rather than auditing everything at the
+end. Created `docs/user-guide.md`, covering Milestones 1–4 (complete) and Milestone 5
+(complete through T5.1–T5.4), organized as one capability card per shipped feature (what it
+does / what to monitor / what a partner can do today), plus a quick-reference monitor table
+and a change log. Published it as a matching Artifact,
+<https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc>, reusing this
+project's own fixed brand palette/type (`ui/design-system.md` — Pine/Brass/Ivory, Georgia
+display + Calibri body) rather than inventing a new visual identity, for consistency with
+the user's own pre-existing "Website Build Status" Artifact. The user also asked that that
+pre-existing Artifact (<https://claude.ai/code/artifact/a26811bf-998b-4899-b3ad-0d03ce7c828f>,
+"Website Build Status") get a standing rule of its own: updated whenever an epic/milestone
+completes or a major change happens. Read its live content first (per the Artifact tool's
+own read-before-update rule), then republished it in place reflecting Milestone 5's real
+completion (T5.1–T5.4 live, T5.5 deferred before Milestone 9, progress bar and percentage
+updated, "Next up" changed to Milestone 6) — this session's own Milestone-5-completion event
+from the prior task became the first real trigger of the new rule.
+**Files Changed:** `docs/user-guide.md` (new), CLAUDE.md (new "Firm-Facing Documentation"
+section; new bullet in Knowledge Management Responsibilities; two new Task Completion
+Checklist items), `memory/decision-log.md`, `memory/completed-work.md`. Two Artifacts
+published/updated (not repo files): the new "Platform User Guide" Artifact, and the
+pre-existing "Website Build Status" Artifact.
+**Related Feature:** None — this is project process/tooling, not a `docs/tasks/*.md` task.
+**Notes:** No application code touched; quality gates re-run and confirmed clean regardless,
+per the Task Completion Checklist's own standing habit. Both Artifact URLs and the update
+rules for each are recorded in CLAUDE.md's "Firm-Facing Documentation" section going forward
+— a future session should read that section, not this entry, for the standing rule.
+
+---
+
 ## 2026-09-10 (planning, session 36+)
 
 **Task:** Resequence T5.5; mark Milestone 5 complete

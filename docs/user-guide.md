@@ -1,0 +1,166 @@
+# Platform User Guide — kaalbert.com
+
+**A living reference for the firm: what the platform can do today, what to keep an eye on,
+and what a partner can (and can't yet) do about it.** Mirrored as an Artifact page —
+<https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc> — both copies are
+updated together, every time a task changes what's true here. This is not an end-of-project
+audit; see "How this guide is maintained" below.
+
+## How this guide is maintained
+
+Updated task-by-task, not in one pass after everything is built (CLAUDE.md's Knowledge
+Management Responsibilities section makes this a standing rule, not a one-off request).
+Concretely: whenever a task changes what a partner can do, see, or needs to monitor — a new
+page, a new admin capability, a new external account/dashboard, a new email or notification
+behaviour — this file and its Artifact mirror are updated in the same session, as part of
+that task's own completion checklist. Nothing here should ever be more than one completed
+task out of date.
+
+This file is the operational manual (what exists, how to run it day to day). A separate,
+shorter Artifact — **"Website Build Status"**,
+<https://claude.ai/code/artifact/a26811bf-998b-4899-b3ad-0d03ce7c828f> — is the
+plain-language progress report for the firm; it's updated only at milestone/epic completion
+or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
+`memory/decision-log.md` for the exact update rule for each.
+
+**As of:** 2026-09-10 (session 36+) — Milestones 1–4 complete; Milestone 5 complete through
+T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9). Next: Milestone 6, Admin
+Authentication.
+
+---
+
+## What's live today
+
+### Public website pages — Milestone 2
+
+**What it does:** Home, the three fee-transparent core offer pages, Capabilities, Our
+Method, About, Contact, and the four legal pages, all live and responsive (mobile/tablet/
+desktop).
+
+**What to monitor:**
+
+- The **Privacy Notice, Cookie Notice, and Terms of Use** are structurally complete but
+  carry draft/illustrative text only, each marked "Draft — pending legal review" on the page
+  itself. The site cannot go fully public until the firm's lawyer supplies real wording for
+  the Privacy Notice specifically. The fourth legal page, Scope of Practice, is real content
+  already.
+- The **Contact page's response-time commitment** (e.g. "we reply within one business day")
+  is still blank — the firm hasn't confirmed a number yet.
+- **kaalbert.com itself is not registered yet** — the live site currently sits on a Railway-
+  provided address, not the firm's own domain, so no DNS/Cloudflare setup exists either.
+
+**What a partner can do about it today:** Nothing via the site itself — there is no admin
+area yet (that's Milestone 6, then 7). Any copy, fee, or content change currently requires a
+developer.
+
+### Business Health Check diagnostic — Milestone 3
+
+**What it does:** A public, scored self-assessment completable in under six minutes:
+question flow → instant results → a gated "email me the full written summary" step
+(delivered via Brevo transactional email).
+
+**What to monitor:**
+
+- Email delivery depends on the **Brevo account** (`kaalbert.company@gmail.com`) and its
+  verified sender — if summary emails stop arriving, check Brevo's sender-verification
+  status first.
+- The diagnostic's question set is the mockups' illustrative content, flagged internally as
+  placeholder pending the firm's real question review — there is no visible "draft" marker
+  on the public page itself the way the legal pages have one, so this is easy to forget is
+  still provisional.
+
+**What a partner can do about it today:** Nothing via the site itself yet — editing
+questions/weights/thresholds without a developer is Milestone 7's Diagnostic Configuration
+screen.
+
+### Insights (articles) — Milestone 4
+
+**What it does:** An articles index and article template, live with the firm's real eight
+articles, plus a reader email-subscribe capture on every article.
+
+**What to monitor:**
+
+- Subscriber addresses are captured and get a one-time confirmation — **nothing further is
+  ever sent to them yet.** There's no ongoing newsletter/campaign mechanism until Milestone
+  17 (gated on the list reaching a size worth a partner's time to compose for).
+
+**What a partner can do about it today:** Nothing via the site itself yet — Milestone 7.
+
+### Landing pages — Milestone 5 (T5.1–T5.2)
+
+**What it does:** Three seeded, dedicated landing-page instances for ad campaigns (one of
+which cross-promotes a downloadable checklist as its own call to action).
+
+**What to monitor:** Only these three exist. A new landing page for a new campaign currently
+needs a developer to add.
+
+**What a partner can do about it today:** Nothing via the site itself yet — Milestone 7.
+
+### Measurement & attribution — Milestone 5 (T5.3–T5.4)
+
+**What it does:** The full first-party measurement layer:
+
+- **Google Tag Manager** container `GTM-PDGKRKRN`, published live, holding a **GA4**
+  configuration tag (property `G-9VX9GS5L0X`) and one event tag per conversion moment.
+- **Six fixed conversion events** fire automatically at the right moment on the site:
+  diagnostic started, diagnostic completed, summary requested, checklist downloaded, enquiry
+  submitted, WhatsApp opened.
+- A **cookie-consent banner** (Consent Mode v2) — visitors' consent choice genuinely gates
+  whether GA4 receives data, not just a cosmetic banner.
+- **First-touch attribution**: which campaign/UTM link a visitor first arrived through is
+  captured client-side and linked to every enquiry and diagnostic submission they later make,
+  so an enquiry can be traced back to the ad or article that produced it. Kept for 90 days,
+  then automatically deleted unless it's still attached to a real enquiry.
+
+**What to monitor:**
+
+- **GTM's own script is cached for ~15 minutes** after any publish — if a newly-published
+  tag seems to "do nothing," wait before concluding something is broken; this has already
+  produced a false alarm once.
+- The nightly **attribution-cleanup** job (a small always-on Railway service, `0 3 * * *`)
+  should show successful runs in Railway's own service logs — a string of failures would mean
+  the 90-day retention promise silently stops holding.
+- **T5.5 — Meta Conversions API, Google Ads (via GA4 import), and LinkedIn Insight Tag — is
+  deliberately not built yet.** It needs a Meta Business Manager account + Pixel + CAPI
+  token, a Google Ads account, and LinkedIn Campaign Manager access, none of which exist for
+  the firm yet. It's been resequenced to build immediately before Milestone 9 rather than
+  abandoned — see `memory/decision-log.md`.
+
+**What a partner can do about it today:** The marketing team can create new tags/triggers
+directly in GTM's own web UI (same `kaalbert.company@gmail.com` account) without a developer,
+**as long as the new tag listens to one of the six existing conversion events above** — a
+genuinely new kind of conversion moment still needs a developer (a `lib/data-layer.ts`
+change) before GTM has anything new to listen to.
+
+---
+
+## What to monitor — the short list
+
+A quick-reference roll-up of every external account/dashboard this platform currently
+depends on:
+
+| System              | What it's for                                           | Where                 |
+| ------------------- | ------------------------------------------------------- | --------------------- |
+| Google Tag Manager  | Container `GTM-PDGKRKRN` — all measurement tags         | tagmanager.google.com |
+| Google Analytics 4  | Property `G-9VX9GS5L0X` — conversion reporting          | analytics.google.com  |
+| Brevo               | Transactional email (diagnostic summary emails)         | app.brevo.com         |
+| Railway             | Hosting, database, and the attribution-cleanup cron job | railway.app           |
+| Domain registration | **Not yet done** — kaalbert.com isn't registered        | —                     |
+
+## What's coming next
+
+- **Milestone 6 — Admin Authentication** (next up): partner login + TOTP two-factor. First
+  milestone that exists purely for firm use.
+- **Milestone 7 — Content Management Admin**: every piece of content seeded so far becomes
+  partner-editable without a developer — this is where most of the "Nothing via the site
+  itself yet" notes above get resolved.
+- **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
+  diagnostic completions in one place.
+- **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
+  GA4, Meta, Google Ads, and LinkedIn — begins with the deferred T5.5 above, then proceeds.
+
+## Change log
+
+| Date       | What changed                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9). |
