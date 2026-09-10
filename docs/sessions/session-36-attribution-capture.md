@@ -39,6 +39,9 @@ referenced by a real enquiry, regardless of age.
   `docs/features/measurement-and-attribution.md` — updated to match the real, built contract.
 - `memory/completed-work.md`, `memory/decision-log.md`, `memory/technical-debt.md` — new
   entries.
+- **Follow-up work, same session** (see its own section below): `.railway/railway.ts` (new
+  `attribution-cleanup` cron service; `preserve()` added for four previously-undeclared
+  `kaalbert-web` variables); `CLAUDE.md` (new Recurring Patterns entry).
 
 ## Decisions Made
 
@@ -59,9 +62,10 @@ referenced by a real enquiry, regardless of age.
   deleted and, critically, that an expired-but-referenced row survives regardless of age —
   the task's own explicit acceptance criterion, and the one case a mocked Prisma client
   can't truly prove.
-- **Railway Cron Job scheduling is flagged as new technical debt, not built** — the cleanup
-  script works standalone but nothing calls it on a schedule yet; wiring an actual Railway
-  Cron Job is a dashboard action for the user to take, not something to do unasked.
+- **Railway Cron Job scheduling — corrected mid-session, see the follow-up section below.**
+  Originally flagged as a dashboard-only action for the user to take; the user pushed back,
+  asked whether it could be scripted, and it could — this decision was reversed the same
+  session, not left standing.
 
 ## Current State
 
@@ -72,7 +76,9 @@ null utm fields without blocking; a garbage attribution payload also never block
 submission; the retention job correctly deleted only the one row that should be deleted. All
 quality gates pass (lint, format:check, typecheck, 67/67 tests — 11 new). All test/scratch
 rows were deleted afterward; the `attribution` table is empty on disk, as it should be before
-any real traffic exists. Not yet committed.
+any real traffic exists. **The retention job is now also actually scheduled** (see the
+follow-up below) — nothing left outstanding for T5.4. Committed as `T5.4` and a same-session
+`T5.4 follow-up`.
 
 **A real bug caught and fixed during this task's own verification**: the first version of
 `scripts/cleanup-attribution.ts` statically imported `lib/prisma` alongside its own `dotenv`
@@ -81,6 +87,38 @@ regardless of source order, so `lib/prisma.ts` read `process.env.DATABASE_URL` b
 `config()` ever ran, throwing "DATABASE_URL is not set" on every run. Fixed with
 `await import(...)` inside `main()` instead of a static import; documented in the script's
 own comment.
+
+## Follow-up: scheduling the retention job (same session)
+
+After this task's own completed-work entry described Railway Cron Job scheduling as a
+dashboard-only action, the user asked directly whether it could be done via CLI/script
+instead — it could, and the framing was wrong. Corrected in the same session:
+
+- Declared a new `attribution-cleanup` service in `.railway/railway.ts` (Railway's
+  config-as-code file, tracked since T1.1): `deploy.cronSchedule: "0 3 * * *"`,
+  `restartPolicyType: "NEVER"`, `build: "true"` (skips Railpack's auto-detected full
+  `next build` — this job only calls `tsx` directly).
+- Verified the real IaC schema by installing the actual `railway` npm package into an
+  isolated scratch directory and reading its shipped `.d.ts` files directly, after
+  confirming (via a deliberately bogus field name) that the CLI does not validate unknown
+  properties — "no error" alone would have been worthless evidence of a field's validity.
+- Applied via `railway config plan` (dry-run, reviewed) then `railway config apply --yes`,
+  with the user's explicit go-ahead for that one production-infrastructure action.
+- **The dry-run caught a real, unrelated landmine first**: the existing `kaalbert-web`
+  service's declaration in that same file had never been updated to `preserve()`
+  `BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`/`GTM_CONTAINER_ID` — `plan` showed
+  applying as-is would have deleted all four live variables. Fixed before touching anything.
+- **The first real deployment then failed for real**, diagnosed from actual Railway build/
+  deploy logs, not guessed: `DATABASE_URL: preserve()` on a brand-new service protects
+  nothing (there was no prior value to preserve), so it deployed unset. Fixed with a real
+  cross-service reference (`ref(postgres("Postgres"), "DATABASE_URL")`). A second deployment
+  then succeeded (`status: SUCCESS` via `railway service list`).
+- **Standing pattern decided**, checked against the roadmap rather than assumed:
+  `platform-performance-dashboards.md` (Milestone 9) needs four more scheduled jobs (one per
+  ad platform), each requiring the same failure-isolation Railway's per-service Cron Jobs
+  already give for free. Decided: one small Railway service per scheduled task, declared in
+  `.railway/railway.ts`, never a shared worker/dispatcher process — recorded in `CLAUDE.md`'s
+  Recurring Patterns section so Milestone 9 inherits this without re-deciding it.
 
 ## Blockers
 

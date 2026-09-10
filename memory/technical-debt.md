@@ -20,32 +20,48 @@ sequencing requirement:
 
 ## Attribution's 90-day retention job has no real schedule triggering it
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-10 (T5.4, session 36)
-**Reason:** `lib/attribution-cleanup.ts`'s `deleteExpiredAttributionRows` and its runner
-(`scripts/cleanup-attribution.ts`, `npm run attribution:cleanup`) are fully built, tested
-(`lib/attribution-cleanup.test.ts`), and verified against real seeded rows in the live
-database — the _logic_ is done and correct. Nothing in this project actually calls it on a
-schedule yet. Railway's own Cron Job feature (a schedule set on a service via the Railway
-dashboard, running this same command) is the natural mechanism per this project's hosting
-stack (ADR 0003), but configuring one is a dashboard action — creating/configuring a Railway
-service's cron schedule is an external action only the user can take, same category as every
-other external-account/dashboard step this project already defers (GTM/GA4 account creation
-at T5.3, domain registration at T1.1).
-**Impact:** Low today — `attribution` rows are brand new (this task), so none are anywhere
-near 90 days old yet. Will become real (unbounded table growth, past the documented FR-6.4
-retention policy) the longer this stays unscheduled, but there's no urgency at launch.
-**Priority:** Low
-**Possible Fix/Fixes:** In the Railway dashboard, add a Cron Job schedule (e.g. daily) to the
-`kaalbert-web` service (or a small dedicated service) running `npm run attribution:cleanup`.
-No code change needed — the script already works standalone; this is purely a Railway
-configuration step.
-**Trigger type:** User-triggered — do not create or configure a Railway Cron Job, or treat
-reaching any future task as a cue to do so; wait for the user to say the schedule has been
-set up (or ask them to set it up) before treating this as resolved.
-**Sequenced into:** T5.4 (this same task, `docs/tasks/05-landing-and-measurement.md`) — no
-later task in any epic currently touches scheduling/cron, so there is no future task to defer
-to; this stays open until the user takes the dashboard action themselves.
+**Date resolved:** 2026-09-10 (same session, follow-up)
+**Reason:** Originally framed as a dashboard-only action ("configuring a Railway Cron Job
+schedule is an external action only the user can take"). **Corrected same-day, per user
+pushback**: Railway's own config-as-code CLI (`railway config plan`/`apply` against this
+repo's already-tracked `.railway/railway.ts`, first written at T1.1) makes this fully
+scriptable — a new `attribution-cleanup` service was declared in that file (source-connected
+to this same repo, `deploy.cronSchedule: "0 3 * * *"`, `restartPolicyType: "NEVER"`) and
+applied for real via `railway config apply`, with the user's explicit go-ahead for that one
+production-infrastructure action. The "only a human can click this in a dashboard" framing
+was simply wrong; the CLI/IaC path is the better, more legible mechanism anyway (the schedule
+now lives in a reviewable, git-tracked file, not tribal knowledge in a web UI).
+**Two real bugs were caught and fixed during this same follow-up**, both confirmed by
+watching the actual deployment fail and re-diagnosing from real logs, not guessed: (1) the
+new service's `DATABASE_URL` was declared with `preserve()`, which only protects an
+_existing_ value — a brand-new service has nothing to preserve, so it deployed with no
+`DATABASE_URL` at all and failed immediately on the same "DATABASE_URL is not set" error the
+script's own code comment already warned about; fixed by declaring a real cross-service
+reference (`ref(postgres_db, "DATABASE_URL")`, requiring `postgres("Postgres")` to also be
+declared and added to the project's `resources` list so the reference target actually exists
+in the graph). (2) Railway's Railpack builder auto-detected the repo as a Next.js app and
+ran the full `npm run build` (a real `next build`) before every deploy — wasted build time
+for a job that only ever calls `tsx` directly; fixed with `build: "true"` (a no-op shell
+command) to skip it while still running `npm install` for the job's own dependencies. Also
+fixed, in the same file edit: the existing `kaalbert-web` service's IaC declaration was stale
+— it never declared `BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`/
+`GTM_CONTAINER_ID` as `preserve()`, so `railway config apply` would have silently deleted
+all four live environment variables the moment anyone ran it (confirmed via `railway config
+plan`'s dry-run diff _before_ touching anything) — a real, unrelated landmine this
+investigation happened to catch.
+**Impact:** None remaining — the service now exists, deploys successfully (confirmed via
+`railway service list`'s own `status: SUCCESS` on a real deployment after both fixes), and
+is scheduled. The stale-variable landmine above is also closed.
+**Priority:** N/A — resolved.
+**Possible Fix/Fixes:** Done — see Reason above. The pattern this establishes (one small
+Railway service per scheduled task, declared in `.railway/railway.ts`, never a shared
+worker/dispatcher process) is now recorded in `CLAUDE.md`'s Recurring Patterns section for
+future scheduled-job needs (Milestone 9's per-platform performance-dashboard syncs are the
+next known case).
+**Trigger type:** Task-sequenced (fully resolved this session; nothing left to defer).
+**Sequenced into:** T5.4 (this same task) — closed, not deferred.
 
 ---
 

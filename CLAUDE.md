@@ -297,6 +297,28 @@ already; keep any new type-check invocation consistent with it.
   fixed events (diagnostic started/completed, summary requested, checklist downloaded,
   enquiry submitted, WhatsApp opened) plus any Phase 2 addition (`consultation_booked`,
   `payment_completed`, `training_registered`) — never a new, separate measurement mechanism.
+- **Every scheduled/background job is its own small Railway service, declared in
+  `.railway/railway.ts` (Railway's config-as-code file, tracked since T1.1) with
+  `deploy.cronSchedule` and `restartPolicyType: "NEVER"`, running one `npm run <script>`
+  command** — never a shared worker/dispatcher process running multiple jobs internally.
+  Decided at T5.4 (`lib/attribution-cleanup.ts`'s `attribution-cleanup` service is the
+  template) specifically because `docs/features/platform-performance-dashboards.md`
+  (Milestone 9) already requires the exact isolation this gives for free ("implemented
+  independently per platform so one platform's sync failure cannot affect another's") — a
+  hand-rolled shared worker would have to reimplement that isolation manually, the kind of
+  custom infrastructure ADR 0001 says to avoid when a platform feature already does the job.
+  Two things to get right every time, both real mistakes made once already (see
+  `memory/decision-log.md`, T5.4 follow-up): (1) declare `DATABASE_URL` (and any other DB
+  dependency) as a real cross-service reference — `ref(postgres("Postgres"), "DATABASE_URL")`
+  — never `preserve()`, which only protects an _existing_ value and leaves a brand-new
+  service's variable simply unset; (2) override `build: "true"` to skip Railpack's
+  auto-detected full `next build` step, since these jobs call `tsx` directly and never touch
+  the compiled Next.js app. Before running `railway config apply` for any change to this
+  file, always run `railway config plan` first and read its diff — an IaC file that omits an
+  existing variable/service treats it as "should not exist" and will delete it on apply
+  (hit for real at T5.4: the file didn't declare `BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/
+  `BREVO_SENDER_NAME`/`GTM_CONTAINER_ID` as `preserve()` and `plan` showed it would have
+  deleted all four).
 
 ## Knowledge Management Responsibilities
 

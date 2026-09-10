@@ -14,6 +14,47 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T5.4 follow-up, session 36)
+
+**Task:** T5.4 follow-up — schedule the attribution retention job via Railway config-as-code
+**Summary:** Corrected this session's own earlier claim that scheduling
+`scripts/cleanup-attribution.ts` required a manual Railway dashboard action — the user asked
+whether it could be scripted instead, and it could: this repo's already-tracked
+`.railway/railway.ts` (Railway's config-as-code file, from T1.1) now declares a new
+`attribution-cleanup` service (`deploy.cronSchedule: "0 3 * * *"`, `restartPolicyType:
+"NEVER"`, `build: "true"` to skip an unnecessary full Next.js build), applied for real via
+`railway config apply` with the user's explicit go-ahead. Verified the real IaC schema by
+installing the actual `railway` npm package into an isolated scratch directory and reading
+its `.d.ts` files directly (confirmed the CLI does not validate unknown properties, so
+trial-and-error alone would have been worthless evidence). The first real deployment
+attempt failed for real (confirmed via `railway service list`'s deployment status and
+`railway logs --build`), diagnosed from actual logs and fixed properly rather than
+papered over: `DATABASE_URL: preserve()` doesn't create a value for a brand-new service with
+no prior one, so it deployed unset — fixed with a real `ref(postgres_db, "DATABASE_URL")`
+cross-service reference. A second redeploy then succeeded (`status: SUCCESS`). Also caught
+and fixed, before applying anything (via `railway config plan`'s dry-run diff): the existing
+`kaalbert-web` service's IaC declaration was stale and would have deleted
+`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`/`GTM_CONTAINER_ID` on apply, since
+an undeclared variable is treated as "should not exist." Also decided and recorded a
+standing pattern (checked against `platform-performance-dashboards.md`'s real Milestone 9
+requirement, not assumed): one small Railway Cron Job service per scheduled task, never a
+shared worker/dispatcher process.
+**Files Changed:** `.railway/railway.ts` (new `attribution-cleanup` service declaration;
+`postgres("Postgres")` reference added; `preserve()` added for the four previously-undeclared
+`kaalbert-web` variables), `memory/technical-debt.md` (the "Attribution's 90-day retention
+job" entry flipped to Resolved), `memory/decision-log.md`, `memory/completed-work.md`,
+`CLAUDE.md` (new Recurring Patterns entry). No application code changed — this was entirely
+an infrastructure/config-as-code correction.
+**Related Feature:** `docs/features/measurement-and-attribution.md` (the job this schedules),
+`docs/features/platform-performance-dashboards.md` (the future case the pattern decision was
+checked against).
+**Notes:** The real, live `attribution-cleanup` Railway service now exists and is scheduled
+— nothing further to do. This is logged as a "T5.4 follow-up" per CLAUDE.md's own
+task-follow-up convention (the debt was small, discovered and fixed in the same session
+T5.4 itself shipped in, so it's fixed now rather than deferred to a future task).
+
+---
+
 ## 2026-09-10 (T5.4, session 36)
 
 **Task:** T5.4 — Attribution capture, persistence, and 90-day retention job

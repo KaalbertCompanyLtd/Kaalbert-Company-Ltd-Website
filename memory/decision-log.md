@@ -2,6 +2,66 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T5.4 follow-up, session 36) — Scheduling the attribution retention job is CLI/IaC-scriptable, not a dashboard-only action; one Railway Cron Job service per scheduled task is the standing pattern, not a shared worker
+
+**Status:** Standing
+
+**Summary:** Immediately after this session's own T5.4 completed-work entry described the
+90-day retention job's schedule as "a Railway dashboard action... only the user can take,"
+the user pushed back and asked whether it could be done via CLI/script instead. It could,
+and should have been from the start — this project's own `.railway/railway.ts` (Railway's
+config-as-code file, tracked since T1.1) already exists specifically for this. Verified the
+real schema by installing the actual `railway` npm package into an isolated scratch
+directory and reading its shipped `.d.ts` files directly, rather than guessing field names
+from trial and error (an earlier probe using a bogus field name proved the CLI does not
+validate/error on unknown properties, so "no error" alone would have been worthless
+evidence). Declared a new `attribution-cleanup` service with `deploy.cronSchedule`, applied
+via `railway config plan` (dry-run, reviewed) then `railway config apply --yes` with the
+user's explicit go-ahead for that one production-infrastructure action.
+
+**The dry-run caught a real, unrelated landmine before anything was touched**: the existing
+`kaalbert-web` service's declaration in that same file had never been updated to declare
+`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`/`BREVO_SENDER_NAME`/`GTM_CONTAINER_ID` as `preserve()` —
+`railway config plan` showed it would delete all four live variables on apply, since an IaC
+file treats any undeclared variable as "should not exist" (the same rule the file's own
+existing comment already documented for `source`). Fixed in the same edit, before applying
+anything.
+
+**The first real deployment attempt then failed for real, twice, each time diagnosed from
+actual logs rather than guessed**: (1) `DATABASE_URL: preserve()` on a service that never
+had a prior value resolves to simply unset — `preserve()` protects an existing value, it
+does not create one — so the container failed immediately, exactly reproducing the
+"DATABASE_URL is not set" failure this session's own `scripts/cleanup-attribution.ts`
+comment already warns about, just at the infrastructure layer instead of the module-loading
+layer. Fixed with a real cross-service reference (`ref(postgres_db, "DATABASE_URL")`,
+requiring `postgres("Postgres")` to be declared and added to the graph's `resources` list so
+the reference target exists). (2) Railway's Railpack builder auto-detected the repo as a
+Next.js app and ran the full `npm run build` before every deploy of a job that only ever
+calls `tsx` directly — fixed with `build: "true"` to skip it. Both fixes were verified for
+real: `railway config plan` showed each as a single safe change before applying, and the
+corrected deployment's own `status: SUCCESS` (via `railway service list`) confirmed the
+container actually ran and exited cleanly.
+
+**Standing pattern decided, not just this one fix**: the user asked directly whether more
+scheduled jobs are coming and whether a shared "worker" abstraction would be better than one
+Cron Job service per task. Checked the roadmap rather than guessing: `platform-performance-
+dashboards.md` (Milestone 9) explicitly requires one scheduled sync job per ad platform (GA4,
+Meta, Google Ads, LinkedIn — four more), each "implemented independently... so one
+platform's sync failure cannot affect another's." Decided: keep one small Railway service
+per scheduled task (declared in `.railway/railway.ts`, each running one `npm run <script>`
+command on its own `cronSchedule`), never a shared worker/dispatcher process — Railway's
+per-service isolation already gives Milestone 9's own explicit requirement for free, and a
+hand-rolled shared worker would have to reimplement that isolation manually, which is exactly
+the kind of custom infrastructure ADR 0001's "packages/infrastructure as building blocks,
+never reinvent what a platform already does" ethos argues against. Recorded in `CLAUDE.md`'s
+Recurring Patterns section so Milestone 9's tasks inherit this without re-deciding it.
+
+**Related Documents:** `docs/tasks/05-landing-and-measurement.md` (T5.4), `docs/features/
+platform-performance-dashboards.md` (the future case this pattern was checked against),
+`docs/adr/0001-custom-build-no-cms-platform.md`, `memory/technical-debt.md` (the "Attribution's
+90-day retention job" entry, now Resolved), `memory/completed-work.md` (T5.4 follow-up entry),
+`CLAUDE.md` (Recurring Patterns section), `.railway/railway.ts`.
+
 ## 2026-09-10 (T5.4, session 36) — Attribution capture is entirely client-driven (`localStorage`, first-touch); `POST /api/diagnostic/submit`'s wire shape changed to carry it; retention job ages off `firstSeen`, checked against real seeded rows, not just unit-mocked
 
 **Status:** Standing
