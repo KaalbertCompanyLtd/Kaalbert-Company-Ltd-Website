@@ -14,6 +14,50 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T6.2, session 38)
+
+**Task:** T6.2 — 2FA setup flow — `/admin/setup-2fa`
+**Summary:** Built the real `/admin/setup-2fa` screen to its mockup
+(`ui/mockups/f-admin-auth/admin-2fa-setup.html`): a server-rendered QR code + manual-key
+fallback, a client-side confirm-code step, and a backup-codes step gated by a required
+checkbox before "Finish setup" (→ `/admin/login`, a forward reference to T6.3). Added
+`lib/auth/totp-setup.ts` (`resolvePendingTotpSetup`, `confirmTotpSetup`, `issueSetupToken`)
+and `POST /api/admin/auth/setup-2fa`. Resolved a real design gap the task itself flagged (no
+login session exists pre-enrolment, so the screen needs another way to identify "which
+account") by adding `admin_user.setup_token`/`setup_token_expires_at` — see
+`memory/decision-log.md` for the full reasoning, including how T6.4/T6.6 will reuse the same
+mechanism. Split `app/admin/layout.tsx`/`page.tsx` into a new `app/admin/(shell)/` route
+group so this auth screen (and T6.3's future login screen) don't inherit the authenticated
+sidebar shell.
+Verified for real via Playwright MCP against a real `admin_user` + setup token (throwaway
+script, deleted before commit): loaded the real page, extracted the real server-generated
+manual key from the DOM, computed the current valid code with `otplib`'s own `generate()`
+(the same RFC 6238 math any real authenticator app implements) since no physical device
+exists in this environment, typed it into the real input, and confirmed the real success
+state (8 real backup codes, correct DB writes — `totp_enabled: true`, `setup_token: null`,
+8 hashed `admin_backup_code` rows). Also confirmed single-use enforcement (revisiting the
+same, now-consumed link correctly shows "no longer valid") and checked mobile (390px), tablet
+(768px), and desktop (1280px) renders.
+Discovered and logged as new technical debt: no task anywhere creates a real `admin_user` row
+— added T6.6 (Initial admin account provisioning, a developer-run CLI script) to close it,
+plus addenda on T6.3 (setup-2fa's confirm endpoint needs the same rate-limiting T6.3 builds)
+and T6.4 (its re-enrolment redirect must reset `totpEnabled`/`totpSecret` before reusing
+`issueSetupToken`, or T6.2's own "already set up" check would reject it).
+**Files Changed:** `prisma/schema.prisma` (`AdminUser.setupToken`/`setupTokenExpiresAt`),
+`prisma/migrations/20260910193052_t6_2_admin_user_setup_token/`, `lib/auth/totp-setup.ts` +
+`.test.ts`, `app/admin/(shell)/layout.tsx` + `page.tsx` (moved from `app/admin/`),
+`app/admin/setup-2fa/page.tsx`, `app/admin/setup-2fa/totp-setup-form.tsx`,
+`app/api/admin/auth/setup-2fa/route.ts`, `package.json`/`package-lock.json` (added `qrcode`,
+`@types/qrcode`), `docs/tasks/06-admin-auth.md` (new T6.6; addenda on T6.3/T6.4),
+`memory/technical-debt.md`, `memory/decision-log.md`.
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, 88/88 tests across 14
+files, 10 new in `lib/auth/totp-setup.test.ts`). `docs/user-guide.md` **not** updated — still
+nothing firm-usable yet (no login flow, no way for the firm itself to create an account
+without T6.6), same explicit-skip reasoning as T6.1.
+
+---
+
 ## 2026-09-10 (T6.1, session 37)
 
 **Task:** T6.1 — Data model: `admin_user`, `admin_backup_code`, `admin_session`

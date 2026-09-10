@@ -869,20 +869,40 @@ model LandingPage {
 /// feature doc's own named field (no `updatedAt` companion — not named in that doc's Data
 /// requirements list, and nothing about this model needs a general last-modified audit
 /// column the way content-editing models do).
+/// `setupToken`/`setupTokenExpiresAt` — added at T6.2, beyond `admin-authentication.md`'s
+/// original id/name/email/password_hash/role/totp_secret/totp_enabled/created_at/
+/// last_login_at list, same "gap discovered once actually building the screen" precedent as
+/// `Offer.ctaLabel`/`tiers` (T2.2) and others (see `memory/decision-log.md`, T6.2). No task
+/// in this epic builds account *creation* — every task from T6.1 on assumes an `admin_user`
+/// row already exists (T6.2's own Input→Output: "New `admin_user`... → confirmed TOTP
+/// enrolment") — so `/admin/setup-2fa` needs a way to resolve "which account is this setup
+/// link for" without a login session (none exists pre-enrolment) and without a guessable
+/// sequential id in the URL (this is a real, unauthenticated, third-party-clickable link —
+/// same class of problem `Subscriber.unsubscribeToken` already solves for a different reason;
+/// a raw `?userId=3` would let anyone enumerate accounts and view/regenerate a live partner's
+/// pending TOTP secret). `setupToken` is a single-use opaque value, nulled the moment setup
+/// completes (`lib/auth/totp-setup.ts`'s `confirmTotpSetup`); `setupTokenExpiresAt` bounds
+/// how long a stale, never-completed link stays valid. Neither field means an account-
+/// creation flow exists yet — see `memory/technical-debt.md` → "No task provisions a real
+/// `admin_user` row yet" for the still-open gap this doesn't close.
 model AdminUser {
-  id           Int               @id @default(autoincrement())
-  name         String
-  email        String            @unique
-  passwordHash String            @map("password_hash")
-  role         String            @default("partner")
+  id                  Int               @id @default(autoincrement())
+  name                String
+  email               String            @unique
+  passwordHash        String            @map("password_hash")
+  role                String            @default("partner")
   /// AES-256-GCM ciphertext (iv/authTag/ciphertext, base64-joined) — never the raw secret.
   /// See model doc-comment.
-  totpSecret   String?           @map("totp_secret")
-  totpEnabled  Boolean           @default(false) @map("totp_enabled")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  lastLoginAt  DateTime?         @map("last_login_at")
-  backupCodes  AdminBackupCode[]
-  sessions     AdminSession[]
+  totpSecret          String?           @map("totp_secret")
+  totpEnabled         Boolean           @default(false) @map("totp_enabled")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  lastLoginAt         DateTime?         @map("last_login_at")
+  /// Opaque, single-use `/admin/setup-2fa` link token — see model doc-comment. Null once
+  /// unused (never issued) or once consumed (setup completed).
+  setupToken          String?           @unique @map("setup_token")
+  setupTokenExpiresAt DateTime?         @map("setup_token_expires_at")
+  backupCodes         AdminBackupCode[]
+  sessions            AdminSession[]
 
   @@map("admin_user")
 }

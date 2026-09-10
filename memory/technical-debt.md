@@ -18,6 +18,34 @@ sequencing requirement:
 
 ---
 
+## No task provisions a real `admin_user` row yet
+
+**Status:** Open
+**Date raised:** 2026-09-10 (T6.2, session 38)
+**Reason:** Discovered building T6.2's `/admin/setup-2fa` — every task in the admin-auth epic
+(T6.1 onward) assumes an `admin_user` row already exists, but no task anywhere creates one.
+Milestone 7's Team area (`docs/tasks/07-content-admin.md` T7.6) edits `author` (public
+profile) records, a related but distinct entity from the login credential — it was never the
+right home for this either. Right now the only way an `admin_user` row (and therefore a
+working `/admin/setup-2fa` link) comes to exist at all is a throwaway verification script run
+manually during this session, deleted before commit.
+**Impact:** Real, but not yet blocking: nothing in Milestones 6-8 fails without this, since no
+task before T6.6 needs a real admin account to exist. It becomes load-bearing the moment the
+firm actually needs to start using `/admin` for real — without it, not even the developer has
+a sanctioned way to create the very first partner account.
+**Priority:** Medium — doesn't block any in-progress build work, but is a real gap in the path
+to Milestone 6 actually being usable, not a someday-nice-to-have.
+**Possible Fix/Fixes:** A new task, T6.6 (added this session, see
+`docs/tasks/06-admin-auth.md`) — a developer-run CLI script that creates one `admin_user` row
+and calls `lib/auth/totp-setup.ts`'s `issueSetupToken` (also new this session) to produce a
+real setup link, deliberately not a self-service invite UI (disproportionate for a fixed
+five-partner firm). The same `issueSetupToken` mechanism is also what T6.4's forced
+re-enrolment redirect reuses (see that task's own addendum) — not a second, parallel gap.
+**Trigger type:** Task-sequenced.
+**Sequenced into:** T06-06 (Initial admin account provisioning)
+
+---
+
 ## `Author.adminUserId` is still a schema-only placeholder FK, not a real Prisma relation
 
 **Status:** Open

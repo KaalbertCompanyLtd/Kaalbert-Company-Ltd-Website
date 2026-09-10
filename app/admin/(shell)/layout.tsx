@@ -4,10 +4,18 @@ import { AdminMobileSidebar } from "@/components/admin-mobile-sidebar";
 import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
 
 /**
- * The sidebar-plus-content-area shell every admin screen inherits
+ * The sidebar-plus-content-area shell every *authenticated* admin screen inherits
  * (ui/screen-inventory.md #25, inferred from ui/mockups/g-admin-content/admin-dashboard.html
- * — there is no dedicated shell mockup). Frame only: no auth enforcement (Milestone 6,
- * docs/tasks/06-admin-auth.md) and no real content beyond this task's placeholder page.
+ * — there is no dedicated shell mockup). Frame only: no auth enforcement yet (T6.3 wires
+ * that up via `app/proxy.ts`) and no real content beyond this task's placeholder page.
+ *
+ * Moved into this `(shell)` route group at T6.2 — a plain `app/admin/layout.tsx` would wrap
+ * *every* route under `/admin/*`, including auth-flow screens like `/admin/setup-2fa` (this
+ * task) and `/admin/login` (T6.3) that must render their own standalone centered card
+ * (`ui/mockups/f-admin-auth/*.html`'s `.admin-auth-shell`), not this sidebar — a partner
+ * setting up 2FA or logging in has no session yet, so a "Signed-in partner" sidebar makes no
+ * sense around them. The route group changes nothing about the URL (`(shell)/page.tsx` still
+ * resolves to `/admin`), only which layout wraps which routes.
  *
  * Responsive from this first implementation (CLAUDE.md's "Responsive is built in from the
  * first implementation" rule, added at T1.5): the persistent sidebar is desktop-only

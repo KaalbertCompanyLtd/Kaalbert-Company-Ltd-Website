@@ -2,6 +2,50 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T6.2, session 38) — `admin_user.setup_token`/`setup_token_expires_at` resolve "which account" for an unauthenticated `/admin/setup-2fa` visit; `app/admin/` split into a `(shell)` route group; `qrcode` chosen for QR rendering
+
+**Status:** Standing
+
+**Summary:** T6.2's own Input→Output assumes a "New `admin_user`" already exists, but no task
+anywhere creates one, and `/admin/setup-2fa` is reached with no login session (none can exist
+pre-enrolment) — so the screen needs its own way to know which account it's setting up,
+without a guessable sequential id in the URL (a real, unauthenticated, third-party-clickable
+link — same class of problem `Subscriber.unsubscribeToken` already solved for a different
+reason). Added two fields to `AdminUser` beyond `admin-authentication.md`'s original list
+(same "gap found building the actual screen" precedent as T2.2/T2.4/etc.): `setupToken`
+(opaque, single-use, nulled on completion) and `setupTokenExpiresAt` (7-day default
+lifetime, `lib/auth/totp-setup.ts`'s `SETUP_TOKEN_LIFETIME_MS`). `lib/auth/totp-setup.ts`
+also exports `issueSetupToken(adminUserId)` — a small, general "generate me a fresh setup
+link for this account" function, deliberately not scoped to "first-time only": T6.4's forced
+re-enrolment redirect and the new T6.6 (account provisioning) both reuse it rather than each
+inventing their own, per addenda added to both tasks this session
+(`docs/tasks/06-admin-auth.md`).
+
+Migrated via `prisma migrate dev --create-only` failing (non-interactive environment doesn't
+support the confirmation prompt an added unique-constraint warning triggers) — worked around
+with `prisma migrate diff --from-config-datasource --to-schema` to get the exact SQL, then a
+hand-written migration directory applied via `prisma migrate deploy` (itself fully
+non-interactive). Record this workaround for the next time a schema change trips the same
+interactive-prompt wall in a non-interactive session.
+
+`app/admin/layout.tsx`/`page.tsx` (T1.5's placeholder dashboard shell) moved into a new
+`app/admin/(shell)/` route group — a plain `app/admin/layout.tsx` would otherwise wrap every
+route under `/admin/*`, including this task's own `/admin/setup-2fa` (and T6.3's future
+`/admin/login`), which must render their own standalone centered auth card, not the
+authenticated sidebar shell. The route group changes nothing about the URL.
+
+`qrcode` (pure-JS, no native compile step — same Railway-build-safety reasoning as T6.1's
+`bcryptjs` choice) generates the QR code server-side, in the page's own Server Component,
+from the `otpauth://` URI `lib/auth/totp-setup.ts` builds. Not a crypto library itself (ADR
+0007 doesn't govern it) — it only renders an image from already-computed data.
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.2, and its new T6.4/T6.6 addenda),
+`docs/features/admin-authentication.md`, `prisma/schema.prisma` (`AdminUser`),
+`lib/auth/totp-setup.ts`, `memory/technical-debt.md` → "No task provisions a real
+`admin_user` row yet."
+
+---
+
 ## 2026-09-10 (T6.1, session 37) — `bcryptjs` over native `bcrypt`/`argon2`; AES-256-GCM via Node's own `crypto` module for TOTP-secret-at-rest encryption
 
 **Status:** Standing
