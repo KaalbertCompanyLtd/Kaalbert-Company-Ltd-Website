@@ -235,17 +235,16 @@ export function getArticleJsonLd(article: {
 
 /**
  * `GET /sitemap.xml`'s content, gathered from every published-content table T2.1–T2.7
- * introduced, plus `article` as of T4.2 (insights-engine.md is Milestone 4 — `article` didn't
- * exist before then). `landing_page` still isn't queried here — that table doesn't exist yet
- * (landing-page-template.md is Milestone 5) — this degrades gracefully to "not yet queryable"
- * for it, per this task's own architecture constraint, rather than erroring; whichever
- * milestone adds that table also adds its own query here, same as this task just did for
- * `article`.
+ * introduced, `article` as of T4.2, and `landing_page` as of T5.1 (insights-engine.md is
+ * Milestone 4, landing-page-template.md is Milestone 5 — neither table existed before its own
+ * milestone). `landing_page` has no draft/published distinction of its own
+ * (content-management-admin.md AC-6: a landing page instance is live the moment it's saved),
+ * so every row is included unconditionally, same as `offer`/`page`.
  */
 export async function getSitemapEntries(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
 
-  const [home, offers, pages, legalPages, articles] = await Promise.all([
+  const [home, offers, pages, legalPages, articles, landingPages] = await Promise.all([
     prisma.homePageContent.findFirst({ orderBy: { id: "asc" }, select: { updatedAt: true } }),
     prisma.offer.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.page.findMany({ select: { slug: true, updatedAt: true } }),
@@ -258,6 +257,7 @@ export async function getSitemapEntries(): Promise<MetadataRoute.Sitemap> {
       where: { publishedAt: { not: null } },
       select: { slug: true, updatedAt: true },
     }),
+    prisma.landingPage.findMany({ select: { slug: true, updatedAt: true } }),
   ]);
 
   const entries: MetadataRoute.Sitemap = [];
@@ -284,6 +284,12 @@ export async function getSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     entries.push({
       url: `${baseUrl}/insights/${article.slug}`,
       lastModified: article.updatedAt,
+    });
+  }
+  for (const landingPage of landingPages) {
+    entries.push({
+      url: `${baseUrl}/lp/${landingPage.slug}`,
+      lastModified: landingPage.updatedAt,
     });
   }
 

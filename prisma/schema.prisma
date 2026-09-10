@@ -770,3 +770,40 @@ model Subscriber {
 
   @@map("subscriber")
 }
+
+/// docs/features/landing-page-template.md "Data requirements" — T5.1. One `/lp/[slug]`
+/// instance. `headline`/`openingParagraph` are the two fields the feature doc's own business
+/// rule calls out as independently editable from the rest of the page body
+/// (content-management-admin.md AC-6's literal test). `kicker` is added beyond that doc's
+/// original field list — same "mockup shows more than the feature doc named" precedent as
+/// `Offer.ctaLabel`/`MethodStage.whatHappens` (see memory/decision-log.md) — because all three
+/// accepted mockups (`ui/mockups/d-landing-pages/*.html`) render one directly above the `<h1>`
+/// and it varies per campaign, so it can't be fixed template chrome. `bodyContent` is an
+/// ordered rich-content block list, same `kind`-discriminated-union convention as
+/// `LegalPage.body`/`Article.body` (see `lib/landing-pages.ts`'s `LandingPageBodyBlock` for the
+/// exact shape) — covers exactly the block kinds the three accepted mockups actually use, not
+/// a general-purpose page builder. `isPlaceholder` follows every other seeded-content model's
+/// convention (`Page`, `Offer`, `LegalPage`, `Article`, etc.) for flagging copy that isn't the
+/// firm's real, final wording yet (CLAUDE.md's "never present placeholder content as final"
+/// rule) — T5.2 (seeding) is what actually sets it per instance, not this task.
+model LandingPage {
+  id                Int      @id @default(autoincrement())
+  slug              String   @unique
+  kicker            String
+  headline          String
+  openingParagraph  String   @map("opening_paragraph")
+  /// Ordered rich-content blocks — see model doc-comment.
+  bodyContent       Json     @map("body_content")
+  ctaLabel          String   @map("cta_label")
+  ctaHref           String   @map("cta_href")
+  /// Internal campaign tracking, distinct from the UTM parameters captured per visit
+  /// (`measurement-and-attribution.md`) — not rendered anywhere on the page itself.
+  campaignReference String   @map("campaign_reference")
+  metaTitle         String   @map("meta_title")
+  metaDescription   String   @map("meta_description")
+  isPlaceholder     Boolean  @default(false) @map("is_placeholder")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("landing_page")
+}

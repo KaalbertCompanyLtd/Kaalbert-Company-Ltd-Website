@@ -14,6 +14,55 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T5.1)
+
+**Task:** T5.1 — Landing page template — `/lp/[slug]`
+**Summary:** Built the paid-traffic landing page template Milestone 5 opens with. Added a
+`LandingPage` model (`landing_page` table) with the feature doc's literal field list
+(`slug`/`headline`/`opening_paragraph`/`body_content`/`cta_label`/`cta_href`/
+`campaign_reference`/`meta_title`/`meta_description`) plus two justified additions following
+the T2.2/T2.4 "mockup shows more than the feature doc named" precedent: `kicker` (all three
+accepted mockups render one above the `<h1>`, and it varies per campaign) and `isPlaceholder`
+(every other seeded-content model's convention). `body_content` is an ordered
+`kind`-discriminated block list (`heading`/`paragraph`/`list`/`stats`/`steps`) — same
+convention as `LegalPage.body`/`Article.body` — sized to cover exactly the block shapes the
+three accepted mockups (`ui/mockups/d-landing-pages/*.html`) actually use (business-health-
+check's `.proof-row` → `stats`, funding-readiness-checklist's `.whats-inside` →
+`heading`+`list`, financial-clarity-pack's `.stage-row` → `steps`, and each mockup's
+repeat-CTA reassurance line → `paragraph`), not a general-purpose page builder. `lib/
+landing-pages.ts` adds `getLandingPageBySlug` (thin `prisma.landingPage.findUnique`
+passthrough, same shape as `lib/offers.ts`/`lib/legal.ts` — `null` on no match, caller
+404s). `app/lp/[slug]/page.tsx` renders: a new `LandingPageHeader` client component
+(`components/landing-page-header.tsx` — logo-only, no `<nav>` at all, reusing `SiteHeader`'s
+fixed/transparent-over-hero/logo-swap-on-scroll visual language but with zero nav markup, so
+"no site navigation renders under any circumstance" holds structurally, not by a toggle) →
+dark hero (kicker/headline/opening_paragraph/CTA) → the `body_content` blocks → a repeated
+CTA → the real, unmodified `<SiteFooter>` (never a per-instance copy, per the architecture
+constraint) for the full Section 8.2 statement. Verified with Playwright MCP against a
+throwaway `test-verification` row (seeded via a scratch `tsx` script, then deleted after
+verification — T5.2, not this task, owns the three real seeded instances): confirmed zero
+`<nav>` landmarks anywhere on the page (accessibility-tree snapshot), the full `SiteFooter`
+scope-of-practice statement rendering, correct OG/Twitter tags + canonical URL + Organization
+JSON-LD, a non-existent slug returning a real 404, no horizontal overflow at 390px/768px/
+1280px, and the header's scroll-triggered logo swap working. Also wired `landing_page` into
+`lib/seo.ts`'s `getSitemapEntries` (seo-and-search-foundation.md explicitly lists "every
+landing page instance" as part of `/sitemap.xml`'s content) — removed that function's old
+"landing_page doesn't exist yet" comment.
+**Files Changed:** `prisma/schema.prisma` (new `LandingPage` model), `prisma/migrations/
+20260910111957_t5_1_landing_page/`, `lib/landing-pages.ts` (new), `components/
+landing-page-header.tsx` (new), `app/lp/[slug]/page.tsx` (new), `lib/seo.ts`
+(`getSitemapEntries` now queries `landingPage`).
+**Related Feature:** `docs/features/landing-page-template.md`, `docs/features/
+seo-and-search-foundation.md`.
+**Notes:** No admin editor exists yet (Milestone 7) and this task doesn't seed real
+instances (T5.2's job, next) — the `landing_page` table is empty on disk right now, by
+design, exactly as it was before this session. The Funding-Readiness Pack offer page's
+`.checklist-panel` cross-promo addendum on T5.2 (`memory/technical-debt.md`) still applies
+unchanged — it's keyed on the landing page actually being _seeded_, not just the template
+existing.
+
+---
+
 ## 2026-09-10 (continued)
 
 **Task:** T1.1 follow-up — fix `prepare` script breaking the Railway production build

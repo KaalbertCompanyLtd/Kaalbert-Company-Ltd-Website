@@ -2,6 +2,37 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T5.1) — Landing page's "no navigation" rule scoped to the header only; `SiteFooter` reused unmodified, nav columns included
+
+**Status:** Standing
+
+**Summary:** `landing-page-template.md`'s business rule and T5.1's own acceptance criteria
+both say "no site navigation renders under any circumstance," while the same task's
+architecture constraints separately require reusing the real, unmodified `SiteFooter`
+component for the Section 8.2 statement — and `SiteFooter` itself renders three columns of
+site-wide nav links (Core Offers/Firm/Insights) plus the address block. These two requirements
+only coexist if "no navigation" is read as scoped to the page's _header_ (the primary way a
+distracted paid-ad visitor could leave the campaign message) rather than the footer's
+existing link columns. Resolved in favour of that reading: built a dedicated `LandingPageHeader`
+component (`components/landing-page-header.tsx`) with zero `<nav>` markup at all — no menu, no
+Core Offers dropdown, no mobile drawer — reusing only `SiteHeader`'s fixed-position/
+transparent-over-hero/logo-swap-on-scroll visual language, and kept `SiteFooter` exactly as
+every other page renders it, nav columns included. Verified via Playwright's accessibility
+tree: the rendered page has zero `<nav>` landmarks anywhere, header included — the acceptance
+criterion holds literally, just not by stripping the footer down to a per-instance copy (which
+the architecture constraint explicitly forbids: "never a per-instance copy that could drift").
+Also decided: `LandingPage.bodyContent` is an ordered `kind`-discriminated block list
+(`heading`/`paragraph`/`list`/`stats`/`steps`), same convention as `LegalPage.body`/
+`Article.body`, sized to exactly the shapes the three accepted mockups use — not a
+general-purpose page builder, and not per-slug hardcoded copy in the route (which would have
+broken `content-management-admin.md`'s "no code change required to create a new landing page"
+rule, unlike the offer page's closed-set `FINAL_CTA_COPY` precedent, since landing pages are
+NOT a fixed set of three the way core offers are).
+
+**Related Documents:** `docs/tasks/05-landing-and-measurement.md` (T5.1), `docs/features/
+landing-page-template.md`, `memory/completed-work.md` (2026-09-10 (T5.1) entry),
+`app/lp/[slug]/page.tsx`, `components/landing-page-header.tsx`, `lib/landing-pages.ts`.
+
 ## 2026-09-10 — Pre-push hook implemented via `core.hooksPath` + `npm run prepare`, not Husky
 
 **Status:** Standing
