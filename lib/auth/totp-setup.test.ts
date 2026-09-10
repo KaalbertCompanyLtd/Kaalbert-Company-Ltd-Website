@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     adminUser: { findUnique: vi.fn(), update: vi.fn() },
-    adminBackupCode: { createMany: vi.fn() },
+    adminBackupCode: { createMany: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -50,6 +50,7 @@ import { prisma } from "@/lib/prisma";
 const findUniqueMock = vi.mocked(prisma.adminUser.findUnique);
 const updateMock = vi.mocked(prisma.adminUser.update);
 const createManyMock = vi.mocked(prisma.adminBackupCode.createMany);
+const deleteManyMock = vi.mocked(prisma.adminBackupCode.deleteMany);
 const transactionMock = vi.mocked(prisma.$transaction);
 const generateURIMock = vi.mocked(generateURI);
 const verifyMock = vi.mocked(verify);
@@ -78,6 +79,7 @@ beforeEach(() => {
   findUniqueMock.mockReset();
   updateMock.mockReset().mockResolvedValue({} as never);
   createManyMock.mockReset().mockResolvedValue({ count: 8 } as never);
+  deleteManyMock.mockReset().mockResolvedValue({ count: 0 } as never);
   transactionMock.mockReset().mockResolvedValue([] as never);
   generateURIMock.mockReset().mockReturnValue("otpauth://totp/stub");
   verifyMock.mockReset();
@@ -210,6 +212,9 @@ describe("confirmTotpSetup — deliberate failed attempts", () => {
     expect(updateMock).toHaveBeenCalledWith({
       where: { id: BASE_USER.id },
       data: { totpEnabled: true, setupToken: null, setupTokenExpiresAt: null },
+    });
+    expect(deleteManyMock).toHaveBeenCalledWith({
+      where: { adminUserId: BASE_USER.id, usedAt: null },
     });
     expect(createManyMock).toHaveBeenCalledWith({
       data: backupCodes.map((code) => ({

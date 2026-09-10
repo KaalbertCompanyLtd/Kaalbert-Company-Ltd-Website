@@ -112,8 +112,8 @@ async function generateAndStoreSecret(adminUserId: number): Promise<string> {
 }
 
 /**
- * Confirms a partner's first TOTP code, completing setup: flips `totp_enabled`, generates
- * and hashes a batch of backup codes, and consumes the setup token (single-use — a second
+ * Confirms a partner's TOTP code, completing setup: flips `totp_enabled`, generates and
+ * hashes a fresh batch of backup codes, and consumes the setup token (single-use — a second
  * call with the same token, before or after success, always fails). Returns the plaintext
  * backup codes — the one and only time they ever exist outside this function's own stack;
  * everywhere else, only `admin_backup_code.code_hash` exists.
@@ -122,6 +122,18 @@ async function generateAndStoreSecret(adminUserId: number): Promise<string> {
  * `docs/tasks/06-admin-auth.md` — this endpoint shipped at T6.2 without it) — keyed by the
  * target account's email, same `AdminLoginAttemptKind.setup_confirm` bucket regardless of
  * which setup token a given attempt carries.
+ *
+ * **T6.2 follow-up (found and fixed at T6.4, session 40):** this function is called more than
+ * once per account over its lifetime — T6.2's own first-time setup, and now T6.4's forced
+ * re-enrolment after backup-code recovery — but originally only ever *added* a new batch of
+ * backup codes (`createMany`), never retiring the previous batch. Confirmed for real: a
+ * backup code from a partner's *first* enrolment was still valid and usable after they later
+ * re-enrolled via T6.4's recovery flow, alongside the brand-new batch just generated — an
+ * ever-growing, never-pruned set of "current" codes, not the fixed batch-of-8 a partner is
+ * actually told they have. Any *unused* backup code from a previous batch is now deleted in
+ * the same transaction a new batch is created — an already-*used* code is left alone (it's
+ * already inert, and this schema never destroys a real usage record, e.g.
+ * `Subscriber.unsubscribedAt`'s own precedent).
  */
 export async function confirmTotpSetup(setupToken: string, code: string): Promise<string[]> {
   const user = await prisma.adminUser.findUnique({ where: { setupToken } });
@@ -150,6 +162,11 @@ export async function confirmTotpSetup(setupToken: string, code: string): Promis
     prisma.adminUser.update({
       where: { id: user.id },
       data: { totpEnabled: true, setupToken: null, setupTokenExpiresAt: null },
+    }),
+    // Retire any unused codes from a previous batch (see this function's own doc-comment) —
+    // an already-used code is left alone, it's already inert and not this delete's concern.
+    prisma.adminBackupCode.deleteMany({
+      where: { adminUserId: user.id, usedAt: null },
     }),
     prisma.adminBackupCode.createMany({
       data: hashedCodes.map((codeHash) => ({ adminUserId: user.id, codeHash })),
