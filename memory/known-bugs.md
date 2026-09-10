@@ -16,6 +16,33 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## `prepare` script's bare `git config` broke the Railway production build
+
+**Status:** Fixed
+**Severity:** High — took down the production deploy pipeline entirely, not a degraded
+page. `npm install` treats a failed lifecycle script as fatal, so this failed the whole
+Railway build (`npm error command failed ... git config core.hooksPath .githooks`) on the
+very next push after the pre-push hook was added.
+**Date found:** 2026-09-10 (T1.1 follow-up, session 31 — surfaced by the user pasting the
+Railway build log after pushing)
+**Description:** `package.json`'s new `prepare` script ran a bare
+`git config core.hooksPath .githooks` to wire up the tracked `.githooks/pre-push` hook.
+That works for a developer's local clone (a real git checkout) but Railway's Railpack build
+copies the repo contents into `/app` as a build context, not a git checkout — no `.git`
+directory exists there — so `git config` exited 128 with `fatal: not in a git directory` and
+took `npm install` (and the whole build) down with it.
+**Workaround:** None needed — fixed same session before the next deploy attempt.
+**Planned Fix:** Guarded the `prepare` script so it only runs `git config` when
+`git rev-parse --is-inside-work-tree` succeeds, no-op (exit 0) otherwise:
+`git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git config core.hooksPath .githooks
+|| exit 0`. Verified both branches: inside this repo it still sets `core.hooksPath`
+correctly; run from a directory with no `.git` it exits 0 without error. Also documented as
+a standing rule in CLAUDE.md's Code Conventions (git-dependent lifecycle scripts must guard
+themselves) so this class of mistake isn't repeated by a future lifecycle-script change.
+**Sequenced into:** T01-01 (already fixed same session — see `memory/completed-work.md`)
+
+---
+
 ## Home page hard-coded "15–20 questions" instead of reading the real seeded question count
 
 **Status:** Fixed

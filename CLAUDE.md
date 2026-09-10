@@ -163,6 +163,15 @@ memory/                 # persistent knowledge — see Knowledge Management Resp
   lives near a DB-querying `lib/` module, put that client-safe data in its own file
   (`lib/<name>-options.ts` or similar) with zero import of `@/lib/prisma`, and have the
   DB-querying file import/re-export shared types from there instead of the other way round.
+- **Never let a `package.json` lifecycle script (`prepare`, `postinstall`, etc.) assume
+  `.git` exists.** Railway's build container is populated from an uploaded build context, not
+  a git checkout — there is no `.git` directory inside it. A `prepare` script that runs a bare
+  `git config ...` (added at T1.1 to wire up the pre-push hook's `core.hooksPath`) fails with
+  `fatal: not in a git directory` and, because `npm install` treats a failed lifecycle script
+  as fatal, takes the entire production deploy down with it (hit for real, same day the hook
+  was added — see `memory/known-bugs.md`). Any git-dependent lifecycle script must guard
+  itself, e.g. `git rev-parse --is-inside-work-tree > /dev/null 2>&1 && <command> || exit 0`,
+  so it no-ops cleanly wherever `.git` isn't present instead of failing the install.
 
 ## Quality Gates (must pass before every commit)
 

@@ -14,6 +14,30 @@ Protocol):
 
 ---
 
+## 2026-09-10 (continued)
+
+**Task:** T1.1 follow-up — fix `prepare` script breaking the Railway production build
+**Summary:** After the previous entry's commits were pushed, Railway's next build failed:
+`npm error command failed ... git config core.hooksPath .githooks` → `fatal: not in a git
+directory`. Railway's Railpack build copies the repo into `/app` as a plain build context,
+not a git checkout, so the new `prepare` script's bare `git config` call had no `.git` to
+operate on, and `npm install` treats a failed lifecycle script as fatal — this took the whole
+build down, not just the hook setup. Fixed by guarding the script:
+`git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git config core.hooksPath
+.githooks || exit 0` — verified both branches (still sets `core.hooksPath` inside this repo;
+exits 0 with no error when run from a directory with no `.git`). Documented as a standing
+CLAUDE.md rule (Code Conventions: git-dependent lifecycle scripts must guard against a
+missing `.git`) and a `memory/known-bugs.md` entry, since this is a real production incident
+a future session needs to know about, not just an in-session correction.
+**Files Changed:** `package.json` (`prepare` script guard), `CLAUDE.md` (new Code
+Conventions bullet), `memory/known-bugs.md` (new Fixed entry), `docs/sessions/session-31-
+pre-push-hook.md` (re-synced).
+**Related Feature:** none — infrastructure/tooling.
+**Notes:** Not pushed yet as of this entry — commit exists locally on `main`; the user needs
+to push again for Railway's next build to pick up the fix.
+
+---
+
 ## 2026-09-10
 
 **Task:** T1.1 follow-up — pre-push quality-gate hook

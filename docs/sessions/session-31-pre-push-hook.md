@@ -17,6 +17,16 @@ lint → format:check → typecheck → test, aborting on first failure, activat
 to `.github/workflows/ci.yml`, since CLAUDE.md's own Quality Gates list requires `npm run
 test` as a hard gate and CI wasn't running it.
 
+**Follow-up within the same session:** the user pushed both commits to GitHub (successfully,
+after a transient DNS blip on the first attempt) and Railway's next production build then
+failed outright — the `prepare` script's bare `git config core.hooksPath .githooks` hit
+`fatal: not in a git directory`, because Railway's Railpack build context is an unpacked
+archive, not a git checkout, and `npm install` treats a failed lifecycle script as fatal.
+Fixed by guarding the script to no-op when `.git` isn't present, documented as a standing
+CLAUDE.md rule (git-dependent lifecycle scripts must guard themselves) and a `memory/known-
+bugs.md` entry, since this is exactly the kind of "hit for real, capture immediately" gotcha
+CLAUDE.md's own process asks for.
+
 ## Files Changed
 
 - `.githooks/pre-push` — new. Runs lint, format:check, typecheck, test in order; exits 1 with
@@ -27,7 +37,16 @@ test` as a hard gate and CI wasn't running it.
   over Husky), plus a Prettier formatting fix to an existing entry.
 - `docs/sessions/session-30-planning-framework-alignment.md` — Prettier formatting fix only
   (two stray unwrapped lines from session 30), no content change.
-- `memory/completed-work.md` — new entry, "T1.1 follow-up."
+- `memory/completed-work.md` — new entry, "T1.1 follow-up," updated for the Railway-build
+  fix.
+- `CLAUDE.md` — new Code Conventions bullet: git-dependent lifecycle scripts must guard
+  themselves against a missing `.git` directory.
+- `memory/known-bugs.md` — new entry (Fixed), "`prepare` script's bare `git config` broke
+  the Railway production build."
+- `package.json` — `prepare` script hardened to
+  `git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git config core.hooksPath
+.githooks || exit 0`, no-ops cleanly outside a git checkout instead of failing `npm
+install`.
 
 ## Decisions Made
 
@@ -42,16 +61,29 @@ test` as a hard gate and CI wasn't running it.
   per CLAUDE.md's sequencing rule, a small fix whose owning task (T1.1) already shipped gets
   fixed immediately and logged as a "T##-## follow-up" in `completed-work.md` instead of
   filed as debt.
+- The Railway-build-breaking `prepare` script bug got a `memory/known-bugs.md` entry (Fixed)
+  rather than being folded silently into the hook's own history — it was a real production
+  incident (took the deploy down, not just a local inconvenience), which the memory-file
+  rules treat differently from an ordinary in-session correction.
+- Earlier in this session I stated the transient DNS failure on the first `git push` attempt
+  was "consistent with this being a deliberate restriction of this agent session" enforced at
+  the network level. That was wrong — the second push attempt (same command, same session)
+  succeeded, proving it was an ordinary transient DNS blip, not a hard block. Noted here so a
+  future session doesn't inherit that incorrect claim from this file.
 
 ## Current State
 
 `npm run lint`, `npm run format:check`, `npm run typecheck`, and `npm run test` all pass
-clean on `main`. The pre-push hook is active in this working copy (`core.hooksPath` set) and
-verified directly: a clean run passes all four gates in order, and an injected formatting
-error aborts with exit code 1 before reaching later gates. CI (`.github/workflows/ci.yml`)
-now runs the same four gates GitHub-side. Commit `ad79359` on `main`, not pushed (pushing is
-blocked from inside an agent session per CLAUDE.md's Git Commit Protocol — the developer
-pushes manually).
+clean on `main`. The pre-push hook is active in this working copy and has now been verified
+two ways: directly (clean run passes all four gates; an injected formatting error aborts
+with exit code 1) and end-to-end through two real `git push` invocations (the user pushed
+`ad79359`/`a69aa60` to both `origin` and a `personal` remote; the hook fired and passed on
+both). CI (`.github/workflows/ci.yml`) now runs the same four gates GitHub-side. The user has
+pushed through commit `a69aa60`; the `prepare`-script fix and its accompanying memory/
+CLAUDE.md updates (this turn) are committed locally but **not yet pushed** — Railway's next
+build (once pushed) should succeed where the previous one failed. Pushing itself happens from
+the user's own terminal, not from inside this agent session (blocked by design per CLAUDE.md's
+Git Commit Protocol).
 
 ## Blockers
 
