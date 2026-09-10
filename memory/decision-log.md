@@ -2,6 +2,46 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T6.1, session 37) — `bcryptjs` over native `bcrypt`/`argon2`; AES-256-GCM via Node's own `crypto` module for TOTP-secret-at-rest encryption
+
+**Status:** Standing
+
+**Summary:** T6.1 needed to settle two real crypto-library decisions the task explicitly
+left open (`docs/tasks/06-admin-auth.md`'s own architecture constraints).
+
+- **Password/backup-code hashing: `bcryptjs`, not `bcrypt` or `argon2`.** All three are
+  vetted (ADR 0007's bar). `bcrypt` and `argon2`'s npm packages both compile native bindings
+  at install time (node-gyp) — a real risk on this project specifically, since Railway's
+  Railpack build runs in an isolated container that has already broken the production build
+  twice for unrelated native/environment-assumption reasons (`memory/known-bugs.md`'s
+  `prepare`-script incident; CLAUDE.md's own "Never let a `package.json` lifecycle script
+  assume `.git` exists" rule was written from that same incident). `bcryptjs` is a pure-JS,
+  drop-in-compatible, actively maintained bcrypt implementation with no native-compile step
+  at all — chosen specifically to remove that entire risk class rather than hope Railpack
+  handles node-gyp cleanly. Slower per-hash than the native alternatives, an accepted
+  trade-off at this project's real login volume (a handful of partners, not a
+  high-throughput auth service).
+- **TOTP secret encryption: AES-256-GCM via Node's built-in `crypto` module, keyed by a new
+  server-held env var (`ADMIN_TOTP_ENCRYPTION_KEY`), not a KMS/vault product.** `totp_secret`
+  must be recoverable in plaintext at verification time (unlike a password/backup-code hash),
+  so it needs reversible encryption. This does not conflict with ADR 0007's "never
+  hand-rolled crypto" — the cipher itself is Node's own audited `crypto` module (OpenSSL/
+  BoringSSL underneath), the same category of "vetted primitive, not hand-rolled" `otplib`
+  itself relies on for its own HMAC work; `lib/auth/totp-encryption.ts` only manages the key
+  and the encrypt/decrypt call shape. A dedicated KMS/vault (e.g. a cloud provider's managed
+  key service) was considered and rejected as more infrastructure than this project's real
+  scale justifies (one shared admin system, five partners) — revisit if that scale changes.
+  A fresh random IV per encryption call (not a fixed/derived one) so the same secret never
+  produces the same ciphertext twice. Losing/rotating the key makes every already-stored
+  `totp_secret` undecryptable — documented in `.env.example`/`CLAUDE.local.md` as a real
+  operational consequence, not just a config note.
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.1), `docs/features/admin-
+authentication.md`, ADR 0007, `lib/auth/password.ts`, `lib/auth/totp-encryption.ts`,
+`memory/known-bugs.md` (the `prepare`-script Railway-build incident cited above).
+
+---
+
 ## 2026-09-10 (session 36+) — Two firm-facing documentation artifacts established, updated incrementally instead of audited at the end
 
 **Status:** Standing

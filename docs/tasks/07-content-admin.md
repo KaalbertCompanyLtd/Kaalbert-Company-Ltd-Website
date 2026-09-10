@@ -134,6 +134,14 @@ profile with no photo yet DOES appear, rendered with an initials avatar
 initials on save, no separate publish step.
 **Size:** M **Dependencies:** T6.3, T2.5, T4.3
 
+**Addendum (session 37, 2026-09-10):** Wire `Author.adminUserId` to a real Prisma relation
+against `AdminUser` (added at T6.1) — currently a schema-only placeholder `Int?` with nothing
+populating or reading it. This task's own "self-service" requirement (a logged-in partner
+edits their own entry) needs it to resolve the authenticated session's `admin_user.id` to the
+right `author` row. See `memory/technical-debt.md` → "`Author.adminUserId` is still a
+schema-only placeholder FK, not a real Prisma relation" for the full reasoning and possible
+fix.
+
 **Addendum (session 11, 2026-09-05):** All 5 seeded partners (`prisma/seed.ts`'s
 `seedAuthors`) currently publish with `photoUrl: null` — no partner photography exists yet
 (see `memory/technical-debt.md` → "About page partners have no real photography yet").

@@ -14,6 +14,53 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T6.1, session 37)
+
+**Task:** T6.1 — Data model: `admin_user`, `admin_backup_code`, `admin_session`
+**Summary:** Milestone 6 (Admin Authentication) begins. Added the three tables
+`docs/features/admin-authentication.md` names, migrated against the real dev database
+(`20260910190643_t6_1_admin_auth_tables`), and established `lib/auth/` (CLAUDE.md's Auth
+Pattern section) with the two crypto-adjacent helpers this schema's own field types need:
+`lib/auth/password.ts` (`bcryptjs` hash/verify, shared by `admin_user.password_hash` and
+`admin_backup_code.code_hash`) and `lib/auth/totp-encryption.ts` (AES-256-GCM via Node's
+`crypto` module, keyed by a new `ADMIN_TOTP_ENCRYPTION_KEY` env var, for
+`admin_user.totp_secret` — reversible, unlike the other two, since TOTP verification needs
+the live plaintext secret). `lib/auth/totp.ts` wraps `otplib`'s `generateSecret()` only (ADR
+0007's vetted RFC 6238 library) — QR/`otpauth://` URI generation and code verification stay
+T6.2/T6.3's job, not built ahead of need. `bcryptjs` was chosen over the native-binding
+`bcrypt`/`argon2` packages specifically to avoid Railway's isolated build-container
+native-compile risk (see `memory/decision-log.md`, T6.1, for the full reasoning — a real,
+already-hit failure mode on this project twice over for unrelated reasons).
+Acceptance criterion ("no plaintext password or raw TOTP secret is ever written to logs")
+verified at this task's actual scope (no login route exists until T6.3) via
+`lib/auth/password.test.ts` and `lib/auth/totp-encryption.test.ts`: a mocked failed
+`bcrypt.compare` call with console spies attached confirms nothing is ever logged, and every
+thrown error message (hash/verify/encrypt/decrypt failure paths) is asserted to never contain
+the raw credential/secret. Also ran a real end-to-end round-trip against the dev database via
+a throwaway script (`scripts/_verify-t6-1.ts`, deleted before commit): created a real
+`admin_user`/`admin_backup_code`/`admin_session` row set, confirmed `verifyPassword` accepts
+the correct password and rejects a wrong one, confirmed `decryptTotpSecret` recovers the
+exact original secret while the stored `totp_secret`/`password_hash` columns never match the
+raw values, and confirmed deleting the `admin_user` row cascades to its backup codes and
+sessions (needed for T6.5's future immediate-invalidation requirement).
+`Author.adminUserId` stays an unwired placeholder FK (unchanged, out of this task's scope) —
+logged as new technical debt, sequenced into T7.6.
+**Files Changed:** `prisma/schema.prisma` (3 new models), `prisma/migrations/
+20260910190643_t6_1_admin_auth_tables/`, `lib/auth/password.ts` + `.test.ts`, `lib/auth/
+totp-encryption.ts` + `.test.ts`, `lib/auth/totp.ts` + `.test.ts`, `package.json`/
+`package-lock.json` (added `bcryptjs`, `otplib`), `.env.example` (new
+`ADMIN_TOTP_ENCRYPTION_KEY` entry), `CLAUDE.local.md`/`.env.local` (not tracked — real dev key
+recorded/generated), `memory/technical-debt.md`, `docs/tasks/07-content-admin.md` (T7.6
+addendum).
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (`npm run lint`, `npm run format:check`, `npm run
+typecheck`, `npm run test` — 78/78 passing across 13 files, 11 new). No UI/route exists yet
+for this task (schema-only) — Playwright MCP verification is not applicable, per the task's
+own note; the real-database round-trip script above is this task's equivalent "exercise it
+for real" step.
+
+---
+
 ## 2026-09-10 (process, session 36+)
 
 **Task:** Start `docs/user-guide.md` (firm operational manual) and its Artifact mirror;

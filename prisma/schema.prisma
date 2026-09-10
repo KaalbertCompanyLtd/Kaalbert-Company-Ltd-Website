@@ -835,6 +835,106 @@ model LandingPage {
   @@map("landing_page")
 }
 
+/// docs/features/admin-authentication.md "Data requirements" — T6.1 (Milestone 6, Admin
+/// Authentication). One partner's login identity — separate from `Author` (their public
+/// profile above); `Author.adminUserId` remains the schema-only placeholder FK its own
+/// doc-comment already describes (not wired to a real relation by this task — a future
+/// content-admin task's job, not this one's).
+///
+/// `role` is a plain string, not a Prisma enum: neither `admin-authentication.md` nor
+/// `content-management-admin.md` enumerates a fixed, closed set of admin roles ("a partner
+/// with the right role" is used descriptively throughout, never as a literal list) — same
+/// precedent as `DiagnosticThreshold.triagePriorityLevel` above. Defaults to `"partner"`, the
+/// normal case; a richer role vocabulary, if the firm ever needs one, is an admin-editable/
+/// seed-time concern, not a schema one.
+///
+/// `passwordHash` is produced by `lib/auth/password.ts` (`bcryptjs` — a vetted, pure-JS
+/// bcrypt implementation, chosen over the native-binding `bcrypt`/`argon2` packages
+/// specifically to avoid Railway's isolated build-container native-compile risk, a real,
+/// already-hit failure mode on this project twice over for unrelated reasons — see
+/// `memory/decision-log.md`, T6.1). `totpSecret` stores the *encrypted* value produced by
+/// `lib/auth/totp-encryption.ts` (AES-256-GCM via Node's own `crypto` module and a
+/// server-held key, `ADMIN_TOTP_ENCRYPTION_KEY`) — reversible, unlike `passwordHash`,
+/// because TOTP verification needs the live plaintext secret to compute the current code
+/// (see that file's doc-comment and `memory/decision-log.md` for the full reasoning). Both
+/// helpers live in the new `lib/auth/` directory this task establishes, per CLAUDE.md's Auth
+/// Pattern section.
+///
+/// `totpSecret` is nullable: a newly created account has no secret until it completes
+/// `/admin/setup-2fa` (T6.2). `totpEnabled` is the separate, explicit gate
+/// `admin-authentication.md`'s Data requirements section names — never inferred from
+/// `totpSecret` being non-null, since T6.2's real flow generates a secret *before*
+/// confirmation (a row can have a `totpSecret` with `totpEnabled` still `false` mid-setup).
+/// `lastLoginAt` is nullable for the same "never happened yet" reason. `createdAt` is the
+/// feature doc's own named field (no `updatedAt` companion — not named in that doc's Data
+/// requirements list, and nothing about this model needs a general last-modified audit
+/// column the way content-editing models do).
+model AdminUser {
+  id           Int               @id @default(autoincrement())
+  name         String
+  email        String            @unique
+  passwordHash String            @map("password_hash")
+  role         String            @default("partner")
+  /// AES-256-GCM ciphertext (iv/authTag/ciphertext, base64-joined) — never the raw secret.
+  /// See model doc-comment.
+  totpSecret   String?           @map("totp_secret")
+  totpEnabled  Boolean           @default(false) @map("totp_enabled")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  lastLoginAt  DateTime?         @map("last_login_at")
+  backupCodes  AdminBackupCode[]
+  sessions     AdminSession[]
+
+  @@map("admin_user")
+}
+
+/// docs/features/admin-authentication.md "Data requirements" — T6.1. One single-use recovery
+/// code, generated in a batch at `/admin/setup-2fa` (T6.2) and consumed by
+/// `POST /api/admin/auth/verify-backup-code` (T6.4) when a partner has lost their
+/// authenticator device. `codeHash` reuses the same `lib/auth/password.ts` hash/verify
+/// functions as `AdminUser.passwordHash` — a backup code is a credential exactly like a
+/// password (one-way verification only, never recovered in plaintext, unlike the TOTP
+/// secret), so it gets the same one-way-hash treatment; T6.2/T6.4 are what actually generate
+/// and check codes, not this task. `usedAt` is nullable — null means still valid; consuming a
+/// code sets this rather than deleting the row, so "this code was already used" stays a real,
+/// traceable fact instead of the row simply vanishing (mirrors this schema's established
+/// "never destructive, always reversible/traceable" precedent, e.g. `Subscriber.
+/// unsubscribedAt`). No `createdAt` here: the feature doc's own field list for this entity
+/// (id, admin_user_id, code_hash, used_at) doesn't name one, and nothing about backup-code
+/// recovery (T6.4's edge cases) needs a creation timestamp the way session expiry needs
+/// `AdminSession.createdAt` below.
+model AdminBackupCode {
+  id          Int       @id @default(autoincrement())
+  adminUserId Int       @map("admin_user_id")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  codeHash    String    @map("code_hash")
+  usedAt      DateTime? @map("used_at")
+
+  @@map("admin_backup_code")
+}
+
+/// docs/features/admin-authentication.md "Data requirements" — T6.1. One TOTP-verified admin
+/// session, created only by `POST /api/admin/auth/verify-totp` or `verify-backup-code`
+/// (T6.3/T6.4) — never by the password step alone (that doc's Interfaces section: the login
+/// endpoint returns a challenge token, not a session). `expiresAt` is what the epic header's
+/// 12-hour absolute-lifetime policy writes into on creation (implemented at T6.3, not this
+/// task); the same policy's 30-minute-inactivity half needs a separately-tracked
+/// last-activity column T6.3 adds then — not invented speculatively here, same
+/// don't-add-fields-beyond-what's-named discipline as every other model in this schema.
+/// `onDelete: Cascade` on the FK is what makes T6.5's "invalidate all of a deactivated user's
+/// live sessions immediately" a straightforward per-user row delete; `@@index([adminUserId])`
+/// supports that same per-user lookup, and looking a session up by its own `id` (a per-session
+/// invalidation, T6.5's other requirement) is already covered by the primary key.
+model AdminSession {
+  id          Int       @id @default(autoincrement())
+  adminUserId Int       @map("admin_user_id")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  expiresAt   DateTime  @map("expires_at")
+
+  @@index([adminUserId])
+  @@map("admin_session")
+}
+
 /// docs/features/measurement-and-attribution.md "Data requirements" — T5.4. First-touch
 /// campaign attribution for one browsing session, captured client-side
 /// (`lib/attribution-client.ts`) the moment a visitor first lands (any page, not only

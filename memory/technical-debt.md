@@ -18,6 +18,33 @@ sequencing requirement:
 
 ---
 
+## `Author.adminUserId` is still a schema-only placeholder FK, not a real Prisma relation
+
+**Status:** Open
+**Date raised:** 2026-09-10 (T6.1, session 37)
+**Reason:** `Author.adminUserId` (added at T2.5) was always a plain nullable `Int?`, deliberately
+not a real Prisma relation, because no `admin_user` table existed yet (see that model's own
+doc-comment in `prisma/schema.prisma`). T6.1 (this task) adds `AdminUser`, so the FK target
+now exists — but wiring the actual relation (and having anything populate it) is real work
+that belongs to whichever task builds the self-service author-profile editor, not this
+schema-only task.
+**Impact:** None today (no code reads or writes `adminUserId` yet). Once T7.6's self-service
+editor exists, "a partner opens their own entry under Team" (content-management-admin.md's
+user flow) needs this relation to resolve the logged-in `admin_user` to their own `author`
+row — without it, T7.6 would have no way to implement "self-service" at all beyond an admin
+picking themselves from a list.
+**Priority:** Low — no current functionality depends on this; it only becomes load-bearing
+when T7.6 is built.
+**Possible Fix/Fixes:** In T7.6, add `adminUser AdminUser? @relation(fields: [adminUserId],
+references: [id])` to `Author` (a new migration), backfill `adminUserId` for the 5 seeded
+partners once each has a real `admin_user` account (T6.2), and have the profile editor
+resolve "my own entry" via the authenticated session's `admin_user.id` rather than any other
+mechanism.
+**Trigger type:** Task-sequenced.
+**Sequenced into:** T07-06 (Team / author profile editor)
+
+---
+
 ## Attribution's 90-day retention job has no real schedule triggering it
 
 **Status:** Resolved
