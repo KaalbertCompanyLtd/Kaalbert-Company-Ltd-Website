@@ -134,6 +134,28 @@ profile with no photo yet DOES appear, rendered with an initials avatar
 initials on save, no separate publish step.
 **Size:** M **Dependencies:** T6.3, T2.5, T4.3
 
+**Addendum (session 42, 2026-09-10):** This task's editor is for the public-facing `author`
+record only — a distinct, real gap remains for managing the underlying **login** identity
+(`admin_user`), which this "Team" area is the natural home for too. Two concrete actions,
+both already fully built at the `lib/` layer with nothing calling them yet:
+
+- **Deactivate/reactivate a partner's account** — `admin-authentication.md`'s own edge case,
+  and T6.5's own Input→Output line already named this task's area as the intended home
+  ("this control ships functionally here; its UI home is Milestone 7's Team content area").
+  Wire a toggle to `lib/auth/session.ts`'s `deactivateAdminUser(adminUserId)`.
+- **Reset an existing partner's 2FA enrolment** — discovered at T6.6 (session 42): if a
+  partner loses their authenticator device _and_ their backup codes simultaneously,
+  `admin-authentication.md`'s own edge case says "account recovery requires another
+  administrator to reset 2FA enrolment" — but no task anywhere actually builds that
+  administrator-facing action. The mechanism already exists and is already tested
+  (`lib/auth/totp-setup.ts`'s `issueSetupToken(adminUserId)`, the same function T6.6's CLI
+  script and T6.4's backup-code recovery both already call) — this task just needs a button
+  that calls it for an _existing_ account and displays the resulting link, the same way
+  T6.6's script prints one for a _new_ account.
+
+See `memory/technical-debt.md` → "No admin-facing way to deactivate/reactivate an account or
+reset an existing partner's 2FA enrolment" for the full reasoning.
+
 **Addendum (session 37, 2026-09-10):** Wire `Author.adminUserId` to a real Prisma relation
 against `AdminUser` (added at T6.1) — currently a schema-only placeholder `Int?` with nothing
 populating or reading it. This task's own "self-service" requirement (a logged-in partner

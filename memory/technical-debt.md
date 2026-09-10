@@ -18,10 +18,44 @@ sequencing requirement:
 
 ---
 
-## No task provisions a real `admin_user` row yet
+## No admin-facing way to deactivate/reactivate an account or reset an existing partner's 2FA enrolment
 
 **Status:** Open
+**Date raised:** 2026-09-10 (T6.6, session 42)
+**Reason:** Discovered writing `docs/user-guide.md`'s new Admin Login section, while
+double-checking a claim before publishing it. Two real gaps, same root cause: T6.5
+(deactivation) and T6.6 (this task, account creation) each built a real, working, fully
+tested `lib/`-layer mechanism, but neither task's own scope included the admin-facing UI to
+trigger it for an _already-existing_ account — T6.5's own Input→Output line explicitly
+named Milestone 7's Team area as that UI's intended home, and `admin-authentication.md`'s
+edge case ("lost device and lost backup codes... requires another administrator to reset 2FA
+enrolment") implies the same kind of action, but no task anywhere actually builds either
+one. Today, both require a developer running an ad hoc script directly (e.g. a one-off `tsx`
+invocation calling `deactivateAdminUser`/`issueSetupToken` — no packaged, repeatable command
+exists for either the way `npm run admin:create-user` now exists for brand-new accounts).
+**Impact:** Low-to-medium and not urgent: a five-partner firm rarely needs to deactivate
+someone or hits the specific "lost device and lost backup codes" scenario, and a developer
+can already do both manually today (the underlying functions are real, tested, and working
+— this is a UI/packaging gap, not a missing capability). Becomes genuinely load-bearing the
+first time either scenario actually happens for real and a developer isn't immediately
+available.
+**Priority:** Low.
+**Possible Fix/Fixes:** Extend T7.6 (Team / author profile editor) — already the "Team"
+area's natural home — with two actions per `admin_user`, both wired to already-built,
+already-tested `lib/` functions: a deactivate/reactivate toggle
+(`lib/auth/session.ts`'s `deactivateAdminUser`) and a "reset 2FA enrolment" button
+(`lib/auth/totp-setup.ts`'s `issueSetupToken`, generating a fresh setup link the admin then
+relays to the affected partner, the same way T6.6's script already does for a new account).
+**Trigger type:** Task-sequenced.
+**Sequenced into:** T07-06 (Team / author profile editor)
+
+---
+
+## No task provisions a real `admin_user` row yet
+
+**Status:** Resolved
 **Date raised:** 2026-09-10 (T6.2, session 38)
+**Date resolved:** 2026-09-10 (T6.6, session 42)
 **Reason:** Discovered building T6.2's `/admin/setup-2fa` — every task in the admin-auth epic
 (T6.1 onward) assumes an `admin_user` row already exists, but no task anywhere creates one.
 Milestone 7's Team area (`docs/tasks/07-content-admin.md` T7.6) edits `author` (public

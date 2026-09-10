@@ -14,6 +14,52 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T6.6, session 42)
+
+**Task:** T6.6 — Admin account provisioning script
+**Summary:** Added `scripts/create-admin-user.ts` (run via `npm run admin:create-user --
+--name "..." --email "..." [--password "..."]`), the CLI-only mechanism this project uses to
+give a partner their very first account — closes the gap logged as technical debt back at
+T6.2. Parses `--name`/`--email`/`--password` from `process.argv`; generates a random
+24-byte base64url password via `crypto.randomBytes` when `--password` is omitted; creates the
+`admin_user` row with `hashPassword` (bcryptjs, same as `loginWithPassword`); issues a
+7-day single-use setup link via T6.2's `issueSetupToken(user.id, { baseUrl: getSiteUrl() })`;
+prints the account ID/email, the generated password (only when one wasn't supplied), and the
+setup link. Duplicate emails are caught via
+`error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"` and reported
+with a clear message rather than a raw Prisma stack. Follows `scripts/cleanup-attribution.ts`'s
+established env-loading pattern exactly (`dotenv.config()` called before any dynamic
+`import()` of a `lib/prisma`-dependent module, since static imports are hoisted above
+`config()` calls).
+Verified for real via Playwright MCP against the real dev server and real database rows (no
+mocks): ran the script to create a live account, followed the printed setup link in the
+browser, completed real TOTP enrolment end-to-end (one code submission failed from normal
+30-second window drift between computing and submitting through the multi-step browser
+interaction — recomputed and resubmitted, succeeded), confirmed a second run against the same
+email is rejected with the duplicate-email message, confirmed missing `--name`/`--email`
+exits with a clear usage error, and confirmed `--password` overrides the random-generation
+path. All test data cleaned from the database afterward.
+While writing `docs/user-guide.md`'s new Admin Login section, caught myself about to
+overstate this script's scope (implying it could also reset an existing partner's lost 2FA)
+and corrected the wording before publishing — see `memory/decision-log.md` for the resulting
+technical-debt entry this surfaced.
+**Files Changed:** `scripts/create-admin-user.ts` (new), `package.json`
+(`admin:create-user` script), `memory/technical-debt.md` (resolved the T6.2-era "no
+provisioning" entry; added a new entry for the missing deactivate/reactivate + reset-2FA
+admin UI), `docs/tasks/07-content-admin.md` (addendum on T7.6), `docs/user-guide.md` (new
+"Admin Login — Milestone 6" section; Milestone 6 moved out of "What's coming next"),
+`memory/decision-log.md`.
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, full test suite green —
+no new unit tests needed, this is a thin CLI wrapper over already-tested `lib/auth`
+functions, verified live instead per CLAUDE.md's "any runnable interface" rule). **This task
+completes Milestone 6** (T6.1–T6.6 all shipped) — both firm-facing Artifacts were updated:
+`docs/user-guide.md` + its mirror (Version 2), and the "Website Build Status" Artifact
+(Version 6), whose ledger row 6 now reads Complete, whose progress track shows 6/9 segments
+done, and whose "Your Team" usability panel now reflects that staff can log in.
+
+---
+
 ## 2026-09-10 (T6.5, session 41)
 
 **Task:** T6.5 — Account deactivation + immediate session invalidation

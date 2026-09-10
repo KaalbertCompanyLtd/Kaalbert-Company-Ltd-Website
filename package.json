@@ -19,7 +19,8 @@
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "attribution:cleanup": "tsx scripts/cleanup-attribution.ts"
+    "attribution:cleanup": "tsx scripts/cleanup-attribution.ts",
+    "admin:create-user": "tsx scripts/create-admin-user.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

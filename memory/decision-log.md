@@ -2,6 +2,50 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T6.6, session 42) — Account provisioning is a CLI script, not an invite-flow UI; discovered a related, distinct gap (no UI for deactivate/reactivate or 2FA reset) while documenting, sequenced rather than built
+
+**Status:** Standing
+
+**Summary:** T6.6 closed the gap `memory/technical-debt.md` logged at T6.2: nothing yet
+created a real `admin_user` row for a partner's very first login. Resolved as
+`scripts/create-admin-user.ts`, a developer-run CLI script, not a self-service "invite a
+partner" button anywhere in `/admin` — a deliberate scope call, not a deferred one: with five
+partners and new accounts created rarely (per `docs/features/admin-authentication.md`), a
+script the developer runs on request is simpler to build and maintain than an invite-flow UI
+(email delivery, role assignment, revocation of a stale invite) for something that happens a
+handful of times ever. The script mirrors `scripts/cleanup-attribution.ts`'s established
+env-loading/dynamic-import shape and `Subscriber.unsubscribeToken`'s precedent for an opaque,
+single-use link (reusing T6.2's own `issueSetupToken`, not a new mechanism).
+
+- **Password generation**: `crypto.randomBytes(24).toString("base64url")` when `--password`
+  isn't supplied — a real random secret, printed once, never a placeholder the operator is
+  expected to remember or reuse.
+- **Duplicate-email handling**: `error instanceof Prisma.PrismaClientKnownRequestError &&
+error.code === "P2002"` — the same pattern already standard elsewhere in this codebase for
+  a unique-constraint violation, not a raw Prisma stack surfaced to the operator.
+- **A related but distinct gap surfaced while writing `docs/user-guide.md`, not from any task
+  spec.** Drafting the guide's "lost device and lost backup codes" scenario, I initially wrote
+  that recovery used "the same mechanism as creating a partner's first account" — caught this
+  was actually false (the new script only ever creates a _new_ `admin_user` row; T6.5's
+  `deactivateAdminUser` and 2FA-reset both already exist as real, tested `lib/` functions but
+  have no UI or command exposing either for an _existing_ account) before publishing, and
+  corrected the wording to state plainly that both remain manual developer actions today.
+  Logged as a new `memory/technical-debt.md` entry rather than expanded into this task's own
+  scope (T6.6's Input→Output line was provisioning only) — sequenced into T7.6 (Team / author
+  profile editor, `docs/tasks/07-content-admin.md`) via an addendum, since that's the natural
+  screen for both a deactivate/reactivate toggle and a "reset 2FA" button once it's built.
+- **This completes Milestone 6.** Both firm-facing Artifacts were updated in this session:
+  `docs/user-guide.md` + its mirror republished as Version 2, and the "Website Build Status"
+  Artifact republished as Version 6 (milestone ledger row 6 flipped to Complete, progress
+  track to 6/9, the ~64% headline stat, and the "Your Team" usability panel updated to
+  reflect that staff can now log in even though there's nothing to edit yet).
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.6), `docs/tasks/07-content-admin.md`
+(T7.6 addendum), `docs/features/admin-authentication.md`, `scripts/create-admin-user.ts`,
+`memory/technical-debt.md`.
+
+---
+
 ## 2026-09-10 (T6.5, session 41) — Account deactivation: two independent enforcement layers, no UI/route this task — verified via a real script instead, same as T6.1
 
 **Status:** Standing
