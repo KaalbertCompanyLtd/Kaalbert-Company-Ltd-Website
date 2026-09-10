@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import type { ReactNode } from "react";
 import QRCode from "qrcode";
 
+import { AuthShell } from "@/app/admin/auth-shell";
 import { resolvePendingTotpSetup } from "@/lib/auth/totp-setup";
 
 import { TotpSetupForm } from "./totp-setup-form";
@@ -40,25 +39,6 @@ function parseToken(raw: string | string[] | undefined): string | null {
  * as this QR image and the manual-entry fallback text — both are the intended, one-time
  * disclosure to the account's own owner that RFC 6238 setup requires, not a leak.
  */
-function AuthShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="bg-muted flex min-h-screen items-center justify-center p-6">
-      <div className="bg-card border-border w-full max-w-[440px] rounded-md border p-10">
-        <div className="mb-6 text-center">
-          <Image
-            src="/brand/logo-primary.png"
-            alt="Kaalbert & Company Ltd"
-            width={1980}
-            height={382}
-            className="mx-auto h-[34px] w-auto"
-          />
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export default async function SetupTwoFactorPage({ searchParams }: SetupTwoFactorPageProps) {
   const { token: rawToken } = await searchParams;
   const token = parseToken(rawToken);

@@ -16,6 +16,38 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## `proxy.ts` written at `app/proxy.ts` never ran at all — no error, no warning
+
+**Status:** Fixed
+**Severity:** High — the exact failure mode this file exists to prevent: `/admin` (and every
+route under it) was fully reachable with zero session check, silently, on the same commit
+that was meant to make T6.3's own literal acceptance criterion ("no admin route reachable
+without a valid session") true.
+**Date found:** 2026-09-10 (T6.3, session 39 — caught by the Task Completion Checklist's own
+"exercise it for real via Playwright MCP" requirement; a static read of the file would never
+have caught this, since it compiles, type-checks, and lints cleanly at the wrong path)
+**Description:** CLAUDE.md's own Auth Pattern section said route-level session enforcement
+"must be implemented in `app/proxy.ts`." Wrote it there. `npm run dev` started clean, no
+compile error, no console warning — and `GET /admin` with no session cookie returned 200
+with the full authenticated dashboard shell, not a redirect. This project's own bundled
+Next.js docs (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/
+proxy.md`) say plainly: "Create a `proxy.ts`... in the project root... so that it is located
+at the same level as `pages` or `app`" — i.e. a sibling of `app/`, never a file inside it.
+Next.js 16 simply never looks inside `app/` for this file at all; nothing about that failure
+mode surfaces anywhere (no build warning, no dev-server log line, no lint rule) — the route
+just silently stays unprotected forever, exactly like this project's own documented
+`middleware.ts`-vs-`proxy.ts` naming trap, but one level more specific and not something
+CLAUDE.md's existing note had covered.
+**Workaround:** None needed — caught and fixed the same session, before any commit.
+**Planned Fix:** Moved the file from `app/proxy.ts` to `proxy.ts` (project root); confirmed
+via a real `curl`/Playwright navigation to `/admin` with no cookie that it now 307-redirects
+to `/admin/login`. Corrected CLAUDE.md's own Next.js 16 note (the exact text that caused this)
+to state the project-root location explicitly, with this bug cited as why it matters — see
+`memory/decision-log.md` for the full correction.
+**Sequenced into:** T06-03 (already fixed same session — see `memory/completed-work.md`)
+
+---
+
 ## `prepare` script's bare `git config` broke the Railway production build
 
 **Status:** Fixed

@@ -6,8 +6,10 @@ import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
 /**
  * The sidebar-plus-content-area shell every *authenticated* admin screen inherits
  * (ui/screen-inventory.md #25, inferred from ui/mockups/g-admin-content/admin-dashboard.html
- * — there is no dedicated shell mockup). Frame only: no auth enforcement yet (T6.3 wires
- * that up via `app/proxy.ts`) and no real content beyond this task's placeholder page.
+ * — there is no dedicated shell mockup). Frame only, no real content beyond this task's
+ * placeholder page — but every route this layout wraps is now genuinely session-gated by
+ * `proxy.ts` (T6.3, project root, not `app/proxy.ts` — see CLAUDE.md's Next.js 16 note for
+ * why that distinction is a real, previously-hit bug, not a style preference).
  *
  * Moved into this `(shell)` route group at T6.2 — a plain `app/admin/layout.tsx` would wrap
  * *every* route under `/admin/*`, including auth-flow screens like `/admin/setup-2fa` (this

@@ -2,6 +2,74 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T6.3, session 39) — `proxy.ts` moved to the project root (real bug, not a style choice); session/rate-limit/replay/challenge-token design decisions
+
+**Status:** Standing
+
+**Summary:** T6.3 built real login enforcement — session cookies, rate limiting, TOTP replay
+protection — and corrected a real bug found live-testing it.
+
+- **`proxy.ts` belongs at the project root, sibling to `app/`, never `app/proxy.ts`.**
+  CLAUDE.md's own Next.js 16 note said `app/proxy.ts`; written there first, it compiled,
+  type-checked, and lint-passed cleanly while never actually running — `/admin` stayed fully
+  reachable with no session check at all, silently, no error anywhere. Caught only by the
+  Task Completion Checklist's own "exercise it for real via Playwright MCP" step (a static
+  read would never have caught this). Confirmed against this project's own bundled Next.js
+  docs and fixed by moving the file; full writeup in `memory/known-bugs.md`. CLAUDE.md's own
+  text corrected in the same session so this doesn't recur.
+- **Sessions are DB-backed (`admin_session`, already existed from T6.1), not a stateless
+  signed cookie.** `AdminSession` gained `token` (the actual cookie value — a fresh random
+  value, never this row's own sequential `id`, same `AdminUser.setupToken` precedent) and
+  `lastActivityAt` (the 30-minute sliding inactivity clock; `expiresAt` alone only covers the
+  12-hour absolute half of the epic's session policy). DB-backed specifically because T6.5's
+  "invalidate all of a deactivated user's live sessions immediately" needs a real server-side
+  revocation guarantee a stateless token can never give. `lib/auth/session.ts`'s expiry check
+  is lazy, not swept — see that file's own doc-comment (confirmed for real this session:
+  backdating one session left a _different_ session's now-stale row untouched, exactly as
+  designed) — no cleanup job exists yet, proportionate at this project's real scale (five
+  partners), same class of call as `AdminLoginAttempt`'s own no-retention decision below.
+- **The password→TOTP challenge token is a stateless, HMAC-signed value (`lib/auth/
+challenge-token.ts`), not a database row.** Node's own `crypto.createHmac`/
+  `timingSafeEqual` directly — a standard signed-token pattern, not a hand-rolled cipher (ADR
+  0007's "never hand-rolled crypto" governs primitives, not this class of usage — same
+  reasoning already established for T6.1's AES-256-GCM TOTP encryption). Stateless because
+  its whole lifetime is under 5 minutes and it carries nothing worth auditing. Reuses the env
+  var originally reserved as `NEXTAUTH_SECRET` (T1.1) — **renamed to
+  `ADMIN_CHALLENGE_TOKEN_SECRET`** at this task, its first real consumer, because this
+  project never adopted the `next-auth` package (ADR 0001) and the old name risked implying
+  otherwise to a future reader. Updated everywhere it was referenced: `.env.example`,
+  `CLAUDE.local.md`, `README.md`, a fresh dev value generated into `.env.local`.
+- **Rate limiting is a real table (`admin_login_attempt`, new), not an in-memory counter** —
+  Railway can redeploy/restart the process at any time, which an in-process counter wouldn't
+  survive. Keyed by the target account's **email**, not the ephemeral `challenge_token`/
+  `setup_token` a given attempt happens to carry — closes a real bypass a token-keyed design
+  would have left open (re-submitting an already-known-correct password mints a fresh
+  `challenge_token` with, otherwise, a fresh rate-limit budget each time). Five failures per
+  15-minute window, per `(identifier, kind)` pair; covers all three code-guessing endpoints
+  this epic ends up with, including T6.2's `setup-2fa` confirm (that task's own addendum
+  required this — `lib/auth/totp-setup.ts`'s `confirmTotpSetup` now calls the same
+  `lib/auth/rate-limit.ts` this task adds). No retention/cleanup job for this table either,
+  same proportionality call as `AdminSession` above.
+- **TOTP replay protection is `otplib`'s own built-in `afterTimeStep` option, not a
+  hand-rolled comparison** — `AdminUser.lastVerifiedTotpStep` (new field) stores the real,
+  library-returned `result.timeStep` after every successful login verification;
+  `verify`'s return type is a union across otplib's TOTP/HOTP strategies (only HOTP's result
+  lacks `timeStep`), narrowed via a documented, safe cast in `lib/auth/login.ts` since this
+  call never passes `strategy: "hotp"`. Confirmed for real this session: generating one valid
+  code, using it to log in, then immediately reusing that exact same code for a second login
+  attempt was rejected with the standard "code didn't match" message, even though the code
+  was still well inside its normal clock-drift tolerance window.
+- **`app/admin/auth-shell.tsx`** — the centered-card shell T6.2 first wrote privately inside
+  `setup-2fa/page.tsx`, extracted to a shared location and reused by `/admin/login` (this
+  task) rather than duplicated a second time.
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.3), `docs/features/admin-
+authentication.md`, `proxy.ts`, `lib/auth/session.ts`, `lib/auth/challenge-token.ts`,
+`lib/auth/rate-limit.ts`, `lib/auth/login.ts`, `memory/known-bugs.md` (the `proxy.ts` bug),
+CLAUDE.md's Auth Pattern section (corrected this session).
+
+---
+
 ## 2026-09-10 (T6.2, session 38) — `admin_user.setup_token`/`setup_token_expires_at` resolve "which account" for an unauthenticated `/admin/setup-2fa` visit; `app/admin/` split into a `(shell)` route group; `qrcode` chosen for QR rendering
 
 **Status:** Standing

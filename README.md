@@ -91,8 +91,12 @@ came from.
 Current vars (`.env.example`):
 
 - `DATABASE_URL` — Railway Postgres connection string. See "Database & Migrations" above.
-- `NEXTAUTH_SECRET` — session-signing secret (ADR 0007, admin auth — not yet consumed by
-  any code; reserved for Milestone 6).
+- `ADMIN_TOTP_ENCRYPTION_KEY` — AES-256-GCM key `admin_user.totp_secret` is encrypted with
+  (T6.1, `lib/auth/totp-encryption.ts`). 64-character hex string (32 bytes).
+- `ADMIN_CHALLENGE_TOKEN_SECRET` — HMAC key signing the short-lived challenge token issued
+  between the password and TOTP steps of admin login (T6.3, `lib/auth/challenge-token.ts`;
+  renamed from this var's original placeholder name `NEXTAUTH_SECRET` — this project never
+  adopted the `next-auth` package, ADR 0001 — the old name risked implying otherwise).
 - `GTM_CONTAINER_ID` — Google Tag Manager container ID (ADR 0006). Read server-side in the
   root `app/layout.tsx`; when unset (e.g. no GTM account exists yet), the GTM snippet
   doesn't render at all rather than emitting a broken script tag — see

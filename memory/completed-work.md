@@ -14,6 +14,71 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T6.3, session 39)
+
+**Task:** T6.3 — Login + TOTP verification + session management
+**Summary:** Built `POST /api/admin/auth/login`, `POST /api/admin/auth/verify-totp`,
+`/admin/login` (both steps, no dedicated TOTP-step mockup — inferred from T6.2's own
+Step-1 pattern per this task's own addendum), and `proxy.ts` — the piece that actually makes
+"no admin route reachable without a session" true for the first time (T6.1's tables and
+T6.2's setup screen existed before this, but nothing enforced anything). New `lib/auth/`
+modules: `session.ts` (DB-backed sessions, 30-min inactivity / 12-hour absolute policy),
+`challenge-token.ts` (stateless HMAC token between the password and TOTP steps),
+`rate-limit.ts` (a real table, not an in-memory counter, covering all three
+code-guessing endpoints including T6.2's setup-2fa confirm per that task's addendum), and
+`login.ts` (orchestrates all of it, including TOTP replay protection via otplib's own
+`afterTimeStep`). Extracted `app/admin/auth-shell.tsx` from T6.2's page so `/admin/login`
+reuses it instead of duplicating the card markup.
+**Real bug caught live-testing, not by static analysis**: `proxy.ts` written at
+`app/proxy.ts` (CLAUDE.md's own stated path) compiled and ran with zero errors while never
+actually executing at all — Next.js only looks for this file at the project root. `/admin`
+stayed fully open with no session check, silently. Caught only because the Task Completion
+Checklist's "exercise it for real via Playwright MCP" step is non-negotiable; moved the file,
+confirmed the fix with a real unauthenticated request (307 → `/admin/login`), corrected
+CLAUDE.md's own text so this doesn't recur, logged in `memory/known-bugs.md`.
+Also renamed the `NEXTAUTH_SECRET` env var placeholder (reserved since T1.1, unused until
+now) to `ADMIN_CHALLENGE_TOKEN_SECRET` — this project never adopted `next-auth`, and giving
+its first real consumer the old name would have kept implying a dependency that was never
+true. Updated everywhere: `.env.example`, `CLAUDE.local.md`, `README.md`, a fresh dev value
+generated into `.env.local`. Also backfilled `README.md`'s env-var list with
+`ADMIN_TOTP_ENCRYPTION_KEY` (T6.1's own var, missed there at the time).
+Verified for real via Playwright MCP against a real, fully-enrolled test `admin_user`
+(throwaway script, deleted before commit): confirmed pre-login `/admin` access is blocked
+(this task's literal acceptance criterion); a real wrong-password attempt shows the generic
+"Invalid email or password" message; a real correct password → correct TOTP code completes
+login and lands on the real authenticated dashboard, with the session row, `login_attempt`
+rows, and `lastVerifiedTotpStep`/`lastLoginAt` all inspected directly in the database and
+matching expectations exactly; reusing an already-verified code on a second login attempt
+within the same window is rejected (replay protection, confirmed against `otplib`'s own
+`afterTimeStep`); five failed password attempts trigger a real 429 rate-limit response, which
+then also blocks a subsequent _correct_ password (the intended behavior, not a bug); backdating
+a session's `lastActivityAt` past 30 minutes and revisiting `/admin` redirects back to login
+and deletes that specific session row (lazy expiry, confirmed not to sweep other rows). Also
+confirmed `/api/admin/*` (non-auth) returns 401 JSON rather than a redirect, and that T6.2's
+`/admin/setup-2fa` still renders and functions correctly after the `AuthShell` extraction.
+Checked mobile (390px), tablet (768px), and desktop (1280px) renders of `/admin/login`.
+**Files Changed:** `prisma/schema.prisma` (`AdminUser.lastVerifiedTotpStep`,
+`AdminSession.token`/`lastActivityAt`, new `AdminLoginAttempt` model + `AdminLoginAttemptKind`
+enum), `prisma/migrations/20260910195546_t6_3_session_replay_rate_limit/`, `proxy.ts` (new,
+project root), `lib/auth/session.ts` + `.test.ts`, `lib/auth/challenge-token.ts` + `.test.ts`,
+`lib/auth/rate-limit.ts` + `.test.ts`, `lib/auth/login.ts` + `.test.ts`,
+`lib/auth/totp-setup.ts` + `.test.ts` (rate-limit wiring added), `app/admin/auth-shell.tsx`
+(new, extracted from `app/admin/setup-2fa/page.tsx`), `app/admin/login/page.tsx` +
+`login-form.tsx`, `app/api/admin/auth/login/route.ts`, `app/api/admin/auth/verify-totp/
+route.ts`, `.env.example`, `CLAUDE.local.md`, `.env.local` (not tracked), `README.md`,
+`CLAUDE.md` (Next.js 16 note corrected), `memory/known-bugs.md`, `memory/decision-log.md`,
+`docs/sessions/session-38-admin-2fa-setup-flow.md` (pre-existing Prettier formatting issue
+fixed as part of this session's quality gate, per CLAUDE.md's "fix pre-existing lint failures
+too" rule).
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, 118/118 tests across 18
+files, 28 new). `docs/user-guide.md` **not** updated — login now technically works, but
+there is still no sanctioned way for the firm to create its own first account (T6.6, still
+open) and no account-management UI exists yet (Milestone 7), so nothing here is actually
+usable by the firm without developer involvement.
+
+---
+
 ## 2026-09-10 (T6.2, session 38)
 
 **Task:** T6.2 — 2FA setup flow — `/admin/setup-2fa`

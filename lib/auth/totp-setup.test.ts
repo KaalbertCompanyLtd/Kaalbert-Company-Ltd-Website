@@ -26,9 +26,17 @@ vi.mock("@/lib/auth/password", () => ({
   hashPassword: vi.fn(),
 }));
 
+vi.mock("@/lib/auth/rate-limit", () => ({
+  assertNotRateLimited: vi.fn(),
+  recordAttempt: vi.fn(),
+  AdminLoginAttemptKind: { password: "password", totp: "totp", setup_confirm: "setup_confirm" },
+  RateLimitError: class RateLimitError extends Error {},
+}));
+
 import { generateURI, verify } from "otplib";
 
 import { hashPassword } from "@/lib/auth/password";
+import { assertNotRateLimited, recordAttempt } from "@/lib/auth/rate-limit";
 import {
   confirmTotpSetup,
   issueSetupToken,
@@ -49,6 +57,8 @@ const generateTotpSecretMock = vi.mocked(generateTotpSecret);
 const encryptTotpSecretMock = vi.mocked(encryptTotpSecret);
 const decryptTotpSecretMock = vi.mocked(decryptTotpSecret);
 const hashPasswordMock = vi.mocked(hashPassword);
+const assertNotRateLimitedMock = vi.mocked(assertNotRateLimited);
+const recordAttemptMock = vi.mocked(recordAttempt);
 
 const BASE_USER = {
   id: 1,
@@ -75,6 +85,8 @@ beforeEach(() => {
   encryptTotpSecretMock.mockReset().mockReturnValue("encrypted-ciphertext");
   decryptTotpSecretMock.mockReset().mockReturnValue("RAWSECRETBASE32");
   hashPasswordMock.mockReset().mockImplementation(async (value) => `hashed:${value}`);
+  assertNotRateLimitedMock.mockReset().mockResolvedValue(undefined);
+  recordAttemptMock.mockReset().mockResolvedValue(undefined);
 });
 
 describe("resolvePendingTotpSetup", () => {
@@ -168,6 +180,17 @@ describe("confirmTotpSetup — deliberate failed attempts", () => {
       expect((error as Error).message).not.toContain("RAWSECRETBASE32");
     }
     expect(transactionMock).not.toHaveBeenCalled();
+    expect(recordAttemptMock).toHaveBeenCalledWith(BASE_USER.email, "setup_confirm", false);
+  });
+
+  it("checks the rate limiter (keyed by the account's email) before verifying, and stops before it if blocked", async () => {
+    findUniqueMock.mockResolvedValue({ ...BASE_USER, totpSecret: "encrypted" } as never);
+    const { RateLimitError } = await import("@/lib/auth/rate-limit");
+    assertNotRateLimitedMock.mockRejectedValue(new RateLimitError("Too many attempts."));
+
+    await expect(confirmTotpSetup("opaque-token", "123456")).rejects.toBeInstanceOf(RateLimitError);
+    expect(assertNotRateLimitedMock).toHaveBeenCalledWith(BASE_USER.email, "setup_confirm");
+    expect(verifyMock).not.toHaveBeenCalled();
   });
 
   it("confirms a correct code: enables TOTP, stores 8 hashed backup codes, and consumes the token", async () => {

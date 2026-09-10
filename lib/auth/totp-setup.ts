@@ -5,6 +5,7 @@ import { generateURI, verify } from "otplib";
 import { prisma } from "@/lib/prisma";
 
 import { hashPassword } from "./password";
+import { assertNotRateLimited, recordAttempt, AdminLoginAttemptKind } from "./rate-limit";
 import { decryptTotpSecret, encryptTotpSecret } from "./totp-encryption";
 import { generateTotpSecret } from "./totp";
 
@@ -116,6 +117,11 @@ async function generateAndStoreSecret(adminUserId: number): Promise<string> {
  * call with the same token, before or after success, always fails). Returns the plaintext
  * backup codes — the one and only time they ever exist outside this function's own stack;
  * everywhere else, only `admin_backup_code.code_hash` exists.
+ *
+ * Rate-limited via `lib/auth/rate-limit.ts` (added at T6.3, per that task's own addendum in
+ * `docs/tasks/06-admin-auth.md` — this endpoint shipped at T6.2 without it) — keyed by the
+ * target account's email, same `AdminLoginAttemptKind.setup_confirm` bucket regardless of
+ * which setup token a given attempt carries.
  */
 export async function confirmTotpSetup(setupToken: string, code: string): Promise<string[]> {
   const user = await prisma.adminUser.findUnique({ where: { setupToken } });
@@ -126,8 +132,13 @@ export async function confirmTotpSetup(setupToken: string, code: string): Promis
     throw new TotpSetupError("This setup link is no longer valid.");
   }
 
+  await assertNotRateLimited(user.email, AdminLoginAttemptKind.setup_confirm);
+
   const rawSecret = decryptTotpSecret(user.totpSecret);
   const result = await verify({ secret: rawSecret, token: code, epochTolerance: EPOCH_TOLERANCE });
+
+  await recordAttempt(user.email, AdminLoginAttemptKind.setup_confirm, result.valid);
+
   if (!result.valid) {
     throw new TotpSetupError("That code didn't match — please try again.");
   }

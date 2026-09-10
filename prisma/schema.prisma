@@ -885,24 +885,37 @@ model LandingPage {
 /// how long a stale, never-completed link stays valid. Neither field means an account-
 /// creation flow exists yet — see `memory/technical-debt.md` → "No task provisions a real
 /// `admin_user` row yet" for the still-open gap this doesn't close.
+///
+/// `lastVerifiedTotpStep` — added at T6.3 for login's own replay-protection acceptance
+/// criterion ("a replayed TOTP code within the same time window is rejected even though it
+/// hasn't expired," `docs/tasks/06-admin-auth.md`). `otplib`'s `verify` accepts an
+/// `afterTimeStep` option built for exactly this: reject any code whose RFC 6238 time step is
+/// `<=` the last one this account successfully verified at — no hand-rolled comparison, the
+/// vetted library already does it (ADR 0007). `lib/auth/login.ts` writes the real,
+/// library-returned `result.timeStep` here after every successful login verification. Not
+/// exercised by T6.2's `confirmTotpSetup` — a setup token is already single-use by
+/// construction, so it has no repeat-verification window to protect against replay within.
 model AdminUser {
-  id                  Int               @id @default(autoincrement())
-  name                String
-  email               String            @unique
-  passwordHash        String            @map("password_hash")
-  role                String            @default("partner")
+  id                   Int               @id @default(autoincrement())
+  name                 String
+  email                String            @unique
+  passwordHash         String            @map("password_hash")
+  role                 String            @default("partner")
   /// AES-256-GCM ciphertext (iv/authTag/ciphertext, base64-joined) — never the raw secret.
   /// See model doc-comment.
-  totpSecret          String?           @map("totp_secret")
-  totpEnabled         Boolean           @default(false) @map("totp_enabled")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  lastLoginAt         DateTime?         @map("last_login_at")
+  totpSecret           String?           @map("totp_secret")
+  totpEnabled          Boolean           @default(false) @map("totp_enabled")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  lastLoginAt          DateTime?         @map("last_login_at")
   /// Opaque, single-use `/admin/setup-2fa` link token — see model doc-comment. Null once
   /// unused (never issued) or once consumed (setup completed).
-  setupToken          String?           @unique @map("setup_token")
-  setupTokenExpiresAt DateTime?         @map("setup_token_expires_at")
-  backupCodes         AdminBackupCode[]
-  sessions            AdminSession[]
+  setupToken           String?           @unique @map("setup_token")
+  setupTokenExpiresAt  DateTime?         @map("setup_token_expires_at")
+  /// RFC 6238 time step of the last successfully verified login TOTP code — see model
+  /// doc-comment. Null for an account that has never completed a login yet.
+  lastVerifiedTotpStep Int?              @map("last_verified_totp_step")
+  backupCodes          AdminBackupCode[]
+  sessions             AdminSession[]
 
   @@map("admin_user")
 }
@@ -936,23 +949,74 @@ model AdminBackupCode {
 /// session, created only by `POST /api/admin/auth/verify-totp` or `verify-backup-code`
 /// (T6.3/T6.4) — never by the password step alone (that doc's Interfaces section: the login
 /// endpoint returns a challenge token, not a session). `expiresAt` is what the epic header's
-/// 12-hour absolute-lifetime policy writes into on creation (implemented at T6.3, not this
-/// task); the same policy's 30-minute-inactivity half needs a separately-tracked
-/// last-activity column T6.3 adds then — not invented speculatively here, same
-/// don't-add-fields-beyond-what's-named discipline as every other model in this schema.
+/// 12-hour absolute-lifetime policy writes into on creation (implemented at T6.3, this task).
 /// `onDelete: Cascade` on the FK is what makes T6.5's "invalidate all of a deactivated user's
 /// live sessions immediately" a straightforward per-user row delete; `@@index([adminUserId])`
 /// supports that same per-user lookup, and looking a session up by its own `id` (a per-session
 /// invalidation, T6.5's other requirement) is already covered by the primary key.
+///
+/// `token`/`lastActivityAt` — added at T6.3, beyond `admin-authentication.md`'s original
+/// id/admin_user_id/created_at/expires_at list (same "gap found building the real thing"
+/// precedent as `AdminUser.setupToken`, T6.2). `token` is the actual opaque, random value
+/// `lib/auth/session.ts` puts in the session cookie — never this row's own sequential `id`,
+/// which would make a session cookie a guessable small integer (same reasoning as
+/// `AdminUser.setupToken`/`Subscriber.unsubscribeToken`). `lastActivityAt` is what makes the
+/// epic's 30-minute-inactivity policy real: `lib/auth/session.ts`'s `verifySession` bumps it
+/// on every authenticated request and rejects (deletes) the session once it's stale, entirely
+/// independent of `expiresAt`'s own fixed 12-hour absolute ceiling — a session can die from
+/// either rule, whichever comes first.
 model AdminSession {
-  id          Int       @id @default(autoincrement())
-  adminUserId Int       @map("admin_user_id")
-  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  expiresAt   DateTime  @map("expires_at")
+  id             Int       @id @default(autoincrement())
+  adminUserId    Int       @map("admin_user_id")
+  adminUser      AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  /// The session cookie's actual value — see model doc-comment.
+  token          String    @unique
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastActivityAt DateTime  @map("last_activity_at")
+  expiresAt      DateTime  @map("expires_at")
 
   @@index([adminUserId])
   @@map("admin_session")
+}
+
+/// New at T6.3 — not named in `admin-authentication.md`'s Data requirements section (which
+/// only lists the three T6.1 tables), but required to build that same doc's own business rule
+/// ("repeated failed login or TOTP attempts: rate-limited to prevent brute-force") for real,
+/// across all three code-guessing endpoints this epic ends up with:
+/// `POST /api/admin/auth/login` (`kind: password`), `verify-totp` (`kind: totp`, T6.3), and
+/// `POST /api/admin/auth/setup-2fa` (`kind: setup_confirm`, T6.2 — see that task's own
+/// addendum in `docs/tasks/06-admin-auth.md` requiring this task to cover it too). `identifier`
+/// is always the target account's normalized email — chosen over the ephemeral
+/// `challenge_token`/`setup_token` a given attempt carries specifically so an attacker who can
+/// mint fresh tokens for the same account (e.g. by re-submitting an already-known-correct
+/// password to get a new `challenge_token`) doesn't get a fresh rate-limit budget each time;
+/// one email, one shared budget, regardless of which token happened to carry a given attempt.
+/// `success` is recorded for both outcomes (not failures only) so `lib/auth/rate-limit.ts`'s
+/// window-count query is a plain `WHERE success = false`, not a subtraction. A plain table,
+/// not an in-memory counter — Railway can redeploy/restart the app process at any time (a
+/// counter living only in memory wouldn't survive that), and CLAUDE.md's own architecture
+/// constraint for this task requires the rate-limit store to be real, not an afterthought. No
+/// retention/cleanup job exists yet for this table (unlike `Attribution`'s 90-day job, T5.4) —
+/// proportionate for now given real volume (five partners, occasional logins), not an
+/// oversight; revisit if that volume ever changes.
+model AdminLoginAttempt {
+  id         Int                    @id @default(autoincrement())
+  identifier String
+  kind       AdminLoginAttemptKind
+  success    Boolean
+  createdAt  DateTime               @default(now()) @map("created_at")
+
+  @@index([identifier, kind, createdAt])
+  @@map("admin_login_attempt")
+}
+
+/// The three code/credential-guessing steps `AdminLoginAttempt` rate-limits — see that
+/// model's own doc-comment for why `setup_confirm` (T6.2's endpoint) is included here even
+/// though this enum itself is new at T6.3.
+enum AdminLoginAttemptKind {
+  password
+  totp
+  setup_confirm
 }
 
 /// docs/features/measurement-and-attribution.md "Data requirements" — T5.4. First-touch

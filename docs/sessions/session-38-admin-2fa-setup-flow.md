@@ -7,15 +7,16 @@
 ## What Was Built
 
 `/admin/setup-2fa` (ui/mockups/f-admin-auth/admin-2fa-setup.html): a server-rendered QR code
-+ manual-key fallback, a client-side confirm-code step, and a backup-codes step gated by a
-required checkbox before "Finish setup". Added `lib/auth/totp-setup.ts`
-(`resolvePendingTotpSetup`, `confirmTotpSetup`, `issueSetupToken`) and `POST
+
+- manual-key fallback, a client-side confirm-code step, and a backup-codes step gated by a
+  required checkbox before "Finish setup". Added `lib/auth/totp-setup.ts`
+  (`resolvePendingTotpSetup`, `confirmTotpSetup`, `issueSetupToken`) and `POST
 /api/admin/auth/setup-2fa`. Resolved a real gap the task itself flagged — no login session
-exists pre-enrolment, so the screen needs another way to identify "which account" — with a
-new `admin_user.setup_token`/`setup_token_expires_at` pair, deliberately general enough for
-T6.4's re-enrolment redirect and the new T6.6 to reuse rather than each inventing their own.
-Split `app/admin/layout.tsx`/`page.tsx` into `app/admin/(shell)/` so this auth screen (and
-T6.3's future `/admin/login`) don't inherit the authenticated sidebar shell.
+  exists pre-enrolment, so the screen needs another way to identify "which account" — with a
+  new `admin_user.setup_token`/`setup_token_expires_at` pair, deliberately general enough for
+  T6.4's re-enrolment redirect and the new T6.6 to reuse rather than each inventing their own.
+  Split `app/admin/layout.tsx`/`page.tsx` into `app/admin/(shell)/` so this auth screen (and
+  T6.3's future `/admin/login`) don't inherit the authenticated sidebar shell.
 
 ## Files Changed
 

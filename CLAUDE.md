@@ -262,11 +262,18 @@ Component that touches admin or portal data — never re-implement session-check
 per-route.
 
 **Next.js 16 note:** this project scaffolded on Next.js 16 (T1.1), where `middleware.ts` is
-deprecated in favour of `app/proxy.ts` (a `proxy` function, running on the Node.js runtime by
-default, not Edge). Any route-level enforcement for `/admin` or `/portal` session checks —
-the "never assumed from client-side routing" requirement above — must be implemented in
-`app/proxy.ts`, never `middleware.ts`: a stray `middleware.ts` is silently ignored at build
-time with no error, which would make auth enforcement silently stop running.
+deprecated in favour of `proxy.ts` (a `proxy` function, running on the Node.js runtime by
+default, not Edge). **`proxy.ts` lives at the project root, sibling to `app/`, never inside
+`app/`** — corrected at T6.3 (session 39) after a real, hit-for-real bug: this file was
+first written at `app/proxy.ts`, which Next.js silently never runs at all (no build error,
+no dev-server warning — the route it was supposed to guard just stayed completely
+unprotected). Confirmed against this project's own bundled Next.js docs
+(`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`): "Create
+a `proxy.ts`... in the project root... so that it is located at the same level as `pages` or
+`app`." Any route-level enforcement for `/admin` or `/portal` session checks — the "never
+assumed from client-side routing" requirement above — must be implemented in `proxy.ts`,
+never `middleware.ts`: a stray `middleware.ts` is silently ignored at build time with no
+error, which would make auth enforcement silently stop running.
 
 **Next.js 16 note (typed routes):** plain `tsc --noEmit` fails on a fresh checkout —
 `app/layout.tsx`'s `LayoutProps<'/'>` (and other typed-route helpers) are ambient types Next
