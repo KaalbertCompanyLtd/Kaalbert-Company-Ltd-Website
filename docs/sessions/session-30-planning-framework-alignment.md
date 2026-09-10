@@ -22,7 +22,7 @@ a commit-message-format `PreToolUse` hook. No application code, schema, or task 
 - CLAUDE.md — condensed MCP Server Setup, Session Management, and Git Commit Protocol to
   short pointer sections (42,606 → 35,133 characters); updated "Memory file format and
   ordering" to document the new `Status` field on `decision-log.md`/`architecture-
-  decisions.md`; updated Rollback/Revision Protocol to require flipping the original entry's
+decisions.md`; updated Rollback/Revision Protocol to require flipping the original entry's
   `Status` to `Superseded` in place; added two Task Completion Checklist items for
   orphaned-fix and Status-flip hygiene.
 - `.claude/skills/mcp-server-setup/SKILL.md` — new, full MCP setup/verification/server-install
@@ -62,7 +62,7 @@ a commit-message-format `PreToolUse` hook. No application code, schema, or task 
   session 29) and had no valid ID at all for this session's own tooling-only commit. Rather
   than invent a fake task ID, documented all three forms in the `git-commit-protocol` skill.
 - **Did not live-test the hook via a real `git commit` in this session.** A `.claude/
-  settings.json` hook change, like an MCP server change, only takes effect after a session
+settings.json` hook change, like an MCP server change, only takes effect after a session
   restart. Running a real commit against the not-yet-reloaded settings risked creating an
   unwanted commit if the hook silently wasn't active yet — verified the script's logic via
   direct pipe-testing instead (five synthesized payloads, all correct).

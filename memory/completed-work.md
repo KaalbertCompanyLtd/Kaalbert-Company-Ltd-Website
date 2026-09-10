@@ -14,6 +14,38 @@ Protocol):
 
 ---
 
+## 2026-09-10
+
+**Task:** T1.1 follow-up — pre-push quality-gate hook
+**Summary:** CLAUDE.md's Quality Gates section already claimed a pre-push hook existed
+("runs lint, format-check, type-check, and tests, and blocks the push if any fail") and its
+Next.js 16 typed-routes note claimed it was "wired into the `typecheck` script, the pre-push
+hook, and CI already" — neither was true; no `.git/hooks/pre-push` or tracked hook existed.
+Prompted by the user reporting repeat CI failures on GitHub. Root-caused the actual last CI
+failure first: `npm run format:check` failed on two files (`memory/decision-log.md`,
+`docs/sessions/session-30-planning-framework-alignment.md`) with stray line-wrap/emphasis
+issues from session 30 — fixed via `prettier --write`. `npm run lint`, `npm run typecheck`,
+and `npm run test` all already passed clean. Then built the actual hook: a tracked
+`.githooks/pre-push` script (git-native `core.hooksPath`, no new dependency) running lint →
+format:check → typecheck → test in that order, aborting on the first failure with a clear
+message; `npm run prepare` (added to `package.json`, auto-runs on `npm install`/`npm ci`) sets
+`core.hooksPath` to `.githooks` so every clone gets it automatically, not just this machine.
+Verified by direct invocation: a clean run passes all four gates, and an injected
+formatting error correctly aborts with exit code 1 before reaching later gates. Also added a
+`Test` step to `.github/workflows/ci.yml` (previously only type-check/lint/format-check),
+since CLAUDE.md's own Quality Gates list requires `npm run test` as a hard gate and it's
+DB-free (jsdom environment, no live Prisma calls) so it costs nothing to run in CI.
+**Files Changed:** `.githooks/pre-push` (new), `package.json` (`prepare` script),
+`.github/workflows/ci.yml` (added `Test` step), `memory/decision-log.md` and
+`docs/sessions/session-30-planning-framework-alignment.md` (Prettier formatting fix).
+**Related Feature:** none — infrastructure/tooling, not a `docs/features/*.md` feature.
+**Notes:** No `memory/technical-debt.md` entry needed — this is the "small, owning task
+already shipped, fix it now" case (T1.1 shipped session 01), not a fix deferred to a future
+task. A dev who bypasses the hook with `git push --no-verify` still has CI (now including
+tests) as a backstop.
+
+---
+
 ## 2026-09-06 (session 30)
 
 **Task:** process — align project with the updated `PROJECT_PLANNING_FRAMEWORK.md`

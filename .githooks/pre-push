@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Pre-push quality gate for kaalbert-web (CLAUDE.md "Quality Gates" section).
+# Mirrors .github/workflows/ci.yml plus the test suite CI doesn't yet run, so a push
+# never reaches GitHub Actions with a failure GitHub would have caught first.
+# Installed via `npm run prepare` (sets core.hooksPath) — see package.json.
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+echo "Running pre-push quality gates..."
+echo
+
+run_gate() {
+  local name="$1"
+  shift
+  echo "-> $name"
+  if ! "$@"; then
+    echo
+    echo "pre-push: '$name' failed — push blocked." >&2
+    echo "Fix the issue above, or run 'git push --no-verify' to bypass (not recommended)." >&2
+    exit 1
+  fi
+  echo
+}
+
+run_gate "lint (npm run lint)" npm run lint --silent
+run_gate "format check (npm run format:check)" npm run format:check --silent
+run_gate "type-check (npm run typecheck)" npm run typecheck --silent
+run_gate "tests (npm run test)" npm run test --silent
+
+echo "All pre-push quality gates passed."

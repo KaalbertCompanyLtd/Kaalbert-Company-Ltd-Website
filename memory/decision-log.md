@@ -2,6 +2,27 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 — Pre-push hook implemented via `core.hooksPath` + `npm run prepare`, not Husky
+
+**Status:** Standing
+
+**Summary:** CLAUDE.md had described a pre-push hook as already existing since at least
+session 30 (Quality Gates section, and the Next.js 16 typed-routes note), but it was never
+actually built — `.git/hooks/pre-push` didn't exist and no hook-manager dependency was
+installed. Surfaced when the user reported repeated GitHub CI failures and asked for a
+pre-push hook so failures surface locally first. Chose git's native `core.hooksPath` pointing
+at a tracked `.githooks/pre-push` script over adding Husky (or similar): the project's ADR
+0001 "packages are building blocks, not owners" ethos plus the general "don't add a
+dependency for what a few lines of native tooling already does" preference made a
+dependency-free hook the better fit here — `core.hooksPath` is a one-line `git config` call.
+`npm run prepare` (a script npm already auto-runs on `install`/`ci`) sets it, so every fresh
+clone gets the hook with no manual step. The hook runs lint → format:check → typecheck →
+test, aborting on first failure, matching the exact order CLAUDE.md's Quality Gates section
+already described.
+
+**Related Documents:** `memory/completed-work.md` (2026-09-10 entry, "T1.1 follow-up"),
+`.githooks/pre-push`, `package.json` (`prepare` script), `.github/workflows/ci.yml`.
+
 ## 2026-09-06 (session 30) — Project aligned with the updated PROJECT_PLANNING_FRAMEWORK.md; commit-message hook added; Status field backfilled onto decision-log.md/architecture-decisions.md
 
 **Status:** Standing
@@ -38,7 +59,7 @@ keep this project's existing no-trailer rule and override the session default fo
 **Decisions made:**
 
 - Extracted `.claude/skills/mcp-server-setup/SKILL.md`, `.claude/skills/session-management/
-  SKILL.md`, and `.claude/skills/git-commit-protocol/SKILL.md` from CLAUDE.md's inline
+SKILL.md`, and `.claude/skills/git-commit-protocol/SKILL.md` from CLAUDE.md's inline
   sections, leaving short pointer versions in CLAUDE.md (now 35,133 characters). AGENTS.md
   is untouched — it has no skill-loading mechanism and must stay fully self-contained for
   non-Claude-Code tools.
@@ -58,7 +79,7 @@ keep this project's existing no-trailer rule and override the session default fo
   header, `Co-Authored-By` trailer, non-commit command, `--amend`) before trusting it; did
   **not** test it via a real `git commit` in the same session that just wired it into
   `.claude/settings.json`, since a hook change (like an MCP server change) only takes effect
-  after a session restart — running a real commit against the *old*, not-yet-reloaded
+  after a session restart — running a real commit against the _old_, not-yet-reloaded
   settings could have created an unwanted commit if the hook silently wasn't active yet.
 - **New commit-ID convention, discovered as a side effect of writing this very entry's own
   commit**: the hook as first built only accepted the `T##-##` task-ID form, but this
