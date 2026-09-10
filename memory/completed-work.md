@@ -14,6 +14,41 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T6.5, session 41)
+
+**Task:** T6.5 — Account deactivation + immediate session invalidation
+**Summary:** Added `admin_user.active` (default `true`) and its enforcement: `lib/auth/
+session.ts`'s new `deactivateAdminUser(adminUserId)` flips `active` to `false` and deletes
+every `admin_session` row for that account in one transaction (the primary mechanism);
+`verifySession` also independently checks `active` on every lookup as defense in depth;
+`loginWithPassword` refuses to issue even a challenge token for a deactivated account, with a
+distinct message shown only after the password is confirmed correct. No UI or API route this
+task, per its own Input→Output line (deactivation's real trigger is Milestone 7's Team
+content area) — this task ships the underlying mechanism only, same as `setupToken` before
+any screen used it.
+Verified for real via a throwaway database-backed script (deleted before commit, same
+pattern T6.1 established for schema-only work with nothing yet calling it — no UI/route
+exists for this task to exercise via Playwright MCP): created a real account + session,
+confirmed `active: true` by default, deactivated it, confirmed `active: false` and zero
+remaining session rows in the database, confirmed the now-orphaned session token is rejected
+by `verifySession`, confirmed a fresh `loginWithPassword` attempt is refused with the
+distinct deactivation message, and independently exercised the defense-in-depth layer by
+creating a session directly on an already-inactive account (bypassing `deactivateAdminUser`
+on purpose) and confirming `verifySession` rejected and cleaned it up too. Every expectation
+matched exactly.
+**Files Changed:** `prisma/schema.prisma` (`AdminUser.active`),
+`prisma/migrations/20260910230808_t6_5_admin_user_active/`, `lib/auth/session.ts` + `.test.ts`
+(`deactivateAdminUser`, `verifySession` extended), `lib/auth/login.ts` + `.test.ts`
+(`loginWithPassword` extended), `memory/decision-log.md`.
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, 126/126 tests across 18
+files, 3 new). `docs/user-guide.md` **not** updated — this task has no firm-visible surface
+of its own yet (no UI until Milestone 7's Team area). Milestone 6 is **not yet complete** —
+T6.6 (account provisioning) is still open; the "Website Build Status" Artifact update is
+deferred until that lands too, per this task's own checklist note.
+
+---
+
 ## 2026-09-10 (T6.4, session 40)
 
 **Task:** T6.4 — Backup code recovery

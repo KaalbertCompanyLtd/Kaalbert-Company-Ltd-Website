@@ -895,6 +895,19 @@ model LandingPage {
 /// library-returned `result.timeStep` here after every successful login verification. Not
 /// exercised by T6.2's `confirmTotpSetup` — a setup token is already single-use by
 /// construction, so it has no repeat-verification window to protect against replay within.
+///
+/// `active` — added at T6.5, beyond `admin-authentication.md`'s original Data requirements
+/// list, same "gap found building the real thing" pattern as every field added to this model
+/// before it. Backs that same doc's own edge case ("a partner account is deactivated... session
+/// invalidated immediately, not merely on next login") — `lib/auth/session.ts`'s
+/// `deactivateAdminUser` flips this to `false` and deletes every live `AdminSession` row for
+/// the account in one transaction; `verifySession` also checks it directly on every lookup
+/// (defense in depth, not reliance on the delete alone), and `lib/auth/login.ts`'s
+/// `loginWithPassword` refuses to issue even a challenge token for an inactive account, so a
+/// deactivated partner can't start a fresh session either. Defaults `true` — every account is
+/// active until an admin says otherwise. No UI sets this yet (Milestone 7's Team area, per
+/// this task's own Input→Output line) — `lib/`-level only, same as `setupToken` before any
+/// screen read/wrote it.
 model AdminUser {
   id                   Int               @id @default(autoincrement())
   name                 String
@@ -914,6 +927,8 @@ model AdminUser {
   /// RFC 6238 time step of the last successfully verified login TOTP code — see model
   /// doc-comment. Null for an account that has never completed a login yet.
   lastVerifiedTotpStep Int?              @map("last_verified_totp_step")
+  /// `false` once an admin deactivates this account — see model doc-comment.
+  active               Boolean           @default(true)
   backupCodes          AdminBackupCode[]
   sessions             AdminSession[]
 
@@ -1001,11 +1016,11 @@ model AdminSession {
 /// proportionate for now given real volume (five partners, occasional logins), not an
 /// oversight; revisit if that volume ever changes.
 model AdminLoginAttempt {
-  id         Int                    @id @default(autoincrement())
+  id         Int                   @id @default(autoincrement())
   identifier String
   kind       AdminLoginAttemptKind
   success    Boolean
-  createdAt  DateTime               @default(now()) @map("created_at")
+  createdAt  DateTime              @default(now()) @map("created_at")
 
   @@index([identifier, kind, createdAt])
   @@map("admin_login_attempt")

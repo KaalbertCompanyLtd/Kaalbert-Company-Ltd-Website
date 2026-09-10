@@ -92,6 +92,7 @@ const BASE_USER = {
   setupToken: null,
   setupTokenExpiresAt: null,
   lastVerifiedTotpStep: null as number | null,
+  active: true,
 };
 
 const UNUSED_BACKUP_CODES = [
@@ -160,6 +161,15 @@ describe("loginWithPassword — deliberate failed attempts", () => {
 
     await expect(loginWithPassword(BASE_USER.email, "correct-password")).rejects.toThrow(
       "hasn't completed two-factor setup",
+    );
+  });
+
+  it("rejects a deactivated account, with a distinct message, only after the password is confirmed correct", async () => {
+    findUniqueMock.mockResolvedValue({ ...BASE_USER, active: false } as never);
+    verifyPasswordMock.mockResolvedValue(true);
+
+    await expect(loginWithPassword(BASE_USER.email, "correct-password")).rejects.toThrow(
+      "This account has been deactivated.",
     );
   });
 });

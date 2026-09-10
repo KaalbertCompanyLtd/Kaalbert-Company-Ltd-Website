@@ -2,6 +2,47 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T6.5, session 41) — Account deactivation: two independent enforcement layers, no UI/route this task — verified via a real script instead, same as T6.1
+
+**Status:** Standing
+
+**Summary:** T6.5 built `admin_user.active` and its enforcement, resolving the one real
+design question this task's own Input→Output line left open: no UI or API route exists for
+deactivation yet (Milestone 7's Team area owns that), so how does a schema-only-in-practice
+task ship something _real_, not just an inert column?
+
+- **Two independent enforcement layers, both real work, not one covering for the other.**
+  (1) `lib/auth/session.ts`'s new `deactivateAdminUser(adminUserId)` — the primary
+  mechanism — flips `active: false` and deletes every `admin_session` row for that account
+  in one transaction. On its own this already satisfies the acceptance criterion (a deleted
+  session simply fails `verifySession`'s own lookup). (2) `verifySession` _also_ joins and
+  checks `admin_user.active` directly, rejecting and lazily deleting any session found on an
+  inactive account — defense in depth for the narrow case of a session that exists without
+  having gone through `deactivateAdminUser`'s own transaction (e.g. one created in the same
+  instant a deactivation commits elsewhere). Confirmed for real: created a session directly
+  on an already-`active: false` account (bypassing `deactivateAdminUser` on purpose, to
+  exercise layer 2 in isolation) and confirmed `verifySession` rejected it and cleaned up the
+  row, exactly as designed.
+- **`loginWithPassword` also refuses to authenticate a deactivated account** — checked once,
+  in the single most upstream place (right after password verification succeeds, same
+  placement as the existing `totpEnabled` check), rather than duplicated across
+  `verifyTotpLogin`/`verifyBackupCodeLogin` too — an inactive partner can't start a _new_
+  session, not just have old ones survive. Message is distinct ("This account has been
+  deactivated") and shown only after the password is confirmed correct — the realistic
+  person hitting this (per `admin-authentication.md`: "e.g. leaves the firm") already knows
+  their own password, so this leaks nothing new to them.
+- **No UI/API route this task, verified via a real database-backed script instead** — same
+  precedent T6.1 set for schema-only work with nothing yet calling it: rather than inventing
+  a premature endpoint Milestone 7's own Team task should own, confirmed the full mechanism
+  live against the real dev database (create session → deactivate → confirm session dead,
+  fresh login refused, and the defense-in-depth path independently).
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.5), `docs/features/admin-
+authentication.md`, `lib/auth/session.ts` (`deactivateAdminUser`, `verifySession`),
+`lib/auth/login.ts` (`loginWithPassword`).
+
+---
+
 ## 2026-09-10 (T6.4, session 40) — Backup-code recovery grants a real session immediately, forced re-enrolment is a client-side redirect not a server-side gate; matching a code needs a bcrypt loop, not a lookup
 
 **Status:** Standing

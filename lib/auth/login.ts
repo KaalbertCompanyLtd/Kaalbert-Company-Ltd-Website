@@ -66,6 +66,13 @@ export async function loginWithPassword(email: string, password: string): Promis
   if (!success || !user) {
     throw new LoginError(INVALID_CREDENTIALS_MESSAGE);
   }
+  if (!user.active) {
+    // Checked only after a correct password, same placement as the totpEnabled check below
+    // — a distinct, honest message here leaks nothing an ex-partner (the realistic case,
+    // per admin-authentication.md's "e.g. leaves the firm") doesn't already know: they just
+    // proved they know this account's own password.
+    throw new LoginError("This account has been deactivated.");
+  }
   if (!user.totpEnabled) {
     // A data-integrity situation (an account somehow reachable at login without ever
     // completing T6.2's setup), not a wrong-password case — a distinct, honest message,

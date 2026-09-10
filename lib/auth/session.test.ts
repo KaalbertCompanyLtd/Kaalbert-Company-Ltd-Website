@@ -9,10 +9,19 @@ vi.mock("@/lib/prisma", () => ({
       delete: vi.fn(),
       deleteMany: vi.fn(),
     },
+    adminUser: {
+      update: vi.fn(),
+    },
+    $transaction: vi.fn(),
   },
 }));
 
-import { createSession, destroySession, verifySession } from "@/lib/auth/session";
+import {
+  createSession,
+  deactivateAdminUser,
+  destroySession,
+  verifySession,
+} from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 
 const createMock = vi.mocked(prisma.adminSession.create);
@@ -20,6 +29,8 @@ const findUniqueMock = vi.mocked(prisma.adminSession.findUnique);
 const updateMock = vi.mocked(prisma.adminSession.update);
 const deleteMock = vi.mocked(prisma.adminSession.delete);
 const deleteManyMock = vi.mocked(prisma.adminSession.deleteMany);
+const adminUserUpdateMock = vi.mocked(prisma.adminUser.update);
+const transactionMock = vi.mocked(prisma.$transaction);
 
 beforeEach(() => {
   createMock.mockReset().mockResolvedValue({} as never);
@@ -27,6 +38,8 @@ beforeEach(() => {
   updateMock.mockReset().mockResolvedValue({} as never);
   deleteMock.mockReset().mockResolvedValue({} as never);
   deleteManyMock.mockReset().mockResolvedValue({ count: 1 } as never);
+  adminUserUpdateMock.mockReset().mockResolvedValue({} as never);
+  transactionMock.mockReset().mockResolvedValue([] as never);
 });
 
 describe("createSession", () => {
@@ -65,6 +78,7 @@ describe("verifySession", () => {
       createdAt: new Date(Date.now() - 13 * 60 * 60 * 1000),
       lastActivityAt: new Date(),
       expiresAt: new Date(Date.now() - 1000),
+      adminUser: { active: true },
     } as never);
 
     await expect(verifySession("tok")).resolves.toBeNull();
@@ -79,10 +93,26 @@ describe("verifySession", () => {
       createdAt: new Date(Date.now() - 60 * 60 * 1000),
       lastActivityAt: new Date(Date.now() - 31 * 60 * 1000),
       expiresAt: new Date(Date.now() + 11 * 60 * 60 * 1000),
+      adminUser: { active: true },
     } as never);
 
     await expect(verifySession("tok")).resolves.toBeNull();
     expect(deleteMock).toHaveBeenCalledWith({ where: { id: 2 } });
+  });
+
+  it("returns null and deletes the row when the account has been deactivated", async () => {
+    findUniqueMock.mockResolvedValue({
+      id: 4,
+      adminUserId: 7,
+      token: "tok",
+      createdAt: new Date(Date.now() - 60 * 60 * 1000),
+      lastActivityAt: new Date(Date.now() - 5 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 11 * 60 * 60 * 1000),
+      adminUser: { active: false },
+    } as never);
+
+    await expect(verifySession("tok")).resolves.toBeNull();
+    expect(deleteMock).toHaveBeenCalledWith({ where: { id: 4 } });
   });
 
   it("returns the session and bumps lastActivityAt when still valid", async () => {
@@ -93,6 +123,7 @@ describe("verifySession", () => {
       createdAt: new Date(Date.now() - 60 * 60 * 1000),
       lastActivityAt: new Date(Date.now() - 5 * 60 * 1000),
       expiresAt: new Date(Date.now() + 11 * 60 * 60 * 1000),
+      adminUser: { active: true },
     } as never);
 
     await expect(verifySession("tok")).resolves.toEqual({ sessionId: 3, adminUserId: 7 });
@@ -100,6 +131,19 @@ describe("verifySession", () => {
     const call = updateMock.mock.calls[0][0];
     expect(call.where).toEqual({ id: 3 });
     expect(deleteMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("deactivateAdminUser", () => {
+  it("flips active to false and deletes every session for the account, in one transaction", async () => {
+    await deactivateAdminUser(9);
+
+    expect(transactionMock).toHaveBeenCalledOnce();
+    expect(adminUserUpdateMock).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: { active: false },
+    });
+    expect(deleteManyMock).toHaveBeenCalledWith({ where: { adminUserId: 9 } });
   });
 });
 
