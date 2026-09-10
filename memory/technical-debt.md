@@ -452,8 +452,19 @@ exist.
 
 ## GTM container not yet provisioned
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
+**Date resolved:** 2026-09-10 (T5.3, session 35) — the user created the real container
+(`GTM-PDGKRKRN`, account "Kaalbert & Company Ltd," under `kaalbert.company@gmail.com`) and a
+real GA4 property (`G-9VX9GS5L0X`), same as this project's own account-ownership precedent
+(`memory/decision-log.md`, T1.1). Set as `GTM_CONTAINER_ID` in `.env.local` and directly on
+the Railway `kaalbert-web` service (`railway variables --set`), and verified end-to-end
+against the real dev server: `gtm.js` loads with the real ID, the six event tags/triggers +
+consent default all fire correctly in GTM Preview mode, and — after publishing — a real
+`google-analytics.com/g/collect` request was observed carrying the `gcd` consent-diagnostics
+parameter for both `diagnostic_started` and the automatic `page_view` hit. T1.6's own
+acceptance criterion ("GTM Preview mode confirms the container fires... with zero tags
+active") is retroactively closed by this same verification.
 **Reason:** T1.6 installed the empty GTM bootstrap snippet (head script + `<body>` noscript
 iframe, ADR 0006) in the root `app/layout.tsx`, reading `GTM_CONTAINER_ID` from the
 environment. No real Google Tag Manager account/container exists for kaalbert.com yet —

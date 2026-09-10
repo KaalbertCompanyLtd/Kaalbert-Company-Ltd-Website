@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ConsentBanner } from "@/components/consent-banner";
 import {
   GoogleTagManagerBodyFrame,
   GoogleTagManagerHeadScript,
@@ -21,9 +22,10 @@ export const metadata: Metadata = {
     "Get your numbers, systems and plans into the shape banks, investors and boards expect. Take the free, six-minute Business Health Check.",
 };
 
-// Empty GTM container (ADR 0006) — no tags configured yet, see T1.6. Unset in dev/CI until
-// a real container is provisioned (memory/technical-debt.md → "GTM container not yet
-// provisioned"), so the snippet renders only once GTM_CONTAINER_ID is set.
+// The real container (GTM-PDGKRKRN, provisioned T5.3, see memory/decision-log.md) — populated
+// with the six conversion events, GA4 linkage, and consent mode (ADR 0006). Still read from
+// the environment rather than hardcoded, and the snippet still renders nothing if unset
+// (kept for local/CI environments without a real ID), consistent with the original T1.6 design.
 const gtmContainerId = process.env.GTM_CONTAINER_ID;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -33,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         {gtmContainerId ? <GoogleTagManagerBodyFrame containerId={gtmContainerId} /> : null}
         {children}
+        <ConsentBanner />
       </body>
     </html>
   );

@@ -33,3 +33,31 @@ export function pushDataLayerEvent(event: DataLayerEvent, payload: Record<string
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push({ event, ...payload });
 }
+
+/**
+ * Google's consent-mode `dataLayer.push(['consent', 'update', {...}])` command shape (T5.3,
+ * measurement-and-attribution.md's FR-7.2) — distinct from `pushDataLayerEvent`'s
+ * `{event, ...payload}` shape, since GTM/GA4 read consent commands as a 3-element array, not
+ * an event object. The container's own "Consent Default" tag (fired on GTM's Consent
+ * Initialization trigger) sets every signal to `denied` by default before any other tag can
+ * fire; this function is only ever called after a visitor has made an explicit choice on the
+ * site's cookie banner. Declining still lets every Google tag fire in Google's own "modelled"
+ * state — never blocked outright — satisfying "the firm retains modelled measurement from
+ * visitors who decline."
+ */
+export function pushConsentUpdate(state: "granted" | "denied") {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dataLayer = window.dataLayer ?? [];
+  window.dataLayer.push([
+    "consent",
+    "update",
+    {
+      ad_storage: state,
+      ad_user_data: state,
+      ad_personalization: state,
+      analytics_storage: state,
+    },
+  ]);
+}

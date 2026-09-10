@@ -2,6 +2,64 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T5.3, session 35) — GTM container populated: GA4 config + six event tags via one shared `{{GA4 Measurement ID}}` constant, Consent Default via Custom HTML on the Consent Initialization trigger, container-level Consent Overview (BETA) enabled
+
+**Status:** Standing
+
+**Summary:** With the real GTM container (`GTM-PDGKRKRN`) and GA4 property (`G-9VX9GS5L0X`)
+now provisioned by the user (resolving `memory/technical-debt.md` → "GTM container not yet
+provisioned"), populated the container directly via GTM's own web UI (driven through the
+user's real Chrome, `kaalbert.company@gmail.com` — not the personal account this session's
+Claude subscription happened to default to; had to explicitly switch accounts mid-session).
+Built: a `Google Tag` type tag ("GA4 Configuration," Tag ID `G-9VX9GS5L0X`, fired on
+`Initialization - All Pages`) that every `Google Analytics: GA4 Event` tag auto-detects and
+reuses ("Google tag found in this container") rather than re-entering the Measurement ID six
+times; a single `Constant` variable (`{{GA4 Measurement ID}}`) referenced by every event tag
+instead, for the same reason; six `GA4 Event` tags + six matching `Custom Event` triggers
+(`diagnostic_started`/`diagnostic_completed`/`summary_requested`/`checklist_downloaded`/
+`enquiry_submitted`/`whatsapp_opened`, exact string match against `lib/data-layer.ts`'s
+`DataLayerEvent` union); a `Consent Default` Custom HTML tag (`dataLayer.push(['consent',
+'default', {...denied...}])`) on the built-in `Consent Initialization - All Pages` trigger —
+no native "Consent Mode" tag type exists in this GTM account even with the container's
+"Enable consent overview" (BETA) setting turned on, so Custom HTML is the correct, officially
+documented mechanism, not a workaround. Confirmed every `Google Analytics: GA4 Event` tag
+carries **built-in** (not manually configured) consent requirements — `ad_storage`,
+`ad_user_data`, `ad_personalization`, `analytics_storage` — automatically, satisfying FR-7.2
+without any additional per-tag consent settings. Published as Version 2 ("Live").
+
+Also built the site's own consent banner (`components/consent-banner.tsx`) and a new
+`pushConsentUpdate` helper (`lib/data-layer.ts`) — a plain fixed bottom bar with native
+`<button>`s (no Base UI primitive needed; native buttons are already fully accessible),
+Accept/Decline pushing `dataLayer.push(['consent', 'update', {...}])`, preference persisted
+in `localStorage` so it only shows once. The banner's "must render hidden during SSR, decide
+real visibility only after mount" pattern genuinely requires `setState` inside `useEffect`;
+suppressed `react-hooks/set-state-in-effect` there with a reasoning comment (same precedent
+style as `insights-article-card.tsx`'s one existing lint suppression) rather than contorting
+the component to avoid a rule that doesn't fit this specific case.
+
+**A real verification pitfall, worth recording**: mid-verification, every real-browser test
+(both the Playwright verification browser and the user's own Chrome) showed zero tags firing
+on a normal page load, even though GTM Preview mode showed everything firing correctly. Spent
+real effort chasing this as a suspected implementation bug before finding the actual cause:
+`gtm.js` is served with `Cache-Control: private, max-age=900`, and every test browser had
+already cached the _empty_ pre-T5.3 container from earlier in this same session (when
+`GTM_CONTAINER_ID` was first set but before any tags existed) — every subsequent "fresh"
+page load for the next 15 minutes kept silently reusing that stale cached script, regardless
+of new page navigations or even a hard reload (`Ctrl+Shift+R`) targeting the top document
+only. Confirmed via direct `fetch(url, {cache: 'no-store'})` (returned the real, current
+content) and finally via simply waiting out the 900s window on a genuinely fresh tab, which
+showed the consent-default push and a real `google-analytics.com/g/collect` request (`gcd`
+consent-diagnostics parameter present, `en=diagnostic_started`) exactly as expected. Recorded
+here so a future session testing GTM changes doesn't lose time to the same artifact — after
+any GTM publish, either wait out the cache window or test in a context that has never loaded
+`gtm.js` for this container ID before, not just "a new tab" (HTTP cache is profile-wide, not
+per-tab).
+
+**Related Documents:** `docs/tasks/05-landing-and-measurement.md` (T5.3), `docs/features/
+measurement-and-attribution.md`, `memory/technical-debt.md` ("GTM container not yet
+provisioned," now Resolved), `memory/completed-work.md` (2026-09-10 (T5.3) entry),
+`lib/data-layer.ts`, `components/consent-banner.tsx`, `app/layout.tsx`.
+
 ## 2026-09-10 (T5.2, session 34) — `downloadFileUrl` added to `LandingPage`: admin-uploadable, not developer-supplied; absence is a handled state, not debt
 
 **Status:** Standing

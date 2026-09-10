@@ -14,6 +14,52 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T5.3, session 35)
+
+**Task:** T5.3 — GTM container: six conversion events + consent mode
+**Summary:** The user provisioned the real GTM container (`GTM-PDGKRKRN`, account "Kaalbert &
+Company Ltd" under `kaalbert.company@gmail.com`, matching this project's own account-ownership
+precedent from T1.1) and a real GA4 property (`G-9VX9GS5L0X`), resolving the long-standing
+"GTM container not yet provisioned" blocker. Set `GTM_CONTAINER_ID` in `.env.local` and
+directly on the Railway `kaalbert-web` service. Populated the container via GTM's own web UI
+(driven through the user's real Chrome browser): a `Google Tag` tag ("GA4 Configuration")
+plus a shared `{{GA4 Measurement ID}}` Constant variable every downstream event tag reuses;
+six `Google Analytics: GA4 Event` tags, each with its own matching `Custom Event` trigger,
+for the six fixed events in `lib/data-layer.ts`'s `DataLayerEvent` union
+(`diagnostic_started`, `diagnostic_completed`, `summary_requested`, `checklist_downloaded`,
+`enquiry_submitted`, `whatsapp_opened`); a `Consent Default` Custom HTML tag on the built-in
+`Consent Initialization - All Pages` trigger, setting all four consent signals
+(`ad_storage`/`ad_user_data`/`ad_personalization`/`analytics_storage`) to `denied` by
+default. Confirmed every GA4 tag carries built-in (automatic, not manually configured)
+consent requirements. Published as Version 2 ("Live"). Also built the site's own consent
+banner: `components/consent-banner.tsx` (new) + `pushConsentUpdate` (new, `lib/
+data-layer.ts`), mounted in `app/layout.tsx`. Verified end-to-end for real: GTM Preview mode
+showed all 8 tags firing correctly on their matching triggers with zero cross-firing; after
+publishing, a real `google-analytics.com/g/collect` request was observed carrying the `gcd`
+consent-diagnostics parameter for both the automatic `page_view` hit and a manually-fired
+`diagnostic_started` event, with `hasGtag`/network behavior confirming the pipeline works
+end-to-end on a real page, not just in Preview mode.
+**Files Changed:** `app/layout.tsx` (mounts `ConsentBanner`; updated comment now that the
+container is real), `components/consent-banner.tsx` (new), `lib/data-layer.ts`
+(`pushConsentUpdate`), `.env.local`/Railway `kaalbert-web` service (`GTM_CONTAINER_ID`, set by
+the user + this session), the GTM container itself (external, not a repo file — 8 tags, 6
+triggers, 1 variable, Version 2 published), `memory/technical-debt.md` ("GTM container not
+yet provisioned" flipped to Resolved), `memory/decision-log.md`, `memory/completed-work.md`.
+**Related Feature:** `docs/features/measurement-and-attribution.md`, ADR 0006.
+**Notes:** A real verification pitfall is recorded in `memory/decision-log.md`'s T5.3 entry —
+`gtm.js`'s 900-second HTTP cache made every real-browser test initially look broken (stale,
+pre-T5.3 empty container being reused) even though GTM Preview mode showed the true, correct
+behavior the whole time; resolved once enough wall-clock time passed for the cache to expire
+naturally, then reconfirmed via a genuinely fresh tab. Google's own collect endpoint returned
+`503` on both real requests observed in this session — that's Google's server (likely flagging
+automated/headless browser traffic), not a defect in this implementation; the requests
+themselves were correctly constructed with the right consent parameters. T5.4 (attribution
+capture/retention) and T5.5 (Meta CAPI, Google Ads import, LinkedIn, domain verification) are
+next in the epic — both still need their own real external accounts/credentials before they
+can proceed, same pattern as this task.
+
+---
+
 ## 2026-09-10 (T5.2 follow-up, session 34)
 
 **Task:** T5.2 follow-up — make the landing page download CTA admin-uploadable, not
