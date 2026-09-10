@@ -14,6 +14,79 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T6.4, session 40)
+
+**Task:** T6.4 — Backup code recovery
+**Summary:** Built `POST /api/admin/auth/verify-backup-code` and `lib/auth/login.ts`'s
+`verifyBackupCodeLogin` — matches a submitted code against every unused
+`admin_backup_code` row for the account (a bcrypt loop, not a lookup, since hashes aren't
+queryable by plaintext), consumes it, resets `totpEnabled`/`totpSecret` in the same
+transaction (the addendum T6.3 left for this task), creates a real session, and issues a
+fresh `/admin/setup-2fa` link via T6.2's `issueSetupToken`. Added a `backup_code`
+`AdminLoginAttemptKind` value so this endpoint shares the same rate-limiting mechanism as
+the other three. Extended `app/admin/login/login-form.tsx` with a "use a backup code
+instead"/"use your authenticator app instead" toggle between the TOTP and backup-code
+states, and a distinct "contact another administrator" message when an account has zero
+unused codes left (`admin-authentication.md`'s own edge case — no self-service bypass
+anywhere).
+**Real gap found and fixed as a T6.2 follow-up (not new T6.4 debt)**: live-testing this
+task's own recovery flow surfaced that T6.2's `confirmTotpSetup` never retired a previous
+batch of unused backup codes — it only ever added new ones, since T6.2 itself was only ever
+called once per account before this task gave it a second real caller. Fixed in the same
+transaction that creates a new batch: delete every unused row for the account first. Full
+writeup in `memory/known-bugs.md` and `memory/decision-log.md`.
+Verified for real via Playwright MCP + `curl` against a real, fully-enrolled test
+`admin_user` with real (bcrypt-hashed) backup codes: the UI toggle between TOTP and
+backup-code steps works; a valid code redirects to the real, fresh `/admin/setup-2fa` link
+with a real new QR code (confirmed `totpEnabled: false`/`totpSecret: null` in the database
+immediately after); the _same_ code rejected on a second attempt; ran two full
+recovery-then-re-enrolment cycles back to back and confirmed in the database that only
+actually-_used_ codes survive across cycles (the retirement fix, working as intended); rate
+limiting (429 after 5 failures) confirmed on this endpoint too, via a real challenge token
+from a real password login. The one thing _not_ independently live-confirmed: the "contact
+another administrator" (zero-codes-remaining) message — blocked by the rate limiter from
+this same session's own earlier testing (15-minute window, keyed by email); that exact path
+is deterministically unit-tested instead (`lib/auth/login.test.ts`). Also noted, not a bug:
+under this design a successful recovery always regenerates a fresh batch of 8, so genuinely
+reaching zero remaining codes through normal use is hard by construction — a safe outcome,
+documented honestly rather than staged. Checked mobile (390px), tablet (768px), and desktop
+(1280px) renders of the backup-code UI state.
+**Files Changed:** `prisma/schema.prisma` (`AdminLoginAttemptKind.backup_code`),
+`prisma/migrations/20260910203732_t6_4_backup_code_attempt_kind/`, `lib/auth/login.ts` +
+`.test.ts` (`verifyBackupCodeLogin`), `app/api/admin/auth/verify-backup-code/route.ts`,
+`app/admin/login/login-form.tsx` (backup-code toggle), `memory/known-bugs.md`,
+`memory/decision-log.md`. (`lib/auth/totp-setup.ts` + `.test.ts`'s own change committed
+separately, under T6.2's identity — see the follow-up entry above.)
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, 123/123 tests across 18
+files, 5 new). `docs/user-guide.md` **not** updated — still no sanctioned way for the firm
+to create its first real account (T6.6, still open), so nothing here is firm-usable yet
+without developer involvement.
+
+---
+
+## 2026-09-10 (T6.2 follow-up, session 40)
+
+**Task:** T6.2 follow-up — retire unused backup codes when generating a new batch
+**Summary:** Found live-testing T6.4's new backup-code recovery flow: `confirmTotpSetup`
+(T6.2, `lib/auth/totp-setup.ts`) only ever `createMany`'d a fresh batch of 8 backup codes,
+never retiring whatever unused codes already existed from an earlier enrolment — harmless
+at T6.2 (called once per account, ever) but a real, silently-ever-growing correctness gap
+once T6.4 gave it a second real caller (forced re-enrolment). Fixed in the same session,
+same transaction that creates the new batch: delete every _unused_ `admin_backup_code` row
+for the account first (an already-used row is left alone — inert history, same
+"never destroy a real usage record" precedent as `Subscriber.unsubscribedAt`). Confirmed for
+real across two full recovery-then-re-enrolment cycles, inspecting the database directly
+after each — only codes actually used across both cycles survived; every unused leftover
+was gone. Per CLAUDE.md's own "small fix to an already-shipped task → fix now, commit under
+that task's identity" rule, not filed as new technical debt.
+**Files Changed:** `lib/auth/totp-setup.ts` (`confirmTotpSetup`), `lib/auth/totp-setup.test.ts`.
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Committed separately from T6.4's own feature commit, under T6.2's task identity,
+per this project's established follow-up-fix convention (first used at T3.7).
+
+---
+
 ## 2026-09-10 (T6.3, session 39)
 
 **Task:** T6.3 — Login + TOTP verification + session management

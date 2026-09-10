@@ -982,10 +982,11 @@ model AdminSession {
 /// New at T6.3 — not named in `admin-authentication.md`'s Data requirements section (which
 /// only lists the three T6.1 tables), but required to build that same doc's own business rule
 /// ("repeated failed login or TOTP attempts: rate-limited to prevent brute-force") for real,
-/// across all three code-guessing endpoints this epic ends up with:
-/// `POST /api/admin/auth/login` (`kind: password`), `verify-totp` (`kind: totp`, T6.3), and
+/// across all four code/credential-guessing endpoints this epic ends up with:
+/// `POST /api/admin/auth/login` (`kind: password`), `verify-totp` (`kind: totp`, T6.3),
 /// `POST /api/admin/auth/setup-2fa` (`kind: setup_confirm`, T6.2 — see that task's own
-/// addendum in `docs/tasks/06-admin-auth.md` requiring this task to cover it too). `identifier`
+/// addendum in `docs/tasks/06-admin-auth.md` requiring this task to cover it too), and
+/// `verify-backup-code` (`kind: backup_code`, T6.4). `identifier`
 /// is always the target account's normalized email — chosen over the ephemeral
 /// `challenge_token`/`setup_token` a given attempt carries specifically so an attacker who can
 /// mint fresh tokens for the same account (e.g. by re-submitting an already-known-correct
@@ -1010,13 +1011,15 @@ model AdminLoginAttempt {
   @@map("admin_login_attempt")
 }
 
-/// The three code/credential-guessing steps `AdminLoginAttempt` rate-limits — see that
+/// The four code/credential-guessing steps `AdminLoginAttempt` rate-limits — see that
 /// model's own doc-comment for why `setup_confirm` (T6.2's endpoint) is included here even
-/// though this enum itself is new at T6.3.
+/// though this enum itself is new at T6.3. `backup_code` added at T6.4 for
+/// `verify-backup-code`'s own recovery-code guessing surface.
 enum AdminLoginAttemptKind {
   password
   totp
   setup_confirm
+  backup_code
 }
 
 /// docs/features/measurement-and-attribution.md "Data requirements" — T5.4. First-touch

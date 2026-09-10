@@ -8,17 +8,19 @@ import { Input } from "@/components/ui/input";
 
 const BTN_PRIMARY =
   "inline-flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-6 py-3 text-body font-semibold text-primary-foreground transition-colors hover:bg-pine-700 disabled:cursor-not-allowed disabled:opacity-60";
+const LINK_SUBTLE = "text-caption text-primary font-semibold hover:underline";
 
-type Step = "password" | "totp";
+type Step = "password" | "totp" | "backup-code";
 type Status = "idle" | "submitting" | "error";
 
 /**
- * The two-step client half of `/admin/login`: password (`ui/mockups/f-admin-auth/
- * admin-login.html`), then a 6-digit TOTP code (no dedicated mockup for this step — inferred
- * from T6.2's own `totp-setup-form.tsx` Step-1 pattern, per `docs/tasks/06-admin-auth.md`
- * T6.3's own note). Never imports `lib/auth/` (which touches `@/lib/prisma`) — same rule
- * `totp-setup-form.tsx` already follows — everything happens via `fetch` against the two API
- * routes this task adds.
+ * The client half of `/admin/login`: password (`ui/mockups/f-admin-auth/admin-login.html`),
+ * then either a 6-digit TOTP code or, via the "use a backup code instead" fallback (T6.4), a
+ * backup code (neither step has a dedicated mockup — both inferred from T6.2's own
+ * `totp-setup-form.tsx` Step-1 `.code-input` pattern, per `docs/tasks/06-admin-auth.md`'s own
+ * notes at T6.3/T6.4). Never imports `lib/auth/` (which touches `@/lib/prisma`) — same rule
+ * `totp-setup-form.tsx` already follows — everything happens via `fetch` against the three
+ * API routes this and the prior task add.
  */
 export function LoginForm() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -89,6 +92,93 @@ export function LoginForm() {
     }
   }
 
+  async function handleBackupCodeSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!challengeToken) return;
+    setStatus("submitting");
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch("/api/admin/auth/verify-backup-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challenge_token: challengeToken, code: backupCode }),
+      });
+      const data: { status: string; setup_url?: string; message?: string } = await response.json();
+
+      if (!response.ok || !data.setup_url) {
+        setStatus("error");
+        setErrorMessage(data.message ?? "Something went wrong — please try again.");
+        return;
+      }
+
+      // Same reasoning as handleTotpSubmit — the session cookie is already set by the time
+      // this navigation fires. A backup-code login always lands on the forced re-enrolment
+      // screen, never `/admin` directly.
+      router.push(data.setup_url);
+    } catch {
+      setStatus("error");
+      setErrorMessage("Something went wrong — please try again.");
+    }
+  }
+
+  function switchStep(next: Step) {
+    setStep(next);
+    setStatus("idle");
+    setErrorMessage(null);
+  }
+
+  if (step === "backup-code") {
+    return (
+      <div>
+        <h1 className="text-h3 font-display text-primary mb-1.5 text-center font-bold">
+          Enter a backup code
+        </h1>
+        <p className="text-caption text-muted-foreground mb-5 text-center">
+          Each backup code works once. Using one will require setting up a new authenticator device.
+        </p>
+
+        <form onSubmit={handleBackupCodeSubmit} noValidate>
+          <Field className="mb-4">
+            <FieldLabel htmlFor="backupCode">Backup code</FieldLabel>
+            <Input
+              id="backupCode"
+              name="backupCode"
+              type="text"
+              autoComplete="off"
+              maxLength={9}
+              required
+              autoFocus
+              className="text-center font-mono text-[1.25rem] tracking-[0.15em] uppercase"
+              value={backupCode}
+              onChange={(event) => setBackupCode(event.target.value.toUpperCase())}
+            />
+          </Field>
+
+          {status === "error" && errorMessage && (
+            <FieldError className="mb-3" role="alert">
+              {errorMessage}
+            </FieldError>
+          )}
+
+          <button
+            type="submit"
+            className={BTN_PRIMARY}
+            disabled={status === "submitting" || backupCode.length === 0}
+          >
+            {status === "submitting" ? "Verifying…" : "Continue"}
+          </button>
+        </form>
+
+        <p className="mt-4 text-center">
+          <button type="button" className={LINK_SUBTLE} onClick={() => switchStep("totp")}>
+            Use your authenticator app instead
+          </button>
+        </p>
+      </div>
+    );
+  }
+
   if (step === "totp") {
     return (
       <div>
@@ -131,6 +221,12 @@ export function LoginForm() {
             {status === "submitting" ? "Verifying…" : "Continue"}
           </button>
         </form>
+
+        <p className="mt-4 text-center">
+          <button type="button" className={LINK_SUBTLE} onClick={() => switchStep("backup-code")}>
+            Use a backup code instead
+          </button>
+        </p>
       </div>
     );
   }

@@ -2,6 +2,48 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (T6.4, session 40) — Backup-code recovery grants a real session immediately, forced re-enrolment is a client-side redirect not a server-side gate; matching a code needs a bcrypt loop, not a lookup
+
+**Status:** Standing
+
+**Summary:** T6.4 built `verify-backup-code` recovery and, in doing so, resolved one real
+design question the task's own literal acceptance criteria didn't spell out, plus fixed a
+real gap the new re-enrolment path exposed in already-shipped T6.2 code.
+
+- **A valid backup code creates a real session immediately** (`lib/auth/session.ts`'s
+  `createSession`, same as a normal TOTP login), at the same time as issuing the forced
+  `/admin/setup-2fa` re-enrolment link — not one or the other. A backup code is a complete,
+  legitimate second factor; there's no reason to withhold a session pending re-enrolment.
+  **Consequence, deliberately accepted**: `proxy.ts` only ever checks session validity, not
+  `admin_user.totp_enabled` — so nothing server-side actually _forces_ a partner who just
+  recovered via backup code to finish re-enrolment before visiting `/admin` directly; the
+  redirect is a `login-form.tsx` `router.push`, a UX nudge, not a hard gate. Accepted because
+  the account's own `totpEnabled: false` state already makes the _next_ login impossible
+  without finishing setup (`loginWithPassword` blocks it) — so re-enrolment becomes
+  unavoidable the moment the current session ends, just not instantly enforced mid-session.
+  Revisit if that gap ever matters in practice; not worth a real server-side check for a
+  five-partner internal tool today.
+- **Matching a submitted code against `admin_backup_code.code_hash` is a loop over every
+  unused row, not a query** — bcrypt hashes aren't matchable by a WHERE clause, so
+  `verifyBackupCodeLogin` fetches every `usedAt: null` row for the account (at most 8) and
+  tries `verifyPassword` against each. Cheap at this scale; not treated as a timing concern
+  worth engineering around, same proportionality call T6.3 already made for
+  `loginWithPassword`'s own account-existence timing.
+- **Real bug found and fixed, sequenced as a T6.2 follow-up, not new T6.4 debt**:
+  `confirmTotpSetup` (T6.2) never retired a previous batch of unused backup codes — it only
+  ever added new ones. T6.2 never needed to worry about this (called once per account,
+  ever); T6.4 is the first thing that calls it a second time (after recovery), which exposed
+  an unbounded, never-pruned accumulation of "current" codes. Fixed in the same transaction
+  that creates a new batch: delete every unused row for that account first. Confirmed for
+  real across two full recovery-then-re-enrolment cycles. Full writeup in
+  `memory/known-bugs.md`.
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.4), `docs/features/admin-
+authentication.md`, `lib/auth/login.ts` (`verifyBackupCodeLogin`), `lib/auth/totp-setup.ts`
+(`confirmTotpSetup`), `memory/known-bugs.md`.
+
+---
+
 ## 2026-09-10 (T6.3, session 39) — `proxy.ts` moved to the project root (real bug, not a style choice); session/rate-limit/replay/challenge-token design decisions
 
 **Status:** Standing

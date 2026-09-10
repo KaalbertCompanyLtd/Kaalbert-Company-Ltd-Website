@@ -16,6 +16,37 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## `confirmTotpSetup` never retired a previous batch of unused backup codes
+
+**Status:** Fixed
+**Severity:** Medium — not a security hole in the classic sense (an old code was never
+guessable by anyone but its original owner), but a real correctness gap: the "8 backup
+codes" a partner is shown and told to save was never actually the _complete_ current set
+once they re-enrolled more than once — stale codes from every earlier enrolment silently
+stayed valid forever alongside each new batch.
+**Date found:** 2026-09-10 (T6.4, session 40 — found live-testing the new backup-code
+recovery flow: recovered with a code, completed re-enrolment, then inspected the database
+directly and found the _previous_ enrolment's unused codes still sitting there, `usedAt:
+null`, right next to the brand-new 8)
+**Description:** `lib/auth/totp-setup.ts`'s `confirmTotpSetup` (T6.2) only ever
+`createMany`'d a fresh batch of 8 backup codes on success — it never had a reason to do
+otherwise, since at T6.2 it was only ever called once per account (first-time setup). T6.4
+added a second real caller (forced re-enrolment after backup-code recovery), which exposed
+that `confirmTotpSetup` doesn't know it might be running a second, third, or Nth time for
+the same account — each call just added 8 more rows on top of whatever was already there.
+**Workaround:** None needed — found and fixed in the same session, before commit.
+**Planned Fix:** In the same transaction that flips `totp_enabled` and creates the new
+batch, `confirmTotpSetup` now deletes every _unused_ `admin_backup_code` row for that
+account first (`usedAt: null` — an already-used row is left alone, it's inert history, same
+"never destroy a real usage record" precedent as `Subscriber.unsubscribedAt`). Confirmed for
+real: ran two full recovery-then-re-enrolment cycles back to back and verified directly in
+the database that only the codes actually _used_ across both cycles survived — every
+unused leftover was gone after each new batch was created.
+**Sequenced into:** T06-02 (follow-up — fixed same session as T06-04, see
+`memory/completed-work.md`)
+
+---
+
 ## `proxy.ts` written at `app/proxy.ts` never ran at all — no error, no warning
 
 **Status:** Fixed
