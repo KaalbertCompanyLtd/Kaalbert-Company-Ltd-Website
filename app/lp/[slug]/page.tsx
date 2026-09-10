@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NOT_FOUND_METADATA } from "@/app/not-found";
+import { LandingPageCta } from "@/components/landing-page-cta";
 import { LandingPageHeader } from "@/components/landing-page-header";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
@@ -127,9 +127,12 @@ export default async function LandingPage({ params }: LandingPageParams) {
             <p className="text-lead mx-auto mb-8 max-w-[560px] font-light text-[#C9D3CD]">
               {landingPage.openingParagraph}
             </p>
-            <Link href={landingPage.ctaHref} className={BTN_ACCENT}>
-              {landingPage.ctaLabel}
-            </Link>
+            <LandingPageCta
+              label={landingPage.ctaLabel}
+              href={landingPage.ctaHref}
+              downloadFileUrl={landingPage.downloadFileUrl}
+              className={BTN_ACCENT}
+            />
           </div>
         </section>
 
@@ -153,9 +156,12 @@ export default async function LandingPage({ params }: LandingPageParams) {
         ) : null}
 
         <section className="px-4 py-16 text-center sm:px-6">
-          <Link href={landingPage.ctaHref} className={BTN_ACCENT}>
-            {landingPage.ctaLabel}
-          </Link>
+          <LandingPageCta
+            label={landingPage.ctaLabel}
+            href={landingPage.ctaHref}
+            downloadFileUrl={landingPage.downloadFileUrl}
+            className={BTN_ACCENT}
+          />
         </section>
       </main>
       <SiteFooter

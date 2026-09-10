@@ -21,22 +21,34 @@ to the real, live route.
 - `app/offers/[slug]/page.tsx` — new checklist cross-promo section (conditional on
   `offer.slug === "funding-readiness-pack"`) linking to `/lp/funding-readiness-checklist`;
   new `BTN_SECONDARY` style constant.
-- `memory/completed-work.md`, `memory/decision-log.md` — new T5.2 entries.
-- `memory/technical-debt.md` — new Open entry ("Funding-Readiness Checklist landing page has
-  no real downloadable asset yet"); existing cross-promo entry flipped `Open` → `Resolved`.
+- `prisma/schema.prisma` — `LandingPage.downloadFileUrl` (nullable), added in this session's
+  follow-up (see below).
+- `prisma/migrations/20260910121704_t5_2_landing_page_download_file_url/` (new).
+- `components/landing-page-cta.tsx` (new, follow-up) — the CTA now used for both the hero and
+  repeat CTA on `app/lp/[slug]/page.tsx`.
+- `docs/tasks/07-content-admin.md` — T7.5 addendum (follow-up).
+- `memory/completed-work.md`, `memory/decision-log.md` — T5.2 entries plus a follow-up
+  correction entry (the original T5.2 decision-log entry is now `Superseded`, not deleted).
+- `memory/technical-debt.md` — the cross-promo entry flipped `Open` → `Resolved`; the
+  checklist-asset entry raised this session was itself corrected and flipped to `Resolved`
+  within the same session (see below), replaced by a new entry sequenced into T7.5.
 
 ## Decisions Made
 
-- **The funding-readiness-checklist instance's CTA routes through the real
-  `/contact?service=funding-readiness-pack` enquiry path, not a fabricated download link.**
-  That mockup's own inline email-capture form gates a real PDF checklist that doesn't exist
-  yet, and `landing_page` has no capture-form fields to model one with anyway. Fabricating a
-  placeholder checklist document was rejected — CLAUDE.md's "do not fabricate ... any
-  firm-supplied content" rule applies to a real advisory document the same way it applies to
-  legal text. Logged as `Trigger type: User-triggered`, `Sequenced into: T5.3`, since T5.3's
-  own contract needs a real "checklist_downloaded" event source to exist before it can wire a
-  GTM tag around it — currently there is none anywhere in the codebase. Full reasoning in
-  `memory/decision-log.md`'s T5.2 entry.
+- **Corrected mid-session, per user feedback: the checklist document must be
+  admin-uploadable, not developer-supplied — and its absence is then a handled state, not
+  debt.** The first pass framed this as "wait for the user/firm to hand the developer the
+  real file," which was wrong. Added `LandingPage.downloadFileUrl` (nullable) and a new
+  `LandingPageCta` client component (mirrors `WhatsAppLinkButton`'s click-tracked-link
+  pattern): renders a real download link firing `checklist_downloaded` when the field is
+  set, falls back to the existing `ctaHref`/`ctaLabel` link when it's null. Verified both
+  branches live via Playwright (temporarily set a test `downloadFileUrl`, confirmed the CTA
+  switches and the event fires with the right payload, then reverted to `null` — the current
+  real state). The original technical-debt/decision-log entries were marked
+  Resolved/Superseded in place, not deleted, and replaced with a correctly-scoped entry +
+  addendum on T7.5 (Landing Pages admin — the actual missing piece is that task's future
+  upload UI, not this file). Full reasoning in `memory/decision-log.md`'s two T5.2 entries
+  (the corrected one and the superseded original, kept for the record).
 - **All three instances seeded with `isPlaceholder: false`** — their copy is sourced directly
   and faithfully from the three accepted mockups, same "mockup copy is real, shipped copy"
   precedent `seedOffers`/`seedHomePageContent` already established, not draft/fabricated text.
@@ -50,14 +62,20 @@ to the real, live route.
 All three `/lp/[slug]` routes are live with distinct, real content and verified via Playwright
 MCP (correct CTAs, no horizontal overflow at 390px/768px, the cross-promo link on
 `/offers/funding-readiness-pack` pointing to the now-real landing page and absent from the
-other two offer pages, `/lp/does-not-exist` still 404ing). All quality gates pass (lint,
-format:check, typecheck, 56/56 tests). Not yet committed.
+other two offer pages, `/lp/does-not-exist` still 404ing). The download-CTA mechanism
+(`LandingPageCta`) was verified in both states: falls back to `/contact` correctly with
+`downloadFileUrl` null (today's real state), and correctly renders a real download link
+firing `checklist_downloaded` when that field is set (tested with a temporary value, then
+reverted). All quality gates pass (lint, format:check, typecheck, 56/56 tests).
 
 **Known limitation carried forward, not fixed this session:** the funding-readiness-checklist
-landing page's headline promises a "Free Download" but its CTA currently leads to a contact
-form, not an instant download — this is the deliberate interim described above, not an
-oversight. T5.3 needs to re-check with the user whether the real checklist asset exists before
-it can fully close out that one event.
+landing page's headline promises a "Free Download" but its CTA still leads to a contact form
+today, because no real checklist file has been uploaded yet — this is now a correctly-modeled,
+permanent-by-design fallback, not a temporary workaround waiting on anyone to "supply" a file
+directly. **T5.3 can actually test the full `checklist_downloaded` GTM flow right now**, even
+without a real file, by temporarily setting `LandingPage.downloadFileUrl` on the
+`funding-readiness-checklist` row (same way this session verified it) — that's a real,
+reusable testing path, not just a one-off.
 
 ## Blockers
 
@@ -126,19 +144,20 @@ confirmed present in `components/contact-form.tsx`/`components/whatsapp-link-but
 
 **Five of six event sources already exist and push real events today** — `lib/data-layer.ts`'s
 `pushDataLayerEvent` is the one shared mechanism every caller already uses. **The sixth,
-`checklist_downloaded`, has no real trigger anywhere in the codebase** — flagged in
-`memory/technical-debt.md` → "Funding-Readiness Checklist landing page has no real
-downloadable asset yet" (raised at T5.2, session 33, `Trigger type: User-triggered`,
-`Sequenced into: T5.3`, i.e. this task). That landing page's CTA currently routes through
-`/contact?service=funding-readiness-pack` instead of a real download, because no real
-firm-authored checklist PDF exists yet — building a capture mechanism or fabricating checklist
-content was explicitly rejected as out of scope for T5.2. **This task cannot wire a real GTM
-tag around an event with no trigger.** Confirm with the user whether the real checklist asset
-now exists before attempting to instrument `checklist_downloaded` — if it still doesn't, wire
-the other five events fully, leave `checklist_downloaded` configured in GTM as a key event
-definition (so no further GTM-side config work is needed once the trigger exists) but without
-a real trigger to test in Preview mode, and say so explicitly in the acceptance-criteria
-write-up rather than claiming "all six events fire" when one demonstrably can't yet.
+`checklist_downloaded`, is fully wired in code but has no live trigger on the real site
+today** — `components/landing-page-cta.tsx`'s `LandingPageCta` already renders a real
+download link and fires `checklist_downloaded` correctly whenever
+`LandingPage.downloadFileUrl` is set, but that field is `null` on the real
+`funding-readiness-checklist` row (no real checklist PDF has been uploaded yet — see
+`memory/technical-debt.md` → "Landing Pages admin (T7.5) needs to expose `downloadFileUrl`" —
+this is a normal, permanent-by-design fallback state, not something blocking on the user).
+**You do not need a real file to test this event in GTM Preview mode**: temporarily set
+`downloadFileUrl` on that row to any test value (a scratch script against `prisma.landingPage.
+update`, same way T5.2's own session verified this), open `/lp/funding-readiness-checklist`
+in GTM Preview, click the CTA, confirm `checklist_downloaded` fires with the right payload,
+then revert the row back to `null` before finishing — do not leave a fake test URL on the
+real row. If GTM Preview mode itself isn't usable this session for some other reason, say so
+explicitly rather than skipping verification.
 
 ## Architecture constraints
 - All tags deploy through the single GTM container (ADR 0006) — never a hard-coded

@@ -18,44 +18,58 @@ sequencing requirement:
 
 ---
 
-## Funding-Readiness Checklist landing page has no real downloadable asset yet
+## Landing Pages admin (T7.5) needs to expose `downloadFileUrl`, wired to the R2 media pipeline
 
 **Status:** Open
 **Date raised:** 2026-09-10
-**Reason:** `ui/mockups/d-landing-pages/landing-funding-readiness-checklist.html`'s own
-design gates an actual PDF checklist behind an inline name/email capture form. No such real,
-firm-authored checklist file exists yet, and fabricating one would violate CLAUDE.md's
-"do not fabricate ... any firm-supplied content" rule — a 12-item professional advisory
-checklist is exactly the kind of real-expertise document only the firm can supply or approve,
-same category as legal text or diagnostic question wording. Building an email-gated capture
-mechanism is also new scope: `landing_page` (`landing-page-template.md`) has no capture-form
-fields, and this task (T5.2) was sized S, not sized for a new capture entity + endpoint. T5.2
-seeded this landing page instance with real copy from the mockup, but pointed its `ctaHref` at
-the real `/contact?service=funding-readiness-pack` enquiry route instead of a fake download
-link — a working, honest destination for the same underlying offer, not a broken link or
-fabricated asset.
-**Impact:** Medium — the landing page is live and functional, but its CTA doesn't yet deliver
-the "instant free download" experience its own headline/kicker ("Free Download") promises;
-a visitor gets routed into the contact form instead. Also blocks the "checklist_downloaded"
-`dataLayer` event (`lib/data-layer.ts`, one of T5.3's six named GTM events) from ever having a
-real trigger to hang off — there is currently no download action anywhere on the site for that
-event to fire from.
-**Priority:** Medium
-**Possible Fix/Fixes:** Once the firm supplies the real checklist document: (1) add it as a
-real static asset (or a proper downloadable-resource entity, mirroring `ArticleResource`'s
-`{label, fileUrl}` shape if more than one such lead magnet ever exists), (2) point this
-landing page's `ctaHref` at it directly, and (3) wire a client-side `pushDataLayerEvent
-("checklist_downloaded")` call on that link's click — this is the piece T5.3's own contract
-assumes already exists ("dataLayer.push(...) calls already present at each event's source")
-and currently doesn't, for this one event specifically.
-**Trigger type:** User-triggered — this depends on the firm actually authoring and
-supplying the real checklist content; do not fabricate placeholder checklist content or build
-a capture mechanism speculatively. Wait for the user/firm to supply the real document before
-touching this.
-**Sequenced into:** T5.3 (GTM container: six conversion events + consent mode,
-`docs/tasks/05-landing-and-measurement.md`) — that task is the next one that needs this
-event's real source to exist before it can wire the tag around it; flagged here so it isn't
-silently assumed done.
+**Reason:** `LandingPage.downloadFileUrl` (added this session, see below) is a real,
+partner-uploadable file — the same category of asset as `Author.photoUrl`
+(`docs/tasks/07-content-admin.md` T7.6, "via the same R2 media pipeline ... ADR 0004") — but
+T7.5's own "Build" line (`docs/tasks/07-content-admin.md`) only lists "headline, opening
+paragraph, body, CTA" for the Landing Pages admin editor, written before this field existed.
+No object storage (Cloudflare R2) is provisioned yet either way (ADR 0004: "added once media
+volume justifies it"), so this field is null on every real row today — the normal,
+pre-upload state, not a defect (`app/lp/[slug]/page.tsx`'s `LandingPageCta` already handles
+it correctly, falling back to `ctaHref`/`ctaLabel`).
+**Impact:** Low today (every current instance's CTA works correctly via the fallback). Will
+become Medium once T7.5 is actually built, if that task's editor is shipped without exposing
+this field — a partner would have no way to upload a real checklist file even once the admin
+exists.
+**Priority:** Low
+**Possible Fix/Fixes:** When T7.5 is built, add `downloadFileUrl` as an optional
+file-upload field on the Landing Pages editor, using whatever R2 upload mechanism T7.6
+establishes for author photos (build in whichever of T7.5/T7.6 lands first; don't duplicate
+the upload pipeline). Provisioning real R2 credentials is a separate, User-triggered
+precondition for uploads to work end-to-end (same category as every other external-account
+setup this project defers to the user) — the editor UI itself can still be built and tested
+against a stubbed/local path in the meantime, same as T1.6 built and verified the GTM
+snippet against a placeholder container ID before a real one existed.
+**Trigger type:** Task-sequenced — building the editor field is normal engineering work once
+T7.5 is reached; only the underlying R2 credentials are User-triggered, and that's already
+covered by ADR 0004's own "added once justified" framing, not a new blocker to raise here.
+**Sequenced into:** T7.5 (Landing Pages admin, `docs/tasks/07-content-admin.md`) — addendum
+added this session pointing back here.
+
+---
+
+## Funding-Readiness Checklist landing page has no real downloadable asset yet
+
+**Status:** Resolved
+**Date raised:** 2026-09-10
+**Date resolved:** 2026-09-10
+**Reason:** Originally framed as "wait for the user to hand the developer the real checklist
+file directly." Corrected same-day, per user feedback: the right design is an
+admin-uploadable field on `LandingPage` (`downloadFileUrl`, nullable) with a graceful
+fallback to `ctaHref`/`ctaLabel` when absent — see the entry above and
+`memory/decision-log.md`'s superseding T5.2 entry (session 34). The missing _file_ is no
+longer debt, since the page now handles its absence correctly by design; the missing _admin
+upload mechanism_ is the real, correctly-scoped gap, tracked in the new entry above instead.
+**Impact:** N/A — superseded before this framing was ever acted on.
+**Priority:** N/A
+**Possible Fix/Fixes:** Superseded — see the entry above.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.5 (superseding entry above) — no longer T5.3, which was never the
+right home for an admin-upload capability gap.
 
 ---
 

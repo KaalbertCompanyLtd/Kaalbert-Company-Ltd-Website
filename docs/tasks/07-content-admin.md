@@ -106,6 +106,16 @@ without vendor involvement (FR-4.3, the literal AC-6 bar for this specific task)
 API-level) creates a working new landing page end to end with zero code or deploy involved.
 **Size:** M **Dependencies:** T6.3, T5.1
 
+**Addendum (session 34, 2026-09-10):** `LandingPage.downloadFileUrl` (added at T5.2, after
+this task was originally written) must also be exposed as an optional file-upload field on
+this editor — the "download" version of a landing page's call to action (e.g. the
+Funding-Readiness Checklist), uploaded via whichever R2 media pipeline T7.6 establishes for
+author photos (ADR 0004) — build the upload mechanism once, reuse it for both. Null/absent
+is a valid, already-handled state (`app/lp/[slug]/page.tsx`'s `LandingPageCta` falls back to
+`ctaHref`/`ctaLabel`), so this field is optional in the editor, not required to publish. See
+`memory/technical-debt.md` → "Landing Pages admin (T7.5) needs to expose `downloadFileUrl`,
+wired to the R2 media pipeline."
+
 ### T7.6 — Team / author profile editor
 
 **Build:** Self-service (and right-role-gated other-partner) editor for the `author` record

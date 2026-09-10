@@ -14,6 +14,42 @@ Protocol):
 
 ---
 
+## 2026-09-10 (T5.2 follow-up, session 34)
+
+**Task:** T5.2 follow-up — make the landing page download CTA admin-uploadable, not
+developer-supplied
+**Summary:** User feedback on the just-committed T5.2 work: the checklist document should be
+something a partner uploads through `/admin`, not something handed directly to whoever's
+implementing the code — and once that's true, its absence stops being a debt item and
+becomes a normal, handled state. Added `LandingPage.downloadFileUrl` (nullable `String`) and
+a new `LandingPageCta` client component (`components/landing-page-cta.tsx`, mirroring
+`WhatsAppLinkButton`'s click-tracked-link pattern) that renders a real file-download link
+firing `checklist_downloaded` when it's set, and falls back to the existing `ctaHref`/
+`ctaLabel` link when null — used for both the hero and repeat CTA on `app/lp/[slug]/page.tsx`.
+Corrected the memory record to match: resolved the original ("wait for the firm to supply the
+file") technical-debt entry and decision-log entry (marked `Superseded`, not deleted), and
+replaced them with a correctly-scoped entry/addendum on T7.5 (Landing Pages admin, not yet
+built) — the real gap is that T7.5's editor doesn't expose this field yet, once it exists.
+Verified via Playwright MCP: the fallback branch renders correctly with `downloadFileUrl`
+null (current real state); temporarily set it to a test value, confirmed the CTA switches to
+a real download link and fires `checklist_downloaded` with the file URL on click, then
+reverted the row back to `null` before finishing.
+**Files Changed:** `prisma/schema.prisma` (`LandingPage.downloadFileUrl`), `prisma/
+migrations/20260910121704_t5_2_landing_page_download_file_url/`, `components/
+landing-page-cta.tsx` (new), `app/lp/[slug]/page.tsx` (uses `LandingPageCta` for both CTAs),
+`docs/tasks/07-content-admin.md` (T7.5 addendum), `memory/technical-debt.md` (new entry;
+original entry marked Resolved), `memory/decision-log.md` (new entry; original T5.2 entry
+marked Superseded), `memory/completed-work.md`.
+**Related Feature:** `docs/features/landing-page-template.md`, `docs/features/
+content-management-admin.md` (T7.5's future scope).
+**Notes:** No admin upload UI or object storage (Cloudflare R2) exists yet — this follow-up
+only makes the _absence_ of the file correct and permanent-by-design, it doesn't build the
+upload path itself. That remains T7.5's job (addendum added), gated behind real R2
+credentials the user supplies when ready (ADR 0004's own "added once justified" framing) —
+do not build a stubbed upload mechanism speculatively.
+
+---
+
 ## 2026-09-10 (T5.2)
 
 **Task:** T5.2 — Three landing page instances, seeded

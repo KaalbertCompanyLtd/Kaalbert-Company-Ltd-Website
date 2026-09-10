@@ -785,7 +785,18 @@ model Subscriber {
 /// a general-purpose page builder. `isPlaceholder` follows every other seeded-content model's
 /// convention (`Page`, `Offer`, `LegalPage`, `Article`, etc.) for flagging copy that isn't the
 /// firm's real, final wording yet (CLAUDE.md's "never present placeholder content as final"
-/// rule) — T5.2 (seeding) is what actually sets it per instance, not this task.
+/// rule) — T5.2 (seeding) is what actually sets it per instance, not this task. `downloadFileUrl`
+/// is added at T5.2 (session 34) — a nullable, admin-uploadable file (via the same R2 media
+/// pipeline `docs/tasks/07-content-admin.md` T7.6 already plans for author photos, ADR 0004),
+/// for a landing page whose call to action is a real download (e.g. the Funding-Readiness
+/// Checklist) rather than a route elsewhere on the site. Null is the normal, expected state
+/// before a partner uploads the real file — not technical debt — because `ctaHref`/`ctaLabel`
+/// always remain a valid, real fallback destination regardless: `app/lp/[slug]/page.tsx`'s
+/// `LandingPageCta` renders a real file-download link (firing the `checklist_downloaded`
+/// measurement event) only when this is set, and falls back to the ordinary `ctaHref` link
+/// otherwise. T7.5 (Landing Pages admin) is where a partner actually uploads/replaces this
+/// field — see that task's addendum in `docs/tasks/07-content-admin.md` and
+/// `memory/decision-log.md` (T5.2, session 34).
 model LandingPage {
   id                Int      @id @default(autoincrement())
   slug              String   @unique
@@ -796,6 +807,9 @@ model LandingPage {
   bodyContent       Json     @map("body_content")
   ctaLabel          String   @map("cta_label")
   ctaHref           String   @map("cta_href")
+  /// Nullable — see model doc-comment. Null until a partner uploads a real file via T7.5's
+  /// future admin editor; `app/lp/[slug]/page.tsx` falls back to `ctaHref`/`ctaLabel` when null.
+  downloadFileUrl   String?  @map("download_file_url")
   /// Internal campaign tracking, distinct from the UTM parameters captured per visit
   /// (`measurement-and-attribution.md`) — not rendered anywhere on the page itself.
   campaignReference String   @map("campaign_reference")

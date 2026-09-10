@@ -2,9 +2,37 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
-## 2026-09-10 (T5.2) — Funding-Readiness Checklist's CTA routes through `/contact`, not a fabricated download, until the firm supplies the real asset
+## 2026-09-10 (T5.2, session 34) — `downloadFileUrl` added to `LandingPage`: admin-uploadable, not developer-supplied; absence is a handled state, not debt
 
 **Status:** Standing
+**Supersedes:** The 2026-09-10 (T5.2) entry immediately below ("Funding-Readiness
+Checklist's CTA routes through `/contact` ... until the firm supplies the real asset")
+
+**Summary:** User feedback, same day: the original framing — "wait for the user/firm to
+supply the real checklist document directly" — was wrong. A landing page's downloadable
+asset should be something a partner uploads through `/admin`, like any other content this
+project already treats that way (`site_settings`, `footer_content`, author photos), not
+something handed to whoever's implementing the code. Corrected by adding
+`LandingPage.downloadFileUrl` (nullable `String`) to the schema, and a new
+`LandingPageCta` client component (`components/landing-page-cta.tsx`, mirroring
+`WhatsAppLinkButton`'s click-tracked-link pattern) that renders a real file-download link
+firing `checklist_downloaded` when it's set, and falls back to the existing `ctaHref`/
+`ctaLabel` link when it's null. This makes "no file uploaded yet" a normal, permanently
+correct state the page already handles by design — not a temporary gap waiting on an
+external supply — so it is explicitly **not** technical debt on its own. What _is_ real
+debt: T7.5 (Landing Pages admin, not yet built) needs to expose this field once it exists,
+using the same R2 upload pipeline T7.6 plans for author photos (ADR 0004) — tracked as its
+own, correctly-scoped `memory/technical-debt.md` entry and addendum on T7.5
+(`docs/tasks/07-content-admin.md`), superseding the original entry's `Sequenced into: T5.3`
+(T5.3 was never the right home for an admin-capability gap).
+
+**Related Documents:** `docs/tasks/07-content-admin.md` (T7.5 addendum), `memory/
+technical-debt.md` (new entry + the original entry marked Resolved), `prisma/schema.prisma`
+(`LandingPage.downloadFileUrl`), `components/landing-page-cta.tsx`, `app/lp/[slug]/page.tsx`.
+
+## 2026-09-10 (T5.2) — Funding-Readiness Checklist's CTA routes through `/contact`, not a fabricated download, until the firm supplies the real asset
+
+**Status:** Superseded
 
 **Summary:** Seeding the three real landing page instances surfaced a genuine gap:
 `landing-funding-readiness-checklist.html`'s own mockup gates an actual PDF checklist behind
