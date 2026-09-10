@@ -4,6 +4,12 @@ Roadmap milestone 5. Closes out everything Document 13.03 asked of the public-fa
 after this, the site can carry paid traffic and prove it's working. Still entirely
 public/marketing-facing; no admin dependency.
 
+**Status: Complete (T5.1–T5.4).** T5.5 is deliberately **resequenced** — see its own entry
+below and `memory/decision-log.md` (session 36+) for the full reasoning. Nothing else in
+Milestones 6–8 depends on T5.5, and Milestone 9 is the only place anything actually needs it
+(`docs/tasks/09-performance-dashboards.md`'s T9.4/T9.5/T9.6), so this epic's practical build
+sequence ends here — proceed to Milestone 6 (`docs/tasks/06-admin-auth.md`) next, not T5.5.
+
 **Decision made here, not left open:** `measurement-and-attribution.md`'s edge case defers
 the `attribution` row's retention window to "Phase 6 task planning" — that's this document.
 **Decision: 90 days**, matching GA4's and Meta's own standard default attribution lookback, so
@@ -101,3 +107,19 @@ visitor-facing response (`architecture.md`, Section 5); a double-submit produces
 deduplicated conversion, not two, verified in Meta Events Manager's own dedup reporting;
 domain verification shows confirmed in Meta Business Manager.
 **Size:** M **Dependencies:** T5.3, T5.4
+
+**Resequenced (session 36+, decided with the user — see `memory/decision-log.md`):** Checked
+the real dependency graph before deferring anything — only `docs/tasks/
+09-performance-dashboards.md`'s T9.4 (Meta), T9.5 (Google Ads), and T9.6 (LinkedIn) depend on
+this task; nothing in Milestones 6, 7, or 8 does. Milestone 9 is explicitly labeled "(Bonus)"
+in `docs/roadmap.md` and its own goal states it's "never built until Phase 1 launch and
+acceptance are complete" — so this task genuinely does not block Phase 1 delivery. It also
+needs multiple real external accounts/credentials that don't exist yet (Meta Business
+Manager + Pixel + Conversions API token, a Google Ads account, LinkedIn Campaign Manager
+access — none created as of this session) plus `kaalbert.com`'s domain registration
+(`memory/technical-debt.md` → "kaalbert.com not registered," still open), which specifically
+blocks this task's own domain-verification acceptance criterion. **Do not attempt this task
+immediately after T5.4** — instead, execute it immediately before starting T9.1
+(`docs/tasks/09-performance-dashboards.md`), by which point those accounts are more likely to
+exist and are actually needed. It keeps its T5.5 identity (Milestone 5 task IDs never
+renumber, per CLAUDE.md's own sequencing rule) — only its build-order position moved.

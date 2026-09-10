@@ -2,7 +2,7 @@
 
 Roadmap milestone 6. The first milestone that exists purely for firm use — deliberately
 placed after every public-facing thing already works. Builds to
-`ui/mockups/g-admin-content/` login/setup-2fa mockups.
+`ui/mockups/f-admin-auth/` login/setup-2fa mockups.
 
 **Decision made here, not left open:** `admin-authentication.md` defers the session
 inactivity-expiry period to "Phase 6 task planning" — that's this document. **Decision: 30

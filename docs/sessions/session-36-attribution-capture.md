@@ -122,16 +122,34 @@ instead — it could, and the framing was wrong. Corrected in the same session:
 
 ## Blockers
 
-None for T5.4 itself. T5.5 (next in the epic) needs multiple real external
-accounts/credentials before it can proceed — Meta Business Manager + a Meta CAPI access
-token, a Google Ads account, and LinkedIn Campaign Manager access — none of which exist yet
-(`META_CAPI_ACCESS_TOKEN` is still blank in `.env.local`/`.env.production`). Same pattern as
-T5.3 needed GTM/GA4 before it could do anything real.
+None for T5.4 itself. T5.5 needs multiple real external accounts/credentials before it can
+proceed — Meta Business Manager + a Meta CAPI access token, a Google Ads account, and
+LinkedIn Campaign Manager access — none of which exist yet (`META_CAPI_ACCESS_TOKEN` is still
+blank in `.env.local`/`.env.production`; confirmed directly with the user this session — none
+of the four exist). Same pattern as T5.3 needed GTM/GA4 before it could do anything real.
+
+**Resequencing decision (same session, after the above was confirmed):** since T5.5 blocks
+nothing on the critical path — only Milestone 9's T9.4/T9.5/T9.6 depend on it, per
+`docs/roadmap.md`'s own "(Bonus)" labeling and a direct dependency-graph check — the user
+decided to resequence T5.5 to run immediately before Milestone 9 instead of right after T5.4,
+and to mark Milestone 5 complete on that basis (T5.1–T5.4 shipped; T5.5 deliberately deferred,
+not abandoned). Updated: `docs/tasks/05-landing-and-measurement.md` (epic status line + T5.5's
+own resequencing note), `docs/tasks/09-performance-dashboards.md` (new note before T9.1),
+`docs/roadmap.md` (Milestone 5 and Milestone 9 entries), `docs/dashboard.md` (Current Phase
+line), `memory/decision-log.md`, `memory/completed-work.md`. T5.5 keeps its own task ID and
+identity — only its build-order position moved. Also fixed a stale mockup-path reference
+found while preparing this handoff: `docs/tasks/06-admin-auth.md`'s epic header cited
+`ui/mockups/g-admin-content/` for the login/2FA-setup screens; the real files live under
+`ui/mockups/f-admin-auth/` (confirmed via `ls`) — corrected in place.
 
 ## Next Task
 
-T5.5 — Meta CAPI, Google Ads import, LinkedIn Insight Tag, domain verification
-File: docs/tasks/05-landing-and-measurement.md
+T6.1 — Data model: `admin_user`, `admin_backup_code`, `admin_session`
+File: docs/tasks/06-admin-auth.md
+(Milestone 6, Admin Authentication — the next milestone in build order now that Milestone 5
+is marked complete through T5.1–T5.4, with T5.5 resequenced to run immediately before
+Milestone 9 instead. See `docs/roadmap.md` and `memory/decision-log.md` for the full
+resequencing decision.)
 
 ## Paste This to Continue
 
@@ -140,150 +158,118 @@ Read CLAUDE.md in full before starting anything else in this session — it defi
 stack, code conventions, quality gates, auth pattern, and the Task Completion Checklist and
 Git Commit Protocol this task must follow exactly.
 
-Then read the full epic file: docs/tasks/05-landing-and-measurement.md — this task is one
-part of a larger epic; the epic's opening paragraph and any task listed as a dependency below
-give context this prompt summarizes but does not replace.
+Then read the full epic file: docs/tasks/06-admin-auth.md — this task is one part of a
+larger epic; the epic's opening paragraph and any task listed as a dependency below give
+context this prompt summarizes but does not replace. Note the epic's own header decision:
+session policy is already fixed at 30 minutes inactivity / 12-hour absolute lifetime
+(implemented later, at T6.3) — this task doesn't implement session enforcement, but the
+`admin_session` table it creates must have the columns that decision needs.
 
-# Task T5.5 — Meta CAPI, Google Ads import, LinkedIn Insight Tag, domain verification
-
-**⚠️ Likely BLOCKED pending user action — read this before doing anything else.** This task
-needs multiple real external accounts/credentials that do not exist yet, confirmed by
-checking `.env.local`/`.env.production` this session: `META_CAPI_ACCESS_TOKEN` is blank, and
-there is no existing GTM tag, technical-debt entry, or memory record indicating a Meta
-Business Manager account, a Google Ads account, or LinkedIn Campaign Manager access exist for
-this firm. Creating any of these accounts is an external action only the user can take (same
-category as T5.3's GTM/GA4 account creation, T1.1's domain registration). **Do not create any
-of these accounts, and do not treat reaching this task as a cue to act.** Start this session
-by asking the user which of the following already exist, in order, since later parts of this
-task depend on earlier ones:
-1. A Meta Business Manager account for the firm, with a Meta Pixel created and its Pixel ID
-   available, plus a **Conversions API access token** generated for that pixel (Meta Events
-   Manager → the pixel's own Settings → Conversions API → generate access token). Needed for
-   `META_CAPI_ACCESS_TOKEN`.
-2. Whether `kaalbert.com`'s domain verification in Meta Business Manager (FR-7.9) has been
-   started/completed — this itself may be blocked on the domain being registered at all
-   (`memory/technical-debt.md` → "kaalbert.com not registered"), so check that dependency
-   first if the domain still isn't registered.
-3. A Google Ads account linked to the real GA4 property (`G-9VX9GS5L0X`, provisioned at T5.3)
-   — needed for FR-7.5's "import from GA4, don't define separately" requirement.
-4. A LinkedIn Campaign Manager account with access to install the LinkedIn Insight Tag.
-
-If none of these exist yet, stop here and report back rather than attempting to simulate,
-stub, or partially build around the missing accounts — same precedent as T5.3's own
-blocked-start note. If some exist and others don't, do as much of the task as the available
-accounts allow (e.g. the server-side Meta CAPI call's *code* can be built and unit-tested
-with a mocked Meta endpoint even before domain verification completes, but say explicitly
-which acceptance criteria remain unverified and why) — do not claim the whole task complete
-on partial credentials.
+# Task T6.1 — Data model: `admin_user`, `admin_backup_code`, `admin_session`
 
 ## What to build
-Server-side Meta Conversions API call (fire-and-forget, deduplicated against the client pixel
-via a shared event ID tied to `enquiry_id`, never regenerated per attempt); Google Ads
-conversion actions imported from GA4 (not defined separately, FR-7.5); LinkedIn Insight Tag
-installed for retargeting accumulation only (FR-7.8 note); Meta Business Manager domain
-verification for kaalbert.com (FR-7.9).
+Tables per `docs/features/admin-authentication.md`; passwords via a vetted hash library
+(bcrypt/argon2), TOTP secrets encrypted at rest, TOTP itself via a vetted library (RFC 6238),
+never hand-rolled (ADR 0007).
 
 ## Input → Output contract
-The same six conversion moments → deduplicated Meta CAPI + pixel events, GA4-imported Google
-Ads conversions, LinkedIn tag firing.
+Schema definition → migrated tables.
 
 ## Acceptance criteria
-A Meta CAPI outage (simulated) never delays or breaks the visitor-facing response
-(`architecture.md`, Section 5); a double-submit produces one deduplicated conversion, not
-two, verified in Meta Events Manager's own dedup reporting; domain verification shows
-confirmed in Meta Business Manager.
+No plaintext password or raw TOTP secret is ever written to logs (verified by a deliberate
+failed-login test and inspecting log output).
 
 ## Size / Dependencies
-M, depends on: T5.3 (this epic's GTM container — GTM-PDGKRKRN, published live — and the real
-GA4 property, G-9VX9GS5L0X; the Meta pixel itself installs as a GTM tag inside that same
-container, not a separate script tag, per ADR 0006's "single container" rule), T5.4 (this
-same session — the `attribution` table and `enquiry_record.attribution_id` relation this
-task's own event payloads may need to reference; more directly, `lib/data-layer.ts`'s
-`pushDataLayerEvent`/`DataLayerEvent` union is the established single mechanism every
-conversion moment already fires through — this task's client-side Meta pixel tag inside GTM
-listens to those same six `dataLayer` events, it does not invent a second push mechanism).
+S, depends on: T1.2 (Postgres schema baseline + migration tooling — provides the Prisma
+schema file and migration workflow this task adds three new tables to; already shipped, no
+further action needed from it).
 
 ## Architecture constraints
-- The Meta pixel itself is a **GTM tag inside the existing container**, not a separate
-  hardcoded `<script>` — CLAUDE.md's "Things NOT to Do" explicitly forbids a hardcoded
-  measurement/advertising tag outside GTM (Document 13.03, Section 11.1, contractual).
-- The **server-side Conversions API call is a separate, custom integration** in `lib/`
-  (a new `lib/meta-capi.ts` or similar) — not delegated to a GTM template's default
-  behaviour (ADR 0006's own explicit decision) — called from the same route handlers that
-  already create/update the relevant `enquiry_record` (`lib/enquiries.ts`,
-  `lib/diagnostic-submit.ts`, `lib/diagnostic-request-summary.ts`), fire-and-forget relative
-  to the visitor-facing response (same precedent as `lib/email.ts`'s
-  `sendTransactionalEmail`/`EmailSendError` — a failed call is logged via `console.error`,
-  never thrown back to the visitor, never retried inline). Simulate a Meta outage (e.g. an
-  unreachable/invalid endpoint in a test) and confirm the response the visitor actually
-  receives is unaffected — this is the task's own literal acceptance criterion, not
-  optional.
-- **Deduplication uses a shared event ID generated once per genuine conversion, tied to
-  `enquiry_id`** — never regenerated per attempt (this task's own explicit edge case in
-  `measurement-and-attribution.md`: "a conversion event fires twice due to a client-side
-  double-submit... the event ID must be generated once per genuine conversion, not
-  regenerated per attempt"). The same event ID must reach both the client-side pixel (fired
-  via GTM, reading it from the `dataLayer` payload) and the server-side CAPI call, so Meta's
-  own dedup logic can match them.
-- **Diagnostic responses themselves are never sent to any advertising platform** — only the
-  fact that a conversion occurred (Document 13.03, Section 9) — audit exactly what payload
-  the server-side CAPI call sends and confirm no response content leaks in.
-- **Google Ads conversions are imported from GA4, not defined as separate GA4/Ads-side
-  conversion actions** (FR-7.5) — this is primarily a GA4/Google Ads dashboard configuration
-  step (linking the two accounts, enabling conversion import), not new application code;
-  confirm this is actually how it's done before writing any code for it.
-- **LinkedIn Insight Tag is a GTM tag too**, installed for retargeting-audience accumulation
-  only — the firm does not plan to advertise on LinkedIn to cold audiences at launch
-  (Document 13.03, Section 11.1) — do not build any LinkedIn conversion-tracking beyond
-  installing the tag itself.
-- Domain verification in Meta Business Manager is a firm-owned-account handover step
-  (`measurement-and-attribution.md`'s own Interfaces section) — a Business Manager dashboard
-  action (adding a DNS TXT record or uploading a verification file), not application code.
+- **Never hand-roll TOTP or password cryptography.** Use a vetted library for the RFC 6238
+  TOTP core (e.g. `otplib`) and a vetted library for password hashing (bcrypt/argon2) — this
+  task only stores what those libraries produce (a hash, an encrypted secret), it does not
+  implement the crypto itself. Neither library is currently in `package.json` — install
+  whichever this task settles on and record the choice.
+- **Every field named in `docs/features/admin-authentication.md`'s Data requirements section
+  maps 1:1 to a Prisma field of the same name** — don't rename during implementation without
+  updating the feature doc to match (see the exact field lists under "Relevant feature
+  specification" below).
+- **TOTP secrets are encrypted at rest**, not merely hashed (unlike passwords/backup codes,
+  a TOTP secret must be recovered in plaintext at verification time to compute the current
+  code, so it needs reversible encryption, not a one-way hash) — decide and document the
+  encryption approach (e.g. a server-held symmetric key via a vetted crypto library) as part
+  of this task; this is a real design decision this task must resolve, not inherited from
+  anywhere else in the codebase.
+- **Business logic lives in `lib/`, never inline.** This task is schema-only, but the
+  password-hashing/TOTP-encryption helper functions later tasks (T6.2, T6.3) will call
+  belong in a new `lib/auth/` directory per CLAUDE.md's Auth Pattern section ("Use `lib/auth`
+  (once scaffolded) for session verification in any route handler or Server Component") —
+  confirmed via grep this session that `lib/auth` does not exist yet, so if this task adds
+  any hashing/encryption helper alongside the schema (rather than leaving that entirely to
+  T6.2/T6.3), it should live there, establishing the directory rather than duplicating it
+  later.
+- **No plaintext password or raw TOTP secret in logs** is this task's literal acceptance
+  criterion — audit any error-path logging (e.g. a failed Prisma write, a caught exception)
+  touching these fields before calling this done, not just the happy path.
+- Confirmed this session via grep: no `admin_user`/`admin_session`/`admin_backup_code`
+  Prisma models, no `lib/auth` directory, and no `app/proxy.ts` exist yet in this codebase —
+  this task is a genuine from-scratch addition, not extending anything partially built.
+  `app/proxy.ts` (session enforcement) and `lib/auth`'s actual verification logic are later
+  tasks' work (T6.3+), not this one's.
 
 ## Relevant ADRs
-- ADR 0006 — `docs/adr/0006-gtm-measurement-container.md` — GTM holds GA4, the Meta pixel,
-  Google Ads, and the LinkedIn Insight Tag as GTM tags; the server-side Meta CAPI call is
-  the one piece that is a custom `lib/` integration, not a GTM tag, specifically so
-  event-ID deduplication is controlled directly by this codebase, not a GTM template.
+- ADR 0007 — `docs/adr/0007-totp-two-factor-auth.md` — TOTP (not email-delivered codes) is
+  the required admin two-factor method, using a well-vetted library for the RFC 6238
+  cryptographic core only; the setup screen, login sequence, backup codes, and enforcement
+  logic are all hand-built. Backup codes exist specifically so a lost authenticator device
+  doesn't cause permanent lockout — this task's `admin_backup_code` table is what makes that
+  possible.
 
 ## Relevant feature specification
-`docs/features/measurement-and-attribution.md` — the CAPI deduplication business rule and
-edge case, the Google Ads/LinkedIn business rules, the domain-verification interface, and
-the "diagnostic responses never sent to any platform" rule this task must respect.
+`docs/features/admin-authentication.md` — the literal contract for this task's three tables:
+- `admin_user` — id, name, email, password_hash, role, totp_secret (encrypted), totp_enabled,
+  created_at, last_login_at.
+- `admin_backup_code` — id, admin_user_id, code_hash, used_at (nullable).
+- `admin_session` — id, admin_user_id, created_at, expires_at.
+Also read its Business rules and Edge cases sections for the constraints these tables exist
+to support (single-use backup codes, no self-service 2FA bypass, rate-limiting, deactivation
+invalidating sessions immediately) — none of that is built in this task, but the schema
+should not foreclose any of it (e.g. `admin_session` needs enough to be individually
+invalidatable per T6.5's later requirement).
 
 ## Mockup / UI reference
-Not applicable — this task has no UI surface of its own (server-side integration + GTM/
-platform-dashboard configuration only).
+Not applicable — this task has no UI surface of its own (pure data-model task). The epic's
+own cited mockups (`ui/mockups/f-admin-auth/admin-login.html`,
+`ui/mockups/f-admin-auth/admin-2fa-setup.html` — corrected this session from a stale
+`g-admin-content/` reference in the epic file) become relevant starting T6.2 (2FA setup
+screen) and T6.3 (login flow), not this task.
 
 ## Coding standards
-- Mockups are authoritative. (Not applicable.)
+- Mockups are authoritative. (Not applicable — no UI this task.)
 - Responsive built in from first implementation. (Not applicable.)
 - Public-site mobile navigation is a side-sliding drawer/sheet. (Not applicable.)
-- Feature docs are the data/interface contract. (Applies —
-  `measurement-and-attribution.md`'s CAPI/dedup/Google Ads/LinkedIn rules are not optional.)
-- Business logic lives in `lib/`. (Applies — the new Meta CAPI call belongs in `lib/`, called
-  from existing route-adjacent business logic, never inline in a route handler.)
-- Every entity field maps to the feature doc. (Not applicable — no new entity fields expected;
-  if a shared event ID needs persisting anywhere, check whether `enquiry_id` alone already
-  suffices as that ID before adding a new column.)
+- Feature docs are the data/interface contract. (Directly applies — the three tables above
+  are copied field-for-field from `admin-authentication.md`.)
+- Business logic lives in `lib/`, never inline. (Applies to any hashing/encryption helper
+  this task introduces — see Architecture constraints above.)
+- Every entity field maps to the feature doc. (Directly applies — this is the core of what
+  this task does.)
 - Fee amounts as structured min/max + scope cap. (Not applicable.)
 - Content the firm can change lives in the database. (Not applicable.)
 - Diagnostic scoring config as data, not logic. (Not applicable.)
-- Accessibility WCAG 2.1 AA via Base UI primitives. (Not applicable — no UI surface.)
+- Accessibility WCAG 2.1 AA via Base UI primitives. (Not applicable — no UI this task.)
 - `export const dynamic = "force-dynamic"` on any route reading live DB content. (Not
-  applicable — no new page/route this task; if the CAPI call is added inside an existing
-  route handler, that route's existing dynamic-rendering status is unaffected.)
+  applicable — no route this task.)
 - Never let a `"use client"` component value-import from a `lib/` file that also imports
-  `@/lib/prisma`. (Not applicable — the Meta CAPI call is server-only; no new client
-  component this task beyond, at most, reading the shared event ID to include in a
-  `dataLayer` push, which `lib/data-layer.ts`'s existing client-safe module already supports.)
+  `@/lib/prisma`. (Not applicable yet — no client component reads this data until T6.2/T6.3;
+  worth remembering once `lib/auth` exists and any client-side setup/login form is built.)
+- Never let a `package.json` lifecycle script assume `.git` exists. (Not applicable — no
+  lifecycle script change this task.)
 - The shared generic `page` entity pattern. (Not applicable.)
 - Every public page type carries meta_title/meta_description + OG/Twitter + JSON-LD. (Not
-  applicable — no new page.)
-- Every conversion moment fires through the existing GTM `dataLayer` pattern. (Directly
-  applies — the Meta pixel/LinkedIn Insight Tag GTM tags listen to the same six events
-  already firing via `pushDataLayerEvent`; this task adds tags/server logic around existing
-  events, never a new push mechanism.)
+  applicable — admin-only, no new public page.)
+- Every conversion moment fires through the existing GTM `dataLayer` pattern. (Not
+  applicable.)
 
 ## Task Completion Checklist
 [ ] Implementation finished
@@ -314,6 +300,6 @@ platform-dashboard configuration only).
 
 ## Session boundary
 Complete this task fully, then write the session summary file (docs/sessions/session-NN-
-<topic>.md per CLAUDE.md's Session Management section) with the output of /task T6.1 in its
+<topic>.md per CLAUDE.md's Session Management section) with the output of /task T6.2 in its
 "Paste This to Continue" block, then stop. Do not begin the next task in this same session.
 ```

@@ -2,6 +2,39 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-10 (session 36+) — T5.5 resequenced to run immediately before Milestone 9 instead of right after T5.4; Milestone 5 marked complete on that basis
+
+**Status:** Standing
+
+**Summary:** After confirming T5.5 needs multiple real external accounts that don't exist
+yet (Meta Business Manager + Pixel + CAPI token, a Google Ads account, LinkedIn Campaign
+Manager access) plus `kaalbert.com`'s still-open domain registration (blocking its own
+domain-verification acceptance criterion specifically), the user asked whether leaving T5.5
+unbuilt blocks anything else. Checked the real dependency graph rather than assuming: only
+`docs/tasks/09-performance-dashboards.md`'s T9.4 (Meta), T9.5 (Google Ads), and T9.6
+(LinkedIn) depend on T5.5 — nothing in Milestones 6, 7, or 8 does, and Milestone 9 is
+explicitly labeled "(Bonus)" in `docs/roadmap.md`, with its own goal text stating it's "never
+built until Phase 1 launch and acceptance are complete." So T5.5 does not block Phase 1
+delivery at all.
+
+Given that, the user asked to resequence T5.5 to execute immediately before Milestone 9
+starts (rather than immediately after T5.4, where it currently sits in the epic file) and to
+mark Milestone 5 complete on that basis. Implemented as a **build-order resequencing, not a
+task renumbering** — T5.5 keeps its identity (CLAUDE.md's own rule: task IDs only ever move
+forward, never renumber), only its execution position moved. Added explicit, mirrored notes
+in both epic files (`docs/tasks/05-landing-and-measurement.md`'s T5.5 entry and epic header;
+`docs/tasks/09-performance-dashboards.md`'s epic header, before T9.1) plus `docs/roadmap.md`'s
+Milestone 5 and Milestone 9 entries, so a future session reading either epic in isolation
+still gets the full picture and doesn't attempt T5.5 at the wrong point or skip it entirely.
+Milestone 5's epic file now carries an explicit `Status: Complete (T5.1–T5.4)` line — the
+first such per-epic status marker in this project; worth using the same convention for other
+epics going forward if a similar situation arises (a task that's real, owned, and
+un-blocking, but not yet buildable).
+
+**Related Documents:** `docs/tasks/05-landing-and-measurement.md`, `docs/tasks/
+09-performance-dashboards.md`, `docs/roadmap.md`, `docs/dashboard.md` (Current Phase line
+updated to match), `memory/completed-work.md`.
+
 ## 2026-09-10 (T5.4 follow-up, session 36) — Scheduling the attribution retention job is CLI/IaC-scriptable, not a dashboard-only action; one Railway Cron Job service per scheduled task is the standing pattern, not a shared worker
 
 **Status:** Standing

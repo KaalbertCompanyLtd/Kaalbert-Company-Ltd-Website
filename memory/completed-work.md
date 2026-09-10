@@ -14,6 +14,46 @@ Protocol):
 
 ---
 
+## 2026-09-10 (planning, session 36+)
+
+**Task:** Resequence T5.5; mark Milestone 5 complete
+**Summary:** The user asked whether leaving T5.5 unbuilt blocks anything else, given its
+real external-account dependencies (Meta Business Manager, Google Ads, LinkedIn, plus
+`kaalbert.com`'s still-open domain registration). Checked the actual dependency graph rather
+than assuming: only Milestone 9's T9.4/T9.5/T9.6 depend on T5.5, and Milestone 9 is
+explicitly "(Bonus)," never built until Phase 1 is complete — so T5.5 blocks nothing on the
+critical path. On that basis, the user asked to resequence T5.5 to execute immediately
+before Milestone 9 (not right after T5.4) and to mark Milestone 5 complete. Implemented as a
+build-order resequencing, not a task renumbering (T5.5 keeps its identity, per CLAUDE.md's
+"task IDs only ever move forward" rule) — added mirrored notes in both epic files
+(`docs/tasks/05-landing-and-measurement.md`'s T5.5 entry + epic header;
+`docs/tasks/09-performance-dashboards.md`'s epic header, before T9.1) and in
+`docs/roadmap.md`'s Milestone 5/9 entries, plus a `Status: Complete (T5.1–T5.4)` marker on
+Milestone 5's epic file — the first per-epic status line in this project, worth reusing for
+a similar situation later. Refreshed `docs/dashboard.md`'s "Current Phase" line to match
+(the rest of that document is a stale Phase-6-planning snapshot, flagged as such rather than
+fully rewritten — out of scope for this request).
+**Files Changed:** `docs/tasks/05-landing-and-measurement.md`, `docs/tasks/
+09-performance-dashboards.md`, `docs/roadmap.md`, `docs/dashboard.md`, `memory/
+decision-log.md`, `memory/completed-work.md`, `docs/sessions/session-36-attribution-capture.md`
+(re-synced: Blockers section rewritten to record the resequencing decision, "Next Task"/
+"Paste This to Continue" replaced with the real T6.1 handoff, per the session-management
+skill's living-document rule), `docs/tasks/06-admin-auth.md` (one-line fix — epic header
+cited a stale `ui/mockups/g-admin-content/` path for the login/2FA-setup mockups; confirmed
+via `ls` that the real files live under `ui/mockups/f-admin-auth/` and corrected in place;
+caught while preparing the T6.1 handoff, not itself a technical-debt item since it was fixed
+immediately).
+**Related Feature:** `docs/features/measurement-and-attribution.md`,
+`docs/features/platform-performance-dashboards.md`, `docs/features/admin-authentication.md`.
+**Notes:** No application code changed — this was entirely a planning-document/sequencing
+correction plus the session handoff to Milestone 6. Confirmed via grep before writing the
+T6.1 handoff that no `lib/auth`, `app/proxy.ts`, or `admin_user`/`admin_session`/
+`admin_backup_code` Prisma models exist yet — T6.1 is a genuine from-scratch task, not
+extending anything partially built. Next task for a fresh session is Milestone 6, T6.1
+(`docs/tasks/06-admin-auth.md`), not T5.5.
+
+---
+
 ## 2026-09-10 (T5.4 follow-up, session 36)
 
 **Task:** T5.4 follow-up — schedule the attribution retention job via Railway config-as-code

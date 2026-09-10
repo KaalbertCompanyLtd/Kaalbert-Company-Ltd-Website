@@ -5,6 +5,16 @@ Built only after Phase 1 launch and acceptance are complete — this epic must n
 forward ahead of any Milestone 1–8 task, and must never be reported as blocking launch.
 Builds to its `ui/mockups/g-admin-content/` overview + four platform-detail mockups.
 
+**Before starting T9.1 — complete T5.5 first (`docs/tasks/05-landing-and-measurement.md`),
+even though this epic hasn't started yet.** Resequenced here deliberately (session 36+,
+decided with the user; full reasoning in `memory/decision-log.md` and on T5.5's own entry in
+its home epic): T5.5 is a Milestone 5 task, but nothing before this epic actually needs it —
+only T9.4 (Meta), T9.5 (Google Ads), and T9.6 (LinkedIn) below depend on it, so it was left
+unbuilt rather than holding up Milestones 6–8. By the time this epic is reached, T5.5's own
+external-account dependencies (Meta Business Manager + Pixel + CAPI token, a Google Ads
+account, LinkedIn Campaign Manager access, and `kaalbert.com`'s domain registration) are far
+more likely to actually exist — confirm they do, build T5.5 for real, then proceed to T9.1.
+
 ---
 
 ### T9.1 — Platform connection data model + OAuth scaffold

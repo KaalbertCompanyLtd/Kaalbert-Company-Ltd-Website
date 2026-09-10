@@ -65,6 +65,9 @@ mockup's illustrative article standing in until then.
 Meta CAPI, Google Ads, LinkedIn, consent mode, all six conversion events) wired and verified
 — the site can now carry paid traffic and prove it's working, closing out everything Document
 13.03 asked of the public-facing site.
+**Status:** Complete (T5.1–T5.4). T5.5 (Meta CAPI/Google Ads/LinkedIn/domain verification)
+is resequenced to run immediately before Milestone 9 instead — see that epic's own note and
+`memory/decision-log.md`; nothing in Milestones 6–8 depends on it.
 **Epic:** `tasks/05-landing-and-measurement.md`
 
 ### Milestone 6: Admin Authentication
@@ -92,6 +95,8 @@ in one place.
 
 **Goal:** A convenience beyond what was asked — never built until Phase 1 launch and
 acceptance are complete, so it can never compete with anything above it.
+**Begins with:** T5.5 (Milestone 5's own task, resequenced here — see that milestone's own
+note above), completed first, before T9.1.
 **Epic:** `tasks/09-performance-dashboards.md`
 
 ---

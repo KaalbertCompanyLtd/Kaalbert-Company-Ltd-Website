@@ -1,10 +1,17 @@
-# Project Health Dashboard — 2026-09-05
+# Project Health Dashboard — 2026-09-05 (Current Phase line last updated 2026-09-10, session 36+)
 
 **Project Name:** kaalbert.com (Kaalbert & Company Ltd Website)
-**Current Phase:** Implementation — Milestone 1 (Foundation) and Milestone 2 (Public
-Presentation Layer) complete through T2.9; T2.10 (custom error pages) also confirmed built
-during T2.9's own audit. Milestone 3 (`docs/tasks/03-diagnostic.md`) underway: T3.1 (scoring
-engine data model) complete. Next up: T3.2 (server-side scoring function).
+**Current Phase:** Implementation — Milestones 1–4 (Foundation, Public Presentation Layer,
+Business Health Check Diagnostic, Insights) complete. Milestone 5 (Landing Pages &
+Measurement, `docs/tasks/05-landing-and-measurement.md`) complete through T5.1–T5.4; T5.5
+(Meta CAPI/Google Ads/LinkedIn/domain verification) deliberately resequenced to run
+immediately before Milestone 9 instead — see `memory/decision-log.md` (session 36+) and
+that milestone's own note in `docs/roadmap.md`; nothing in Milestones 6–8 depends on it, and
+it needs external accounts that don't exist yet. **Next up: Milestone 6
+(`docs/tasks/06-admin-auth.md`), T6.1.** (The rest of this document below the artifacts table
+is a Phase-6-planning-time snapshot from session 15 and has not been kept current session by
+session since — treat its narrative/audit sections as historical record, not live status;
+this line and the one above are the only parts refreshed as of session 36+.)
 
 ## Artifacts Produced
 
