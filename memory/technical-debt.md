@@ -49,15 +49,23 @@ R2, the fewer existing rows need backfilling later.
 **Possible Fix/Fixes:** Once Cloudflare R2 is provisioned, replace `lib/media-storage.ts`'s
 `encodeImageUpload` body with a real R2 upload call returning a real object URL — no other
 file changes, since `POST /api/admin/media` and every caller (the article editor's preview
-image/figure blocks, and T7.5/T7.6 once they reuse the same `AdminImageUploadButton`
-component) only ever treat its return value as an opaque URL string. Existing rows already
-holding a base64 `data:` URI would need a one-off backfill migration to re-upload them to R2
-at that point — not attempted here, since R2 doesn't exist yet to backfill into.
+image/figure blocks, and T7.6 once it reuses the same `AdminImageUploadButton` component for
+author photos) only ever treat its return value as an opaque URL string. Existing rows
+already holding a base64 `data:` URI would need a one-off backfill migration to re-upload
+them to R2 at that point — not attempted here, since R2 doesn't exist yet to backfill into.
+Update (T7.5, session 48): T7.5 did **not** reuse `AdminImageUploadButton`/`encodeImageUpload`
+as originally planned here — that mechanism is image-only, and a landing-page checklist is
+realistically a PDF, so T7.5 built a separate sibling instead (`encodeDownloadFileUpload`,
+`POST /api/admin/media/downloads`, `AdminDownloadUploadButton` — see the now-Resolved
+"Landing Pages admin (T7.5) needs to expose `downloadFileUrl`" entry above for the full
+reasoning). Same interim base64 mechanism, same real-R2 swap-in shape, but it's now **two**
+function bodies to swap when R2 arrives, not one — `encodeImageUpload` and
+`encodeDownloadFileUpload`, both in `lib/media-storage.ts`.
 **Trigger type:** Task-sequenced
 **Sequenced into:** T7.6 (Team / author profile editor, `docs/tasks/07-content-admin.md`) —
 see that task's session-45 addendum: it's the next task to touch this same mechanism (author
 photo upload), and the natural checkpoint to check whether R2 is provisioned yet and swap
-over if so.
+over both functions if so.
 
 ---
 
@@ -304,8 +312,9 @@ next known case).
 
 ## Landing Pages admin (T7.5) needs to expose `downloadFileUrl`, wired to the R2 media pipeline
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-10
+**Date resolved:** 2026-09-11 (T7.5, session 48)
 **Reason:** `LandingPage.downloadFileUrl` (added this session, see below) is a real,
 partner-uploadable file — the same category of asset as `Author.photoUrl`
 (`docs/tasks/07-content-admin.md` T7.6, "via the same R2 media pipeline ... ADR 0004") — but
@@ -324,20 +333,25 @@ exists.
 upload mechanism T7.6 establishes...~~ Update (session 45, T7.2): the mechanism now exists —
 `components/admin-image-upload-button.tsx` (`AdminImageUploadButton`) + `POST /api/admin/
 media` + `lib/media-storage.ts`, built for the article editor's preview image/figure blocks.
-When T7.5 is built, reuse that component/route directly for `downloadFileUrl` rather than
-duplicating an upload mechanism. It's still interim, not real R2 (`lib/media-storage.ts`
-returns a base64 `data:` URI, not an object-storage URL) — Provisioning real R2 credentials
-is a separate, User-triggered precondition for uploads to become real object-storage URLs
-(same category as every other external-account setup this project defers to the user); the
-editor UI itself works correctly against the interim mechanism in the meantime, same as T1.6
-built and verified the GTM snippet against a placeholder container ID before a real one
-existed. See `memory/technical-debt.md` → "Article/author image uploads use an interim
-base64 data-URI store, not real Cloudflare R2" for the swap-over-to-real-R2 tracking.
-**Trigger type:** Task-sequenced — building the editor field is normal engineering work once
-T7.5 is reached; only the underlying R2 credentials are User-triggered, and that's already
-covered by ADR 0004's own "added once justified" framing, not a new blocker to raise here.
-**Sequenced into:** T7.5 (Landing Pages admin, `docs/tasks/07-content-admin.md`) — addendum
-added this session pointing back here.
+~~When T7.5 is built, reuse that component/route directly for `downloadFileUrl`~~ Done, with
+one real correction discovered at T7.5 itself: that mechanism is image-only (client-side
+`accept="image/*"` and server-side `ACCEPTED_IMAGE_TYPES`), and a landing-page checklist is
+realistically a PDF, not an image — reusing it as-is would have silently let a PDF fail
+upload or, worse, tried to render one in an `<img>` tag. Built a genuinely separate, smaller
+sibling instead: `lib/media-storage.ts`'s `encodeDownloadFileUpload` (PDF-only, 5MB cap vs.
+images' 2MB, since PDFs run larger), `POST /api/admin/media/downloads`, and
+`components/admin-download-upload-button.tsx` (`AdminDownloadUploadButton`) — same interim
+base64 `data:` URI storage as `encodeImageUpload`, same real-R2 swap-in plan (only
+`lib/media-storage.ts`'s function bodies change; every caller, including
+`components/landing-page-cta.tsx`, already treats the result as an opaque URL). Still
+interim, not real R2 — provisioning real R2 credentials remains a separate, User-triggered
+precondition (same category as every other external-account setup this project defers to the
+user). See `memory/technical-debt.md` → "Article/author image uploads use an interim base64
+data-URI store, not real Cloudflare R2" for the swap-over-to-real-R2 tracking, which now also
+covers this second function.
+**Trigger type:** N/A — resolved
+**Sequenced into:** T7.5 (Landing Pages admin, `docs/tasks/07-content-admin.md`) — closed out
+per that task's own build.
 
 ---
 

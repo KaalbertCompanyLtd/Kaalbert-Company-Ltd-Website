@@ -2,6 +2,82 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.5, session 48) — Landing Pages admin built create-only; the URL slug is partner-typed, not auto-derived; a separate non-image upload mechanism built instead of reusing T7.2's image-only one
+
+**Status:** Standing
+
+**Summary:** T7.5 (Landing Pages admin) built `/admin/landing-pages` (list) and `/admin/
+landing-pages/new` (create). Concrete decisions:
+
+- **Create-only, no edit/delete.** `landing-page-template.md`'s own Interfaces line names
+  `POST /api/admin/landing-pages` alone; `content-management-admin.md`'s User flow step 6
+  describes only "select the template, set headline/opening paragraph, save — a new live
+  page exists." Editing or retiring an already-live campaign page was never in this task's
+  scope, so no `PATCH`/`DELETE` route or UI was built. The list screen is read-only.
+- **The URL slug is a real, partner-typed field, not auto-derived from the headline.**
+  `Article.slug` (T7.2) is auto-derived from the title with a silent numeric-suffix
+  collision fallback, because an article's URL is an incidental side effect of its title.
+  A landing page's `/lp/[slug]` URL is different: it's the actual destination printed on an
+  ad, a QR code, or campaign copy — a partner has a real reason to want a specific, readable
+  slug. Modeled instead on `Category.slug`'s precedent ("partner-authored, partner-visible,
+  worth surfacing a collision inline") — the form has an explicit "URL slug" field with a
+  live `kaalbert.com/lp/…` preview, normalized server-side via the same `lib/categories.ts`
+  `slugify()` every other partner-typed slug in this admin already uses, and a duplicate is
+  rejected inline rather than silently disambiguated.
+- **`downloadFileUrl`'s upload does NOT reuse `AdminImageUploadButton`/`encodeImageUpload`
+  (T7.2), despite `memory/technical-debt.md`'s own note saying T7.5 would.** That mechanism
+  is hard-coded image-only (client `accept` attribute and server `ACCEPTED_IMAGE_TYPES`) —
+  a landing-page checklist is realistically a PDF, and reusing the image path as-is would
+  have either rejected every real upload or let a PDF end up somewhere only `<img src>`
+  expects a decodable image. Built a deliberately small sibling instead:
+  `lib/media-storage.ts`'s `encodeDownloadFileUpload` (PDF only, 5MB cap vs. images' 2MB —
+  PDFs run larger), `POST /api/admin/media/downloads`, and
+  `components/admin-download-upload-button.tsx` — same interim base64 `data:`-URI storage
+  and same real-R2 swap-in shape as `encodeImageUpload`, just a second function to swap
+  later instead of one. `ctaHref`/`ctaLabel` stay required regardless of whether a download
+  file is attached — `components/landing-page-cta.tsx`'s own fallback contract needs a real
+  destination either way.
+- **`bodyContent` blocks are validated per-kind server-side** (non-blank text, non-empty
+  item arrays, every list/stats/steps item's required subfields present) — same rigor
+  `updateOffer`'s FAQ/method-stage validation already applies to a structurally different
+  ordered-block shape, via a new `LandingPageBlockEditor` (5 kinds: heading, paragraph,
+  list, stats, steps) deliberately duplicating `LegalBlockEditor`'s add/move/remove
+  mechanics in miniature rather than generalizing either existing block editor — same
+  "small, deliberate duplication over a one-time-reuse refactor" precedent T7.3 already set.
+- **A brand-new landing page is always created with `isPlaceholder: false`, never exposed
+  as a field.** Unlike the three seeded, mockup-derived instances (flagged placeholder
+  pending firm review), a page a partner builds through this form is real content they
+  wrote and explicitly signed off via the required 10.05-compliance checkbox — the same
+  "save is the publish moment" pattern T7.3 already established for content types with no
+  separate draft/live column.
+- **Fixed a real gap from the previous session (T7.4):** `memory/decision-log.md`,
+  `docs/user-guide.md`, and the T7.4 session summary had each been hand-edited (via the
+  Edit tool) after that session's last `npm run format` run, and committed without a final
+  format pass — `npm run format:check` on the already-committed files failed at the start of
+  this session. Fixed as its own `chore(T07-04)` commit before starting T7.5's own work.
+  Lesson for future sessions: run `format`/`format:check` as the literal last step before
+  every commit, after all file edits including memory/docs/session-summary files, not only
+  after the code implementation.
+
+Verified for real via Playwright MCP against the live dev database: created a real test
+landing page (all five `bodyContent` block kinds, a real PDF file uploaded and attached),
+confirmed `/lp/[slug]` rendered it correctly including a real `checklist_downloaded`-firing
+download link (`href` starting `data:application/pdf;base64,...`) when a download file was
+attached, and the ordinary `ctaHref` link when it wasn't; confirmed the duplicate-slug
+rejection (tried `business-health-check`, got the inline 400) and the missing-compliance
+rejection both work; confirmed a non-PDF upload to the new download endpoint is rejected.
+The native OS file-chooser dialog didn't cooperate with headless Playwright automation for
+the upload button's own click interaction, so the upload endpoint was verified via a direct
+authenticated `fetch`/`FormData` call from the same browser session instead — the same code
+path the button component calls, just not through a simulated file-picker click. Checked at
+mobile (390px)/tablet (768px)/desktop (1280px); the list table stays inside its own
+`overflow-x-auto` wrapper with no page-level horizontal scroll at 390px. Both test rows
+deleted afterward via a direct Prisma query (no delete UI exists in this create-only scope).
+
+**Related Documents:** `docs/tasks/07-content-admin.md` (T7.5), `docs/features/landing-page-
+template.md`, `docs/features/content-management-admin.md`, `lib/admin-landing-pages.ts`,
+`lib/admin-landing-pages.test.ts`, `lib/media-storage.ts`.
+
 ## 2026-09-11 (T7.4, session 47) — Offer editor: four more mockup gaps fixed beyond the five already named, FAQs/method stages given real structured fields, slug-keyed route, tiered-vs-single-tier form split, 10.05 gate extended to the Advisory Retainer
 
 **Status:** Standing

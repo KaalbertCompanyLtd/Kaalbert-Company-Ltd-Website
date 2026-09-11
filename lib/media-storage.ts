@@ -55,3 +55,36 @@ export function encodeImageUpload({ buffer, contentType }: ImageUploadInput): st
 
   return `data:${contentType};base64,${buffer.toString("base64")}`;
 }
+
+const MAX_DOWNLOAD_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB, pre-encoding — PDFs run larger than a JPEG/PNG/WebP preview image
+const ACCEPTED_DOWNLOAD_TYPES = new Set(["application/pdf"]);
+
+export interface DownloadFileUploadInput {
+  buffer: Buffer;
+  contentType: string;
+}
+
+/**
+ * Sibling to `encodeImageUpload` for a real, non-image download — `LandingPage.
+ * downloadFileUrl` (T7.5), e.g. the Funding-Readiness Checklist PDF. A separate, smaller
+ * function rather than widening `encodeImageUpload`'s own accepted-type set: every existing
+ * caller of that function (article preview images, figure blocks) genuinely renders its
+ * result in an `<img src>` — conflating the two would let a PDF silently end up there. Same
+ * interim base64-data-URI storage as `encodeImageUpload` (see that function's own
+ * doc-comment for the real-R2 swap-in plan) — `components/landing-page-cta.tsx` already
+ * treats `downloadFileUrl` as an opaque `href`, so nothing there changes when R2 replaces
+ * this function's body either.
+ */
+export function encodeDownloadFileUpload({ buffer, contentType }: DownloadFileUploadInput): string {
+  if (!ACCEPTED_DOWNLOAD_TYPES.has(contentType)) {
+    throw new MediaValidationError("Only PDF files are accepted for a download.");
+  }
+  if (buffer.byteLength === 0) {
+    throw new MediaValidationError("The uploaded file is empty.");
+  }
+  if (buffer.byteLength > MAX_DOWNLOAD_UPLOAD_BYTES) {
+    throw new MediaValidationError("Downloadable files must be 5MB or smaller.");
+  }
+
+  return `data:${contentType};base64,${buffer.toString("base64")}`;
+}

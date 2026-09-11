@@ -14,6 +14,54 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.5, session 48)
+
+**Task:** T7.5 — Landing Pages admin
+**Summary:** Built `/admin/landing-pages` (list of the three seeded campaign instances,
+`AdminDataTable`-style — headline, `/lp/[slug]` link, campaign reference, last updated) and
+`/admin/landing-pages/new` (create-only editor: URL slug, kicker, headline, opening
+paragraph, an ordered `bodyContent` block editor covering all five block kinds — heading,
+paragraph, checklist, stat row, step row — CTA label/link, an optional PDF download-file
+upload, campaign reference, meta title/description, and the 10.05-compliance checkbox). New
+`lib/admin-landing-pages.ts` (`getLandingPageList`, `createLandingPage` — duplicate-slug
+rejection, per-block-kind validation, the 10.05 gate) and `POST /api/admin/landing-pages`
+(parses/shapes only). Also built the download-file upload mechanism this task's own
+addendum required: `lib/media-storage.ts`'s new `encodeDownloadFileUpload` (PDF-only, 5MB
+cap), `POST /api/admin/media/downloads`, and `components/admin-download-upload-button.tsx`.
+**Files Changed:** `lib/admin-landing-pages.ts`, `lib/admin-landing-pages.test.ts`,
+`lib/media-storage.ts`, `app/admin/(shell)/landing-pages/page.tsx`, `app/admin/(shell)/
+landing-pages/new/page.tsx`, `app/admin/(shell)/landing-pages/new/new-landing-page-form.tsx`,
+`app/admin/(shell)/landing-pages/landing-page-block-editor.tsx`,
+`components/admin-download-upload-button.tsx`, `app/api/admin/landing-pages/route.ts`,
+`app/api/admin/media/downloads/route.ts`.
+**Related Feature:** `docs/features/landing-page-template.md`, `docs/features/content-
+management-admin.md`.
+**Notes:** Create-only, per the feature doc's own Interfaces line (`POST /api/admin/landing-
+pages` alone, no `PATCH`) — editing an already-live campaign page is out of this task's
+scope. The URL slug is a real, partner-typed field (normalized via `lib/categories.ts`'s
+`slugify`, duplicate rejected inline) rather than auto-derived from the headline the way
+`Article.slug` is — a campaign URL is deliberately chosen to match ad/print/QR copy, closer
+to `Category.slug`'s own precedent. `AdminImageUploadButton` (T7.2) was **not** reused for
+the download file as originally planned in `memory/technical-debt.md` — it's image-only,
+and a checklist is realistically a PDF; built a small sibling mechanism instead. Full
+reasoning in `memory/decision-log.md`. Verified live via Playwright MCP: created a real test
+landing page end to end (all five body-block kinds, a real PDF upload via a direct multipart
+POST — the native file-chooser dialog didn't cooperate with headless automation, so the
+upload endpoint was exercised directly instead of through a simulated click), confirmed
+`/lp/[slug]` rendered it correctly (no site navigation, full footer, `checklist_downloaded`-
+firing download link when a file is attached), confirmed the duplicate-slug and missing-
+compliance-checkbox rejections both return inline 400s, checked mobile (390px)/tablet
+(768px)/desktop (1280px) — the list table stays within its own `overflow-x-auto` container,
+no page-level horizontal scroll. Both test rows deleted afterward via a direct Prisma query
+(no delete UI exists in this create-only scope), dev DB back to exactly 3 real rows. All
+quality gates pass (lint, format:check, typecheck, 225 tests total — 9 new). Also fixed a
+formatting-drift gap from the previous session (T7.4): `memory/decision-log.md`,
+`docs/user-guide.md`, and the T7.4 session summary had been hand-edited after the last
+`npm run format` run and committed without a final format pass — caught and fixed as its own
+`chore(T07-04)` commit before starting this task's own work.
+
+---
+
 ## 2026-09-11 (T7.4, session 47)
 
 **Task:** T7.4 — Offer editor (fee bands, FAQs, and full field set)

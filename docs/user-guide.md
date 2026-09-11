@@ -23,14 +23,14 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 47) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 48) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
 Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1), Articles/
-Categories admin (T7.2), Pages admin (Capabilities/Our Method/Legal/Footer, T7.3), and Offers
-admin (the three core offers plus the Advisory Retainer, T7.4) are all live; Landing Pages,
-Team, Diagnostic Configuration, Site Settings, Subscribers, and article-resource attachment
-(T7.10) are next.
+Categories admin (T7.2), Pages admin (Capabilities/Our Method/Legal/Footer, T7.3), Offers
+admin (the three core offers plus the Advisory Retainer, T7.4), and Landing Pages admin
+(create-only, T7.5) are all live; Team, Diagnostic Configuration, Site Settings, Subscribers,
+and article-resource attachment (T7.10) are next.
 
 ---
 
@@ -131,19 +131,35 @@ in the body; and can create/rename/retire Insights categories themselves too.
 `/admin/articles` → "New Article", or "Edit" on any existing one. Create, rename, or retire an
 Insights category from the same screen's "Manage categories" link — retiring one never
 deletes its articles, they just lose that category tag. Attaching a downloadable file to an
-article is still Milestone 7 work not yet reached (T7.10); landing pages, team profiles, and
-diagnostic questions are also still ahead. Marketing/legal page copy and the three core
-offers plus the Advisory Retainer are already editable — see "Public website pages" above.
+article is still Milestone 7 work not yet reached (T7.10); team profiles and diagnostic
+questions are also still ahead. Marketing/legal page copy, the three core offers plus the
+Advisory Retainer, and creating a new landing page are already editable — see "Public
+website pages" and "Landing pages" above.
 
-### Landing pages — Milestone 5 (T5.1–T5.2)
+### Landing pages — Milestone 5 (T5.1–T5.2), admin creation added at Milestone 7 (T7.5)
 
 **What it does:** Three seeded, dedicated landing-page instances for ad campaigns (one of
-which cross-promotes a downloadable checklist as its own call to action).
+which cross-promotes a downloadable checklist as its own call to action). **A partner can
+now create a brand-new campaign landing page themselves** — `/admin/landing-pages` → "New
+Landing Page" — no developer or deploy involved.
 
-**What to monitor:** Only these three exist. A new landing page for a new campaign currently
-needs a developer to add.
+**What to monitor:**
 
-**What a partner can do about it today:** Nothing via the site itself yet — Milestone 7.
+- Creating one is **create-only, no editing yet** — once a campaign page is created, it
+  can't be edited or removed from `/admin` afterward; that would need a developer directly.
+- The optional PDF checklist upload uses the same interim storage as article preview images
+  — durable, but not on a real image host yet (Cloudflare R2 isn't set up). A partner can
+  leave this blank and use an ordinary link instead; the call-to-action link is always
+  required regardless, as the real fallback destination.
+- The partner chooses the page's own URL (e.g. `kaalbert.com/lp/spring-2026-promo`) — a
+  duplicate is rejected with a clear inline message, never silently overwriting an existing
+  campaign page.
+
+**What a partner can do about it today:** Create a new landing page end to end — headline,
+opening paragraph, body content (headings, paragraphs, a checklist, stat rows, step rows, in
+any order), call to action, an optional PDF download, and meta tags —
+`/admin/landing-pages`. Editing or retiring an existing landing page still needs a
+developer.
 
 ### Measurement & attribution — Milestone 5 (T5.3–T5.4)
 
@@ -258,10 +274,10 @@ depends on:
 
 - **Milestone 7 — Content Management Admin** (in progress): every piece of content seeded so
   far becomes partner-editable without a developer. Dashboard, Articles/Categories, Pages
-  (Capabilities/Our Method/Legal/Footer), and Offers (the three core offers plus the Advisory
-  Retainer) are live; Landing Pages, Team, Diagnostic Configuration, Site Settings,
-  Subscribers, and article-resource attachment are next — where the remaining "still needs a
-  developer" notes above get resolved.
+  (Capabilities/Our Method/Legal/Footer), Offers (the three core offers plus the Advisory
+  Retainer), and Landing Pages (create-only) are live; Team, Diagnostic Configuration, Site
+  Settings, Subscribers, and article-resource attachment are next — where the remaining
+  "still needs a developer" notes above get resolved.
 - **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
   diagnostic completions in one place.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
@@ -271,6 +287,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Landing Pages admin (T7.5) went live — a partner can now create a brand-new campaign landing page themselves (headline, opening paragraph, body content, CTA, an optional PDF download, meta tags) — `/admin/landing-pages` → "New Landing Page". Create-only for now: editing or retiring an existing landing page still needs a developer. The partner picks the page's own URL slug; a duplicate is rejected with a clear inline message.                           |
 | 2026-09-11 | Offers admin (T7.4) went live — a partner can now edit all three core offer pages' full field set (problem statement, who it's for/not for, method stages, deliverables/required inputs, fee band, out-of-scope note, FAQs, CTA) and the Advisory Retainer's fee/description themselves — `/admin/offers`. A fee band still can't be saved without its scope cap, enforced by the system; updating a fee updates the offer page and the nav dropdown hint in one save. |
 | 2026-09-11 | Pages admin (T7.3) went live — a partner can now edit Capabilities, Our Method, any of the four legal pages (including clearing the "Draft — pending legal review" marker themselves), and the shared footer's scope-of-practice/registration text. Corrected a drift: the "Public website pages" section's "what a partner can do" line had been updated in the Artifact mirror during T7.2 but not in this file — synced here.                                       |
 | 2026-09-11 | Articles/Categories admin (T7.2) went live — a partner can now write, edit, and publish an article themselves (including images/figures), and create/rename/retire Insights categories, both fully self-service. Noted the two remaining gaps: image uploads use an interim storage method pending Cloudflare R2, and attaching a downloadable file to an article isn't built yet (T7.10).                                                                             |
