@@ -23,10 +23,12 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 43) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 44) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
-Next: Milestone 7, Content Management Admin.
+Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1) is live; the
+rest of Milestone 7 (Articles, Pages, Offers, Landing Pages, Team, Diagnostic Configuration)
+is next.
 
 ---
 
@@ -176,13 +178,21 @@ distinct from the self-service password reset above, which is already fully buil
 no one else's involvement.
 
 **What to monitor:** Nothing external — this milestone introduces no new third-party
-account/dashboard dependency, everything runs inside the app and its own database.
+account/dashboard dependency, everything runs inside the app and its own database. One
+internal thing to know, not to worry about: on the dashboard below, every enquiry currently
+shows a "New" status badge and the Triage column shows only Flagged/Not flagged (not a
+High/Medium/Low priority) — both are accurate today (there's no way yet for an enquiry to be
+anything other than "new," and no priority level is saved anywhere per enquiry yet), not a
+bug; both become real once Milestone 8 (Enquiry Management) ships.
 
 **What a partner can do about it today:** Log in, reset their own forgotten password
-self-service, and reach a placeholder admin dashboard — there is nothing to actually edit yet
-(that's Milestone 7). Deactivating another partner's account, resetting a partner's 2FA or
-password on their behalf, and creating a brand-new partner's first account all still require
-the developer directly.
+self-service, and see the real admin dashboard (T7.1) — four at-a-glance counts (new
+enquiries, triage-flagged, diagnostics completed this month, published articles) and the 5
+most recent enquiries, both reading real, live data. There is nothing to actually *edit* yet
+(that's the rest of Milestone 7), and no way yet to open an enquiry, change its status, or
+filter the list (that's Milestone 8) — today's dashboard is look-but-not-touch. Deactivating
+another partner's account, resetting a partner's 2FA or password on their behalf, and
+creating a brand-new partner's first account all still require the developer directly.
 
 ---
 
@@ -213,6 +223,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                   |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-09-11 | Admin dashboard (T7.1) went live — real stat counts and a recent-enquiries panel replace the old placeholder; noted the two honest placeholders (status always "New", Triage shown as flagged/not-flagged only) that resolve once Milestone 8 ships. |
 | 2026-09-11 | Added self-service password reset (T6.7) to the Admin Login section — a partner can now reset a forgotten password themselves, no developer or other partner needed.           |
 | 2026-09-10 | Milestone 6 (Admin Login) complete — added its "What's live today" section, moved it out of "What's coming next", updated the two stale "no admin area yet" mentions above it. |
 | 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9).                                                |

@@ -18,6 +18,76 @@ sequencing requirement:
 
 ---
 
+## Enquiry-level triage priority (High/Medium/Low) is computed at diagnostic-scoring time but never persisted, so no admin screen can show it
+
+**Status:** Open
+**Date raised:** 2026-09-11 (T7.1, session 44)
+**Reason:** Discovered building the admin dashboard's recent-enquiries panel to
+`ui/mockups/g-admin-content/admin-dashboard.html`, whose Triage column shows a High/Medium/
+Low priority badge (`badge-triage-high/medium/low`, `ui/mockups/_shared.css`).
+`lib/diagnostic-scoring.ts`'s `resolveTriageBand` computes exactly this value per submission
+(`overallPriorityLevel`, sourced from `diagnostic_threshold.triagePriorityLevel` — confirmed
+by `memory/technical-debt.md`'s own earlier, resolved entry on score bands: "an internal
+partner-facing priority word like 'High'"), but `DiagnosticScoringResult` never returns it and
+`lib/diagnostic-submit.ts` never persists it — only the boolean `overallTriageFlag` is written
+to `enquiry_record.triage_flag`. The priority word is used once, inline, inside
+`buildIndicativeCostStatement`'s prose, then discarded.
+**Impact:** Low today — the boolean `triageFlag` still drives correct sort/flag behaviour
+everywhere it's used. But every future triage-priority UI (this task's own dashboard, T8.2's
+list, T8.3's detail screen) can only show a flagged/not-flagged boolean, never the real
+High/Medium/Low the visitor's own diagnostic actually resolved to, unless this is fixed.
+Recomputing it later from currently-configured thresholds would be wrong (thresholds are
+admin-editable and may have changed since the enquiry was scored — CLAUDE.md's diagnostic
+values-are-data rule means this is expected to happen), so only capturing it at
+scoring/submit time is correct.
+**Priority:** Medium — not urgent (boolean triage still works everywhere today), but every
+enquiry row written before this is fixed permanently loses its real priority level; the gap
+widens the longer it's left.
+**Possible Fix/Fixes:** Add `triagePriorityLevel` to `DiagnosticScoringResult` (returning
+`overallPriorityLevel` from `scoreDiagnosticResponses` instead of only consuming it locally),
+add an `enquiry_record.triage_priority_level` (`String?`, null for contact-form rows, same
+nullability precedent as `triage_flag`) column, and persist it in `lib/diagnostic-submit.ts`
+alongside the existing `triageFlag: result.overallTriageFlag` line.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T8.1 (`docs/tasks/08-enquiry-management.md`) — see that task's session-44
+addendum for the exact fields/files this touches.
+
+---
+
+## Admin dashboard's New Enquiries stat and Status badge assume every enquiry is "new" because `enquiry_record` has no `status` column yet
+
+**Status:** Open
+**Date raised:** 2026-09-11 (T7.1, session 44)
+**Reason:** `content-management-admin.md`'s dashboard spec defines "New enquiries" as
+`COUNT(enquiry_record)` filtered by `status = new`, and the accepted mockup
+(`ui/mockups/g-admin-content/admin-dashboard.html`) shows a per-row Status badge
+(New/Contacted). But `status` — along with `assigned_partner_id`/`internal_notes`/
+`status_updated_at` — is `enquiry-management.md`'s own extension to `enquiry_record`, and is
+explicitly Milestone 8 (T8.1) scope, not modelled yet (see the `EnquiryRecord` model
+doc-comment in `prisma/schema.prisma`, and `docs/roadmap.md`'s Milestone 7-before-8 ordering
+— T7.1 depends on T6.3/T3.5/T2.6/T4.1, never T8.1). T7.1 (`lib/admin-dashboard.ts`) worked
+around this rather than adding the column early (out of this task's own stated scope, "no new
+entity," and the schema's own explicit "not anticipated here" comment): "New enquiries" is
+computed as an unfiltered `COUNT(enquiry_record)`, and the Status badge always renders "New"
+— both are honestly correct today, since no status-transition capability exists yet for a row
+to be anything else, but both are placeholders load-bearing on T8.1 shipping.
+**Impact:** Low today (the numbers/badge shown are accurate, just not yet meaningfully
+filterable). Becomes actively wrong the moment T8.1 ships and a partner starts marking
+enquiries contacted/closed/converted/not-a-fit — until this task's own functions are updated
+in lockstep, "New Enquiries" would keep counting every row ever created, not just the
+genuinely-new ones, and every row would keep showing "New" regardless of its real status.
+**Priority:** Medium — not urgent pre-T8.1 (no way for the value to be wrong yet), but a
+real, silent staleness risk the moment T8.1 ships if not updated together.
+**Possible Fix/Fixes:** Once T8.1 adds `status`, update `lib/admin-dashboard.ts`'s
+`getAdminDashboardStats` to filter `where: { status: "new" }` and `getRecentEnquiries` to
+select/return the real `status` value instead of the hardcoded `"new"` literal, updating both
+functions' tests (`lib/admin-dashboard.test.ts`) alongside.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T8.1 (`docs/tasks/08-enquiry-management.md`) — see that task's session-44
+addendum.
+
+---
+
 ## No admin-facing way to deactivate/reactivate an account, reset an existing partner's 2FA enrolment, or reset an existing partner's password
 
 **Status:** Open

@@ -2,6 +2,58 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.1, session 44) — Admin dashboard built against `enquiry_record` fields Milestone 8 hasn't added yet; gaps worked around honestly and sequenced forward rather than built early or fudged
+
+**Status:** Standing
+
+**Summary:** `content-management-admin.md`'s dashboard spec and its accepted mockup
+(`ui/mockups/g-admin-content/admin-dashboard.html`) both assume two pieces of data that don't
+exist on `enquiry_record` yet: a `status` field (`enquiry-management.md`'s own extension,
+explicitly flagged in the schema's model doc-comment as Milestone 8/T8.1 scope, never
+anticipated at T2.6) and a persisted per-enquiry triage priority level (the mockup's
+High/Medium/Low Triage badge — `lib/diagnostic-scoring.ts` computes this value per submission
+but only ever discards it after embedding it in prose, never persisting it structurally).
+Roadmap order is Milestone 7 before Milestone 8, and T7.1's own dependency list is T6.3/T3.5/
+T2.6/T4.1 — Milestone 8 is genuinely not built yet at this task's normal point of execution,
+so this wasn't a build-order mistake to fix, but a real sequencing gap between how
+`content-management-admin.md` was written and how the epics were actually ordered.
+
+Chose not to add either field early, even though both are small schema changes T7.1 could
+technically have made: the `EnquiryRecord` model doc-comment explicitly says the `status`
+extension is "not anticipated here... no precedent in this task's own architecture
+constraints for adding it early," and T7.1's own task doc caps its scope at "no new entity"
+(read-only aggregate queries). Instead:
+
+- **"New enquiries"** is computed as an unfiltered `COUNT(enquiry_record)` — honestly correct
+  today (every row genuinely is "new," since no status-transition capability exists for a row
+  to be anything else yet), not a fabricated approximation.
+- **The Status badge** always renders "New" for the same reason.
+- **The Triage column** renders a real, persisted boolean (`triageFlag`: Flagged/Not flagged)
+  rather than fabricating a High/Medium/Low value that isn't stored anywhere per-row. Reusing
+  currently-configured `diagnostic_threshold` values to reconstruct a priority at read time
+  was considered and rejected — thresholds are admin-editable (ADR 0005), so a value
+  recomputed today could misrepresent what actually triggered a specific historical
+  submission.
+- **Source** is simplified to a two-way "Business Health Check"/"Contact form" label
+  (derived from `triageFlag` being non-null vs. null, the same diagnostic-vs-contact-form
+  signal the model doc-comment already establishes) rather than also resolving the visitor's
+  specific landing page by name — the mockup's per-row landing-page-name variety read as
+  illustrative sample data, not a stated data-requirement, and that finer detail already has
+  a real home at T8.3's enquiry detail screen (attribution block).
+
+Both real gaps are logged in `memory/technical-debt.md` ("Admin dashboard's New Enquiries stat
+and Status badge assume every enquiry is 'new'..." and "Enquiry-level triage priority... is
+computed... but never persisted...") and sequenced into T8.1 via an addendum in
+`docs/tasks/08-enquiry-management.md`, not left floating — T8.1 already extends this same
+table's schema, so both fields land in the same migration as a natural fit.
+
+**Related Documents:** `docs/features/content-management-admin.md`,
+`docs/features/enquiry-management.md`, `docs/tasks/07-content-admin.md` (T7.1),
+`docs/tasks/08-enquiry-management.md` (T8.1), `prisma/schema.prisma` (`EnquiryRecord` model
+doc-comment), `lib/admin-dashboard.ts`.
+
+---
+
 ## 2026-09-11 (T6.7, session 43) — Password reset is self-service by design (TOTP is untouched); a new task was added directly to the epic and built in the same session, at the user's explicit request
 
 **Status:** Standing

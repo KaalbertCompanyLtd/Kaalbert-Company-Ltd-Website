@@ -16,6 +16,31 @@ Builds to `ui/mockups/g-admin-content/` enquiries list/detail mockups.
 diagnostic) is queryable through the extended schema with no data loss.
 **Size:** S **Dependencies:** T3.1, T2.6
 
+**Addendum (session 44, 2026-09-11):** While building T7.1 (Admin dashboard), the dashboard's
+"New enquiries" stat and the recent-enquiries panel's Status badge both had to work around
+`status` not existing yet — every row was shown/counted as unconditionally "new," which is
+honest today (no status-transition capability exists yet to make a row anything else) but
+must switch to a real `status = 'new'` filter/read once this task ships the column. See
+`memory/technical-debt.md` → "Admin dashboard's New Enquiries stat and Status badge assume
+every enquiry is 'new' because `enquiry_record` has no `status` column yet" — update
+`lib/admin-dashboard.ts`'s `getAdminDashboardStats`/`getRecentEnquiries` (and their tests) in
+this task, not just add the column.
+
+Separately, also add a `triagePriorityLevel` (`String?`) column here while this task is
+already extending this same table's schema: `lib/diagnostic-scoring.ts`'s
+`resolveTriageBand` already computes an `overallPriorityLevel` ("High"/"Medium"/"Low", from
+`diagnostic_threshold.triagePriorityLevel`) per submission, but `lib/diagnostic-submit.ts`
+only ever persists the boolean `triageFlag` — the priority word itself is discarded after
+being embedded in `indicativeCostStatement`'s prose, with no structured field to read it back
+from later. `ui/mockups/g-admin-content/admin-dashboard.html`'s Triage column shows a
+High/Medium/Low badge (`badge-triage-high/medium/low` in `ui/mockups/_shared.css`), but T7.1
+could only render a plain Flagged/Not-flagged boolean since no structured field exists — see
+`memory/technical-debt.md` → "Enquiry-level triage priority (High/Medium/Low) is computed at
+diagnostic-scoring time but never persisted, so no admin screen can show it." When adding the
+column here, also update `lib/diagnostic-submit.ts` to persist it (mirroring how
+`triageFlag: result.overallTriageFlag` is already set) and revisit T7.1's dashboard Triage
+badge to use the real value instead of the boolean approximation.
+
 ### T8.2 — Enquiries list — `/admin/enquiries`
 
 **Build:** List screen to its mockup: triage-flagged rows surfaced first by default,

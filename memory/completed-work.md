@@ -14,6 +14,51 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.1, session 44)
+
+**Task:** T7.1 — Admin dashboard — `/admin`
+**Summary:** Replaced the T1.5 placeholder at `app/admin/(shell)/page.tsx` with the real
+dashboard: 4 stat cards (New Enquiries, Triage-flagged, Diagnostics This Month, Published
+Articles) and a recent-enquiries panel (5 most recent `enquiry_record` rows, unfiltered),
+built to `ui/mockups/g-admin-content/admin-dashboard.html`. All aggregate queries live in
+new `lib/admin-dashboard.ts` (`getAdminDashboardStats`, `getRecentEnquiries`), not inline in
+the page component, per CLAUDE.md's business-logic-in-`lib/` rule; the page itself is a
+Server Component with `export const dynamic = "force-dynamic"`.
+
+Two real data gaps surfaced mid-build — `enquiry_record` has no `status` column yet
+(`enquiry-management.md`'s extension is explicitly Milestone 8/T8.1 scope, not built at this
+task's normal point in the roadmap), and no per-enquiry triage priority level (High/Medium/
+Low) is persisted anywhere, only a boolean `triageFlag`. Both were worked around honestly
+(unfiltered `COUNT` doubling as "new enquiries" since every row genuinely is new today; a
+hardcoded "New" status badge; a boolean Flagged/Not-flagged badge instead of a fabricated
+priority level) rather than building Milestone 8 fields early or inventing data — see
+`memory/decision-log.md` for the full reasoning and `memory/technical-debt.md` for both
+tracked gaps, both sequenced into T8.1 via an addendum in
+`docs/tasks/08-enquiry-management.md`.
+
+Verified for real via Playwright MCP: logged into `/admin` with the dev admin account
+(completing its pending TOTP re-enrolment via a backup code, since the account's 2FA setup
+had been left incomplete — see `CLAUDE.local.md`, now updated with the new TOTP secret/backup
+codes), reached the live dashboard, and cross-checked all 4 stat counts (6/5/6/8) and the 5
+recent-enquiry rows against a direct Prisma query against the same dev database — exact
+match. Checked at mobile (390px — stat cards stack 2×2, the enquiries table scrolls within
+its own `overflow-x-auto` container per the existing `Table` component, no page-level
+horizontal scroll, confirmed via `document.documentElement.scrollWidth`), tablet (768px), and
+desktop (1280px, matching the mockup's own layout closely).
+**Files Changed:** `lib/admin-dashboard.ts` (new), `lib/admin-dashboard.test.ts` (new),
+`app/admin/(shell)/page.tsx`, `docs/tasks/08-enquiry-management.md` (T8.1 addendum),
+`CLAUDE.local.md` (dev admin 2FA re-enrolment).
+**Related Feature:** `docs/features/content-management-admin.md`
+**Notes:** Quality gates all clean (lint, format:check, `npx tsc --noEmit` via
+`npm run typecheck`, 152/152 tests including 9 new). `docs/user-guide.md` not updated — this
+screen has no partner-facing action yet (read-only stats/list a partner can already infer
+from the enquiries they've received directly); it becomes genuinely user-guide-worthy once
+T7.2+ and T8.x give the Quick Actions links real destinations. No milestone/epic completed
+this session (T7.1 is the first of 7 tasks in Milestone 7), so the "Website Build Status"
+Artifact was not updated.
+
+---
+
 ## 2026-09-11 (T6.3 follow-up, session 44)
 
 **Task:** T6.3 follow-up — Redirect an already-authenticated visitor away from `/admin/login`
