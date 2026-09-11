@@ -14,6 +14,65 @@ Protocol):
 
 ---
 
+## 2026-09-11 (session 54)
+
+**Task:** Provision Cloudflare R2 and close out the two R2-blocked technical-debt entries —
+not a `docs/tasks/*.md` task, an infrastructure/ops session
+**Summary:** User provisioned a real R2 bucket (`kaalbert-media`) and S3-compatible API token
+directly in the Cloudflare dashboard. Wired it into the codebase: new `lib/r2-client.ts`
+(a cached `@aws-sdk/client-s3` `S3Client` pointed at R2's S3-compatible endpoint, plus
+`getR2PublicUrl`/`getR2ObjectKeyFromUrl` helpers); `lib/media-storage.ts`'s
+`encodeImageUpload`/`encodeDownloadFileUpload` now upload to R2 and return real public URLs
+(both became `async` — the only call-site change needed, in the two media API routes);
+`lib/insights.ts`'s `isResourceReachable` now uses a `HeadObjectCommand` against our own
+bucket instead of a plain HTTP `HEAD` against an arbitrary host, falling back to the old
+check for any non-R2 URL. No backfill migration needed — every table this touches was
+confirmed still `null`/empty before writing the new code. Verified fully live via Playwright:
+uploaded a real image and a real PDF through the admin, confirmed both landed at real,
+publicly-fetchable `https://pub-....r2.dev/...` URLs (`curl` against the live object matched
+content-type and exact byte size), confirmed the public article page's resource link
+resolved as available via the new `HeadObjectCommand` path, then deleted both test objects
+directly from the bucket.
+
+Also discovered and fixed, while auditing the live Railway service's variables before adding
+R2 credentials there: `ADMIN_CHALLENGE_TOKEN_SECRET` and `ADMIN_TOTP_ENCRYPTION_KEY` were
+never set on production at all — every real `/admin/login` attempt has been hard-erroring
+since Milestone 6 shipped. Generated two fresh, production-only values (never reused from
+either local `.env.*` file) and set them on the live `kaalbert-web` service. **Not yet live**
+— setting Railway variables doesn't itself deploy, and this session's own auto-mode
+permissions blocked the follow-up `railway redeploy` as a Production Deploy action requiring
+explicit user approval. See `memory/known-bugs.md`.
+
+Brought `.env.example`, `.env.local` (user's own action), `.env.production` (local prod-build
+testing only, per its own header comment — never read by the deployed app), and
+`CLAUDE.local.md` in sync with each other and with the actual live Railway variables —
+comprehensive pass, not R2-only: cross-checked every `process.env.*` reference in the
+codebase against `.env.example`, fixed `.env.production`'s stale `NEXTAUTH_SECRET=` (the
+pre-T6.3 placeholder name, still present there even though `.env.example`'s own comment has
+documented the rename since T6.3) and its entirely-missing `ADMIN_TOTP_ENCRYPTION_KEY`, and
+corrected `CLAUDE.local.md`'s Credentials section, which still described Brevo as "awaiting a
+real account" even though `.env.local`/`.env.production`/Railway have all held a real
+`BREVO_API_KEY` for some time — a stale status note unrelated to R2, caught in the same pass.
+**Files Changed:** `lib/r2-client.ts` (new), `lib/media-storage.ts`, `lib/media-storage.test.ts`,
+`lib/insights.ts`, `lib/insights.test.ts`, `app/api/admin/media/route.ts`, `app/api/admin/
+media/downloads/route.ts`, `package.json`/`package-lock.json` (`@aws-sdk/client-s3`),
+`.env.example`, `.env.production` (gitignored, local), `CLAUDE.local.md`,
+`memory/technical-debt.md` (both R2 entries resolved), `memory/decision-log.md`,
+`memory/architecture-decisions.md` (ADR 0004 entry), `memory/known-bugs.md` (new entry — the
+missing production auth secrets). Also set 7 variables directly on the live `kaalbert-web`
+Railway service (5 `CLOUDFLARE_R2_*`, `ADMIN_CHALLENGE_TOKEN_SECRET`,
+`ADMIN_TOTP_ENCRYPTION_KEY`) — not a file in this repo, `railway variable set`.
+**Related Feature:** ADR 0004 (Cloudflare CDN/proxy), `docs/features/insights-engine.md`
+(the resource-availability edge case `isResourceReachable` implements).
+**Notes:** **A production redeploy is still required and was not done this session** — see
+`memory/known-bugs.md`'s new entry. The R2 credentials and both auth secrets are set on
+Railway but inert until the `kaalbert-web` service is redeployed (Railway dashboard's
+"Redeploy" button, or `railway redeploy --service kaalbert-web` with permission to run it).
+Nothing in `docs/user-guide.md` changed — this session touched infrastructure/environment
+plumbing only, no partner-visible admin capability changed.
+
+---
+
 ## 2026-09-11 (T7.10, session 53)
 
 **Task:** T7.10 — Article downloadable-resource management

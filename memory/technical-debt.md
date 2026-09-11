@@ -20,8 +20,9 @@ sequencing requirement:
 
 ## Article/author image uploads use an interim base64 data-URI store, not real Cloudflare R2
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-11 (T7.2, session 45)
+**Date resolved:** 2026-09-11 (session 54)
 **Reason:** T7.2 (article editor) is the first task to need real image upload (a required
 preview image, and the new `figure` body block) — but Cloudflare R2 (ADR 0004) is "added once
 media volume justifies it," not provisioned yet, confirmed via `CLAUDE.local.md`'s
@@ -73,6 +74,22 @@ no longer names one). Once R2 is actually provisioned, swap `lib/media-storage.t
 `encodeImageUpload`/`encodeDownloadFileUpload` bodies for a real upload call — the correct
 next action is a direct, user-initiated fix at that point, not waiting for another task to
 "reach" this mechanism a third time.
+**Resolution (session 54):** R2 provisioned (user provisioned the bucket + API token directly
+in the Cloudflare dashboard; see `memory/decision-log.md` for the one-bucket/public-access
+reasoning). `lib/media-storage.ts`'s `encodeImageUpload`/`encodeDownloadFileUpload` now both
+upload to R2 via a new `lib/r2-client.ts` (an `@aws-sdk/client-s3` `S3Client` pointed at R2's
+S3-compatible endpoint) and return the object's real `CLOUDFLARE_R2_PUBLIC_URL`-based URL —
+both functions are now `async`, the only call-site change needed (`app/api/admin/media/
+route.ts`, `app/api/admin/media/downloads/route.ts` now `await` them). No caller, schema
+field, or public-rendering code changed, exactly as this entry's own "Possible Fix" predicted.
+No backfill migration was needed — queried every table this file's output lands in
+(`Article.previewImage`, a `figure` block's `imageUrl`, `Author.photoUrl`, `LandingPage.
+downloadFileUrl`, `ArticleResource.fileUrl`) before writing the new code, and every one was
+still `null`/empty already (no real upload had ever gone through the interim mechanism).
+Verified live via Playwright: uploaded a real image and a real PDF through the admin,
+confirmed both landed at real, publicly-fetchable `https://pub-....r2.dev/...` URLs (`curl`
+against the live object, correct content-type/size), then cleaned up both test objects
+directly from the bucket.
 
 ---
 
@@ -418,8 +435,9 @@ right home for an admin-upload capability gap.
 
 ## Article download-resource availability is checked via a live per-request HEAD fetch, not a real object-storage capability
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-06 (T4.3, session 26)
+**Date resolved:** 2026-09-11 (session 54)
 **Reason:** `insights-engine.md`'s edge case requires a removed `article_resource` file to
 "fail gracefully with a clear message, not a dead link." No object storage (Cloudflare R2,
 ADR 0004) is provisioned yet — "added once media volume justifies it," not day one — so
@@ -452,6 +470,17 @@ replace `lib/insights.ts`'s `isResourceReachable` with R2's own existence signal
 the sibling entry's `encodeImageUpload`/`encodeDownloadFileUpload` swap — the correct next
 action then is a direct, user-initiated fix, not waiting for another task to "reach" this
 mechanism again.
+**Resolution (session 54):** R2 provisioned. `lib/insights.ts`'s `isResourceReachable` now
+derives the R2 object key from the `fileUrl` (`lib/r2-client.ts`'s `getR2ObjectKeyFromUrl`,
+stripping the `CLOUDFLARE_R2_PUBLIC_URL` prefix) and issues a `HeadObjectCommand` against our
+own bucket via the S3 SDK, instead of a plain HTTP `HEAD` against an arbitrary external host —
+faster and more reliable, since it's now an authenticated call against our own storage rather
+than trusting whatever host a `fileUrl` happened to point at. Falls back to the original plain
+HTTP `HEAD` check for any URL that isn't under our own R2 base (defensive; should never occur
+for a `fileUrl` this project itself writes going forward). Verified live via Playwright: a
+real, just-uploaded R2-backed PDF resource correctly rendered as an available download link on
+the real public article page (not the "currently unavailable" fallback), confirming the new
+`HeadObjectCommand` path resolves correctly end-to-end.
 
 ---
 

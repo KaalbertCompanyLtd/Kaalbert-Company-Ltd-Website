@@ -2,6 +2,53 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (session 54) — Cloudflare R2 provisioned: one bucket (not two), same credentials across dev/prod (not rotated), HeadObjectCommand replaces the live HTTP HEAD check
+
+**Status:** Standing
+
+**Summary:** User provisioned a real Cloudflare R2 bucket (`kaalbert-media`) and an
+S3-compatible API token directly in the Cloudflare dashboard, per ADR 0004's "added once media
+volume justifies it" precondition. Three real decisions made while wiring this up:
+
+1. **One bucket, not two.** The bucket has both an S3-compatible API token (Object Read &
+   Write, scoped to just this bucket — used server-side only, in `lib/r2-client.ts`, never
+   exposed to the browser) _and_ public read access enabled (the bucket's own R2.dev
+   subdomain, `CLOUDFLARE_R2_PUBLIC_URL`). These are independent settings on the same bucket,
+   not a private/public split needing two buckets — every asset this project stores (article
+   preview images/figures, author photos, landing-page PDFs, article resources) is meant to
+   be publicly visible on the site anyway, so authenticated writes + anonymous reads on one
+   bucket is exactly the right shape; nothing in current scope needs a genuinely private
+   object.
+2. **Same R2 credentials in `.env.local`, `.env.production`, and the live `kaalbert-web`
+   Railway service — deliberately not rotated per environment.** Explicit user instruction
+   ("I don't want to be rotating for production"). Treated as a legitimate exception to this
+   project's usual per-environment-secret rule (which the two admin-auth secrets below still
+   follow) because an R2 API token is a storage-bucket credential, not a live-session-forging
+   secret — the blast radius of dev/prod sharing it is low at this project's scale (five
+   partners, pre-launch).
+3. **`ADMIN_CHALLENGE_TOKEN_SECRET`/`ADMIN_TOTP_ENCRYPTION_KEY` still get a separate,
+   freshly-generated value per environment** — explicitly _not_ extended the same "don't
+   rotate" treatment as R2, since these gate real admin login sessions and TOTP secret
+   encryption; reusing a dev value in production would materially weaken production auth.
+   Discovered while setting these up that the live Railway service had **neither variable set
+   at all**, meaning every real admin login attempt had been hard-erroring in production since
+   Milestone 6 shipped — logged as its own known-bug (`memory/known-bugs.md`), fixed by
+   generating two new production-only values, not by reusing either local file's.
+
+Also decided, while replacing `lib/insights.ts`'s `isResourceReachable`: keep a live
+existence check at all (rather than dropping it now that uploads are confirmed-real at
+upload time) — `insights-engine.md`'s "must fail gracefully... not a broken link" edge case
+is a real, still-standing business requirement, not conditional on which storage backend is
+in use. Implemented via R2's own `HeadObjectCommand` (an authenticated call against our own
+bucket) instead of the old plain HTTP `HEAD` against an arbitrary external host — same
+UX guarantee, meaningfully faster/more reliable than before.
+
+**Related Documents:** `memory/technical-debt.md` (both now-Resolved R2 entries),
+`memory/known-bugs.md` (missing production auth secrets), `lib/r2-client.ts`,
+`lib/media-storage.ts`, `lib/insights.ts`, ADR 0004.
+
+---
+
 ## 2026-09-11 (T7.10, session 53) — Two R2-blocked technical-debt entries reclassified from Task-sequenced to User-triggered after their `Sequenced into` pointers went stale twice
 
 **Status:** Standing

@@ -16,6 +16,42 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## Production `kaalbert-web` Railway service was missing `ADMIN_CHALLENGE_TOKEN_SECRET`/`ADMIN_TOTP_ENCRYPTION_KEY` entirely — every real admin login attempt hard-errored
+
+**Status:** Open (fix prepared, not yet live — see Workaround)
+**Severity:** High
+**Date found:** 2026-09-11 (R2 provisioning session, session 54)
+**Description:** Discovered while checking the live Railway service's variables before adding
+Cloudflare R2 credentials there: `ADMIN_CHALLENGE_TOKEN_SECRET` (`lib/auth/challenge-token.ts`)
+and `ADMIN_TOTP_ENCRYPTION_KEY` (`lib/auth/totp-encryption.ts`) were never set on the live
+`kaalbert-web` service at all — only in `.env.local`/`.env.production` (both gitignored,
+neither read by the deployed app, per ADR 0008). Both files throw a hard `Error` the instant
+either is read with no value set (confirmed by reading each file's own guard clause), meaning
+`/admin/login` and every TOTP-touching request has been throwing in production since
+Milestone 6 shipped — no real partner could have logged in against the live site at any point
+until this was found. CLAUDE.local.md's own prior text said production "needs its own
+separately-generated value set directly on the `kaalbert-web` Railway service" for both, but
+that step was apparently never actually carried out, and nothing in this project's own
+`docs/dashboard.md`/session summaries flagged it as still-pending — a real gap in how a
+"needs to be done separately on Railway" note was tracked, not just a one-off miss.
+**Workaround:** None from the visitor/partner side — this genuinely blocked every real login
+attempt. Fixed in this session's own action (not a code change): generated two fresh,
+separately-random values (never reused from either local `.env.*` file, matching this
+project's own per-environment-secret convention) and set them on the live `kaalbert-web`
+service via `railway variable set ... --skip-deploys`. **Not yet live**: the variables are
+set, but this session's own auto-mode permissions blocked the follow-up `railway redeploy`
+(classified as a Production Deploy action requiring explicit user approval) — the fix stays
+inert until a deploy actually picks up the new variables.
+**Planned Fix:** Trigger a redeploy of the `kaalbert-web` service (Railway dashboard's
+"Redeploy" button, or `railway redeploy --service kaalbert-web` from a terminal with
+permission to do so) — no code change needed, the variables are already in place.
+**Trigger type:** User-triggered — this session cannot self-approve a production deploy;
+ask the user to trigger it (or approve the next `railway redeploy` call) directly.
+**Sequenced into:** No task — this is a direct operational action (redeploy), not tied to any
+`docs/tasks/*.md` item; do not wait for a future task to "reach" this, ask the user now.
+
+---
+
 ## Article byline rendering (`lib/insights.ts`) has no `author.published` check
 
 **Status:** Open

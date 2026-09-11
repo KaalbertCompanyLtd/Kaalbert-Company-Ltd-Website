@@ -1,36 +1,87 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { encodeImageUpload, MediaValidationError } from "@/lib/media-storage";
+const sendMock = vi.fn();
+
+vi.mock("@/lib/r2-client", () => ({
+  getR2Client: () => ({ send: sendMock }),
+  getR2Bucket: () => "kaalbert-media",
+  getR2PublicUrl: (key: string) => `https://pub-test.r2.dev/${key}`,
+}));
+
+import {
+  encodeDownloadFileUpload,
+  encodeImageUpload,
+  MediaValidationError,
+} from "@/lib/media-storage";
+
+beforeEach(() => {
+  sendMock.mockReset();
+  sendMock.mockResolvedValue({});
+});
 
 describe("encodeImageUpload", () => {
-  it("encodes a valid image as a base64 data URI", () => {
+  it("uploads a valid image to R2 and returns its public URL", async () => {
     const buffer = Buffer.from([1, 2, 3, 4]);
-    const url = encodeImageUpload({ buffer, contentType: "image/png" });
+    const url = await encodeImageUpload({ buffer, contentType: "image/png" });
 
-    expect(url).toBe(`data:image/png;base64,${buffer.toString("base64")}`);
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(url).toMatch(/^https:\/\/pub-test\.r2\.dev\/images\/.+\.png$/);
   });
 
-  it("rejects an unsupported content type", () => {
-    expect(() => encodeImageUpload({ buffer: Buffer.from([1]), contentType: "image/gif" })).toThrow(
-      MediaValidationError,
-    );
+  it("rejects an unsupported content type", async () => {
+    await expect(
+      encodeImageUpload({ buffer: Buffer.from([1]), contentType: "image/gif" }),
+    ).rejects.toThrow(MediaValidationError);
+    expect(sendMock).not.toHaveBeenCalled();
   });
 
-  it("rejects an empty file", () => {
-    expect(() => encodeImageUpload({ buffer: Buffer.alloc(0), contentType: "image/jpeg" })).toThrow(
-      MediaValidationError,
-    );
+  it("rejects an empty file", async () => {
+    await expect(
+      encodeImageUpload({ buffer: Buffer.alloc(0), contentType: "image/jpeg" }),
+    ).rejects.toThrow(MediaValidationError);
   });
 
-  it("rejects a file over the 2MB cap", () => {
+  it("rejects a file over the 2MB cap", async () => {
     const oversized = Buffer.alloc(2 * 1024 * 1024 + 1);
-    expect(() => encodeImageUpload({ buffer: oversized, contentType: "image/webp" })).toThrow(
-      MediaValidationError,
-    );
+    await expect(
+      encodeImageUpload({ buffer: oversized, contentType: "image/webp" }),
+    ).rejects.toThrow(MediaValidationError);
   });
 
-  it("accepts a file exactly at the 2MB cap", () => {
+  it("accepts a file exactly at the 2MB cap", async () => {
     const atCap = Buffer.alloc(2 * 1024 * 1024);
-    expect(() => encodeImageUpload({ buffer: atCap, contentType: "image/webp" })).not.toThrow();
+    await expect(encodeImageUpload({ buffer: atCap, contentType: "image/webp" })).resolves.toMatch(
+      /^https:\/\//,
+    );
+  });
+});
+
+describe("encodeDownloadFileUpload", () => {
+  it("uploads a valid PDF to R2 and returns its public URL", async () => {
+    const buffer = Buffer.from([1, 2, 3, 4]);
+    const url = await encodeDownloadFileUpload({ buffer, contentType: "application/pdf" });
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(url).toMatch(/^https:\/\/pub-test\.r2\.dev\/downloads\/.+\.pdf$/);
+  });
+
+  it("rejects a non-PDF content type", async () => {
+    await expect(
+      encodeDownloadFileUpload({ buffer: Buffer.from([1]), contentType: "image/png" }),
+    ).rejects.toThrow(MediaValidationError);
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty file", async () => {
+    await expect(
+      encodeDownloadFileUpload({ buffer: Buffer.alloc(0), contentType: "application/pdf" }),
+    ).rejects.toThrow(MediaValidationError);
+  });
+
+  it("rejects a file over the 5MB cap", async () => {
+    const oversized = Buffer.alloc(5 * 1024 * 1024 + 1);
+    await expect(
+      encodeDownloadFileUpload({ buffer: oversized, contentType: "application/pdf" }),
+    ).rejects.toThrow(MediaValidationError);
   });
 });

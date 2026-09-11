@@ -1,4 +1,7 @@
+import { HeadObjectCommand } from "@aws-sdk/client-s3";
+
 import { prisma } from "@/lib/prisma";
+import { getR2Bucket, getR2Client, getR2ObjectKeyFromUrl } from "@/lib/r2-client";
 
 /**
  * `ui/mockups/b-insights/insights-index.html`'s own `PAGE_SIZE` — kept identical so the grid
@@ -318,13 +321,30 @@ export function buildArticleShareLinks(article: { title: string; url: string }):
 /**
  * insights-engine.md's edge case: "a downloadable resource file is removed after an article
  * referencing it is already published: the article's download link must fail gracefully with
- * a clear message, not a broken link with no explanation." No object storage (Cloudflare R2,
- * ADR 0004) is provisioned yet to answer this more cheaply (e.g. a presigned-URL existence
- * check) — this does a live `HEAD` request against the file's own URL at render time as a
- * pragmatic interim check. Treats a network error/timeout the same as a non-2xx response
- * (unreachable either way from the visitor's perspective) rather than distinguishing them.
+ * a clear message, not a broken link with no explanation." Now that Cloudflare R2 (ADR 0004)
+ * is provisioned, every real `fileUrl` this project generates lives under
+ * `CLOUDFLARE_R2_PUBLIC_URL` — `getR2ObjectKeyFromUrl` recovers the object key from that, and
+ * a `HeadObjectCommand` against our own bucket answers "does this still exist" reliably and
+ * fast, replacing the old plain HTTP `HEAD` request against an arbitrary external host (the
+ * only option available before R2 existed — see `memory/technical-debt.md`'s now-resolved
+ * "Article download-resource availability is checked via a live per-request HEAD fetch"
+ * entry). Falls back to the original plain-HTTP `HEAD` check for any URL that isn't under our
+ * own R2 base (defensive — should never happen for a `fileUrl` this project itself wrote, but
+ * doesn't hard-fail on one that somehow isn't). Treats a network error/timeout/missing-object
+ * the same as "not reachable" (unreachable either way from the visitor's perspective) rather
+ * than distinguishing them.
  */
 export async function isResourceReachable(fileUrl: string): Promise<boolean> {
+  const objectKey = getR2ObjectKeyFromUrl(fileUrl);
+  if (objectKey) {
+    try {
+      await getR2Client().send(new HeadObjectCommand({ Bucket: getR2Bucket(), Key: objectKey }));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);

@@ -23,6 +23,7 @@
     "admin:create-user": "tsx scripts/create-admin-user.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1131.0",
     "@base-ui/react": "^1.8.0",
     "@getbrevo/brevo": "^6.0.3",
     "@prisma/adapter-pg": "7.10.0",

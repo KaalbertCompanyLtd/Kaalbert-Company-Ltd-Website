@@ -59,6 +59,12 @@ target for Ghanaian 3G/mid-range-Android visitors, at no additional cost.
 Trade-offs: Introduces a genuine single point of failure (a Cloudflare outage makes the site
 unreachable, since DNS itself routes through it) — accepted given Cloudflare's uptime record
 and a documented manual DNS-fallback path.
+**Update (2026-09-11, session 54):** R2's own "once media volume justifies it" trigger has
+now been acted on — a real bucket (`kaalbert-media`) and API token are provisioned and wired
+into `lib/media-storage.ts`/`lib/r2-client.ts`, replacing the interim base64 storage every
+media upload used from T7.2 through T7.10. Not a reversal of this decision, just its already-
+planned second half executing; see `memory/decision-log.md` for the one-bucket/credential-
+sharing reasoning.
 
 ## Diagnostic Engine as an In-App, Data-Driven Module
 

@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = encodeDownloadFileUpload({ buffer, contentType: file.type });
+    const url = await encodeDownloadFileUpload({ buffer, contentType: file.type });
     return NextResponse.json({ status: "ok", url }, { status: 200 });
   } catch (error) {
     if (error instanceof MediaValidationError) {

@@ -7,6 +7,14 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+const r2SendMock = vi.fn();
+vi.mock("@/lib/r2-client", () => ({
+  getR2Client: () => ({ send: r2SendMock }),
+  getR2Bucket: () => "kaalbert-media",
+  getR2ObjectKeyFromUrl: (url: string) =>
+    url.startsWith("https://pub-test.r2.dev/") ? url.replace("https://pub-test.r2.dev/", "") : null,
+}));
+
 import { prisma } from "@/lib/prisma";
 import {
   buildArticleShareLinks,
@@ -37,6 +45,7 @@ beforeEach(() => {
   findUniqueMock.mockReset();
   categoriesFindManyMock.mockReset();
   categoriesFindManyMock.mockResolvedValue([]);
+  r2SendMock.mockReset();
 });
 
 describe("getInsightsIndex", () => {
@@ -256,19 +265,37 @@ describe("isResourceReachable", () => {
     global.fetch = originalFetch;
   });
 
-  it("returns true for a 2xx HEAD response", async () => {
+  it("returns true when a HeadObjectCommand against R2 succeeds, for a real R2 URL", async () => {
+    r2SendMock.mockResolvedValueOnce({});
+
+    await expect(
+      isResourceReachable("https://pub-test.r2.dev/downloads/real-file.pdf"),
+    ).resolves.toBe(true);
+    expect(r2SendMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns false (never throws) when the R2 object is missing", async () => {
+    r2SendMock.mockRejectedValueOnce(new Error("NotFound"));
+
+    await expect(
+      isResourceReachable("https://pub-test.r2.dev/downloads/deleted-file.pdf"),
+    ).resolves.toBe(false);
+  });
+
+  it("falls back to a plain HTTP HEAD for a URL outside this project's own R2 base", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true }) as never;
 
     await expect(isResourceReachable("https://example.com/file.pdf")).resolves.toBe(true);
+    expect(r2SendMock).not.toHaveBeenCalled();
   });
 
-  it("returns false for a non-2xx response", async () => {
+  it("returns false for a non-2xx response on the HTTP fallback path", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: false }) as never;
 
     await expect(isResourceReachable("https://example.com/gone.pdf")).resolves.toBe(false);
   });
 
-  it("returns false (never throws) on a network error", async () => {
+  it("returns false (never throws) on a network error on the HTTP fallback path", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("network error")) as never;
 
     await expect(isResourceReachable("https://example.com/file.pdf")).resolves.toBe(false);
