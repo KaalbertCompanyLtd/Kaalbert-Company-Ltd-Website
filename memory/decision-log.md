@@ -2,6 +2,74 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.4, session 47) — Offer editor: four more mockup gaps fixed beyond the five already named, FAQs/method stages given real structured fields, slug-keyed route, tiered-vs-single-tier form split, 10.05 gate extended to the Advisory Retainer
+
+**Status:** Standing
+
+**Summary:** T7.4 (Offer editor) built `/admin/offers` as one combined screen — a picker over
+the three core offers (each rendering the full FR-4.1 field set) plus, always visible below
+it, the Advisory Retainer singleton panel, mirroring T7.3's Legal-page-plus-footer "combined
+screen, two panels" shape. New `lib/admin-offers.ts` holds all business logic (`getOfferList`,
+`getOfferForEdit`, `updateOffer`, `getAdvisoryRetainerForEdit`, `updateAdvisoryRetainer`);
+`PATCH /api/admin/offers/[slug]` and `PATCH /api/admin/advisory-retainer` parse/shape only.
+Concrete decisions:
+
+- **Four more required `offer` fields were missing from the mockup, beyond the five this
+  task's own "Build" line already named as fixed.** `ui/mockups/g-admin-content/admin-offer-
+  editor.html` still had no `teaser`, `ctaHref`, `metaTitle`, or `metaDescription` fields —
+  all four are required, non-nullable `Offer` columns with no other admin surface to edit
+  them. Added all four to the built editor (never to the mockup file itself), same treatment
+  T7.2/T7.3 already gave their own mockup gaps.
+- **`methodStages`/`faqs` are edited as real structured fields, not the mockup's flat
+  alternating text-input rows.** The mockup's `.list-editor` shows each method stage and each
+  FAQ question/answer as a single flat text input — a wireframing-tool simplification. The
+  actual schema stores `{title, description}[]` and `{question, answer}[]` respectively
+  (`core-offer-pages.md`'s own Data requirements), so `MethodStageListEditor`/`FaqListEditor`
+  expose both fields per entry, with add/move/remove — the "repeating add/remove/reorder list
+  of small forms" this task's own architecture constraints called for, not a `kind`-
+  discriminated union like T7.2's `ArticleBodyBlock`.
+- **A tiered offer (Business Health Check) hides the parent row's own deliverables/required-
+  inputs/indicative-timeline/fee-band fields entirely and shows `OfferTierListEditor`
+  instead** — `core-offer-pages.md`'s own doc-comment says those top-level fields "go unused"
+  for a tiered offer, so `updateOffer` never writes them for a tiered save (verified live: the
+  transaction's `offer.update` call for Business Health Check carries no `feeAmountMin`/
+  `deliverables` keys at all). A single `RadioGroup` across all tiers enforces exactly one
+  `isFeatured` tier — `updateOffer` rejects a save with zero or more than one.
+- **`PATCH /api/admin/offers/[slug]`, keyed by slug not id** — `content-management-admin.md`'s
+  own Interfaces line names `[id]`, but every other consumer of an offer in this codebase
+  (`getOfferBySlug`, the public `/offers/[slug]` route, T7.3's own `PATCH /api/admin/legal/
+  [slug]` precedent) is slug-keyed; matching that avoids an extra id-vs-slug lookup on the
+  client, which already has the slug from `getOfferList`'s picker. A route path parameter
+  isn't an entity field CLAUDE.md's "match the feature doc's field names" rule governs.
+- **The Advisory Retainer gets the same 10.05-compliance checkbox as the three core offers**,
+  gating its own `PATCH /api/admin/advisory-retainer` save — not named explicitly by this
+  task, but `advisory_retainer.description` is real published copy shown on `/capabilities`,
+  so FR-5.4's sign-off gate applies the same way it does to every other promotional page this
+  admin edits (T7.3's own precedent for Capabilities/Our Method: the gate applies to the one
+  save action that exists, since there's no separate Publish step for this content type).
+- **`clientInputs` (both `Offer`'s own and each `OfferTier`'s) is edited as a single textarea,
+  not a list editor** — matches the mockup exactly and the schema's own "seeded as a one-
+  element array" convention (`core-offer-pages.md`'s `Offer.clientInputs` doc-comment); the
+  form submits `[text]` or `[]`, never a real multi-item list, unlike `deliverables`.
+
+Verified for real via Playwright MCP against the live dev database: loaded all three offers
+(tiered Business Health Check and both single-tier offers) with their full real seeded
+content; raised Funding-Readiness Pack's fee floor from GHS 9,000 to 9,500 and confirmed both
+`/offers/funding-readiness-pack`'s fee panel and `SiteHeader`'s nav dropdown fee-hint ("From
+GHS 9,500") updated in the same request cycle — this task's own acceptance criterion; raised
+the Advisory Retainer's fee and confirmed `/capabilities` updated; submitted Financial Clarity
+Pack with a blank scope cap and confirmed the API rejected it with the scope-cap error message
+surfaced inline, never silently saved; confirmed an unauthenticated `PATCH` to the new route
+returns 401 (`proxy.ts`'s existing `/api/admin/:path*` matcher covers it with no route-level
+auth code needed). Checked at mobile (390px)/tablet (768px)/desktop (1280px) — the tier fee-
+band grid and radio-group collapse to one column on mobile, no page-level horizontal scroll.
+Every test edit reverted afterward via the same admin UI so the dev DB is exactly as it was
+before this session (the rejected scope-cap save never persisted, so nothing to revert there).
+
+**Related Documents:** `docs/tasks/07-content-admin.md` (T7.4), `docs/features/content-
+management-admin.md`, `docs/features/core-offer-pages.md`, `docs/features/capabilities-
+page.md`, `lib/admin-offers.ts`, `lib/admin-offers.test.ts`.
+
 ## 2026-09-11 (T7.3, session 46) — Pages editor built as three purpose-built screens (Capabilities, Our Method, Legal+Footer) with no add/remove on the two fixed repeating sections; the 10.05 compliance gate reinterpreted for content with no draft/live distinction; no such gate for legal text
 
 **Status:** Standing

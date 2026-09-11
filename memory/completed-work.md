@@ -14,6 +14,48 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.4, session 47)
+
+**Task:** T7.4 — Offer editor (fee bands, FAQs, and full field set)
+**Summary:** Built `/admin/offers`: a picker over the three core offers (Business Health
+Check, Financial Clarity Pack, Funding-Readiness Pack), each rendering the full FR-4.1 field
+set — problem statement, who_for/who_not_for, ordered method stages, structured fee band
+(single-tier offers) or per-tier fee bands with a featured-tier selector (Business Health
+Check), out-of-scope note, ordered FAQs, CTA label/link, meta title/description — plus a
+combined Advisory Retainer singleton panel below it. New `lib/admin-offers.ts` (all business
+logic, including the fee-band-needs-a-scope-cap validation applied identically to a single-
+tier offer and to each `OfferTier`) and two new route handlers (`PATCH /api/admin/offers/
+[slug]`, `PATCH /api/admin/advisory-retainer`) that parse/shape only. New client components
+under `app/admin/(shell)/offers/`: `offers-admin-client.tsx`, `offer-editor-form.tsx`,
+`offer-tier-editor.tsx`, `method-stage-list-editor.tsx`, `faq-list-editor.tsx`, `string-list-
+editor.tsx`, `advisory-retainer-editor.tsx`.
+**Files Changed:** `lib/admin-offers.ts`, `lib/admin-offers.test.ts`, `app/admin/(shell)/
+offers/page.tsx`, `app/admin/(shell)/offers/offers-admin-client.tsx`, `app/admin/(shell)/
+offers/offer-editor-form.tsx`, `app/admin/(shell)/offers/offer-tier-editor.tsx`, `app/admin/
+(shell)/offers/method-stage-list-editor.tsx`, `app/admin/(shell)/offers/faq-list-editor.tsx`,
+`app/admin/(shell)/offers/string-list-editor.tsx`, `app/admin/(shell)/offers/advisory-
+retainer-editor.tsx`, `app/api/admin/offers/[slug]/route.ts`, `app/api/admin/advisory-
+retainer/route.ts`.
+**Related Feature:** `docs/features/content-management-admin.md`, `docs/features/core-offer-
+pages.md`, `docs/features/capabilities-page.md`.
+**Notes:** Four mockup gaps beyond the five already named by this task's own "Build" line
+(`teaser`/`ctaHref`/`metaTitle`/`metaDescription`), plus FAQs/method stages built as real
+structured `{question, answer}`/`{title, description}` fields rather than the mockup's flat
+rows — full reasoning in `memory/decision-log.md`. Verified live via Playwright MCP: a fee
+update on Funding-Readiness Pack reflected in both the offer page and the `SiteHeader` nav
+fee-hint in the same request cycle (this task's own acceptance criterion); an Advisory
+Retainer fee update reflected on `/capabilities`; a fee band submitted without a scope cap on
+Financial Clarity Pack was rejected by the API with the error surfaced inline; an
+unauthenticated `PATCH` returns 401 via the existing `proxy.ts` matcher. Checked at mobile
+(390px)/tablet (768px)/desktop (1280px). All quality gates pass (`npm run lint`, `npm run
+format:check`, `npm run typecheck`, `npm run test` — 216 tests, 16 new for `lib/admin-
+offers.ts`). Every dev-DB test edit reverted afterward via the admin UI itself. No firm-
+visible capability changed beyond what the user guide already describes generically ("update
+a fee range") — see the `docs/user-guide.md` update below for the small addition (the
+Advisory Retainer is now editable too, previously undocumented as a gap).
+
+---
+
 ## 2026-09-11 (T7.3, session 46)
 
 **Task:** T7.3 — Pages editor (marketing pages incl. Capabilities, Our Method; legal pages)

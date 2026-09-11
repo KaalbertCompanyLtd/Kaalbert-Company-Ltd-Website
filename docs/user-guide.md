@@ -23,13 +23,14 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 46) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 47) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
 Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1), Articles/
-Categories admin (T7.2), and Pages admin (Capabilities/Our Method/Legal/Footer, T7.3) are
-all live; Offers, Landing Pages, Team, Diagnostic Configuration, Site Settings, Subscribers,
-and article-resource attachment (T7.10) are next.
+Categories admin (T7.2), Pages admin (Capabilities/Our Method/Legal/Footer, T7.3), and Offers
+admin (the three core offers plus the Advisory Retainer, T7.4) are all live; Landing Pages,
+Team, Diagnostic Configuration, Site Settings, Subscribers, and article-resource attachment
+(T7.10) are next.
 
 ---
 
@@ -39,9 +40,11 @@ and article-resource attachment (T7.10) are next.
 
 **What it does:** Home, the three fee-transparent core offer pages, Capabilities, Our
 Method, About, Contact, and the four legal pages, all live and responsive (mobile/tablet/
-desktop). **A partner can now edit Capabilities, Our Method, and any legal page themselves**
-— `/admin/pages` — including marking a legal page as no longer a draft once the firm's
-counsel has confirmed its wording (the same real gate named in the bullet below).
+desktop). **A partner can now edit Capabilities, Our Method, any legal page, and all three
+core offer pages plus the Advisory Retainer themselves** — `/admin/pages` and `/admin/
+offers` — including marking a legal page as no longer a draft once the firm's counsel has
+confirmed its wording, and updating a published fee band (the same real gate named in the
+bullet below applies to both areas).
 
 **What to monitor:**
 
@@ -54,7 +57,13 @@ counsel has confirmed its wording (the same real gate named in the bullet below)
 - Editing Capabilities/Our Method requires ticking "This complies with 10.05 Positioning and
   Claims Guidance Note" before Save enables — the same real sign-off gate Articles use.
   There's no separate "Publish" step for these two pages (unlike Articles): saving a change
-  makes it live immediately.
+  makes it live immediately. The same gate applies to every save on `/admin/offers`, one
+  checkbox per offer and one for the Advisory Retainer.
+- A fee band (on any of the three core offers, or per pricing tier on Business Health Check)
+  **cannot be saved without its scope cap** — the system enforces this, not just a reminder;
+  the two fields are entered and saved together. Updating a fee here updates it everywhere it
+  appears — the offer page's own fee panel and the navigation dropdown's "From GHS ..." hint
+  — in the same save, never a second copy to remember to update.
 - Editing the shared footer's scope-of-practice/registration text is possible today, but
   **the public footer doesn't read it live yet** — that wiring is a separate, already-known
   gap, sequenced into a later Milestone 7 task (Site Settings).
@@ -64,9 +73,13 @@ counsel has confirmed its wording (the same real gate named in the bullet below)
   provided address, not the firm's own domain, so no DNS/Cloudflare setup exists either.
 
 **What a partner can do about it today:** Edit Capabilities, Our Method, any of the four
-legal pages, and the shared footer's scope-of-practice/registration text themselves —
-`/admin/pages`. Home, the three core offer pages, About, and Contact still need a developer
-for any copy change (Offers/Team/Site Settings are later Milestone 7 tasks).
+legal pages, and the shared footer's scope-of-practice/registration text — `/admin/pages` —
+and edit any of the three core offer pages (problem statement, who it's for/not for, method
+stages, deliverables, required inputs, fee band, out-of-scope note, FAQs, CTA) plus the
+Advisory Retainer's fee and description — `/admin/offers`. Home and About still need a
+developer for any copy change; Contact's static copy does too, though its response-time
+commitment and contact details move to Site Settings once that task ships (Team/Site
+Settings are later Milestone 7 tasks).
 
 ### Business Health Check diagnostic — Milestone 3
 
@@ -118,9 +131,9 @@ in the body; and can create/rename/retire Insights categories themselves too.
 `/admin/articles` → "New Article", or "Edit" on any existing one. Create, rename, or retire an
 Insights category from the same screen's "Manage categories" link — retiring one never
 deletes its articles, they just lose that category tag. Attaching a downloadable file to an
-article is still Milestone 7 work not yet reached (T7.10); offers, landing pages, team
-profiles, and diagnostic questions are also still ahead. Marketing/legal page copy is
-already editable — see "Public website pages" above.
+article is still Milestone 7 work not yet reached (T7.10); landing pages, team profiles, and
+diagnostic questions are also still ahead. Marketing/legal page copy and the three core
+offers plus the Advisory Retainer are already editable — see "Public website pages" above.
 
 ### Landing pages — Milestone 5 (T5.1–T5.2)
 
@@ -244,10 +257,11 @@ depends on:
 ## What's coming next
 
 - **Milestone 7 — Content Management Admin** (in progress): every piece of content seeded so
-  far becomes partner-editable without a developer. Dashboard, Articles/Categories, and
-  Pages (Capabilities/Our Method/Legal/Footer) are live; Offers, Landing Pages, Team,
-  Diagnostic Configuration, Site Settings, Subscribers, and article-resource attachment are
-  next — where the remaining "still needs a developer" notes above get resolved.
+  far becomes partner-editable without a developer. Dashboard, Articles/Categories, Pages
+  (Capabilities/Our Method/Legal/Footer), and Offers (the three core offers plus the Advisory
+  Retainer) are live; Landing Pages, Team, Diagnostic Configuration, Site Settings,
+  Subscribers, and article-resource attachment are next — where the remaining "still needs a
+  developer" notes above get resolved.
 - **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
   diagnostic completions in one place.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
@@ -257,6 +271,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Offers admin (T7.4) went live — a partner can now edit all three core offer pages' full field set (problem statement, who it's for/not for, method stages, deliverables/required inputs, fee band, out-of-scope note, FAQs, CTA) and the Advisory Retainer's fee/description themselves — `/admin/offers`. A fee band still can't be saved without its scope cap, enforced by the system; updating a fee updates the offer page and the nav dropdown hint in one save.                                       |
 | 2026-09-11 | Pages admin (T7.3) went live — a partner can now edit Capabilities, Our Method, any of the four legal pages (including clearing the "Draft — pending legal review" marker themselves), and the shared footer's scope-of-practice/registration text. Corrected a drift: the "Public website pages" section's "what a partner can do" line had been updated in the Artifact mirror during T7.2 but not in this file — synced here. |
 | 2026-09-11 | Articles/Categories admin (T7.2) went live — a partner can now write, edit, and publish an article themselves (including images/figures), and create/rename/retire Insights categories, both fully self-service. Noted the two remaining gaps: image uploads use an interim storage method pending Cloudflare R2, and attaching a downloadable file to an article isn't built yet (T7.10).                                       |
 | 2026-09-11 | Admin dashboard (T7.1) went live — real stat counts and a recent-enquiries panel replace the old placeholder; noted the two honest placeholders (status always "New", Triage shown as flagged/not-flagged only) that resolve once Milestone 8 ships.                                                                                                                                                                             |
