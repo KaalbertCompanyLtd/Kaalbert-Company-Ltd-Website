@@ -2,6 +2,39 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.10, session 53) — Two R2-blocked technical-debt entries reclassified from Task-sequenced to User-triggered after their `Sequenced into` pointers went stale twice
+
+**Status:** Standing
+
+**Summary:** While resolving T7.10's own technical-debt entry, found that its
+`Sequenced into: T7.10` pointer — and a sibling entry's `Sequenced into: T7.6` — both now
+pointed at already-shipped tasks, the exact "never point at an already-shipped task"
+violation CLAUDE.md's sequencing rule (session 49, T7.6) exists to prevent. Both entries'
+real fix (swapping the interim base64 media storage / live HEAD-check for real Cloudflare
+R2) has never actually been blocked on "reaching" a task — it's blocked on the firm/
+developer provisioning real R2 credentials, an external precondition each of the two tasks
+that "reached" this mechanism (T7.6, then T7.10) could only check and re-defer, never
+resolve. Re-sequencing to a third not-yet-reached task would just repeat the same pattern,
+since no further upcoming Milestone 7 task touches media uploads at all. Reclassified both
+entries to `Trigger type: User-triggered`, `Sequenced into: No task` — naming the real
+precondition (R2 provisioning) instead of a task ID, per the User-triggered exemption
+CLAUDE.md's own sequencing rule already carves out for exactly this shape of dependency.
+
+**Going forward:** a debt entry whose fix depends on an external precondition (a credential
+being provisioned, a firm decision, a domain being registered) should be marked
+`User-triggered` from the moment that's true — even if a specific near-term task happens to
+be a convenient place to _check_ whether the precondition is now met. `Task-sequenced` +
+"check and possibly re-defer" is only sound for a bounded number of hops; once it's been
+re-checked at two separate tasks with no change and no further task left to check at, that's
+the signal it was never really task-sequenced at all, and the entry should say what it's
+actually waiting for.
+
+**Related Documents:** `memory/technical-debt.md` ("Article/author image uploads use an
+interim base64 data-URI store", "Article download-resource availability is checked via a
+live per-request HEAD fetch"), CLAUDE.md's sequencing rule (the T7.6/session 49 precedent).
+
+---
+
 ## 2026-09-11 (T7.7, session 50) — `docs/user-guide.md`/its Artifact mirror rewritten as
 
 step-by-step walkthroughs, not feature summaries — standing rule going forward

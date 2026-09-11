@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getArticleForEdit, getArticleFormOptions } from "@/lib/articles";
+import { getArticleResources } from "@/lib/admin-article-resources";
 import { ArticleEditorForm } from "../article-editor-form";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,11 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
     notFound();
   }
 
-  const [article, options] = await Promise.all([getArticleForEdit(id), getArticleFormOptions()]);
+  const [article, options, resources] = await Promise.all([
+    getArticleForEdit(id),
+    getArticleFormOptions(),
+    getArticleResources(id),
+  ]);
   if (!article) {
     notFound();
   }
@@ -34,6 +39,7 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
       <ArticleEditorForm
         articleId={article.id}
         options={options}
+        resources={resources}
         initial={{
           title: article.title,
           excerpt: article.excerpt,

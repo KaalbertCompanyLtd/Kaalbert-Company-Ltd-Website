@@ -14,6 +14,59 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.10, session 53)
+
+**Task:** T7.10 — Article downloadable-resource management
+**Summary:** Built a "Downloadable resources" panel on the article editor's right column
+(`article-resources-panel.tsx`), rendered only for an existing article since
+`ArticleResource.articleId` is a required FK. Found and corrected a stale instruction in the
+epic file while assembling this task's own prompt: its "Build" line called for a new
+non-image upload mechanism "generalized to accept non-image files," but T7.5 (built after
+that epic entry was written) already built exactly that —
+`components/admin-download-upload-button.tsx`'s `AdminDownloadUploadButton` posting to
+`POST /api/admin/media/downloads`, calling `lib/media-storage.ts`'s
+`encodeDownloadFileUpload`. Reused it directly rather than building a second upload path.
+Add: a Label field gates the upload button (disabled — shown as a hint instead — until a
+label is typed, since `ArticleResource.fileUrl` is non-nullable and there's no "draft with no
+file yet" state); on upload, the row is created immediately via its own API route, not
+bundled into the editor's "Save draft"/"Publish" flow — same self-contained-widget pattern as
+the Categories list's add/rename/retire (T7.2), not `block-editor.tsx`'s in-memory-array
+pattern (`ArticleResource` is a real child table, not one JSON column). Reorder: ▲/▼ buttons,
+persisted via a 3-step `sortOrder`-swap transaction (`lib/admin-article-resources.ts`'s
+`moveArticleResource`), identical shape to `lib/admin-diagnostic.ts`'s
+`moveDiagnosticQuestion` and required for the same reason —
+`@@unique([articleId, sortOrder])` is checked immediately in Postgres, so a plain 2-statement
+swap would violate it mid-transaction. Remove: an `AlertDialog`-confirmed real delete
+(`ArticleResource` has no "never hard-delete" rule, unlike `Subscriber`'s soft unsubscribe).
+Verified live via Playwright against the real dev server: uploaded two real PDFs to a
+published article, confirmed both appeared correctly on the real public article page in the
+same order set in admin; reordered them in admin, reloaded, and confirmed the new order
+persisted server-side and matched on the public page; removed one and confirmed its download
+link disappeared from the public page on the same request cycle; confirmed the confirmation
+dialog's copy and behaviour; checked the panel at mobile/tablet/desktop widths. Cleaned up
+all test data afterward, leaving the article exactly as it was found.
+**Files Changed:** `lib/admin-article-resources.ts` (new) — `getArticleResources`/
+`addArticleResource`/`removeArticleResource`/`moveArticleResource`;
+`lib/admin-article-resources.test.ts` (new) — 9 tests; `app/admin/(shell)/articles/
+article-resources-panel.tsx` (new); `app/admin/(shell)/articles/article-editor-form.tsx`
+(added the `resources` prop and panel render, gated on `articleId`); `app/admin/(shell)/
+articles/[id]/page.tsx` (fetches and passes resources); `app/api/admin/articles/[id]/
+resources/route.ts` (new, `POST`); `app/api/admin/articles/resources/[resourceId]/route.ts`
+(new, `DELETE`); `app/api/admin/articles/resources/[resourceId]/move/route.ts` (new, `POST`).
+**Related Feature:** `docs/features/insights-engine.md` (the `article_resource` entity and
+its graceful-failure-on-removed-file edge case, which this task's own admin action is
+distinct from — a partner's Remove here is a normal, immediate, successful delete).
+**Notes:** Closed two technical-debt entries: "Article downloadable-resource attachment...
+is not built" (Resolved) and, while updating it, caught that its own `Sequenced into`
+pointer — and a sibling entry's ("Article/author image uploads use an interim base64
+data-URI store") — both pointed at already-shipped tasks (T7.10 itself, and T7.6 from an
+earlier session). Reclassified both to `Trigger type: User-triggered` with no task pointer,
+since their real fix depends on Cloudflare R2 actually being provisioned (an external,
+firm-initiated precondition), not on any future task in this project's own sequence — see
+`memory/technical-debt.md` for the full corrected entries.
+
+---
+
 ## 2026-09-11 (T7.9 follow-up, session 52 continued)
 
 **Task:** T7.9 follow-up — CSV export was missing the `subscriber` entity's own `id` field

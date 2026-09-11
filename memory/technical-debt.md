@@ -61,18 +61,26 @@ realistically a PDF, so T7.5 built a separate sibling instead (`encodeDownloadFi
 reasoning). Same interim base64 mechanism, same real-R2 swap-in shape, but it's now **two**
 function bodies to swap when R2 arrives, not one — `encodeImageUpload` and
 `encodeDownloadFileUpload`, both in `lib/media-storage.ts`.
-**Trigger type:** Task-sequenced
-**Sequenced into:** T7.6 (Team / author profile editor, `docs/tasks/07-content-admin.md`) —
-see that task's session-45 addendum: it's the next task to touch this same mechanism (author
-photo upload), and the natural checkpoint to check whether R2 is provisioned yet and swap
-over both functions if so.
+**Trigger type:** User-triggered — do not treat reaching any future task as a cue to build
+against R2 speculatively; the underlying blocker is the firm/developer actually provisioning
+real Cloudflare R2 credentials (`CLOUDFLARE_R2_*`, `CLAUDE.local.md`'s Credentials section),
+not this project's own task sequence.
+**Sequenced into:** No task — re-checked twice already at tasks that reuse this same
+mechanism (T7.6, author photos; T7.10, article resources, session 53) and R2 was still
+unprovisioned both times, with no further upcoming Milestone 7 task left that touches media
+uploads at all (per CLAUDE.md's rule against pointing at an already-shipped task, this entry
+no longer names one). Once R2 is actually provisioned, swap `lib/media-storage.ts`'s
+`encodeImageUpload`/`encodeDownloadFileUpload` bodies for a real upload call — the correct
+next action is a direct, user-initiated fix at that point, not waiting for another task to
+"reach" this mechanism a third time.
 
 ---
 
 ## Article downloadable-resource attachment (upload/attach a file to `article_resource`) is not built — T7.2 built preview-image/figure uploads only
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-11 (T7.2, session 45)
+**Date resolved:** 2026-09-11 (T7.10, session 53)
 **Reason:** `ui/mockups/g-admin-content/admin-article-editor.html`'s toolbar shows an "Attach
 file" (📎) button alongside the image button, and `article_resource` (T4.1) already exists as
 a real entity with nothing in `/admin` that creates a row for it — every resource currently
@@ -96,6 +104,20 @@ own session-04 precedent for keeping tasks appropriately scoped. New task added:
 **Trigger type:** Task-sequenced
 **Sequenced into:** T7.10 (Article downloadable-resource management,
 `docs/tasks/07-content-admin.md`) — new task added this session.
+**Resolution (T7.10, session 53):** Built a "Downloadable resources" panel on the article
+editor's right column (`app/admin/(shell)/articles/article-resources-panel.tsx`), only
+rendered for an existing article (`ArticleResource.articleId` is a required FK). Add: a
+Label field + `components/admin-download-upload-button.tsx`'s `AdminDownloadUploadButton`
+(already built at T7.5 for the exact same interim base64 upload mechanism — reused directly,
+no second upload path built). Reorder: ▲/▼ buttons per row, persisted via a 3-step
+sortOrder-swap transaction (`lib/admin-article-resources.ts`'s `moveArticleResource`, same
+shape as `lib/admin-diagnostic.ts`'s `moveDiagnosticQuestion`). Remove: an `AlertDialog`-
+confirmed real delete (`ArticleResource` has no "never hard-delete" rule, unlike
+`Subscriber`). Verified live via Playwright: uploaded two real PDFs, confirmed both appeared
+on the real public article page in the same order set in admin, reordered and confirmed the
+new order persisted after a reload and matched on the public page, removed one and confirmed
+it disappeared from the public page on the same request cycle, and checked at mobile/tablet/
+desktop widths.
 
 ---
 
@@ -414,14 +436,22 @@ many resources, and a real dependency on every linked host staying responsive.
 check with R2's own existence signal — e.g. generate resource URLs only for objects confirmed
 to exist at upload time, or query R2's API directly, either of which is cheaper and more
 reliable than a live network round-trip per resource per visitor.
-**Trigger type:** Task-sequenced
-**Sequenced into:** T7.10 (Article downloadable-resource management,
-`docs/tasks/07-content-admin.md`) — re-sequenced from T7.2 (session 45): T7.2 built
-preview-image/figure uploads only, not `article_resource` attachment management (see
-`memory/technical-debt.md` → "Article downloadable-resource attachment... is not built" for
-why that was split into its own new task, T7.10) — this HEAD-check replacement can only
-happen once _something_ actually uploads resources through the admin for R2 to confirm
-existence of, which is T7.10's job, not T7.2's.
+**Trigger type:** User-triggered — do not treat reaching a future task as a cue to build
+against R2 speculatively; the underlying blocker is the firm/developer actually provisioning
+real Cloudflare R2 credentials (`CLAUDE.local.md`'s Credentials section), not this project's
+own task sequence. Same reclassification, same reasoning, as the sibling "Article/author
+image uploads use an interim base64 data-URI store" entry above.
+**Sequenced into:** No task — T7.10 (session 53) is exactly the task this entry was
+precondition on ("this HEAD-check replacement can only happen once _something_ actually
+uploads resources through the admin"), and it has now shipped: real `article_resource` rows
+can be uploaded through `/admin`, but R2 is still unprovisioned, so the HEAD-check itself was
+correctly left in place per T7.10's own architecture constraint. No further upcoming
+Milestone 7 task touches this mechanism (per CLAUDE.md's rule against pointing at an
+already-shipped task, this entry no longer names one). Once R2 is actually provisioned,
+replace `lib/insights.ts`'s `isResourceReachable` with R2's own existence signal, alongside
+the sibling entry's `encodeImageUpload`/`encodeDownloadFileUpload` swap — the correct next
+action then is a direct, user-initiated fix, not waiting for another task to "reach" this
+mechanism again.
 
 ---
 

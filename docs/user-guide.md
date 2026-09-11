@@ -28,14 +28,16 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 52) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 53) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
 Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1), Articles/
-Categories admin (T7.2), Pages admin (Capabilities/Our Method/Legal/Footer, T7.3), Offers
-admin (the three core offers plus the Advisory Retainer, T7.4), Landing Pages admin
-(create-only, T7.5), Team admin (T7.6), Diagnostic Configuration (T7.7), Site Settings (T7.8),
-and Subscribers (T7.9) are all live; article-resource attachment (T7.10) is next.
+Categories admin (T7.2, plus downloadable-resource attachment, T7.10), Pages admin
+(Capabilities/Our Method/Legal/Footer, T7.3), Offers admin (the three core offers plus the
+Advisory Retainer, T7.4), Landing Pages admin (create-only, T7.5), Team admin (T7.6),
+Diagnostic Configuration (T7.7), Site Settings (T7.8), and Subscribers (T7.9) are all live —
+every task in this epic is now firm-visible except T7.11 (an internal correctness fix with
+no admin screen of its own), which is next.
 
 ---
 
@@ -239,14 +241,20 @@ row to continue it.
    neither the image nor the checkbox is required for a draft), or **"Publish"** once both
    the preview image and the compliance checkbox are done — **Publish stays disabled until
    both are true.**
+9. Still in the right-hand column, once the article has been saved at least once (this panel
+   only appears on an already-saved article — a brand-new, unsaved one has nothing to attach
+   a file to yet): under **Downloadable resources**, type a **Label** first (e.g. "Team
+   Structure Checklist"), then click **"Upload a PDF"** that appears once you've typed one.
+   The resource is attached immediately — no separate save step. Use the ▲/▼ icons to reorder
+   multiple resources (this is the order they'll appear in on the public article page's
+   download list), or the trash icon to remove one, with a confirmation first. Removing one
+   here takes its download link off the public page immediately, in the same action.
 
 **What to monitor:**
 
-- Article/figure images are stored as an interim data URI inside the database, not on a real
-  image host yet (Cloudflare R2 isn't set up) — uploads work and are durable, but every image
-  adds real weight to that article's own page.
-- **Attaching a downloadable resource file to an article isn't built yet** — the handful of
-  existing downloadable resources were set up directly by the developer.
+- Article/figure images, and now downloadable-resource PDFs too, are stored as an interim
+  data URI inside the database, not on a real image host yet (Cloudflare R2 isn't set up) —
+  uploads work and are durable, but every file adds real weight to that article's own page.
 - Subscriber addresses captured on the article page get a one-time confirmation only —
   nothing further is ever sent to them until Milestone 17 ships a real newsletter mechanism.
 
@@ -586,11 +594,12 @@ depends on:
 
 ## What's coming next
 
-- **Milestone 7 — Content Management Admin** (in progress): every piece of content seeded so
-  far becomes partner-editable without a developer. Dashboard, Articles/Categories, Pages
-  (Capabilities/Our Method/Legal/Footer), Offers (the three core offers plus the Advisory
-  Retainer), Landing Pages (create-only), Team, Diagnostic Configuration, Site Settings, and
-  Subscribers are all live; article-resource attachment is next.
+- **Milestone 7 — Content Management Admin** (nearly complete): every piece of content
+  seeded so far is now partner-editable without a developer. Dashboard, Articles/Categories
+  (with downloadable-resource attachment), Pages (Capabilities/Our Method/Legal/Footer),
+  Offers (the three core offers plus the Advisory Retainer), Landing Pages (create-only),
+  Team, Diagnostic Configuration, Site Settings, and Subscribers are all live; one internal
+  fix (T7.11, no admin screen of its own) remains before this milestone formally closes.
 - **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
   diagnostic completions in one place.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
@@ -600,6 +609,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Downloadable-resource attachment (T7.10) went live on the article editor — a partner can now attach a PDF to a published (or already-saved draft) article themselves, reorder or remove them, with the public article page's download list updating immediately — no developer needed. Previously the handful of existing downloadable resources had to be set up directly in the database.                                                                                                                                                                                                                      |
 | 2026-09-11 | Subscribers admin (T7.9) went live — a partner can now search/filter the full Insights-subscriber list, export the current filtered view as a CSV, and manually remove someone (the exact same effect as that person's own one-click unsubscribe link — their record stays, just marked Unsubscribed) — `/admin/subscribers`. Still no way to actually send this list anything beyond the one-time confirmation email; a real newsletter send stays a separate, gated, not-yet-built capability.                                                                                                                 |
 | 2026-09-11 | Site Settings (T7.8) went live — a partner can now edit the firm's phone/WhatsApp/email/address/response-time commitment and social profile URLs themselves — `/admin/site-settings`. One save now reaches the footer, `/contact`, every WhatsApp button, and the Organization search listing at once (previously the footer still showed old hardcoded text even after a Site Settings edit — that gap is now closed, including the footer's scope-of-practice/registration text from the Legal Pages screen). A blank required field now correctly disappears from the site rather than showing a broken link. |
 | 2026-09-11 | Rewrote every admin section as a step-by-step "how to" walkthrough (exact screens, buttons, and what each field means) instead of a feature list — user feedback that the previous version told the firm _what_ exists but not _how_ to actually use it. No underlying platform change; documentation-only.                                                                                                                                                                                                                                                                                                      |

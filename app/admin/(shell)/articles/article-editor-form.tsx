@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { ArticleBodyBlock, ArticleNextStepCta } from "@/lib/insights";
+import type { ArticleResourceRow } from "@/lib/admin-article-resources";
 import { AdminImageUploadButton } from "@/components/admin-image-upload-button";
+import { ArticleResourcesPanel } from "./article-resources-panel";
 import { Badge } from "@/components/ui/badge";
 import { BlockEditor } from "./block-editor";
 import { Button } from "@/components/ui/button";
@@ -56,10 +58,14 @@ export function ArticleEditorForm({
   articleId,
   initial,
   options,
+  resources,
 }: {
   articleId?: number;
   initial: ArticleEditorInitial;
   options: ArticleEditorOptions;
+  /** Only ever passed alongside `articleId` — `ArticleResource` rows can't exist before the
+   * article itself does. Omitted (never rendered) on the "New Article" screen. */
+  resources?: ArticleResourceRow[];
 }) {
   const router = useRouter();
 
@@ -346,6 +352,10 @@ export function ArticleEditorForm({
               </FieldLabel>
             </div>
           </div>
+
+          {articleId !== undefined && (
+            <ArticleResourcesPanel articleId={articleId} initial={resources ?? []} />
+          )}
         </div>
       </div>
 
