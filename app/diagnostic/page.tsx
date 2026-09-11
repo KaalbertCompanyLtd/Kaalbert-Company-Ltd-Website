@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getActiveDiagnosticFlow } from "@/lib/diagnostic-flow";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 
 // Reads live `diagnostic_dimension`/`diagnostic_question` rows on every request — same
 // reasoning as every other page built against seeded content (memory/decision-log.md, T2.1):
@@ -28,9 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DiagnosticPage() {
-  const [questions, offerNavLinks] = await Promise.all([
+  const [questions, offerNavLinks, footerContent] = await Promise.all([
     getActiveDiagnosticFlow(),
     getOfferNavLinks(),
+    getSiteFooterContent(),
   ]);
 
   return (
@@ -52,11 +54,7 @@ export default async function DiagnosticPage() {
 
         <DiagnosticFlow questions={questions} />
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

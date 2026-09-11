@@ -26,11 +26,7 @@ export default function LayoutShellHomeScratchPage() {
           <div className="h-[1400px]" />
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter />
     </>
   );
 }

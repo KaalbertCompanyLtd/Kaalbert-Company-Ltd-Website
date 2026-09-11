@@ -7,6 +7,7 @@ import { getInsightsIndex } from "@/lib/insights";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 import { ArticleCard } from "@/components/insights-article-card";
 import { InsightsSubscribeForm } from "@/components/insights-subscribe-form";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
@@ -87,7 +88,7 @@ export default async function InsightsPage({ searchParams }: InsightsPageProps) 
   const requestedPage = Number.parseInt(firstValue(params.page) ?? "1", 10);
   const justUnsubscribed = firstValue(params.unsubscribed) === "1";
 
-  const [page, offerNavLinks, index] = await Promise.all([
+  const [page, offerNavLinks, index, footerContent] = await Promise.all([
     getPageBySlug("insights"),
     getOfferNavLinks(),
     getInsightsIndex({
@@ -95,6 +96,7 @@ export default async function InsightsPage({ searchParams }: InsightsPageProps) 
       q,
       page: Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1,
     }),
+    getSiteFooterContent(),
   ]);
 
   const hasActiveFilters = Boolean(category || q);
@@ -234,11 +236,7 @@ export default async function InsightsPage({ searchParams }: InsightsPageProps) 
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

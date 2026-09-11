@@ -5,6 +5,7 @@ import { getAdvisoryRetainer, formatRetainerFee, getCapabilities } from "@/lib/c
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -30,11 +31,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CapabilitiesPage() {
-  const [page, capabilities, retainer, offerNavLinks] = await Promise.all([
+  const [page, capabilities, retainer, offerNavLinks, footerContent] = await Promise.all([
     getPageBySlug("capabilities"),
     getCapabilities(),
     getAdvisoryRetainer(),
     getOfferNavLinks(),
+    getSiteFooterContent(),
   ]);
 
   return (
@@ -110,11 +112,7 @@ export default async function CapabilitiesPage() {
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

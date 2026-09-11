@@ -11,6 +11,7 @@ import { getScoreBand } from "@/lib/diagnostic-flow";
 import { getDiagnosticResultByEnquiryId } from "@/lib/diagnostic-submit";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 
 // Reads a live `enquiry_record` row on every request — same reasoning as every other page
 // built against seeded/submitted content (memory/decision-log.md, T2.1): Railway's build
@@ -65,7 +66,11 @@ export default async function DiagnosticResultsPage({ searchParams }: Diagnostic
     notFound();
   }
 
-  const [offerNavLinks, band] = await Promise.all([getOfferNavLinks(), getScoreBand(result.score)]);
+  const [offerNavLinks, band, footerContent] = await Promise.all([
+    getOfferNavLinks(),
+    getScoreBand(result.score),
+    getSiteFooterContent(),
+  ]);
   const weakestSet = new Set(result.weakestDimensions);
 
   return (
@@ -138,11 +143,7 @@ export default async function DiagnosticResultsPage({ searchParams }: Diagnostic
           </div>
         </div>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

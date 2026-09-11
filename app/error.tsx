@@ -13,7 +13,9 @@ import { SiteHeader } from "@/components/site-header";
  * an error boundary to be a Client Component, so unlike app/not-found.tsx this can't fetch
  * live offer data for SiteHeader's nav — it renders with `offerNavLinks` omitted, which falls
  * back to that component's own hard-coded `FALLBACK_CORE_OFFERS` (see components/
- * site-header.tsx and memory/decision-log.md, T2.2).
+ * site-header.tsx and memory/decision-log.md, T2.2). Same reasoning for `SiteFooter` here
+ * (T7.8): rendered with every prop omitted, falling back to its own hard-coded contact/
+ * scope-of-practice copy rather than `site_settings`/`footer_content`.
  *
  * Only catches errors below this segment of the tree — a root-layout-level crash is
  * app/global-error.tsx's job instead (Next.js's error-boundary scoping rule).
@@ -63,11 +65,7 @@ export default function Error({
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter />
     </>
   );
 }

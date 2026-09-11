@@ -6,6 +6,7 @@ import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { getMethodStages } from "@/lib/our-method";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -63,10 +64,11 @@ function renderIntroCopyWithOfferLinks(
 }
 
 export default async function OurMethodPage() {
-  const [page, stages, offerNavLinks] = await Promise.all([
+  const [page, stages, offerNavLinks, footerContent] = await Promise.all([
     getPageBySlug("our-method"),
     getMethodStages(),
     getOfferNavLinks(),
+    getSiteFooterContent(),
   ]);
 
   // `introCopy` is mandatory content for this page specifically (our-method-page.md's edge
@@ -177,11 +179,7 @@ export default async function OurMethodPage() {
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

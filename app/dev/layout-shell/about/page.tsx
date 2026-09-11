@@ -23,11 +23,7 @@ export default function LayoutShellAboutScratchPage() {
           <p className="text-body text-foreground">Second scratch page for the T1.5 A/B check.</p>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter />
     </>
   );
 }

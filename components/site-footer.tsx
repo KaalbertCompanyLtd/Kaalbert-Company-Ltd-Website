@@ -20,16 +20,29 @@ const INSIGHTS_LINKS = [
   { name: "Contact", href: "/contact" },
 ] as const;
 
+// T1.5's original mockup literals — used only as the fallback when a caller omits these
+// props entirely (see SiteFooterProps below), never as a display decision by this component.
+const FALLBACK_ADDRESS_LINE_1 = "House No. 13 Gbenjin Gbe Avenue";
+const FALLBACK_ADDRESS_LINE_2 = "East Legon-ARS, Accra";
+const FALLBACK_PHONE_PRIMARY = "0558 480 001";
+
 export interface SiteFooterProps {
   /**
-   * site_settings fields (content-management-admin.md). Passed as props rather than
-   * hard-coded inline so a later task can wire a live database read without restructuring
-   * this component — no `site_settings` table exists yet, so every caller currently passes
-   * the mockups' actual literal values (see docs/tasks/01-foundation.md T1.5).
+   * `site_settings`/`footer_content` fields (content-management-admin.md), sourced live via
+   * `lib/site-settings.ts`'s `getSiteFooterContent()` — every real public page passes these
+   * explicitly. All optional, defaulting to the values above, for the two callers that can't
+   * fetch live data: `app/error.tsx` (a required Client Component) and `app/not-found.tsx`
+   * (deliberately zero-DB-dependency for reliability, see that file's own comment). A field
+   * passed as an explicit blank string (a required `site_settings` field left blank
+   * pre-launch, content-management-admin.md's edge case) is NOT replaced by the fallback —
+   * only an omitted (`undefined`) prop is — so the corresponding line below is omitted from
+   * render instead of showing stale mockup copy.
    */
-  addressLine1: string;
-  addressLine2: string;
-  phonePrimary: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  phonePrimary?: string;
+  scopeOfPracticeStatement?: string;
+  companyRegistrationDetails?: string | null;
 }
 
 function FooterLinkColumn({
@@ -55,7 +68,13 @@ function FooterLinkColumn({
   );
 }
 
-export function SiteFooter({ addressLine1, addressLine2, phonePrimary }: SiteFooterProps) {
+export function SiteFooter({
+  addressLine1 = FALLBACK_ADDRESS_LINE_1,
+  addressLine2 = FALLBACK_ADDRESS_LINE_2,
+  phonePrimary = FALLBACK_PHONE_PRIMARY,
+  scopeOfPracticeStatement,
+  companyRegistrationDetails,
+}: SiteFooterProps) {
   return (
     <footer className="border-accent bg-primary text-primary-foreground border-t pt-14 pb-6">
       <div className="mx-auto max-w-[1200px] px-6">
@@ -70,14 +89,25 @@ export function SiteFooter({ addressLine1, addressLine2, phonePrimary }: SiteFoo
           <FooterLinkColumn heading="Core Offers" links={CORE_OFFER_LINKS} />
           <FooterLinkColumn heading="Firm" links={FIRM_LINKS} />
           <FooterLinkColumn heading="Insights" links={INSIGHTS_LINKS} />
-          <div>
-            <strong className="text-primary-foreground mb-2.5 block">{addressLine1}</strong>
-            <span className="text-primary-foreground/80">{addressLine2}</span>
-            <br />
-            <span className="text-primary-foreground/80">{phonePrimary}</span>
-          </div>
+          {/* A blank `site_settings.address` (allowed pre-launch, content-management-admin.md's
+              edge case) omits this whole column rather than rendering an empty heading. */}
+          {addressLine1 && (
+            <div>
+              <strong className="text-primary-foreground mb-2.5 block">{addressLine1}</strong>
+              {addressLine2 && <span className="text-primary-foreground/80">{addressLine2}</span>}
+              {phonePrimary && (
+                <>
+                  <br />
+                  <span className="text-primary-foreground/80">{phonePrimary}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
-        <ScopeOfPracticeNote />
+        <ScopeOfPracticeNote
+          statement={scopeOfPracticeStatement}
+          companyRegistrationDetails={companyRegistrationDetails}
+        />
       </div>
     </footer>
   );

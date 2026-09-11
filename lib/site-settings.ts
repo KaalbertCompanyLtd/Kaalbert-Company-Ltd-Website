@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getFooterContent } from "@/lib/legal";
 
 /**
  * The `site_settings` singleton row (phone/WhatsApp/email/address/response-time — see
@@ -33,4 +34,36 @@ export function splitAddressLines(address: string): string[] {
 export function toTelHref(localNumber: string): string {
   const digitsOnly = localNumber.replace(/\s+/g, "");
   return `tel:+233${digitsOnly.replace(/^0/, "")}`;
+}
+
+export interface SiteFooterContent {
+  addressLine1: string;
+  addressLine2: string;
+  phonePrimary: string;
+  scopeOfPracticeStatement: string;
+  companyRegistrationDetails: string | null;
+}
+
+/**
+ * The exact prop shape `components/site-footer.tsx`'s `SiteFooter` needs, combining
+ * `site_settings` and `footer_content` (T7.8) in one call so a page that renders `SiteFooter`
+ * but doesn't otherwise need `site_settings`/`footer_content` (most public pages) doesn't
+ * have to repeat this shaping logic itself. A page that already fetches `getSiteSettings()`
+ * for its own display (e.g. `/contact`) should call `getFooterContent()` directly instead of
+ * this, to avoid querying `site_settings` twice. Every required `site_settings` field the
+ * footer displays (`address`, `phonePrimary`) is left exactly as stored — possibly blank
+ * pre-launch — so `SiteFooter` itself, not this function, is what omits a blank field from
+ * render (content-management-admin.md's edge case).
+ */
+export async function getSiteFooterContent(): Promise<SiteFooterContent> {
+  const [settings, footer] = await Promise.all([getSiteSettings(), getFooterContent()]);
+  const addressLines = splitAddressLines(settings.address);
+
+  return {
+    addressLine1: addressLines[0] ?? "",
+    addressLine2: addressLines.slice(1).join(", "),
+    phonePrimary: settings.phonePrimary,
+    scopeOfPracticeStatement: footer.scopeOfPracticeStatement,
+    companyRegistrationDetails: footer.companyRegistrationDetails,
+  };
 }

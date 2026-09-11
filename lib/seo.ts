@@ -131,9 +131,9 @@ export interface OrganizationJsonLdData {
   name: string;
   url: string;
   logo: string;
-  telephone: string;
-  email: string;
-  address: {
+  telephone?: string;
+  email?: string;
+  address?: {
     "@type": "PostalAddress";
     streetAddress: string;
     addressCountry: string;
@@ -145,7 +145,10 @@ export interface OrganizationJsonLdData {
  * seo-and-search-foundation.md's business rule: Organization JSON-LD renders on every page
  * from one shared source — `site_settings` — never a per-page copy. Deliberately outside
  * GTM (ADR 0006's boundary, restated in this task's own architecture constraints): this is
- * search-engine structured data, not a measurement/advertising tag.
+ * search-engine structured data, not a measurement/advertising tag. `telephone`/`email`/
+ * `address` are omitted (not rendered as an empty/broken value) when the underlying
+ * `site_settings` field is blank — content-management-admin.md's edge case (T7.8), same
+ * "omit rather than fake" precedent already applied to `sameAs` below.
  */
 export async function getOrganizationJsonLd(): Promise<OrganizationJsonLdData> {
   const settings = await getSiteSettings();
@@ -157,14 +160,21 @@ export async function getOrganizationJsonLd(): Promise<OrganizationJsonLdData> {
     name: FIRM_NAME,
     url: baseUrl,
     logo: new URL("/brand/logo-primary.png", baseUrl).toString(),
-    telephone: toTelHref(settings.phonePrimary).replace("tel:", ""),
-    email: settings.email,
-    address: {
+  };
+
+  if (settings.phonePrimary) {
+    data.telephone = toTelHref(settings.phonePrimary).replace("tel:", "");
+  }
+  if (settings.email) {
+    data.email = settings.email;
+  }
+  if (settings.address) {
+    data.address = {
       "@type": "PostalAddress",
       streetAddress: settings.address.split("\n").join(", "),
       addressCountry: "GH",
-    },
-  };
+    };
+  }
 
   // seo-and-search-foundation.md's edge case: an empty `social_profile_urls` at launch omits
   // `sameAs` entirely rather than rendering a placeholder or broken URL.

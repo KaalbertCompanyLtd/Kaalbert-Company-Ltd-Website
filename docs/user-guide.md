@@ -166,9 +166,8 @@ site (including landing pages).
 - The **Privacy Notice specifically** must have real wording before the site can go fully
   public — it's still draft/illustrative today. The other three legal pages are either
   already real (Scope of Practice) or lower-risk to leave in draft a little longer.
-- Editing the footer's scope-of-practice/registration text works today, but **the public
-  footer doesn't read it live yet** — that wiring is a known gap, sequenced into a later
-  Milestone 7 task (Site Settings).
+- Editing the footer's scope-of-practice/registration text updates the footer on every page
+  of the site immediately — this wiring shipped with Site Settings below.
 
 ---
 
@@ -463,6 +462,43 @@ for the full boundary.
 
 ---
 
+## Editing Site Settings
+
+`/admin/site-settings` — click **Site Settings** in the sidebar, under Operations. One shared
+record for the whole firm's contact details — there's nothing to pick or create, just one
+form.
+
+1. **Phone (primary)** — the firm's main phone number, shown on `/contact` and as a link in
+   the footer. Leave blank and the phone link disappears from the site entirely rather than
+   showing a broken link.
+2. **Phone (secondary)** — optional, a second phone number shown alongside the primary on
+   `/contact` only.
+3. **Email** — shown on `/contact` as a `mailto:` link. Leave blank to omit it.
+4. **WhatsApp number** — digits only, with the country code and no leading zero or `+` (e.g.
+   `233558480001` for a Ghana number starting `0`). This is what every "Message us on
+   WhatsApp" button site-wide links to. Leave blank and every WhatsApp button disappears.
+5. **Office address** — one address line per line of the box (e.g. street address on the
+   first line, area/city on the second). Shown on `/contact` and in the footer. Leave entirely
+   blank to omit the address from both.
+6. **Response-time commitment** — optional free text (e.g. "We reply within one business
+   day"), shown as a small note on `/contact`. Leave blank until the firm has a real,
+   keepable commitment to state — it's omitted entirely while blank, never shown as
+   "pending."
+7. **Social profile URLs** — one full URL per line (e.g. a LinkedIn company page). Feeds the
+   `sameAs` field search engines read for the firm's Organization listing. Leave blank to
+   omit it from that listing.
+
+Click **Save**. Every field here reaches the footer, `/contact`, every WhatsApp button, and
+the search-engine Organization listing in the same save — there's no separate step to
+"publish" a Site Settings change.
+
+The footer's scope-of-practice statement and company registration details are a separate
+record, edited on the Legal Pages & Footer screen (`/admin/pages/legal`, see above) — not
+here — but both records feed the same footer, so a change to either one is live everywhere
+immediately.
+
+---
+
 ## Measurement & attribution
 
 No dedicated admin screen — this runs through Google Tag Manager's own console, not
@@ -531,8 +567,8 @@ depends on:
 - **Milestone 7 — Content Management Admin** (in progress): every piece of content seeded so
   far becomes partner-editable without a developer. Dashboard, Articles/Categories, Pages
   (Capabilities/Our Method/Legal/Footer), Offers (the three core offers plus the Advisory
-  Retainer), Landing Pages (create-only), Team, and Diagnostic Configuration are all live;
-  Site Settings, Subscribers, and article-resource attachment are next.
+  Retainer), Landing Pages (create-only), Team, Diagnostic Configuration, and Site Settings are
+  all live; Subscribers and article-resource attachment are next.
 - **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
   diagnostic completions in one place.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
@@ -540,16 +576,17 @@ depends on:
 
 ## Change log
 
-| Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-11 | Rewrote every admin section as a step-by-step "how to" walkthrough (exact screens, buttons, and what each field means) instead of a feature list — user feedback that the previous version told the firm _what_ exists but not _how_ to actually use it. No underlying platform change; documentation-only.                                                                                                                                                            |
-| 2026-09-11 | Diagnostic Configuration (T7.7) went live — a partner can now add/edit/reorder/deactivate diagnostic questions (including choice-option labels/values), and edit dimension weights, triage thresholds, and score-band text — `/admin/diagnostic-questions` and `/admin/diagnostic-configuration`. Weights must total 100% before saving; the last active question in a dimension can't be deactivated; the scoring algorithm itself stays a developer-only change.     |
-| 2026-09-11 | Team admin (T7.6) went live — a partner can now edit any partner's public profile (photo, title, practice area, credentials, personal statement, bio, display order) and deactivate/reactivate a colleague's login, or reset their 2FA enrolment/password on their behalf — `/admin/team`. Publishing is automatic (computed from name/practice area/personal statement), not a toggle; a profile already crediting published articles cannot be unpublished.          |
-| 2026-09-11 | Landing Pages admin (T7.5) went live — a partner can now create a brand-new campaign landing page themselves (headline, opening paragraph, body content, CTA, an optional PDF download, meta tags) — `/admin/landing-pages` → "New Landing Page". Create-only for now: editing or retiring an existing landing page still needs a developer. The partner picks the page's own URL slug; a duplicate is rejected with a clear inline message.                           |
-| 2026-09-11 | Offers admin (T7.4) went live — a partner can now edit all three core offer pages' full field set (problem statement, who it's for/not for, method stages, deliverables/required inputs, fee band, out-of-scope note, FAQs, CTA) and the Advisory Retainer's fee/description themselves — `/admin/offers`. A fee band still can't be saved without its scope cap, enforced by the system; updating a fee updates the offer page and the nav dropdown hint in one save. |
-| 2026-09-11 | Pages admin (T7.3) went live — a partner can now edit Capabilities, Our Method, any of the four legal pages (including clearing the "Draft — pending legal review" marker themselves), and the shared footer's scope-of-practice/registration text. Corrected a drift: the "Public website pages" section's "what a partner can do" line had been updated in the Artifact mirror during T7.2 but not in this file — synced here.                                       |
-| 2026-09-11 | Articles/Categories admin (T7.2) went live — a partner can now write, edit, and publish an article themselves (including images/figures), and create/rename/retire Insights categories, both fully self-service. Noted the two remaining gaps: image uploads use an interim storage method pending Cloudflare R2, and attaching a downloadable file to an article isn't built yet (T7.10).                                                                             |
-| 2026-09-11 | Admin dashboard (T7.1) went live — real stat counts and a recent-enquiries panel replace the old placeholder; noted the two honest placeholders (status always "New", Triage shown as flagged/not-flagged only) that resolve once Milestone 8 ships.                                                                                                                                                                                                                   |
-| 2026-09-11 | Added self-service password reset (T6.7) to the Admin Login section — a partner can now reset a forgotten password themselves, no developer or other partner needed.                                                                                                                                                                                                                                                                                                   |
-| 2026-09-10 | Milestone 6 (Admin Login) complete — added its "What's live today" section, moved it out of "What's coming next", updated the two stale "no admin area yet" mentions above it.                                                                                                                                                                                                                                                                                         |
-| 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9).                                                                                                                                                                                                                                                                                                                                        |
+| Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Site Settings (T7.8) went live — a partner can now edit the firm's phone/WhatsApp/email/address/response-time commitment and social profile URLs themselves — `/admin/site-settings`. One save now reaches the footer, `/contact`, every WhatsApp button, and the Organization search listing at once (previously the footer still showed old hardcoded text even after a Site Settings edit — that gap is now closed, including the footer's scope-of-practice/registration text from the Legal Pages screen). A blank required field now correctly disappears from the site rather than showing a broken link. |
+| 2026-09-11 | Rewrote every admin section as a step-by-step "how to" walkthrough (exact screens, buttons, and what each field means) instead of a feature list — user feedback that the previous version told the firm _what_ exists but not _how_ to actually use it. No underlying platform change; documentation-only.                                                                                                                                                                                                                                                                                                      |
+| 2026-09-11 | Diagnostic Configuration (T7.7) went live — a partner can now add/edit/reorder/deactivate diagnostic questions (including choice-option labels/values), and edit dimension weights, triage thresholds, and score-band text — `/admin/diagnostic-questions` and `/admin/diagnostic-configuration`. Weights must total 100% before saving; the last active question in a dimension can't be deactivated; the scoring algorithm itself stays a developer-only change.                                                                                                                                               |
+| 2026-09-11 | Team admin (T7.6) went live — a partner can now edit any partner's public profile (photo, title, practice area, credentials, personal statement, bio, display order) and deactivate/reactivate a colleague's login, or reset their 2FA enrolment/password on their behalf — `/admin/team`. Publishing is automatic (computed from name/practice area/personal statement), not a toggle; a profile already crediting published articles cannot be unpublished.                                                                                                                                                    |
+| 2026-09-11 | Landing Pages admin (T7.5) went live — a partner can now create a brand-new campaign landing page themselves (headline, opening paragraph, body content, CTA, an optional PDF download, meta tags) — `/admin/landing-pages` → "New Landing Page". Create-only for now: editing or retiring an existing landing page still needs a developer. The partner picks the page's own URL slug; a duplicate is rejected with a clear inline message.                                                                                                                                                                     |
+| 2026-09-11 | Offers admin (T7.4) went live — a partner can now edit all three core offer pages' full field set (problem statement, who it's for/not for, method stages, deliverables/required inputs, fee band, out-of-scope note, FAQs, CTA) and the Advisory Retainer's fee/description themselves — `/admin/offers`. A fee band still can't be saved without its scope cap, enforced by the system; updating a fee updates the offer page and the nav dropdown hint in one save.                                                                                                                                           |
+| 2026-09-11 | Pages admin (T7.3) went live — a partner can now edit Capabilities, Our Method, any of the four legal pages (including clearing the "Draft — pending legal review" marker themselves), and the shared footer's scope-of-practice/registration text. Corrected a drift: the "Public website pages" section's "what a partner can do" line had been updated in the Artifact mirror during T7.2 but not in this file — synced here.                                                                                                                                                                                 |
+| 2026-09-11 | Articles/Categories admin (T7.2) went live — a partner can now write, edit, and publish an article themselves (including images/figures), and create/rename/retire Insights categories, both fully self-service. Noted the two remaining gaps: image uploads use an interim storage method pending Cloudflare R2, and attaching a downloadable file to an article isn't built yet (T7.10).                                                                                                                                                                                                                       |
+| 2026-09-11 | Admin dashboard (T7.1) went live — real stat counts and a recent-enquiries panel replace the old placeholder; noted the two honest placeholders (status always "New", Triage shown as flagged/not-flagged only) that resolve once Milestone 8 ships.                                                                                                                                                                                                                                                                                                                                                             |
+| 2026-09-11 | Added self-service password reset (T6.7) to the Admin Login section — a partner can now reset a forgotten password themselves, no developer or other partner needed.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 2026-09-10 | Milestone 6 (Admin Login) complete — added its "What's live today" section, moved it out of "What's coming next", updated the two stale "no admin area yet" mentions above it.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |

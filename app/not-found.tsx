@@ -17,7 +17,10 @@ import { SiteHeader } from "@/components/site-header";
 // proxy (`metro.proxy.rlwy.net`) made a DB-backed version of this page hang for tens of
 // seconds before failing. `SiteHeader`'s `offerNavLinks` prop is optional specifically to
 // support this: omitting it falls back to `FALLBACK_CORE_OFFERS`, so this page has zero
-// runtime dependencies and renders instantly regardless of database health.
+// runtime dependencies and renders instantly regardless of database health. Same reasoning
+// for `SiteFooter` below (T7.8): every prop is omitted, so it falls back to its own
+// hard-coded contact/scope-of-practice copy rather than a live `site_settings`/
+// `footer_content` fetch.
 /**
  * Exported (not just used locally) so a route that calls `notFound()` itself — e.g. app/
  * offers/[slug]/page.tsx's unknown-slug case — can return this same object from its own
@@ -87,11 +90,7 @@ export default function NotFound() {
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter />
     </>
   );
 }

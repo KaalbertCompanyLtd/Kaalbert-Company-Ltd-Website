@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WhatsAppLinkButton } from "@/components/whatsapp-link-button";
 import { buildWhatsAppMessage, resolveServiceContext } from "@/lib/contact";
+import { getFooterContent } from "@/lib/legal";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
@@ -39,11 +40,12 @@ export async function generateMetadata({ searchParams }: ContactPageProps): Prom
 
 export default async function ContactPage({ searchParams }: ContactPageProps) {
   const { service } = await searchParams;
-  const [page, siteSettings, offerNavLinks, serviceContext] = await Promise.all([
+  const [page, siteSettings, offerNavLinks, serviceContext, footerContentRow] = await Promise.all([
     getPageBySlug("contact"),
     getSiteSettings(),
     getOfferNavLinks(),
     resolveServiceContext(service),
+    getFooterContent(),
   ]);
 
   const addressLines = splitAddressLines(siteSettings.address);
@@ -93,68 +95,82 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
             </div>
 
             <div>
-              <div className="border-border bg-card mb-3.5 rounded-md border p-5">
-                <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
-                  WhatsApp
-                </span>
-                <WhatsAppLinkButton
-                  whatsappNumber={siteSettings.whatsappNumber}
-                  message={whatsappMessage}
-                  className="text-primary text-[1.0625rem] font-bold hover:underline"
-                >
-                  Message us directly →
-                </WhatsAppLinkButton>
-              </div>
-
-              <div className="border-border bg-card mb-3.5 rounded-md border p-5">
-                <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
-                  Phone
-                </span>
-                <a
-                  href={toTelHref(siteSettings.phonePrimary)}
-                  className="text-primary block text-[1.0625rem] font-bold hover:underline"
-                >
-                  {siteSettings.phonePrimary}
-                </a>
-                {siteSettings.phoneSecondary && (
-                  <a
-                    href={toTelHref(siteSettings.phoneSecondary)}
-                    className="text-primary block font-semibold hover:underline"
-                  >
-                    {siteSettings.phoneSecondary}
-                  </a>
-                )}
-              </div>
-
-              <div className="border-border bg-card mb-3.5 rounded-md border p-5">
-                <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
-                  Email
-                </span>
-                <a
-                  href={`mailto:${siteSettings.email}`}
-                  className="text-primary text-[1.0625rem] font-bold hover:underline"
-                >
-                  {siteSettings.email}
-                </a>
-              </div>
-
-              <div className="border-border bg-card mb-3.5 rounded-md border p-5">
-                <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
-                  Office
-                </span>
-                {addressLines.map((line, index) => (
-                  <span
-                    key={line}
-                    className={
-                      index === 0
-                        ? "text-primary block text-[0.9375rem]"
-                        : "text-muted-foreground block text-[0.9375rem]"
-                    }
-                  >
-                    {line}
+              {/* Each card below is omitted entirely when the `site_settings` field it needs
+                  is blank (content-management-admin.md's edge case: a blank required field
+                  is omitted from the public display, not rendered broken — e.g. an empty
+                  `tel:`/`mailto:`/`wa.me` link). */}
+              {siteSettings.whatsappNumber && (
+                <div className="border-border bg-card mb-3.5 rounded-md border p-5">
+                  <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
+                    WhatsApp
                   </span>
-                ))}
-              </div>
+                  <WhatsAppLinkButton
+                    whatsappNumber={siteSettings.whatsappNumber}
+                    message={whatsappMessage}
+                    className="text-primary text-[1.0625rem] font-bold hover:underline"
+                  >
+                    Message us directly →
+                  </WhatsAppLinkButton>
+                </div>
+              )}
+
+              {(siteSettings.phonePrimary || siteSettings.phoneSecondary) && (
+                <div className="border-border bg-card mb-3.5 rounded-md border p-5">
+                  <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
+                    Phone
+                  </span>
+                  {siteSettings.phonePrimary && (
+                    <a
+                      href={toTelHref(siteSettings.phonePrimary)}
+                      className="text-primary block text-[1.0625rem] font-bold hover:underline"
+                    >
+                      {siteSettings.phonePrimary}
+                    </a>
+                  )}
+                  {siteSettings.phoneSecondary && (
+                    <a
+                      href={toTelHref(siteSettings.phoneSecondary)}
+                      className="text-primary block font-semibold hover:underline"
+                    >
+                      {siteSettings.phoneSecondary}
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {siteSettings.email && (
+                <div className="border-border bg-card mb-3.5 rounded-md border p-5">
+                  <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
+                    Email
+                  </span>
+                  <a
+                    href={`mailto:${siteSettings.email}`}
+                    className="text-primary text-[1.0625rem] font-bold hover:underline"
+                  >
+                    {siteSettings.email}
+                  </a>
+                </div>
+              )}
+
+              {addressLines.length > 0 && (
+                <div className="border-border bg-card mb-3.5 rounded-md border p-5">
+                  <span className="text-caption text-accent mb-1 block font-semibold tracking-[0.06em] uppercase">
+                    Office
+                  </span>
+                  {addressLines.map((line, index) => (
+                    <span
+                      key={line}
+                      className={
+                        index === 0
+                          ? "text-primary block text-[0.9375rem]"
+                          : "text-muted-foreground block text-[0.9375rem]"
+                      }
+                    >
+                      {line}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Only shown once the firm has confirmed a real, keepable response-time
                   commitment (site_settings.response_time_commitment) — omitted entirely
@@ -170,9 +186,11 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         </section>
       </main>
       <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
+        addressLine1={addressLines[0] ?? ""}
+        addressLine2={addressLines.slice(1).join(", ")}
+        phonePrimary={siteSettings.phonePrimary}
+        scopeOfPracticeStatement={footerContentRow.scopeOfPracticeStatement}
+        companyRegistrationDetails={footerContentRow.companyRegistrationDetails}
       />
     </>
   );

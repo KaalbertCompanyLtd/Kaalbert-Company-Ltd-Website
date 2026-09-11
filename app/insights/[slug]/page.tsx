@@ -14,6 +14,7 @@ import {
 import type { ArticleBodyBlock, ArticleResourceItem } from "@/lib/insights";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata, getSiteUrl, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 import { ArticleJsonLd } from "@/components/article-json-ld";
 import { InsightsSubscribeForm } from "@/components/insights-subscribe-form";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
@@ -226,10 +227,11 @@ export default async function ArticlePage({ params }: ArticlePageParams) {
     notFound();
   }
 
-  const [offerNavLinks, relatedArticles, resourceAvailability] = await Promise.all([
+  const [offerNavLinks, relatedArticles, resourceAvailability, footerContent] = await Promise.all([
     getOfferNavLinks(),
     getRelatedArticles({ id: article.id, categoryId: article.categoryId }),
     Promise.all(article.resources.map((resource) => isResourceReachable(resource.fileUrl))),
+    getSiteFooterContent(),
   ]);
 
   const articleUrl = new URL(`/insights/${article.slug}`, getSiteUrl()).toString();
@@ -410,11 +412,7 @@ export default async function ArticlePage({ params }: ArticlePageParams) {
           </section>
         )}
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

@@ -31,6 +31,21 @@ export async function getLegalPageBySlug(slug: string) {
 }
 
 /**
+ * The `footer_content` singleton row — same `findFirst` pattern as `lib/site-settings.ts`'s
+ * `getSiteSettings`. Read by every public `SiteFooter` call site (T7.8) to source
+ * `ScopeOfPracticeNote`'s statement/company-registration-details live, instead of that
+ * component's own hard-coded fallback copy (memory/technical-debt.md → "SiteFooter/
+ * ScopeOfPracticeNote not wired into footer_content").
+ */
+export async function getFooterContent() {
+  const content = await prisma.footerContent.findFirst();
+  if (!content) {
+    throw new Error(`footer_content has no row — run \`npm run db:seed\` (see prisma/seed.ts).`);
+  }
+  return content;
+}
+
+/**
  * "Last revised 26 August 2026" once the firm has actually revised the page (`scope-of-
  * practice`'s real, non-placeholder row), or the mockups' own "Pending first publication"
  * copy while `lastRevisedAt` is null (every page still in draft).

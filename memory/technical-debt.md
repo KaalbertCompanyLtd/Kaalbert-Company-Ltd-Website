@@ -541,8 +541,9 @@ display are done.
 
 ## `footer_content.scope_of_practice_statement`/`company_registration_details` materialized but not wired into `SiteFooter`/`ScopeOfPracticeNote`
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
+**Date resolved:** 2026-09-11 (T7.8, session 51)
 **Reason:** T2.7 (`docs/tasks/02-public-presentation.md`) materialized the `footer_content`
 singleton (seeded with the same scope-of-practice wording `components/scope-of-practice-
 note.tsx` already hardcodes, plus `companyRegistrationDetails: null`), reading it live on
@@ -571,6 +572,15 @@ read by the same seven call sites.
 **Trigger type:** Task-sequenced
 **Sequenced into:** T7.8 (Site Settings singleton, `docs/tasks/07-content-admin.md`) —
 addendum added this session pointing back here, alongside the existing `SiteSettings` entry.
+**Resolution (T7.8, session 51):** Added `lib/legal.ts`'s `getFooterContent()` (the resolver
+this entry's own fix note said didn't exist yet). `ScopeOfPracticeNote`
+(`components/scope-of-practice-note.tsx`) now accepts `statement`/`companyRegistrationDetails`
+as optional props (defaulting to the original hard-coded copy/`null` only when a prop is
+omitted, not when explicitly blank), rendering the registration-details line only when
+non-null. `SiteFooter` threads both through. Fixed in the same pass as the `SiteSettings`
+entry directly below, across all sixteen real `SiteFooter` call sites (more had accumulated
+since this entry's original "seven" count) — see that entry's own resolution note for the
+full list and the two deliberate exceptions (`app/error.tsx`, `app/not-found.tsx`).
 
 ---
 
@@ -591,19 +601,22 @@ display, not shown broken), so nothing renders incorrectly. The gap is simply th
 visitor sees no stated response-time commitment at all until the firm confirms one.
 **Priority:** Medium
 **Possible Fix/Fixes:** Once the firm states a real, keepable response-time commitment, set
-`site_settings.response_time_commitment` via T7.8's Site Settings admin screen (no code
-change required — this is a content edit, not a build task).
-**Trigger type:** User-triggered — do not fabricate a response-time commitment or treat
-reaching T7.8 as a cue to invent one; wait for the firm to state a real number first.
-**Sequenced into:** T7.8 (Site Settings singleton, `docs/tasks/07-content-admin.md`) —
-addendum added this session pointing back here.
+`site_settings.response_time_commitment` via the now-built Site Settings screen
+(`/admin/site-settings`, T7.8, session 51 — "Response-time commitment" field) — no code
+change required, this is a content edit, not a build task.
+**Trigger type:** User-triggered — do not fabricate a response-time commitment or treat T7.8
+having shipped as a cue to invent one; wait for the firm to state a real number first.
+**Sequenced into:** `/admin/site-settings` (built at T7.8, `docs/tasks/07-content-admin.md`,
+session 51) — recording where the mechanism now lives, per CLAUDE.md's User-triggered
+exemption from the "don't point at an already-shipped task" rule.
 
 ---
 
 ## `SiteFooter` callers still pass hardcoded address/phone props instead of reading `site_settings`
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
+**Date resolved:** 2026-09-11 (T7.8, session 51)
 **Reason:** T2.6 is the first task to materialize a real `site_settings` row, and wires it
 into `/contact`'s own channel cards and `WhatsAppLinkButton` — but every public page's
 `SiteFooter` call (T1.5's own precedent, `app/(public)/page.tsx`, `app/capabilities/page.tsx`,
@@ -627,10 +640,26 @@ matter.
 **Trigger type:** Task-sequenced
 **Sequenced into:** T7.8 (Site Settings singleton, `docs/tasks/07-content-admin.md`) —
 addendum added this session pointing back here.
-
----
-
-## Funding-Readiness Pack's checklist cross-promo panel omitted from the offer detail page
+**Resolution (T7.8, session 51):** `SiteFooter`'s props are now all optional
+(`addressLine1`/`addressLine2`/`phonePrimary`/`scopeOfPracticeStatement`/
+`companyRegistrationDetails`), defaulting to the original T1.5 mockup literals only when a
+prop is omitted (`undefined`) — same `FALLBACK_CORE_OFFERS`-style precedent already used by
+`SiteHeader`'s `offerNavLinks`. Added `lib/site-settings.ts`'s `getSiteFooterContent()`
+(combines `getSiteSettings()` + `getFooterContent()` into `SiteFooter`'s exact prop shape) so
+most callers need only one added fetch. Fixed at all sixteen real `<SiteFooter>` call sites —
+more had accumulated since this entry's original "five" count (`app/(public)/page.tsx`,
+`app/capabilities/page.tsx`, `app/our-method/page.tsx`, `app/about/page.tsx`,
+`app/contact/page.tsx`, `app/diagnostic/page.tsx`, `app/diagnostic/results/page.tsx`,
+`app/offers/[slug]/page.tsx`, `app/insights/page.tsx`, `app/insights/[slug]/page.tsx`,
+`app/legal/[slug]/page.tsx`, `app/lp/[slug]/page.tsx`, and the two `app/dev/layout-shell/*`
+scratch pages, which now render with every prop omitted rather than stale hardcoded literals).
+Two call sites deliberately keep the fallback instead of fetching: `app/error.tsx` (a required
+Client Component per Next.js's error-boundary rule, can't call server-only Prisma code) and
+`app/not-found.tsx` (deliberately zero-DB-dependency for reliability — see that file's own
+comment about a real DNS-hang incident). Also fixed a related bug found live-verifying this
+task: `app/contact/page.tsx`'s phone/WhatsApp/email/office cards rendered an empty, broken
+`tel:`/`wa.me`/`mailto:` link when the underlying field was blank instead of omitting the
+card — each is now conditionally rendered.
 
 **Status:** Resolved
 **Date raised:** 2026-09-05

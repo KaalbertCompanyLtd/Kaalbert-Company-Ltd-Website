@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { getLandingPageBySlug } from "@/lib/landing-pages";
 import type { LandingPageBodyBlock } from "@/lib/landing-pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 
 // Reads live `landing_page` rows on every request — same reasoning as every other page built
 // against seeded content this project (memory/decision-log.md, T2.1): this content is meant
@@ -103,7 +104,10 @@ function LandingPageBodyBlockView({ block }: { block: LandingPageBodyBlock }) {
 
 export default async function LandingPage({ params }: LandingPageParams) {
   const { slug } = await params;
-  const landingPage = await getLandingPageBySlug(slug);
+  const [landingPage, footerContent] = await Promise.all([
+    getLandingPageBySlug(slug),
+    getSiteFooterContent(),
+  ]);
 
   if (!landingPage) {
     notFound();
@@ -164,11 +168,7 @@ export default async function LandingPage({ params }: LandingPageParams) {
           />
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

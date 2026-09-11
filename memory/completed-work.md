@@ -14,6 +14,59 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.8, session 51)
+
+**Task:** T7.8 — Site Settings (singleton) admin
+**Summary:** Built `/admin/site-settings` — a flat singleton form (phone_primary/secondary,
+email, whatsapp_number, address, response_time_commitment, social_profile_urls), no
+10.05-compliance checkbox (same precedent as the Legal Pages editor), following the
+Capabilities/Our Method editor pattern per the task's own screen-inventory mapping. Every
+required field is savable blank (`content-management-admin.md`'s edge case: launch content
+not finalised yet) — `lib/admin-site-settings.ts`'s `updateSiteSettings` never rejects the
+save itself; each public reader is what omits its own display. The larger part of this task
+was closing three technical-debt entries this same update depended on: every real
+`<SiteFooter>` call site (sixteen, not the five/seven originally flagged — more had
+accumulated across Milestones 2–7) now reads live `site_settings`/`footer_content` via the new
+`lib/site-settings.ts#getSiteFooterContent()` (combines `getSiteSettings()` + the new
+`lib/legal.ts#getFooterContent()`) instead of T1.5's hardcoded literals. `SiteFooter`'s props
+are now all optional, defaulting to those literals only when a prop is omitted — same
+`FALLBACK_CORE_OFFERS` precedent `SiteHeader` already used — so `app/error.tsx` (a required
+Client Component) and `app/not-found.tsx` (deliberately zero-DB-dependency for reliability)
+keep working with no fetch. `components/scope-of-practice-note.tsx` now accepts
+`statement`/`companyRegistrationDetails` as props instead of hardcoding the scope-of-practice
+text, rendering the registration-details line only when non-null. Also updated
+`lib/seo.ts#getOrganizationJsonLd` to omit `telephone`/`email`/`address` (not just `sameAs`)
+when the underlying field is blank, and fixed a related bug caught live-verifying this task
+via Playwright: `app/contact/page.tsx`'s phone/WhatsApp/email/office cards rendered an empty,
+broken `tel:`/`wa.me`/`mailto:` link when the field was blank instead of omitting the card —
+each is now conditionally rendered, same "omit rather than fake" bar as everywhere else.
+Verified live: changed the phone number via the admin form and confirmed it updated `/contact`
+and the `/capabilities` footer in the same save, confirmed a blank phone omits the link on
+`/contact` and the JSON-LD `telephone` key without breaking anything else, and confirmed a
+newly-saved social profile URL appears in the Organization schema's `sameAs` — all via
+Playwright MCP against the real dev server, at mobile/tablet/desktop widths.
+**Files Changed:** `lib/admin-site-settings.ts` (new), `lib/admin-site-settings.test.ts` (new),
+`lib/site-settings.ts` (+`getSiteFooterContent`), `lib/site-settings.test.ts` (new),
+`lib/legal.ts` (+`getFooterContent`), `lib/seo.ts` (Organization JSON-LD omits blank
+telephone/email/address), `app/admin/(shell)/site-settings/page.tsx` (new),
+`app/admin/(shell)/site-settings/site-settings-editor-form.tsx` (new),
+`app/api/admin/site-settings/route.ts` (new), `components/site-footer.tsx`,
+`components/scope-of-practice-note.tsx`, `app/contact/page.tsx` (+blank-field card guards),
+and the `<SiteFooter>` call site in every other real public page (`app/(public)/page.tsx`,
+`app/capabilities/page.tsx`, `app/our-method/page.tsx`, `app/about/page.tsx`,
+`app/diagnostic/page.tsx`, `app/diagnostic/results/page.tsx`, `app/offers/[slug]/page.tsx`,
+`app/insights/page.tsx`, `app/insights/[slug]/page.tsx`, `app/legal/[slug]/page.tsx`,
+`app/lp/[slug]/page.tsx`, `app/error.tsx`, `app/not-found.tsx`, and the two
+`app/dev/layout-shell/*` scratch pages).
+**Related Feature:** `docs/features/content-management-admin.md` (Site Settings),
+`docs/features/legal-and-compliance-pages.md` (footer scope-of-practice/registration
+details), `docs/features/seo-and-search-foundation.md` (Organization `sameAs`).
+**Notes:** `response_time_commitment` was left exactly as seeded (`null`) — the firm still
+hasn't stated a real, keepable commitment; the technical-debt entry stays Open,
+User-triggered, now pointing at `/admin/site-settings` as where to set it once the firm does.
+
+---
+
 ## 2026-09-11 (T7.7, session 50)
 
 **Task:** T7.7 — Diagnostic Configuration admin

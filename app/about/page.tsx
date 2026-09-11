@@ -5,6 +5,7 @@ import { getAuthors, getFirmStatement, getInitials } from "@/lib/about";
 import { getOfferNavLinks } from "@/lib/offers";
 import { getPageBySlug } from "@/lib/pages";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { OrganizationJsonLd } from "@/components/organization-json-ld";
@@ -82,11 +83,12 @@ function PartnerRoleLine({ title, practiceArea }: { title: string; practiceArea:
 }
 
 export default async function AboutPage() {
-  const [page, firmStatement, authors, offerNavLinks] = await Promise.all([
+  const [page, firmStatement, authors, offerNavLinks, footerContent] = await Promise.all([
     getPageBySlug("about"),
     getFirmStatement(),
     getAuthors(),
     getOfferNavLinks(),
+    getSiteFooterContent(),
   ]);
 
   const [leadPartner, ...otherPartners] = authors;
@@ -234,11 +236,7 @@ export default async function AboutPage() {
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

@@ -15,6 +15,7 @@ import {
 import { formatFeeBand, getOfferBySlug, getOfferNavLinks } from "@/lib/offers";
 import type { MethodStage, OfferFaq } from "@/lib/offers";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 
 // Reads live `offer`/`offer_tier` rows on every request — same reasoning as
 // app/(public)/page.tsx: this content is meant to become admin-editable (Milestone 7), and
@@ -85,7 +86,11 @@ export async function generateMetadata({ params }: OfferPageParams): Promise<Met
 
 export default async function OfferPage({ params }: OfferPageParams) {
   const { slug } = await params;
-  const [offer, offerNavLinks] = await Promise.all([getOfferBySlug(slug), getOfferNavLinks()]);
+  const [offer, offerNavLinks, footerContent] = await Promise.all([
+    getOfferBySlug(slug),
+    getOfferNavLinks(),
+    getSiteFooterContent(),
+  ]);
 
   if (!offer) {
     notFound();
@@ -362,11 +367,7 @@ export default async function OfferPage({ params }: OfferPageParams) {
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

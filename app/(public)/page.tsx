@@ -9,6 +9,7 @@ import { getActiveDiagnosticQuestionCount } from "@/lib/diagnostic-flow";
 import { getFeaturedArticles, getHomePageContent, getOfferCards } from "@/lib/home";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 
 // Reads live `home_page_content`/`offer` rows on every request rather than being baked into
 // a static build. Two reasons: (1) this content is meant to become admin-editable later
@@ -90,12 +91,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [content, offers, offerNavLinks, diagnosticQuestionCount] = await Promise.all([
-    getHomePageContent(),
-    getOfferCards(),
-    getOfferNavLinks(),
-    getActiveDiagnosticQuestionCount(),
-  ]);
+  const [content, offers, offerNavLinks, diagnosticQuestionCount, footerContent] =
+    await Promise.all([
+      getHomePageContent(),
+      getOfferCards(),
+      getOfferNavLinks(),
+      getActiveDiagnosticQuestionCount(),
+      getSiteFooterContent(),
+    ]);
   const featuredArticles = await getFeaturedArticles(content.featuredArticleIds);
 
   return (
@@ -314,11 +317,7 @@ export default async function HomePage() {
           </div>
         </section>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }

@@ -17,6 +17,7 @@ import { formatRevisedDate, getLegalPageBySlug } from "@/lib/legal";
 import type { LegalPageBlock } from "@/lib/legal";
 import { getOfferNavLinks } from "@/lib/offers";
 import { buildPageMetadata, legalPageBodyExcerpt, resolveMetaDescription } from "@/lib/seo";
+import { getSiteFooterContent } from "@/lib/site-settings";
 
 // Reads live `legal_page` rows on every request — same reasoning as every other page built
 // against seeded content this epic (memory/decision-log.md, T2.1): this content is meant to
@@ -133,9 +134,10 @@ function LegalBlock({ block }: { block: LegalPageBlock }) {
 
 export default async function LegalPage({ params }: LegalPageParams) {
   const { slug } = await params;
-  const [legalPage, offerNavLinks] = await Promise.all([
+  const [legalPage, offerNavLinks, footerContent] = await Promise.all([
     getLegalPageBySlug(slug),
     getOfferNavLinks(),
+    getSiteFooterContent(),
   ]);
 
   if (!legalPage) {
@@ -188,11 +190,7 @@ export default async function LegalPage({ params }: LegalPageParams) {
           </div>
         </div>
       </main>
-      <SiteFooter
-        addressLine1="House No. 13 Gbenjin Gbe Avenue"
-        addressLine2="East Legon-ARS, Accra"
-        phonePrimary="0558 480 001"
-      />
+      <SiteFooter {...footerContent} />
     </>
   );
 }
