@@ -171,8 +171,9 @@ addendum.
 
 ## No admin-facing way to deactivate/reactivate an account, reset an existing partner's 2FA enrolment, or reset an existing partner's password
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-10 (T6.6, session 42); broadened 2026-09-11 (T6.7, session 43)
+**Date resolved:** 2026-09-11 (T7.6, session 49)
 **Reason:** Discovered writing `docs/user-guide.md`'s new Admin Login section, while
 double-checking a claim before publishing it. Three real gaps, same root cause: T6.5
 (deactivation), T6.6 (account creation), and T6.7 (self-service password reset) each built a
@@ -195,15 +196,20 @@ underlying functions are real, tested, and working — this is a UI/packaging ga
 missing capability). Becomes genuinely load-bearing the first time any of the three scenarios
 actually happens for real and a developer isn't immediately available.
 **Priority:** Low.
-**Possible Fix/Fixes:** Extend T7.6 (Team / author profile editor) — already the "Team"
-area's natural home — with three actions per `admin_user`, all wired to already-built,
-already-tested `lib/` functions: a deactivate/reactivate toggle (`lib/auth/session.ts`'s
-`deactivateAdminUser`), a "reset 2FA enrolment" button (`lib/auth/totp-setup.ts`'s
-`issueSetupToken`), and a "reset password" button (`lib/auth/password-reset.ts`'s
-`issuePasswordResetToken`) — the latter two both generate a fresh link the admin then relays
-to the affected partner, the same way T6.6's script already does for a new account.
-**Trigger type:** Task-sequenced.
-**Sequenced into:** T07-06 (Team / author profile editor)
+**Possible Fix/Fixes:** ~~Extend T7.6... with three actions per `admin_user`...~~ Done: a
+`components/ui/alert-dialog.tsx`-confirmed "Deactivate account" / plain "Reactivate account"
+toggle, a "Reset 2FA enrolment" button, and a "Reset password" button, all on
+`/admin/team/[id]`'s new `AdminUserActionsPanel` — only rendered when that author has a
+linked `admin_user` at all (`lib/admin-authors.ts`'s `setAdminUserActive`/
+`resetAdminUserTotp`/`resetAdminUserPassword`, thin wrappers over the exact `lib/auth/*`
+functions this entry already named). The latter two display the fresh link on-screen for the
+admin to relay out of band, exactly as planned. `lib/auth/session.ts` gained a new
+`reactivateAdminUser` — `deactivateAdminUser` only ever built the one direction.
+**Trigger type:** N/A — resolved
+**Sequenced into:** T07-06 (Team / author profile editor) — closed out per that task's own
+build; verified live via Playwright MCP (see `memory/decision-log.md`, T7.6 entry) including
+a real deactivate → confirmed the session was actually invalidated on the very next request,
+not just the DB flag flipping.
 
 ---
 
@@ -238,8 +244,9 @@ re-enrolment redirect reuses (see that task's own addendum) — not a second, pa
 
 ## `Author.adminUserId` is still a schema-only placeholder FK, not a real Prisma relation
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-10 (T6.1, session 37)
+**Date resolved:** 2026-09-11 (T7.6, session 49)
 **Reason:** `Author.adminUserId` (added at T2.5) was always a plain nullable `Int?`, deliberately
 not a real Prisma relation, because no `admin_user` table existed yet (see that model's own
 doc-comment in `prisma/schema.prisma`). T6.1 (this task) adds `AdminUser`, so the FK target
@@ -253,13 +260,24 @@ row — without it, T7.6 would have no way to implement "self-service" at all be
 picking themselves from a list.
 **Priority:** Low — no current functionality depends on this; it only becomes load-bearing
 when T7.6 is built.
-**Possible Fix/Fixes:** In T7.6, add `adminUser AdminUser? @relation(fields: [adminUserId],
-references: [id])` to `Author` (a new migration), backfill `adminUserId` for the 5 seeded
-partners once each has a real `admin_user` account (T6.2), and have the profile editor
-resolve "my own entry" via the authenticated session's `admin_user.id` rather than any other
-mechanism.
-**Trigger type:** Task-sequenced.
-**Sequenced into:** T07-06 (Team / author profile editor)
+**Possible Fix/Fixes:** ~~In T7.6, add `adminUser AdminUser? @relation(...)` to `Author`
+(a new migration)...~~ Done: `adminUserId` is now `@unique` with a real `AdminUser?`
+relation (migration `20260911103608_add_author_admin_user_relation`), and
+`lib/admin-authors.ts`'s `getAuthorIdForAdminUser` resolves the authenticated session's
+`admin_user.id` to their own `author` row for the Team list's "this is you" marker. **Not
+done, and separately still-blocked**: backfilling `adminUserId` for the 5 seeded partners —
+none of them has a real `admin_user` login account yet (only this project's own dev/test-only
+account exists, `CLAUDE.local.md`'s Credentials section, deliberately not tied to any real
+partner). Backfilling is a one-row `UPDATE`/`npm run admin:create-user` action once a real
+account exists for a given partner — not attempted here since no such accounts exist to link
+to yet.
+**Trigger type:** User-triggered — the backfill step specifically (not this entry's own
+schema/relation work, which is done). Do not create real `admin_user` accounts for the 5
+seeded partners or attempt to backfill `adminUserId` on their own initiative; wait for the
+firm to say a specific partner is ready to be onboarded with real login credentials.
+**Sequenced into:** T07-06 (Team / author profile editor) — closed out per this task's own
+build; the remaining backfill step has no task to sequence into since it's a one-off
+operator action, not engineering work, whenever the firm is ready for it.
 
 ---
 

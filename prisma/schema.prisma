@@ -261,9 +261,12 @@ model FirmStatement {
 /// placeholder image standing in for a real one), swapped for the real photo the moment one
 /// is uploaded — no publish-state change required. `credentials` is similarly nullable where
 /// a partner has no formal designation to state yet — never fabricated to fill the field,
-/// rendered only when present. `published` still gates on the other required fields (name,
-/// practiceArea, personalStatement, bio) per content-management-admin.md's publish-gating
-/// rule.
+/// rendered only when present. `published` gates on exactly three required fields (name,
+/// practiceArea, personalStatement) per content-management-admin.md's publish-gating rule and
+/// about-and-partners-page.md's own edge case — `bio` is deliberately NOT publish-gating
+/// (corrected at T7.6, session 49: this doc-comment previously named it as a fourth gating
+/// field, which neither feature doc ever did; `bio` has no live public reader yet at all,
+/// per its own note below, so gating publish on it would have blocked every real profile).
 ///
 /// `order` follows `Capability.order`/`MethodStage.order`'s naming precedent (not named in
 /// the feature doc) — needed to render exactly one partner as the page's single featured
@@ -284,21 +287,30 @@ model FirmStatement {
 /// `articles` is the back-relation added at T4.1 (`insights-engine.md`) — this task reuses
 /// this existing model as-is for article bylines rather than creating a second author entity
 /// (see that task's own note); no other field here changes.
+///
+/// `adminUserId` is a real, unique `AdminUser` relation as of T7.6 (session 49) — previously
+/// a schema-only placeholder `Int?` with nothing populating or reading it
+/// (`memory/technical-debt.md` → "`Author.adminUserId` is still a schema-only placeholder
+/// FK, not a real Prisma relation"). `@unique` because one login corresponds to at most one
+/// public profile. Resolves the authenticated session's `admin_user.id` to the right
+/// `author` row for T7.6's self-service editing — null for a partner whose public profile
+/// exists but has no login account (yet) linked to it.
 model Author {
-  id                Int       @id @default(autoincrement())
-  adminUserId       Int?      @map("admin_user_id")
+  id                Int        @id @default(autoincrement())
+  adminUserId       Int?       @unique @map("admin_user_id")
+  adminUser         AdminUser? @relation(fields: [adminUserId], references: [id])
   name              String
-  photoUrl          String?   @map("photo_url")
-  title             String    @default("Partner")
-  practiceArea      String    @map("practice_area")
+  photoUrl          String?    @map("photo_url")
+  title             String     @default("Partner")
+  practiceArea      String     @map("practice_area")
   credentials       String?
-  personalStatement String    @map("personal_statement")
+  personalStatement String     @map("personal_statement")
   bio               String
   order             Int
-  published         Boolean   @default(false)
-  isPlaceholder     Boolean   @default(false) @map("is_placeholder")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  published         Boolean    @default(false)
+  isPlaceholder     Boolean    @default(false) @map("is_placeholder")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
   articles          Article[]
 
   @@map("author")
@@ -925,33 +937,37 @@ model LandingPage {
 /// `setupTokenExpiresAt`'s 7 days, since this link is requested on demand by the partner who
 /// needs it right now, not handed over through an out-of-band channel with its own delay.
 model AdminUser {
-  id                       Int               @id @default(autoincrement())
-  name                     String
-  email                    String            @unique
-  passwordHash             String            @map("password_hash")
-  role                     String            @default("partner")
+  id                          Int               @id @default(autoincrement())
+  name                        String
+  email                       String            @unique
+  passwordHash                String            @map("password_hash")
+  role                        String            @default("partner")
   /// AES-256-GCM ciphertext (iv/authTag/ciphertext, base64-joined) — never the raw secret.
   /// See model doc-comment.
-  totpSecret               String?           @map("totp_secret")
-  totpEnabled              Boolean           @default(false) @map("totp_enabled")
-  createdAt                DateTime          @default(now()) @map("created_at")
-  lastLoginAt              DateTime?         @map("last_login_at")
+  totpSecret                  String?           @map("totp_secret")
+  totpEnabled                 Boolean           @default(false) @map("totp_enabled")
+  createdAt                   DateTime          @default(now()) @map("created_at")
+  lastLoginAt                 DateTime?         @map("last_login_at")
   /// Opaque, single-use `/admin/setup-2fa` link token — see model doc-comment. Null once
   /// unused (never issued) or once consumed (setup completed).
-  setupToken               String?           @unique @map("setup_token")
-  setupTokenExpiresAt      DateTime?         @map("setup_token_expires_at")
+  setupToken                  String?           @unique @map("setup_token")
+  setupTokenExpiresAt         DateTime?         @map("setup_token_expires_at")
   /// RFC 6238 time step of the last successfully verified login TOTP code — see model
   /// doc-comment. Null for an account that has never completed a login yet.
-  lastVerifiedTotpStep     Int?              @map("last_verified_totp_step")
+  lastVerifiedTotpStep        Int?              @map("last_verified_totp_step")
   /// `false` once an admin deactivates this account — see model doc-comment.
-  active                   Boolean           @default(true)
+  active                      Boolean           @default(true)
   /// Opaque, single-use `/admin/reset-password` link token — see model doc-comment. Null once
   /// unused (never requested), once consumed (reset completed), or once superseded by a newer
   /// request.
-  passwordResetToken       String?           @unique @map("password_reset_token")
-  passwordResetTokenExpiresAt DateTime?      @map("password_reset_token_expires_at")
-  backupCodes              AdminBackupCode[]
-  sessions                 AdminSession[]
+  passwordResetToken          String?           @unique @map("password_reset_token")
+  passwordResetTokenExpiresAt DateTime?         @map("password_reset_token_expires_at")
+  backupCodes                 AdminBackupCode[]
+  sessions                    AdminSession[]
+  /// Back-relation to `Author.adminUserId` (T7.6) — null for the dev/test-only account this
+  /// project's own local admin-provisioning script creates, which is deliberately not tied
+  /// to any real partner's public profile.
+  author                      Author?
 
   @@map("admin_user")
 }

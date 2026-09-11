@@ -14,6 +14,59 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.6, session 49)
+
+**Task:** T7.6 — Team / author profile editor
+**Summary:** Built `/admin/team` (list, `AdminDataTable`-style — name/title/practice area/
+published/login status, "(you)" marker next to the signed-in partner's own row) and
+`/admin/team/[id]` (editor: photo via `AdminImageUploadButton`, title, practice area,
+credentials, personal statement, bio, display order, with a live "saving now would publish/
+unpublish" hint and a read-only computed publish badge — no directly-editable publish
+toggle). Also wired `Author.adminUserId` to a real, `@unique` Prisma relation against
+`AdminUser` (migration `20260911103608_add_author_admin_user_relation`) and built the three
+admin-facing account actions this task's own session-42 addendum named: deactivate/
+reactivate (new `reactivateAdminUser` alongside the existing `deactivateAdminUser`), reset
+2FA enrolment, reset password — all on an `AdminUserActionsPanel` shown only when the author
+has a linked login.
+**Files Changed:** `prisma/schema.prisma`, `prisma/migrations/
+20260911103608_add_author_admin_user_relation/`, `lib/admin-authors.ts`, `lib/admin-authors
+.test.ts`, `lib/auth/session.ts` (added `reactivateAdminUser`), `app/admin/(shell)/team/
+page.tsx`, `app/admin/(shell)/team/[id]/page.tsx`, `app/admin/(shell)/team/[id]/author-
+editor-form.tsx`, `app/admin/(shell)/team/[id]/admin-user-actions-panel.tsx`, `app/api/
+admin/authors/[id]/route.ts`, `app/api/admin/admin-users/[id]/deactivate/route.ts`, `.../
+reactivate/route.ts`, `.../reset-2fa/route.ts`, `.../reset-password/route.ts`.
+**Related Feature:** `docs/features/about-and-partners-page.md`, `docs/features/content-
+management-admin.md`, `docs/features/admin-authentication.md`.
+**Notes:** Found and fixed a stale schema doc-comment: `Author`'s own doc-comment said
+`published` gated on four fields including `bio`, but both feature docs and this task's own
+Input→Output line name exactly three (name, practiceArea, personalStatement) — corrected in
+the same migration-adjacent commit, no functional impact since nothing had implemented the
+gating logic yet. Discovered a real, separate gap while building the publish-gating
+validation: `lib/insights.ts`'s article-byline queries have no `author.published` check at
+all — logged as a new known-bug and a new task (`docs/tasks/04-insights.md` T4.6, since it
+needs a firm decision, not just a mechanical fix) rather than silently ignored or
+unscoped-fixed inside this task. `updateAuthor` protects against the practical case in the
+meantime: it refuses to unpublish an author who already has articles. No role-based
+restriction gates opening another partner's entry — a deliberate decision extending
+`content-management-admin.md`'s own existing "Decision, not a gap" precedent (no technical
+approval-routing layer for a five-partner firm), not an oversight; see decision log.
+Verified live via Playwright MCP against the real dev database: temporarily linked the dev
+account to a real seeded author, confirmed the list's "(you)" marker and "Active" login
+status, opened the editor and confirmed initials-avatar fallback + all fields prefilled
+correctly, confirmed the live "saving now would unpublish" hint, confirmed a genuine
+unpublish attempt was rejected inline (the author had 2 real articles), saved a real
+credentials edit and confirmed it propagated to `/about` live, tested "Reset 2FA enrolment"
+and "Reset password" (both returned real, working links), and tested "Deactivate account"
+for real — confirmed via a follow-up navigation that the session was genuinely invalidated
+on its very next request, not just the DB flag flipping, then reactivated and logged back in
+to finish verification. Checked mobile (390px)/tablet (768px)/desktop (1280px); fixed one
+minor label-wrap cosmetic issue found at desktop width. Every test change reverted
+afterward (author unlinked, credentials cleared, account re-activated) — dev DB and the one
+real dev/test admin account are back to their pre-session state. All quality gates pass
+(lint, format:check, typecheck, 243 tests — 18 new).
+
+---
+
 ## 2026-09-11 (T7.5, session 48)
 
 **Task:** T7.5 — Landing Pages admin

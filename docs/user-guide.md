@@ -23,14 +23,14 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 48) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 49) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
 Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1), Articles/
 Categories admin (T7.2), Pages admin (Capabilities/Our Method/Legal/Footer, T7.3), Offers
-admin (the three core offers plus the Advisory Retainer, T7.4), and Landing Pages admin
-(create-only, T7.5) are all live; Team, Diagnostic Configuration, Site Settings, Subscribers,
-and article-resource attachment (T7.10) are next.
+admin (the three core offers plus the Advisory Retainer, T7.4), Landing Pages admin
+(create-only, T7.5), and the Team admin (T7.6) are all live; Diagnostic Configuration, Site
+Settings, Subscribers, and article-resource attachment (T7.10) are next.
 
 ---
 
@@ -76,10 +76,11 @@ bullet below applies to both areas).
 legal pages, and the shared footer's scope-of-practice/registration text — `/admin/pages` —
 and edit any of the three core offer pages (problem statement, who it's for/not for, method
 stages, deliverables, required inputs, fee band, out-of-scope note, FAQs, CTA) plus the
-Advisory Retainer's fee and description — `/admin/offers`. Home and About still need a
-developer for any copy change; Contact's static copy does too, though its response-time
-commitment and contact details move to Site Settings once that task ships (Team/Site
-Settings are later Milestone 7 tasks).
+Advisory Retainer's fee and description — `/admin/offers`. Home still needs a developer for
+any copy change; Contact's static copy does too, though its response-time commitment and
+contact details move to Site Settings once that task ships. About's own hero/firm-statement
+copy also still needs a developer; the partner profiles it renders are editable — see the
+Team admin card below.
 
 ### Business Health Check diagnostic — Milestone 3
 
@@ -215,12 +216,12 @@ without a valid session, checked on every single request.
 - **Lost your authenticator device?** A one-time backup code (8 were shown once, at setup)
   logs a partner back in and immediately forces them to set up a new device before continuing
   — there is no other way back in. If a partner has lost both their device _and_ their backup
-  codes, there is no self-service recovery at all, by design — another administrator has to
-  ask the developer to reset their enrolment directly (not yet a packaged, self-service admin
-  action — see "What's not built yet" below).
+  codes, there is no self-service recovery at all, by design — **another partner can now
+  reset their 2FA enrolment themselves** from that partner's own entry under `/admin/team`
+  (see the Team card below) — no developer needed for this step any more.
 - **Deactivating an account** (e.g. a partner leaves the firm) immediately ends every session
   that partner has open, anywhere, on their very next click — not just at their next login.
-  This also isn't a self-service admin action yet — ask the developer.
+  **A partner can now do this themselves** too, from `/admin/team` — see below.
 - **Getting a partner their very first account** is currently a step only the developer can
   do (`npm run admin:create-user`) — it creates the account and hands back a one-time setup
   link valid for 7 days, which gets sent to the new partner through whatever secure channel
@@ -228,15 +229,6 @@ without a valid session, checked on every single request.
   deliberately no self-service "invite a partner" button in the admin area itself; with five
   partners and new accounts created rarely, asking the developer each time is simpler than
   building and maintaining an invite flow for something that happens a handful of times ever.
-
-**What's not built yet:** Deactivating/reactivating an existing account, resetting an
-existing partner's 2FA enrolment, and resetting a partner's password **on their behalf**
-(i.e. if their email is unreachable too, not just their password forgotten) all have a real,
-working mechanism behind them already — just no button anywhere to trigger any of the three.
-A developer can do all three directly today; they're sequenced into Milestone 7's Team
-screen (T7.6) as follow-up work, not yet built (see `memory/technical-debt.md`). Note this is
-distinct from the self-service password reset above, which is already fully built and needs
-no one else's involvement.
 
 **What to monitor:** Nothing external — this milestone introduces no new third-party
 account/dashboard dependency, everything runs inside the app and its own database. One
@@ -249,11 +241,48 @@ bug; both become real once Milestone 8 (Enquiry Management) ships.
 **What a partner can do about it today:** Log in, reset their own forgotten password
 self-service, and see the real admin dashboard (T7.1) — four at-a-glance counts (new
 enquiries, triage-flagged, diagnostics completed this month, published articles) and the 5
-most recent enquiries, both reading real, live data. There is nothing to actually _edit_ yet
-(that's the rest of Milestone 7), and no way yet to open an enquiry, change its status, or
-filter the list (that's Milestone 8) — today's dashboard is look-but-not-touch. Deactivating
-another partner's account, resetting a partner's 2FA or password on their behalf, and
-creating a brand-new partner's first account all still require the developer directly.
+most recent enquiries, both reading real, live data. There is no way yet to open an enquiry,
+change its status, or filter the list (that's Milestone 8) — today's dashboard is
+look-but-not-touch. Deactivating/reactivating a partner's account, resetting a partner's 2FA
+enrolment, and resetting a partner's password on their behalf are all now done from
+`/admin/team` (see below) — only creating a brand-new partner's very first account still
+requires the developer directly.
+
+### Team admin — Milestone 7 (T7.6)
+
+**What it does:** `/admin/team` — a list of all five partners' public profiles (name, title,
+practice area, whether published on `/about`, whether they have a login yet) and, per
+partner, a full editor: photo, title, practice area, credentials, personal statement, bio,
+and display order (lowest = the single featured "Lead Partner" card on `/about`). Any
+signed-in partner can open and edit any entry — the normal path is self-service (the list
+marks which one is "you"), but nothing technically prevents editing a colleague's, the same
+"firm's own internal discipline, not a code-level gate" principle already applied to
+content sign-off generally (`content-management-admin.md`). Where a partner has a login
+account linked, the same screen also has the three account actions named above:
+deactivate/reactivate, reset 2FA enrolment, reset password.
+
+**What to monitor:**
+
+- **Publishing is automatic, not a toggle**: a profile shows "Published" the moment name,
+  practice area, and personal statement are all filled in, and "Not published" (omitted
+  entirely from `/about` and article bylines) the moment any of those three goes blank —
+  photo and credentials are never required. The editor shows a live "saving now would
+  publish/unpublish this profile" hint before you save.
+- **A profile that already has published Insights articles can't be unpublished** — the
+  system blocks the save and names how many articles would be affected, rather than leaving
+  an article crediting an incomplete profile.
+- **None of the 5 real partners has a login account linked to their profile yet** — only
+  once a developer creates a partner's actual `/admin` login (`npm run admin:create-user`)
+  does the "Login account" panel (and the three account actions) appear on that partner's
+  entry.
+- **No real partner photography exists yet** — every profile shows an initials avatar in
+  its place, which is the correct, intended state until real photos are ready, not a bug.
+
+**What a partner can do about it today:** Edit your own profile (or, by the firm's own
+discipline, a colleague's) — photo, title, practice area, credentials, personal statement,
+bio, display order — `/admin/team`. Deactivate/reactivate a colleague's login, and reset
+their 2FA enrolment or password on their behalf, from the same screen once they have a
+login account linked.
 
 ---
 
@@ -275,7 +304,7 @@ depends on:
 - **Milestone 7 — Content Management Admin** (in progress): every piece of content seeded so
   far becomes partner-editable without a developer. Dashboard, Articles/Categories, Pages
   (Capabilities/Our Method/Legal/Footer), Offers (the three core offers plus the Advisory
-  Retainer), and Landing Pages (create-only) are live; Team, Diagnostic Configuration, Site
+  Retainer), Landing Pages (create-only), and Team are live; Diagnostic Configuration, Site
   Settings, Subscribers, and article-resource attachment are next — where the remaining
   "still needs a developer" notes above get resolved.
 - **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
@@ -287,6 +316,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Team admin (T7.6) went live — a partner can now edit any partner's public profile (photo, title, practice area, credentials, personal statement, bio, display order) and deactivate/reactivate a colleague's login, or reset their 2FA enrolment/password on their behalf — `/admin/team`. Publishing is automatic (computed from name/practice area/personal statement), not a toggle; a profile already crediting published articles cannot be unpublished.          |
 | 2026-09-11 | Landing Pages admin (T7.5) went live — a partner can now create a brand-new campaign landing page themselves (headline, opening paragraph, body content, CTA, an optional PDF download, meta tags) — `/admin/landing-pages` → "New Landing Page". Create-only for now: editing or retiring an existing landing page still needs a developer. The partner picks the page's own URL slug; a duplicate is rejected with a clear inline message.                           |
 | 2026-09-11 | Offers admin (T7.4) went live — a partner can now edit all three core offer pages' full field set (problem statement, who it's for/not for, method stages, deliverables/required inputs, fee band, out-of-scope note, FAQs, CTA) and the Advisory Retainer's fee/description themselves — `/admin/offers`. A fee band still can't be saved without its scope cap, enforced by the system; updating a fee updates the offer page and the nav dropdown hint in one save. |
 | 2026-09-11 | Pages admin (T7.3) went live — a partner can now edit Capabilities, Our Method, any of the four legal pages (including clearing the "Draft — pending legal review" marker themselves), and the shared footer's scope-of-practice/registration text. Corrected a drift: the "Public website pages" section's "what a partner can do" line had been updated in the Artifact mirror during T7.2 but not in this file — synced here.                                       |

@@ -16,6 +16,38 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## Article byline rendering (`lib/insights.ts`) has no `author.published` check
+
+**Status:** Open
+**Severity:** Low
+**Date found:** 2026-09-11 (T7.6, session 49)
+**Description:** `lib/insights.ts`'s several `article.author` queries (index, related
+articles, `lib/home.ts`'s featured-Insights section) and `app/insights/[slug]/page.tsx`'s
+byline all read `author.name`/`author.practiceArea` directly with no `published` filter —
+if an `author` row ever became unpublished (its required name/practice-area/
+personal-statement fields cleared) while it still had existing articles, those articles'
+bylines would keep showing that now-incomplete profile, contradicting
+`content-management-admin.md`'s "never shown half-filled" principle and T7.6's own
+acceptance criterion ("never appears... as an article byline"). Does not affect any real
+data today — all 5 seeded authors are, and remain, published — this is a latent gap in the
+rendering layer, not an observed failure.
+**Workaround:** `lib/admin-authors.ts`'s `updateAuthor` (T7.6) closes the practical path to
+this state: it refuses to save a change that would leave an author unpublished if that
+author already has any articles, so an author with articles can never actually reach the
+missing-required-field state through the admin editor. The rendering-layer gap remains
+real, just currently unreachable through the one write path that exists.
+**Planned Fix:** Either (a) have `lib/insights.ts`'s various author-including queries select
+`published` and have `shapeArticleCard`/the detail-page byline fall back to a neutral
+attribution (e.g. omit the byline, or credit "Kaalbert & Company Ltd") when `!author.
+published`, or (b) formally decide bylines are exempt from the publish gate (an article, once
+published, is a historical record and its byline should stay stable regardless of the
+author's current profile state) and document that as the real rule instead. Needs a real
+decision, not just a mechanical fix — flagged here rather than guessed at.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T4.6 (`docs/tasks/04-insights.md`) — new task added this session.
+
+---
+
 ## `proxy.ts` didn't allowlist T6.7's two new unauthenticated pages
 
 **Status:** Fixed

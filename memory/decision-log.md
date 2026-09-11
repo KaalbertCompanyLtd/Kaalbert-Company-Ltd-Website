@@ -2,6 +2,85 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.6, session 49) — Team editor: no role gate on editing another partner's entry, `bio` corrected as non-publish-gating, the article-byline gap sequenced into a new task rather than fixed unscoped, `Author.adminUserId` finally a real relation
+
+**Status:** Standing
+
+**Summary:** T7.6 (Team / author profile editor) built `/admin/team` (list) and `/admin/
+team/[id]` (editor), plus the three admin-facing account actions (deactivate/reactivate,
+reset 2FA, reset password) this task's own session-42 addendum named. Concrete decisions:
+
+- **No role-based check gates opening or editing another partner's entry.** The task's own
+  "Build" line says "self-service (and right-role-gated other-partner) editor," but no role
+  tiers, values, or checks exist anywhere in this codebase — `admin_user.role` is a plain
+  string defaulting to `"partner"`, never read by any authorization decision today. Building
+  real RBAC to satisfy this literally would mean inventing a policy (which roles exist, who
+  has the authority) nobody has specified. Extended `content-management-admin.md`'s own
+  existing, explicit "Decision, not a gap" precedent instead — the same document already
+  declines to build a technical approval-routing layer for copy sign-off, reasoning "with
+  five partners and one shared admin system, a technical approval-routing layer... is more
+  process than a firm this size needs... who personally exercises that judgment is the
+  firm's own internal discipline." Applied identically here: any signed-in partner can open
+  and edit any author's entry from the Team list; the list marks which one is "(you)" for
+  the normal self-service path, but nothing technically prevents the other case the task
+  line anticipates.
+- **`Author.adminUserId` is now a real, `@unique` Prisma relation against `AdminUser`**
+  (migration `20260911103608_add_author_admin_user_relation`, applied via `prisma migrate
+diff --script` + `prisma migrate deploy` rather than the normal interactive `prisma
+migrate dev`, which refused to run non-interactively in this session's shell — see the
+  Prisma CLI skill's own migrate-diff workflow for forward-generating a migration this way).
+  `lib/admin-authors.ts`'s new `getAuthorIdForAdminUser` resolves the authenticated session
+  to the partner's own row. None of the 5 seeded partners has a real `admin_user` login
+  account yet (only this project's own dev/test-only account exists) — backfilling
+  `adminUserId` for a specific partner is a one-off, User-triggered action once the firm
+  says that partner is ready to be onboarded with real credentials, not attempted here.
+- **Fixed a stale schema doc-comment**: `Author`'s own doc-comment said `published` gated on
+  four fields (name, practiceArea, personalStatement, **and bio**), but both
+  `content-management-admin.md` and `about-and-partners-page.md` — and this task's own
+  Input→Output line — name exactly three, never `bio`. No functional impact (nothing had
+  implemented the gating logic before this task), but left uncorrected the doc-comment would
+  have actively misled whoever wrote `updateAuthor` next. `bio` has no live public reader at
+  all yet (`insights-engine.md`'s future byline use, not built), so gating publish on it
+  would have blocked every real profile from ever registering as complete.
+- **`updateAuthor` refuses to leave an author unpublished if they already have articles**,
+  rather than allowing it and letting the byline render however it renders. While building
+  this validation, discovered `lib/insights.ts`'s several `article.author`-including queries
+  (index cards, related articles, `lib/home.ts`'s featured section) and the article detail
+  page's byline have **no `author.published` check anywhere** — a real, separately-logged
+  gap (`memory/known-bugs.md`) that this task's own acceptance criterion ("never appears...
+  as an article byline") would otherwise fail against, if this validation weren't here.
+  Rather than fixing the rendering layer unscoped inside this task (a real product decision
+  is needed first — does an unpublished author's existing bylines go blank, or stay as a
+  historical record regardless of current profile state?), logged it as a new task
+  (`docs/tasks/04-insights.md` T4.6) and left the rendering layer as-is, protected in
+  practice by this validation being the one write path that currently exists.
+- **`title` falls back to the schema's own `"Partner"` default if saved blank**, rather than
+  persisting an empty string — a lightweight, minimal safeguard (title isn't publish-gating,
+  so a blank value could otherwise slip through and render an empty badge on `/about`).
+- **The publish badge is computed client-side too, live, from the fields as currently
+  typed** — not just re-read from the server response after save — so a partner sees "saving
+  now would unpublish this profile" before they commit to it, not only after.
+
+Verified for real via Playwright MCP against the live dev database: temporarily linked the
+dev/test admin account to a real seeded author (`Author` id 2, Ama Wiafe) to exercise
+self-service and the account-actions panel, since no real partner has a login account yet;
+confirmed the "(you)" marker, the live unpublish hint, and that saving a blank personal
+statement was rejected inline naming the real article count ("2 articles already credit this
+partner as author"); saved a real credentials edit and confirmed it appeared on `/about` in
+the same request cycle; exercised all three account actions for real, including confirming
+via a follow-up navigation that deactivating genuinely invalidated the session (redirected
+to `/admin/login` on the very next request, not merely a flipped DB flag) — then reactivated
+and logged back in to finish verification. Every test change reverted afterward (`author`
+unlinked, credentials cleared, account reactivated) via direct Prisma queries — no delete/
+unlink UI exists for this, matching this task's own scope. Checked at mobile (390px)/tablet
+(768px)/desktop (1280px), fixing one label-wrap cosmetic issue found at desktop width along
+the way.
+
+**Related Documents:** `docs/tasks/07-content-admin.md` (T7.6), `docs/features/about-and-
+partners-page.md`, `docs/features/content-management-admin.md`, `docs/features/admin-
+authentication.md`, `docs/tasks/04-insights.md` (new T4.6), `lib/admin-authors.ts`,
+`lib/admin-authors.test.ts`, `prisma/schema.prisma`.
+
 ## 2026-09-11 (T7.5, session 48) — Landing Pages admin built create-only; the URL slug is partner-typed, not auto-derived; a separate non-image upload mechanism built instead of reusing T7.2's image-only one
 
 **Status:** Standing

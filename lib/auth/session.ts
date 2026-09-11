@@ -111,3 +111,14 @@ export async function deactivateAdminUser(adminUserId: number): Promise<void> {
     prisma.adminSession.deleteMany({ where: { adminUserId } }),
   ]);
 }
+
+/**
+ * The reverse of `deactivateAdminUser` above (T7.6's own "Deactivate/reactivate a partner's
+ * account" requirement — `deactivateAdminUser` only ever built the one direction). No
+ * session to restore: deactivation already deleted every live session for the account, so
+ * reactivating simply clears the flag and lets the partner log in fresh, going through the
+ * normal password + TOTP flow again like any other login.
+ */
+export async function reactivateAdminUser(adminUserId: number): Promise<void> {
+  await prisma.adminUser.update({ where: { id: adminUserId }, data: { active: true } });
+}
