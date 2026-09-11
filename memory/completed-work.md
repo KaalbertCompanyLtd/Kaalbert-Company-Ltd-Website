@@ -14,6 +14,35 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T6.3 follow-up, session 44)
+
+**Task:** T6.3 follow-up — Redirect an already-authenticated visitor away from `/admin/login`
+**Summary:** The user asked, as a plain design question, whether an already-signed-in partner
+should be able to visit `/admin/login` at all — they currently could, and would just see the
+login form again with no indication a session already existed; submitting credentials again
+worked but required a full password + TOTP re-authentication for no reason. Fixed by making
+`app/admin/login/page.tsx` an async Server Component that reads the session cookie via
+`cookies()`, calls `lib/auth/session.ts`'s `verifySession`, and `redirect()`s to `/admin` when
+a valid session is found — otherwise renders the form exactly as before. Deliberately checked
+in the page itself, not `proxy.ts`: this is the only one of the four unauthenticated `/admin/*`
+pages where "already has a session" is a meaningful thing to check (`/admin/setup-2fa`,
+`/admin/forgot-password`, `/admin/reset-password` are all reached via their own single-use
+token regardless of session state), so adding it to `proxy.ts`'s allowlist logic would have
+added a DB query to all four for no behavioural difference on three of them.
+Verified for real via Playwright MCP: a throwaway test account (created, TOTP-enrolled,
+cleaned up afterward) logged in fully, then navigating back to `/admin/login` while still
+authenticated redirected straight to `/admin`; a plain `curl` with no session cookie at all
+still got a normal 200 with no redirect, confirming no regression for the unauthenticated
+case.
+**Files Changed:** `app/admin/login/page.tsx`.
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, 143/143 tests — no test
+changes needed, this is page-level routing logic with no new `lib/` function). No
+`docs/user-guide.md` update — this is an internal UX correction, not a new capability a
+partner needs to be told about.
+
+---
+
 ## 2026-09-11 (T6.7, session 43)
 
 **Task:** T6.7 — Self-service password reset
