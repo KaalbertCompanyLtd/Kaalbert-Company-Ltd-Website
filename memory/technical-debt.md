@@ -912,8 +912,9 @@ re-sequenced to T3.7 above rather than left pointing at this now-completed task.
 
 ## `diagnostic_question` has no queryable `is_placeholder` column
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-05
+**Date resolved:** 2026-09-11 (T7.7, session 50)
 **Reason:** T3.3 (`docs/tasks/03-diagnostic.md`) seeded the launch question set carried over
 verbatim from `ui/mockups/c-diagnostic/diagnostic-flow.html` and — per that task's own
 acceptance criterion — flagged every question `is_placeholder: true`, but only in the seed
@@ -939,6 +940,11 @@ content.
 **Sequenced into:** T7.7 (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — the
 first task that actually builds a UI surface over this question set; see the addendum added
 to that task's entry this session.
+**Resolution:** Added a real `isPlaceholder Boolean @default(false)` column to
+`DiagnosticQuestion` via migration, updated `prisma/seed.ts` to set it `true` on the real
+column (not just a comment), and the Diagnostic Questions admin list/edit screens (T7.7)
+surface it as a "Placeholder" badge in the list and an editable "Placeholder content" toggle
+in the editor, matching every other content type's convention.
 
 ---
 

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { DiagnosticFlowQuestion } from "@/lib/diagnostic-flow-options";
+import type { DiagnosticChoiceOption, DiagnosticFlowQuestion } from "@/lib/diagnostic-flow-options";
 
 export type { DiagnosticFlowQuestion };
 
@@ -14,7 +14,10 @@ export type { DiagnosticFlowQuestion };
  * `lib/diagnostic-flow-options.ts`'s client-safe types/constants, so
  * `components/diagnostic-flow.tsx` ("use client") never pulls Prisma's driver-adapter code
  * into the browser bundle (it broke Turbopack's dev compile outright, silently, the first
- * time this task combined them in one file — see memory/known-bugs.md).
+ * time this task combined them in one file — see memory/known-bugs.md). Now also the only
+ * place a `choice` question's real option set (`choiceOptions`, T7.7) is resolved — it's a
+ * real DB column, not client-side lookup data, so it's attached to each question object here
+ * and carried down as plain serializable props, same as every other field.
  */
 export async function getActiveDiagnosticFlow(): Promise<DiagnosticFlowQuestion[]> {
   const dimensions = await prisma.diagnosticDimension.findMany({
@@ -35,6 +38,7 @@ export async function getActiveDiagnosticFlow(): Promise<DiagnosticFlowQuestion[
       order: question.order,
       promptText: question.promptText,
       responseType: question.responseType,
+      choiceOptions: question.choiceOptions as unknown as DiagnosticChoiceOption[] | null,
     })),
   );
 }

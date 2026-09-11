@@ -14,6 +14,65 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.7, session 50)
+
+**Task:** T7.7 — Diagnostic Configuration admin
+**Summary:** Built the Diagnostic Configuration admin: `/admin/diagnostic-questions` (list —
+order/prompt/dimension/type/active columns, reorder ▲▼ buttons disabled at dimension
+boundaries, inline active toggle enforcing "every active dimension needs at least one active
+question," a "Placeholder" badge, "New Question" and per-row "Edit" links) plus
+`/admin/diagnostic-questions/new` and `/admin/diagnostic-questions/[id]` (a shared editor
+form — dimension/response type frozen after creation, prompt text, choice options editor for
+`choice`-type questions, active/placeholder toggles) and `/admin/diagnostic-configuration`
+(dimension weights, overall + per-dimension triage thresholds, and score bands — reached via
+an inline link from the questions list, per CLAUDE.md's "one nav entry, second screen via
+inline link" pattern). Follows the values-vs-logic boundary exactly: only
+`weight`/`thresholdValue`/`triagePriorityLevel`/question text/order/active/choiceOptions are
+ever admin-editable — `lib/diagnostic-scoring.ts`'s algorithm itself is untouched.
+Self-identified and closed a real scope gap while building this: `diagnostic_question` had no
+`choiceOptions` column, so the public diagnostic flow resolved a `choice` question's option
+labels/values from a hard-coded `${dimensionId}-${order}` map in
+`lib/diagnostic-flow-options.ts` — the moment this task's own admin let a partner reorder or
+add a `choice` question, that map would silently go stale and the public flow would throw an
+uncaught error for a real visitor. Added a real `choiceOptions Json?` column (migration
+`20260911123727_add_diagnostic_question_choice_options_and_placeholder`, same migration also
+closes the `is_placeholder` technical-debt entry below), moved choice-option resolution
+server-side into `lib/diagnostic-flow.ts`, and rewrote `lib/diagnostic-flow-options.ts` to
+hold only the Prisma-free scale/boolean option constants + shared types. Also found and fixed
+a second, adjacent gap while building the Diagnostic Configuration screen: seeded dimension
+weights were `1` each (scores correctly under `diagnostic-scoring.ts`'s total-weight
+normalization, but never literally summed to 100) — the new screen's own "must total 100%"
+Save gate, matching the mockup's documented business rule, would have been permanently
+disabled for a partner opening it with real seed data. Updated `prisma/seed.ts` and the live
+dev rows to `20` each (same equal weighting, expressed the way the admin screen expects).
+Verified live via Playwright MCP: question reordering (with page-reload persistence check),
+the last-active-question deactivate guard (both blocked and allowed paths), creating a
+`choice` question end-to-end then deleting the test row, editing an existing question,
+dimension-weight/threshold save round-trip, score-band save, and a full regression pass of
+the public `/diagnostic` flow (choice + scale questions both render/advance correctly after
+the `choiceOptions` refactor) — plus mobile (390px) and tablet (768px) checks, which caught
+and fixed a real table-overlap bug (`TableCell`'s default `whitespace-nowrap` fighting a
+`max-w` prompt column) before this task was called done.
+**Files Changed:** `prisma/schema.prisma`, `prisma/migrations/
+20260911123727_add_diagnostic_question_choice_options_and_placeholder/`, `prisma/seed.ts`,
+`lib/diagnostic-flow-options.ts`, `lib/diagnostic-flow.ts`, `components/diagnostic-flow.tsx`,
+`lib/admin-diagnostic.ts`, `lib/admin-diagnostic.test.ts`, `components/admin-sidebar-nav.tsx`,
+`app/admin/(shell)/diagnostic-questions/page.tsx`, `.../questions-list-client.tsx`, `.../
+question-editor-form.tsx`, `.../new/page.tsx`, `.../[id]/page.tsx`, `app/admin/(shell)/
+diagnostic-configuration/page.tsx`, `.../configuration-client.tsx`, `app/api/admin/
+diagnostic-questions/route.ts`, `.../[id]/route.ts`, `.../[id]/move/route.ts`, `.../[id]/
+active/route.ts`, `app/api/admin/diagnostic-configuration/route.ts`, `app/api/admin/
+diagnostic-score-bands/route.ts`.
+**Related Feature:** `docs/features/content-management-admin.md`, `docs/features/business-
+health-check-diagnostic.md`, ADR 0005.
+**Notes:** Combined-route deviation reused (T7.3/T7.4 precedent, documented inline in each
+route): `PATCH /api/admin/diagnostic-configuration` saves weights + both threshold panels in
+one request, and `PATCH /api/admin/diagnostic-score-bands` saves all four bands in one
+request, matching each screen's real single-Save-button UI rather than the feature doc's
+originally-sketched per-resource routes.
+
+---
+
 ## 2026-09-11 (T7.6, session 49)
 
 **Task:** T7.6 — Team / author profile editor

@@ -30,7 +30,7 @@ const NAV_SECTIONS = [
     label: "Operations",
     items: [
       { name: "Enquiries", href: "/admin/enquiries" },
-      { name: "Diagnostic Configuration", href: "/admin/diagnostic-configuration" },
+      { name: "Diagnostic Configuration", href: "/admin/diagnostic-questions" },
       { name: "Site Settings", href: "/admin/site-settings" },
     ],
   },

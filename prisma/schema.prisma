@@ -464,17 +464,36 @@ model DiagnosticDimension {
 /// silently accepted as scoring-engine input. `active` lets a question be retired from the
 /// live flow without deleting historical `DiagnosticResponse` rows that reference it (T3.2's
 /// scoring function only ever queries `active: true` questions).
+///
+/// `choiceOptions` is new at T7.7 (session 50) — a real column at last for a `choice`
+/// question's option label-to-value mapping, null for `scale`/`boolean` questions (their
+/// option sets are fixed/universal, `lib/diagnostic-flow-options.ts`'s
+/// `DIAGNOSTIC_SCALE_OPTIONS`/`DIAGNOSTIC_BOOLEAN_OPTIONS`). Previously this mapping lived
+/// only in that same client-safe file, hard-coded and keyed by `${dimensionId}-${order}` —
+/// safe as long as nothing ever reordered or created a `choice` question, which is exactly
+/// what T7.7's own admin editor needs to do; discovered and fixed in the same task rather
+/// than left as a live trap for the first real reorder/create.
+/// `isPlaceholder` is new at T7.7 too — closes `memory/technical-debt.md` →
+/// "`diagnostic_question` has no queryable `is_placeholder` column" (T3.3 could only flag the
+/// launch question set's pending-review status in `prisma/seed.ts`'s own comment, since this
+/// column didn't exist yet).
 model DiagnosticQuestion {
-  id           Int                    @id @default(autoincrement())
-  promptText   String                 @map("prompt_text")
-  dimensionId  Int                    @map("dimension_id")
-  dimension    DiagnosticDimension    @relation(fields: [dimensionId], references: [id], onDelete: Restrict)
-  order        Int
-  responseType DiagnosticResponseType @map("response_type")
-  active       Boolean                @default(true)
-  createdAt    DateTime               @default(now()) @map("created_at")
-  updatedAt    DateTime               @updatedAt @map("updated_at")
-  responses    DiagnosticResponse[]
+  id            Int                    @id @default(autoincrement())
+  promptText    String                 @map("prompt_text")
+  dimensionId   Int                    @map("dimension_id")
+  dimension     DiagnosticDimension    @relation(fields: [dimensionId], references: [id], onDelete: Restrict)
+  order         Int
+  responseType  DiagnosticResponseType @map("response_type")
+  /// Ordered `{label, value}[]` — `value` a numeric string already normalized to 0–1, the
+  /// same convention every `DiagnosticResponse.answerValue` carries. Required when
+  /// `responseType` is `choice`, null otherwise — enforced by `lib/admin-diagnostic.ts`, not
+  /// the database (Prisma has no conditional-column-requirement construct).
+  choiceOptions Json?                  @map("choice_options")
+  active        Boolean                @default(true)
+  isPlaceholder Boolean                @default(false) @map("is_placeholder")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+  responses     DiagnosticResponse[]
 
   @@unique([dimensionId, order])
   @@map("diagnostic_question")

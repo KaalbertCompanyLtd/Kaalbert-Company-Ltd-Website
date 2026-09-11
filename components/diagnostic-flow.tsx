@@ -9,7 +9,6 @@ import { getStoredAttribution } from "@/lib/attribution-client";
 import {
   DIAGNOSTIC_BOOLEAN_OPTIONS,
   DIAGNOSTIC_SCALE_OPTIONS,
-  getChoiceOptions,
   type DiagnosticChoiceOption,
   type DiagnosticFlowQuestion,
 } from "@/lib/diagnostic-flow-options";
@@ -35,7 +34,16 @@ function optionsFor(question: DiagnosticFlowQuestion): DiagnosticChoiceOption[] 
     case "scale":
       return DIAGNOSTIC_SCALE_OPTIONS;
     case "choice":
-      return getChoiceOptions(question.dimensionId, question.order);
+      // `choiceOptions` is only ever null here if the admin editor's own save-time
+      // validation was bypassed (it requires a non-empty set for every `choice` question,
+      // lib/admin-diagnostic.ts's `validateChoiceOptions`) — a config bug, not a visitor
+      // mistake, so this fails loudly rather than silently rendering no options.
+      if (!question.choiceOptions || question.choiceOptions.length === 0) {
+        throw new Error(
+          `Diagnostic question ${question.id} is type "choice" but has no choiceOptions configured.`,
+        );
+      }
+      return question.choiceOptions;
   }
 }
 

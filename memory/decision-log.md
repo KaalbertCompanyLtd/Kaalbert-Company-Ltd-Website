@@ -2,6 +2,88 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.7, session 50) — `docs/user-guide.md`/its Artifact mirror rewritten as
+
+step-by-step walkthroughs, not feature summaries — standing rule going forward
+
+**Status:** Standing
+
+**Summary:** User feedback, reviewing the guide mid-session: the existing format told the
+firm _what_ exists ("a partner can now create a landing page — `/admin/landing-pages` → 'New
+Landing Page'") but never _how_ — no field names, no order to fill them in, no explanation of
+what a field means. Rewrote every admin-facing section (marketing pages, legal pages/footer,
+offers, articles/categories, landing pages, team, diagnostic configuration, plus a new
+"Logging in" section) as a numbered walkthrough naming the exact screen, exact button/link
+text, and what each field does — sourced from actually reading each editor form's real code
+(`app/admin/(shell)/**`), not inferred from memory of building it. Applies to both the
+markdown file and its Artifact mirror (the Artifact's existing "You can do today" bullet-list
+callout was replaced with a "How to..." numbered-list callout using the same card layout).
+
+**Going forward:** every future task that adds or changes a partner-facing admin capability
+must write its `docs/user-guide.md`/Artifact update in this same numbered-walkthrough style —
+naming the actual fields and the order to fill them in, not just stating the capability
+exists — read the real admin screen/form code first if the session didn't just build it
+itself. This is now the standing bar for this file, not a one-time rewrite.
+
+**Related Documents:** `docs/user-guide.md`, CLAUDE.md's "Firm-Facing Documentation" section.
+
+---
+
+## 2026-09-11 (T7.7, session 50) — Added `DiagnosticQuestion.choiceOptions` as a real schema
+
+column, expanding T7.7's own scope beyond its literal `/task` prompt
+
+**Status:** Standing
+
+**Summary:** While building the Diagnostic Questions admin editor, found that a `choice`-type
+question's option labels/values were resolved from a hard-coded
+`DIAGNOSTIC_CHOICE_OPTIONS[`${dimensionId}-${order}`]` map in `lib/diagnostic-flow-
+options.ts` — keyed by position, not by the question's own identity. The moment this task's
+own admin let a partner reorder a `choice` question (shifting its `order`) or add a new one,
+that map would go stale silently and `components/diagnostic-flow.tsx`'s `optionsFor` would
+throw for a real visitor mid-diagnostic — the exact "uncaught error reaching a live visitor"
+failure class this epic's own zero-active-questions acceptance criterion already exists to
+prevent. Treated this as in-scope rather than a follow-up: added a real `choiceOptions Json?`
+column to `DiagnosticQuestion` (migration
+`20260911123727_add_diagnostic_question_choice_options_and_placeholder`), moved choice-option
+resolution server-side into `lib/diagnostic-flow.ts` (the one file allowed to import
+`@/lib/prisma`), and rewrote `lib/diagnostic-flow-options.ts` to hold only the Prisma-free
+scale/boolean constants + shared types — preserving CLAUDE.md's "no client component imports
+a value from a `lib/` file that also imports `@/lib/prisma`" rule.
+
+Justification for expanding scope rather than filing a technical-debt entry: ADR 0005 already
+mandates the diagnostic engine be data-driven, and this map was the one remaining
+hard-coded piece of it; fixing it required touching the same files (`lib/diagnostic-flow.ts`,
+`components/diagnostic-flow.tsx`) this task's own admin work already had open, so deferring
+it would have meant re-opening the same files in a later session for no real savings.
+
+**Related Documents:** ADR 0005, `docs/features/business-health-check-diagnostic.md`,
+`docs/features/content-management-admin.md`.
+
+---
+
+## 2026-09-11 (T7.7, session 50) — Reseeded dimension weights from 1-each to 20-each so the
+
+new Diagnostic Configuration screen's own Save gate isn't permanently disabled
+
+**Status:** Standing
+
+**Summary:** `prisma/seed.ts`'s `DIAGNOSTIC_DIMENSIONS` seeded each of the 5 dimensions with
+`weight: 1` — scores correctly, since `lib/diagnostic-scoring.ts`'s `scoreDiagnosticResponses`
+normalizes by total weight regardless of what the individual values are (weightedSum /
+totalWeight), so `1` each and `20` each produce an identical score. But the Diagnostic
+Configuration admin screen built this same session enforces `ui/mockups/g-admin-content/
+admin-diagnostic-configuration.html`'s own explicit UX rule — weights must literally sum to
+100 before Save is enabled, "so a weight reads as this % of the score" — and `1+1+1+1+1=5`
+never satisfies that gate. Left as-is, a partner opening this brand-new screen for the first
+time would find Save permanently disabled until they happened to know to retype all five
+values. Fixed by reseeding to `20` each (same equal weighting, expressed the way the admin
+screen — and a partner reading it — expects) and updating the 5 live dev rows to match.
+
+**Related Documents:** `memory/completed-work.md` (T7.7 entry), ADR 0005.
+
+---
+
 ## 2026-09-11 (process, session 49 follow-up) — Corrected a new task appended to an already-shipped epic; tightened the sequencing rule to prevent it recurring
 
 **Status:** Standing

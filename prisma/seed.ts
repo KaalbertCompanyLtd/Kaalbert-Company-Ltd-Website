@@ -1142,19 +1142,31 @@ async function seedFooterContent() {
  * Two overall bands (40 → "High", 70 → "Medium") give `EnquiryRecord.triageFlag` (T3.5) a
  * real multi-tier signal to work with.
  *
- * `choice`-type questions have no schema column to store an option's label-to-value mapping
- * (decided at T3.2 — every answer, regardless of `responseType`, is a plain numeric string
- * pre-normalized to 0–1, see `lib/diagnostic-scoring.ts`'s and `prisma/schema.prisma`'s
- * `DiagnosticResponse.answerValue` doc-comments) — so each choice question's real option set
- * and values is documented inline below, carried over verbatim from the mockup's own
- * per-question `options` array, for T3.4's client flow to read from directly.
+ * `choice`-type questions carry their real option set in `choiceOptions` (added at T7.7,
+ * session 50) — an ordered `{label, value}[]`, `value` already the same 0–1 normalized
+ * numeric string every answer submits regardless of `responseType` (decided at T3.2, see
+ * `lib/diagnostic-scoring.ts`'s and `prisma/schema.prisma`'s `DiagnosticResponse.answerValue`
+ * doc-comments). Previously this mapping lived only in `lib/diagnostic-flow-options.ts`,
+ * hard-coded and keyed by `${dimensionId}-${order}` — safe only as long as nothing ever
+ * reordered or created a `choice` question, which is exactly what T7.7's own admin editor
+ * needs to do; the values below are carried over verbatim from that now-removed hard-coded
+ * map (itself carried over from the mockup's own per-question `options` array).
+ */
+/**
+ * Weights of 20 each (T7.7, session 50) — previously 1 each, which `lib/diagnostic-
+ * scoring.ts`'s `scoreDiagnosticResponses` normalizes by total weight regardless (so scoring
+ * output was identical either way), but which permanently blocked the Diagnostic
+ * Configuration admin screen's own "must total 100%" Save gate the moment that screen was
+ * built — `ui/mockups/g-admin-content/admin-diagnostic-configuration.html`'s own real UX
+ * rule, kept so a weight reads as "this % of the score." Equal weighting preserved, just
+ * expressed the way the admin screen (and a partner reading it) expects.
  */
 const DIAGNOSTIC_DIMENSIONS: Array<{ id: number; name: string; weight: number }> = [
-  { id: 1, name: "Structure", weight: 1 },
-  { id: 2, name: "Records", weight: 1 },
-  { id: 3, name: "Cash Control", weight: 1 },
-  { id: 4, name: "Funding Readiness", weight: 1 },
-  { id: 5, name: "Owner Dependence", weight: 1 },
+  { id: 1, name: "Structure", weight: 20 },
+  { id: 2, name: "Records", weight: 20 },
+  { id: 3, name: "Cash Control", weight: 20 },
+  { id: 4, name: "Funding Readiness", weight: 20 },
+  { id: 5, name: "Owner Dependence", weight: 20 },
 ];
 
 async function seedDiagnosticDimensions() {
@@ -1172,15 +1184,20 @@ const DIAGNOSTIC_QUESTIONS: Array<{
   order: number;
   promptText: string;
   responseType: DiagnosticResponseType;
+  choiceOptions?: { label: string; value: string }[];
 }> = [
   // Dimension 1: Structure
   {
     dimensionId: 1,
     order: 1,
-    // Choice options (label → normalized value): "Yes" → 1, "In progress" → 0.5, "Not yet" → 0.
     promptText:
       "Is the business formally registered — incorporated, or a registered business name?",
     responseType: DiagnosticResponseType.choice,
+    choiceOptions: [
+      { label: "Yes", value: "1" },
+      { label: "In progress", value: "0.5" },
+      { label: "Not yet", value: "0" },
+    ],
   },
   {
     dimensionId: 1,
@@ -1198,9 +1215,13 @@ const DIAGNOSTIC_QUESTIONS: Array<{
   {
     dimensionId: 2,
     order: 1,
-    // Choice options: "Regular record-keeping" → 1, "Rough notes" → 0.5, "No record" → 0.
     promptText: "Do you keep a record of sales — even a notebook or a spreadsheet?",
     responseType: DiagnosticResponseType.choice,
+    choiceOptions: [
+      { label: "Regular record-keeping", value: "1" },
+      { label: "Rough notes", value: "0.5" },
+      { label: "No record", value: "0" },
+    ],
   },
   {
     dimensionId: 2,
@@ -1211,10 +1232,14 @@ const DIAGNOSTIC_QUESTIONS: Array<{
   {
     dimensionId: 2,
     order: 3,
-    // Choice options: "12 months or more" → 1, "3–12 months" → 0.66, "1–3 months" → 0.33,
-    // "Less than 1 month" → 0.
     promptText: "How many months back could you produce a reasonably complete financial picture?",
     responseType: DiagnosticResponseType.choice,
+    choiceOptions: [
+      { label: "12 months or more", value: "1" },
+      { label: "3–12 months", value: "0.66" },
+      { label: "1–3 months", value: "0.33" },
+      { label: "Less than 1 month", value: "0" },
+    ],
   },
   // Dimension 3: Cash Control
   {
@@ -1247,10 +1272,13 @@ const DIAGNOSTIC_QUESTIONS: Array<{
   {
     dimensionId: 4,
     order: 1,
-    // Choice options: "Applied, successful" → 1, "Applied, not successful" → 0.5,
-    // "Never applied" → 0.
     promptText: "Has the business applied for a loan, grant or investment before?",
     responseType: DiagnosticResponseType.choice,
+    choiceOptions: [
+      { label: "Applied, successful", value: "1" },
+      { label: "Applied, not successful", value: "0.5" },
+      { label: "Never applied", value: "0" },
+    ],
   },
   {
     dimensionId: 4,
@@ -1284,14 +1312,27 @@ const DIAGNOSTIC_QUESTIONS: Array<{
 
 async function seedDiagnosticQuestions() {
   for (const question of DIAGNOSTIC_QUESTIONS) {
+    const choiceOptions: Prisma.InputJsonValue | typeof Prisma.JsonNull = question.choiceOptions
+      ? question.choiceOptions
+      : Prisma.JsonNull;
     await prisma.diagnosticQuestion.upsert({
       where: { dimensionId_order: { dimensionId: question.dimensionId, order: question.order } },
       update: {
         promptText: question.promptText,
         responseType: question.responseType,
+        choiceOptions,
         active: true,
+        isPlaceholder: true,
       },
-      create: { ...question, active: true },
+      create: {
+        dimensionId: question.dimensionId,
+        order: question.order,
+        promptText: question.promptText,
+        responseType: question.responseType,
+        choiceOptions,
+        active: true,
+        isPlaceholder: true,
+      },
     });
   }
 }

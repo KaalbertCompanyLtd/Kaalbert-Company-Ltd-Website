@@ -648,6 +648,13 @@ never let either one go stale and plan to "catch it up later."
   <https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc>. **Update rule:
   every task** that changes what a partner can do, see, or must monitor — republish the
   Artifact in the same session the file changes, so the two never drift apart.
+  **Write every admin capability as a numbered "how to" walkthrough, never a feature
+  summary** (tightened T7.7, session 50, after user feedback that the guide said a capability
+  existed — "a partner can create a landing page" — without ever saying how: which fields,
+  what order, what each one means). Name the exact screen, the exact button/link text, and
+  every field a partner would see, in the order they'd fill it in — sourced from actually
+  reading that screen's real form/editor code (`app/admin/(shell)/**`) if the current session
+  didn't just build it itself, never inferred from memory or the feature doc alone.
 - **"Website Build Status"** Artifact —
   <https://claude.ai/code/artifact/a26811bf-998b-4899-b3ad-0d03ce7c828f> — a short,
   plain-language progress report for the firm (milestone ledger, what's usable today, open
