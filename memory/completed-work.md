@@ -43,9 +43,12 @@ Input→Output line name exactly three (name, practiceArea, personalStatement) �
 the same migration-adjacent commit, no functional impact since nothing had implemented the
 gating logic yet. Discovered a real, separate gap while building the publish-gating
 validation: `lib/insights.ts`'s article-byline queries have no `author.published` check at
-all — logged as a new known-bug and a new task (`docs/tasks/04-insights.md` T4.6, since it
-needs a firm decision, not just a mechanical fix) rather than silently ignored or
-unscoped-fixed inside this task. `updateAuthor` protects against the practical case in the
+all — logged as a new known-bug and a new task (`docs/tasks/07-content-admin.md` T7.11,
+since it needs a firm decision, not just a mechanical fix) rather than silently ignored or
+unscoped-fixed inside this task — originally misfiled as a new task appended to the already-
+shipped `docs/tasks/04-insights.md`, caught and corrected the same session (see `memory/
+decision-log.md`'s process entry and CLAUDE.md's tightened sequencing rule). `updateAuthor`
+protects against the practical case in the
 meantime: it refuses to unpublish an author who already has articles. No role-based
 restriction gates opening another partner's entry — a deliberate decision extending
 `content-management-admin.md`'s own existing "Decision, not a gap" precedent (no technical

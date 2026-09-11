@@ -88,6 +88,12 @@ prose summary.
   possible/planned fix has both `Trigger type` and `Sequenced into` filled in — flag an
   orphaned fix (described but not sequenced into a task or marked `User-triggered`) as a
   finding.
+- Any `Sequenced into` target named or reused this session (new task or existing) points at
+  a task in an epic that has NOT already fully shipped — check `docs/roadmap.md`/`memory/
+completed-work.md`. A new task appended to an already-shipped epic file, or an existing-
+  task pointer reused after that task already executed, is exactly as orphaned as a missing
+  `Sequenced into` field and must be flagged as a finding (see CLAUDE.md's "Debt/bug fixes
+  must be sequenced into a task, never left orphaned" section).
 - Any `memory/technical-debt.md`/`memory/known-bugs.md` entry resolved this session has its
   `Status` flipped in place (`Open` → `Resolved`/`Fixed`), not left `Open` and not duplicated
   as a new entry.

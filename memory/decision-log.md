@@ -2,6 +2,60 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (process, session 49 follow-up) — Corrected a new task appended to an already-shipped epic; tightened the sequencing rule to prevent it recurring
+
+**Status:** Standing
+
+**Summary:** User caught a real process bug immediately after T7.6 shipped: the "Article
+byline rendering has no `author.published` check" known-bug entry (this same session, see
+above) had been sequenced into a brand-new `T4.6`, appended to `docs/tasks/04-insights.md`
+— but Milestone 4 (Insights) had already fully shipped, so no future session would ever
+naturally reopen that epic file to find and execute a task appended to it. CLAUDE.md's
+existing "Debt/bug fixes must be sequenced into a task, never left orphaned" rule already
+handled the narrower case of an addendum on an already-_completed task_ being inert; it
+never explicitly covered a _new task appended to an already-shipped epic_, which is the same
+failure by one level up.
+
+**Fix, this project:**
+
+- Moved the task from `docs/tasks/04-insights.md`'s `T4.6` to `docs/tasks/07-content-
+admin.md`'s new `T7.11` — Milestone 7 is the epic currently being executed session by
+  session, so a task appended there will actually be reached. Updated `memory/known-
+bugs.md`'s "Sequenced into" pointer, and this entry's own cross-references, to match.
+- Audited every other `Sequenced into` pointer across `memory/technical-debt.md` and
+  `memory/known-bugs.md` for the same failure mode. Found two genuine pre-existing instances
+  — "ESLint pinned to the EOL 9.x line" and "4 high-severity npm audit vulnerabilities in
+  Prisma CLI's dev-tooling tree" — both `Task-sequenced` and both still pointing at `T3.7`
+  (Milestone 3, shipped long ago) as an "opportunistic recheck whenever `package.json` is
+  next touched" pointer that had already gone stale without anyone noticing. Reassigned both
+  to `T7.7` (Diagnostic Configuration), the concrete next task about to be executed, so they
+  have a real chance of being picked up. Every other `Sequenced into` pointer into an
+  already-shipped epic checked out fine: either the target task was reached and the fix
+  genuinely executed there (the normal, working case — T7.6's own several addenda are a good
+  example), fixed in the same session it was raised, or explicitly `User-triggered` (domain
+  registration, final favicon, partner photography) — which never relied on task-sequencing
+  to fire in the first place, since resolution depends on the user raising it, not a session
+  "reaching" a task.
+- Tightened CLAUDE.md's own "Debt/bug fixes must be sequenced into a task, never left
+  orphaned" section with an explicit rule: before writing `Sequenced into`, confirm the
+  target epic/milestone is not already fully shipped (check `docs/roadmap.md`/`memory/
+completed-work.md`); if the natural epic has already shipped, place a new task in the epic
+  _currently being executed_ instead, never in the shipped one — and the same check applies
+  when reusing an _existing_ task number as an opportunistic-recheck target, not only when
+  creating a brand-new task.
+
+**Fix, the reusable planning framework:** Applied the equivalent tightening to `/home/
+cosbydeveloper/SharedSpace/Dev_Workspace/01 - Hasty Notes/PROJECT_PLANNING_FRAMEWORK.md`'s
+own "Sequencing a fix for a logged debt or bug (never leave it orphaned)" section (Phase 7),
+so every future project generated from this framework inherits the same protection from day
+one, rather than each one independently rediscovering this gap the way this project just
+did. Also added a matching finding to the generated `/review` command's checklist.
+
+**Related Documents:** `docs/tasks/04-insights.md`, `docs/tasks/07-content-admin.md`
+(T7.11), `memory/known-bugs.md`, `memory/technical-debt.md`, CLAUDE.md ("Debt/bug fixes must
+be sequenced into a task, never left orphaned"), `/home/cosbydeveloper/SharedSpace/
+Dev_Workspace/01 - Hasty Notes/PROJECT_PLANNING_FRAMEWORK.md`.
+
 ## 2026-09-11 (T7.6, session 49) — Team editor: no role gate on editing another partner's entry, `bio` corrected as non-publish-gating, the article-byline gap sequenced into a new task rather than fixed unscoped, `Author.adminUserId` finally a real relation
 
 **Status:** Standing
@@ -52,8 +106,11 @@ migrate dev`, which refused to run non-interactively in this session's shell —
   Rather than fixing the rendering layer unscoped inside this task (a real product decision
   is needed first — does an unpublished author's existing bylines go blank, or stay as a
   historical record regardless of current profile state?), logged it as a new task
-  (`docs/tasks/04-insights.md` T4.6) and left the rendering layer as-is, protected in
-  practice by this validation being the one write path that currently exists.
+  (originally appended as T4.6 to `docs/tasks/04-insights.md` — corrected later this same
+  session to `docs/tasks/07-content-admin.md`'s T7.11 instead, since Milestone 4 had already
+  fully shipped and a new task there would never be reached; see the correction entry below)
+  and left the rendering layer as-is, protected in practice by this validation being the one
+  write path that currently exists.
 - **`title` falls back to the schema's own `"Partner"` default if saved blank**, rather than
   persisting an empty string — a lightweight, minimal safeguard (title isn't publish-gating,
   so a blank value could otherwise slip through and render an empty badge on `/about`).
@@ -76,10 +133,10 @@ unlink UI exists for this, matching this task's own scope. Checked at mobile (39
 (768px)/desktop (1280px), fixing one label-wrap cosmetic issue found at desktop width along
 the way.
 
-**Related Documents:** `docs/tasks/07-content-admin.md` (T7.6), `docs/features/about-and-
-partners-page.md`, `docs/features/content-management-admin.md`, `docs/features/admin-
-authentication.md`, `docs/tasks/04-insights.md` (new T4.6), `lib/admin-authors.ts`,
-`lib/admin-authors.test.ts`, `prisma/schema.prisma`.
+**Related Documents:** `docs/tasks/07-content-admin.md` (T7.6, T7.11), `docs/features/about-
+and-partners-page.md`, `docs/features/content-management-admin.md`, `docs/features/admin-
+authentication.md`, `lib/admin-authors.ts`, `lib/admin-authors.test.ts`, `prisma/
+schema.prisma`.
 
 ## 2026-09-11 (T7.5, session 48) — Landing Pages admin built create-only; the URL slug is partner-typed, not auto-derived; a separate non-image upload mechanism built instead of reusing T7.2's image-only one
 

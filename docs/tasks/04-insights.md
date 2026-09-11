@@ -69,29 +69,3 @@ second row — re-confirms, and clears `unsubscribed_at` if it was set; no `subs
 measurement event fires (deliberately not one of Document 13.03's fixed six events — this
 task must not invent one).
 **Size:** M **Dependencies:** T4.1, T3.7 (email utility)
-
-### T4.6 — Article byline resolves against a real `author.published` check
-
-**Build:** `lib/insights.ts`'s several `article.author`-including queries (index cards,
-related articles, `lib/home.ts`'s featured-Insights section) and `app/insights/[slug]/
-page.tsx`'s byline currently read `author.name`/`author.practiceArea` directly with no
-`published` check at all — discovered at T7.6 (session 49) while building the Team admin
-editor, which can leave an `author` row unpublished (required fields cleared) while it still
-has existing articles crediting it, once that editor's own protective validation is ever
-relaxed or bypassed directly via the database. Requires a real product decision first, not
-just a mechanical fix: either (a) an unpublished author's existing article bylines fall back
-to a neutral attribution (omit the byline, or credit "Kaalbert & Company Ltd") once their
-profile goes dark, or (b) a byline is a historical record of who wrote the piece and stays
-exactly as it was regardless of the author's current profile state, and `author.published`
-was never meant to reach bylines at all — confirm which with the firm before implementing
-either.
-**Input → Output:** An `author` row with `published: false` → (a) every existing article
-byline crediting them falls back to the neutral attribution, or (b) bylines are confirmed
-exempt and no code changes — whichever the firm confirms.
-**Acceptance criteria:** Once the firm's answer is confirmed: if (a), an author's articles'
-bylines change the moment that author is unpublished, with no code change needed per article
-(same "one edit, every reader" principle as every other admin-editable content in this
-project); if (b), this task closes by updating `insights-engine.md`'s own documented byline
-behavior to state the exemption explicitly, so it's a recorded decision, not a silent gap.
-**Size:** S **Dependencies:** T4.1, T7.6 (`lib/admin-authors.ts`'s `updateAuthor` is the one
-write path this currently depends on staying protective in the meantime)

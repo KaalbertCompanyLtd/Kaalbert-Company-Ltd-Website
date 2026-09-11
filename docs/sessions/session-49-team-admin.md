@@ -39,10 +39,20 @@ route.ts` — new.
   placeholder FK" (with a note that per-partner backfill remains User-triggered) and "No
   admin-facing way to deactivate/reactivate an account..." in place.
 - `memory/known-bugs.md` — new: article-byline rendering has no `author.published` check.
-- `docs/tasks/04-insights.md` — new T4.6, sequencing the byline gap's real fix (needs a
-  firm decision, not a mechanical one).
+- `docs/tasks/07-content-admin.md` — new T7.11, sequencing the byline gap's real fix (needs
+  a firm decision, not a mechanical one). Originally misfiled as a new T4.6 appended to the
+  already-shipped `docs/tasks/04-insights.md`; caught and corrected the same session (see
+  below and `memory/decision-log.md`'s process entry).
 - `docs/user-guide.md` + its Artifact mirror — updated: new Team admin card, Admin Login
   card's "Not built yet" callout resolved into "You can do today."
+- **Process correction, same session**: CLAUDE.md's "Debt/bug fixes must be sequenced into
+  a task, never left orphaned" section tightened to explicitly forbid sequencing a new task
+  into an already-shipped epic — caught when the user asked whether `T4.6` would ever
+  actually be picked up. Audited every other `Sequenced into` pointer in `memory/technical-
+debt.md`/`memory/known-bugs.md` for the same failure mode; found and fixed two pre-existing
+  instances (ESLint/npm-audit entries pointing at the long-shipped T3.7, reassigned to T7.7).
+  Also applied the equivalent fix to the reusable `PROJECT_PLANNING_FRAMEWORK.md` so future
+  projects inherit the protection from day one.
 
 ## Decisions Made
 
@@ -60,9 +70,14 @@ route.ts` — new.
   personalStatement).
 - `updateAuthor` refuses to unpublish an author who already has articles — discovered while
   building this that `lib/insights.ts`'s byline rendering has no `published` check at all;
-  logged as a new known-bug and a new task (`docs/tasks/04-insights.md` T4.6) rather than
-  fixed unscoped inside this task, since the real fix needs a firm decision (does an
+  logged as a new known-bug and a new task (`docs/tasks/07-content-admin.md` T7.11) rather
+  than fixed unscoped inside this task, since the real fix needs a firm decision (does an
   unpublished author's existing bylines go blank, or stay as a historical record?).
+- **Corrected mid-session**: that new task was first appended as `T4.6` to the already-
+  shipped `docs/tasks/04-insights.md`, which the user caught — nothing would ever reach it
+  there. Moved to `T7.11` in the currently-active Milestone 7 epic instead, and tightened
+  CLAUDE.md's own sequencing rule (plus the reusable planning framework) so this can't
+  recur. Full reasoning in `memory/decision-log.md`'s process entry.
 - `title` falls back to the schema's own `"Partner"` default if saved blank, rather than
   persisting an empty string.
 - The publish badge is computed client-side too, live, from the fields as currently typed,
@@ -179,6 +194,16 @@ already seeded there).
   enough for multi-paragraph prose for `emailDetail` specifically (blank-line-separated
   paragraphs, per that field's own doc-comment), separate from the single-line `statement`
   input. Do not collapse these into one field.
+- **Low-priority, optional, no code change needed for this task itself**: if this task ends
+  up touching `package.json` for any real reason (a new dependency, a version bump), take
+  the opportunity to re-check two long-dormant `Low` priority `memory/technical-debt.md`
+  entries reassigned here this session after they'd gone stale pointing at an already-
+  shipped task — "ESLint pinned to the EOL 9.x line" (`npm info eslint-config-next
+  peerDependencies`, see if an `eslint@^10` bump is clean yet) and "4 high-severity npm
+  audit vulnerabilities in Prisma CLI's dev-tooling tree" (`npm info prisma dist-tags`, see
+  if a newer patch/stable release closes the `mysql2`/`deepmerge-ts` advisories). If this
+  task never naturally touches `package.json`, leave both entries as-is rather than forcing
+  an unrelated dependency bump just to close them out.
 - **Any page/route that reads live database content must export `export const dynamic =
   "force-dynamic"`.**
 - **Never let a `"use client"` component import a value (not just a type) from a `lib/`

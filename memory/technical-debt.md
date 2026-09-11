@@ -879,10 +879,13 @@ a release with a peer range that includes ESLint 10 cleanly (check `npm info
 eslint-config-next peerDependencies` before retrying).
 **Trigger type:** Task-sequenced — re-check opportunistically whenever `package.json` is next
 touched for an unrelated reason; no separate user go-ahead needed.
-**Sequenced into:** T3.7 (Gated summary request, `docs/tasks/03-diagnostic.md`) — the
-transactional-email utility it builds is the next task expected to add a real new
-dependency, so the next natural `package.json` touch to re-check against; see the
-session-17 re-check below for why T3.2 itself didn't move this.
+**Sequenced into:** ~~T3.7 (Gated summary request, `docs/tasks/03-diagnostic.md`)~~ —
+corrected (session 49, T7.6 follow-up): T3.7 shipped long ago without anyone re-checking
+this, since a `Task-sequenced` pointer into an already-shipped epic is never naturally
+revisited (see CLAUDE.md's tightened "never sequence into an already-shipped epic" rule and
+`memory/decision-log.md`, 2026-09-11 process entry, for the full correction). Reassigned to
+**T7.7** (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — the concrete next
+task about to be executed, so this has a real chance of actually being re-checked.
 
 **Re-checked (session 04, 2026-09-05, T1.4):** `npm info eslint-config-next@16.3.4
 peerDependencies` now reports `eslint: >=9.0.0` — technically includes 10 — and a dry-run
@@ -1025,10 +1028,14 @@ stable, and downgrading to 6.x is a step backward on both counts. Real fix is a 
 Prisma 7.x patch release (or a stabilized 8.0) that bumps `mysql2`/`deepmerge-ts` — revisit
 next time `package.json` dependencies are touched.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T3.7 (Gated summary request, `docs/tasks/03-diagnostic.md`) — the
-transactional-email utility it builds is the next task expected to add a real new
-dependency, so the next natural `package.json` touch to re-check against; see the
-session-17 re-check below for why T3.2 itself didn't move this.
+**Sequenced into:** ~~T3.7 (Gated summary request, `docs/tasks/03-diagnostic.md`)~~ —
+corrected (session 49, T7.6 follow-up): T3.7 shipped long ago without anyone re-checking
+this, since a `Task-sequenced` pointer into an already-shipped epic is never naturally
+revisited (see CLAUDE.md's tightened "never sequence into an already-shipped epic" rule and
+`memory/decision-log.md`, 2026-09-11 process entry, for the full correction). Reassigned to
+**T7.7** (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — the concrete next
+task about to be executed, so this has a real chance of actually being re-checked. See the
+session-17 re-check below for why T3.2 itself didn't move this (kept for historical record).
 
 **Re-checked (session 04, 2026-09-05, T1.4):** `npm info prisma version` /
 `@prisma/client version` / `@prisma/adapter-pg version` all still report `7.10.0` as latest

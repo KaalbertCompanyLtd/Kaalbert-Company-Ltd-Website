@@ -44,7 +44,12 @@ published, is a historical record and its byline should stay stable regardless o
 author's current profile state) and document that as the real rule instead. Needs a real
 decision, not just a mechanical fix — flagged here rather than guessed at.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T4.6 (`docs/tasks/04-insights.md`) — new task added this session.
+**Sequenced into:** T7.11 (`docs/tasks/07-content-admin.md`) — corrected same session:
+originally sequenced into a new T4.6 appended to `docs/tasks/04-insights.md`, but Milestone 4
+had already fully shipped, so nothing would ever reach it. Moved into Milestone 7 (this
+epic, still actively in progress) instead — see CLAUDE.md's tightened "Debt/bug fixes must be
+sequenced into a task, never left orphaned" rule and `memory/decision-log.md` for the full
+correction.
 
 ---
 

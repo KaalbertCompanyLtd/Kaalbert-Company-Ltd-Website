@@ -421,6 +421,29 @@ only the user can make, or a user action not yet taken.
 - If no existing task fits, create a new task entry in the right epic file, correctly
   ordered by dependency like any other task (not appended out of sequence at the end),
   sized, and with real acceptance criteria — never just a bullet point with no task shape.
+- **Before writing `Sequenced into:` — whether reusing an existing task or creating a new
+  one — confirm the target epic/milestone has not already fully shipped** (check
+  `docs/roadmap.md`'s milestone status and `memory/completed-work.md` for whether every task
+  in that epic file has already landed). A shipped epic's file is never reopened by a future
+  session the normal way a `/task` invocation reaches an upcoming one — its task list was
+  read top-to-bottom once, and nothing points back at it again. A **new** task appended
+  there is exactly as inert as the already-covered case above (an addendum on an
+  already-completed _task_), just one level up: an addendum on an already-shipped _epic_.
+  This applies equally to an **existing** task reused as an opportunistic/"recheck later"
+  target (e.g. "revisit next time `package.json` is touched") — if that task has already
+  executed, the pointer is already stale the moment it's written, not just eventually.
+  (Caught for real at T7.6, session 49 — a new task was first appended to Milestone 4's
+  epic file after that milestone had already fully shipped; see `memory/decision-log.md`'s
+  process entry for the full correction and the audit of every other `Sequenced into`
+  pointer this surfaced.) If the natural/most-relevant epic has already shipped, do **not**
+  sequence into it — place the new task in the epic **currently being executed** instead
+  (per the most recent session summary's own "Next Task" pointer), ordered so a session
+  still working through that epic's task list will actually reach it; only fall back to the
+  nearest not-yet-started epic if the fix is genuinely unrelated to anything in the active
+  one. `User-triggered` entries are exempt from this check — their resolution depends on the
+  user raising it, not on a session "reaching" a task, so pointing one at an already-shipped
+  task (recording _where the mechanism now lives_, e.g. "upload via T7.6's now-built Team
+  editor") is fine and doesn't need reassigning.
 - Either way, set the debt/bug entry's `Sequenced into:` field to the task ID it now lives
   under. An entry with a real fix and no `Sequenced into:` target is a bug in the memory
   system itself — fix it before ending the session, not next time someone happens to notice.
@@ -545,6 +568,9 @@ Before marking work complete:
 [ ] memory/known-bugs.md updated (if applicable)
 [ ] Any technical-debt.md/known-bugs.md entry logged this session with a possible/planned
     fix has Trigger type and Sequenced into filled in — never left blank
+[ ] Every Task-sequenced Sequenced into target named or reused this session points at a task
+    in an epic that has NOT already fully shipped (check docs/roadmap.md/memory/completed-
+    work.md) — never a new task appended to an already-shipped epic file
 [ ] Any technical-debt.md/known-bugs.md entry resolved this session has its Status flipped
     in place (Open → Resolved/Fixed), not left Open and not duplicated as a new entry
 [ ] docs/user-guide.md updated, and its Artifact mirror republished, if this task changed
