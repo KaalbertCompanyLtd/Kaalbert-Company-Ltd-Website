@@ -16,7 +16,7 @@ Concrete decisions:
 
 - **Four more required `offer` fields were missing from the mockup, beyond the five this
   task's own "Build" line already named as fixed.** `ui/mockups/g-admin-content/admin-offer-
-  editor.html` still had no `teaser`, `ctaHref`, `metaTitle`, or `metaDescription` fields —
+editor.html` still had no `teaser`, `ctaHref`, `metaTitle`, or `metaDescription` fields —
   all four are required, non-nullable `Offer` columns with no other admin surface to edit
   them. Added all four to the built editor (never to the mockup file itself), same treatment
   T7.2/T7.3 already gave their own mockup gaps.
@@ -38,7 +38,7 @@ Concrete decisions:
 - **`PATCH /api/admin/offers/[slug]`, keyed by slug not id** — `content-management-admin.md`'s
   own Interfaces line names `[id]`, but every other consumer of an offer in this codebase
   (`getOfferBySlug`, the public `/offers/[slug]` route, T7.3's own `PATCH /api/admin/legal/
-  [slug]` precedent) is slug-keyed; matching that avoids an extra id-vs-slug lookup on the
+[slug]` precedent) is slug-keyed; matching that avoids an extra id-vs-slug lookup on the
   client, which already has the slug from `getOfferList`'s picker. A route path parameter
   isn't an entity field CLAUDE.md's "match the feature doc's field names" rule governs.
 - **The Advisory Retainer gets the same 10.05-compliance checkbox as the three core offers**,

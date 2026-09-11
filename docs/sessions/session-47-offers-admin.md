@@ -64,8 +64,7 @@ shape only.
   the mockup and the schema's own "one-element array" convention — `deliverables` is a real
   multi-item list, `clientInputs` is not.
 
-Full reasoning for all of the above in `memory/decision-log.md`, 2026-09-11 (T7.4, session
-47) entry.
+Full reasoning for all of the above in `memory/decision-log.md`, 2026-09-11 (T7.4, session 47) entry.
 
 ## Current State
 
