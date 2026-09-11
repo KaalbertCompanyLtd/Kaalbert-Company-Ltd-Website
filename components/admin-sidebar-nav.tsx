@@ -32,6 +32,7 @@ const NAV_SECTIONS = [
       { name: "Enquiries", href: "/admin/enquiries" },
       { name: "Diagnostic Configuration", href: "/admin/diagnostic-questions" },
       { name: "Site Settings", href: "/admin/site-settings" },
+      { name: "Subscribers", href: "/admin/subscribers" },
     ],
   },
   {

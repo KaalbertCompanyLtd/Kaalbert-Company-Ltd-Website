@@ -14,6 +14,49 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.9, session 52)
+
+**Task:** T7.9 — Subscribers list
+**Summary:** Built `/admin/subscribers` — an `AdminDataTable`-pattern screen (following
+`app/admin/(shell)/articles/page.tsx`'s established list/filter/pagination shape, T7.2)
+listing every `subscriber` row, subscribed and unsubscribed alike, with a search-by-email
+box and a Subscribed/Unsubscribed status filter. Two actions: **Export**, which generates a
+CSV client-side from the currently filtered array (before pagination) so it always matches
+what's on screen — no separate export endpoint exists in the feature doc's Interfaces list,
+and every row is already loaded in the browser, so a second query that could drift from the
+visible set was avoided entirely; and **Remove**, gated behind an `AlertDialog` confirmation
+(same pattern as the Categories list's "Retire" action, T7.2), which reuses
+`lib/insights-subscription.ts`'s existing `unsubscribeFromInsights(token)` — the row's own
+`unsubscribeToken` is looked up first, then the exact same function a visitor's one-click
+email link calls is invoked, satisfying this task's own acceptance criterion ("the identical
+effect... not a second code path") by construction rather than by convention. A removed row
+stays visible with its status flipped to Unsubscribed, never disappears — consistent with
+`insights-engine.md`'s "never a hard delete" rule. The on-screen "N subscribed, N
+unsubscribed" summary line is computed from the client's own `rows` state (not a
+server-rendered prop) specifically so it stays correct immediately after a Remove action,
+without needing a page reload — caught this by testing the flow live via Playwright before
+fixing it. Verified end-to-end against the real dev server: filtered/searched the list,
+removed the one real dev subscriber and confirmed its status flipped in place and persisted
+across a reload, exported a CSV and read its contents back (matched the filtered set
+exactly, including the real `unsubscribedAt` timestamp from the Remove action just
+performed), and confirmed the Unsubscribed filter correctly showed the empty state. Checked
+at mobile/tablet/desktop widths.
+**Files Changed:** `lib/admin-subscribers.ts` (new) — `getSubscriberList`/
+`removeSubscriber`; `lib/admin-subscribers.test.ts` (new) — 3 tests; `app/admin/(shell)/
+subscribers/page.tsx` (new), `subscribers-list-client.tsx` (new); `app/api/admin/
+subscribers/[id]/route.ts` (new) — `DELETE`; `components/admin-sidebar-nav.tsx` (added the
+"Subscribers" nav entry under Operations).
+**Related Feature:** `docs/features/insights-engine.md` (the `subscriber` entity and its
+`POST /api/insights/unsubscribe` rule this task's Remove action must match).
+**Notes:** No export API route was built — deliberate, per this task's own architecture
+constraint that export must reflect the on-screen filtered set; a client-side CSV from the
+already-loaded array is the simplest way to guarantee that without a second query. Did not
+touch anything related to actually emailing this list (Brevo campaign composition/sending,
+ADR 0012, `docs/features/subscriber-outreach.md`, P2-8) — that stays Phase 2, gated, out of
+this task's scope entirely, per its own architecture constraint.
+
+---
+
 ## 2026-09-11 (T7.8, session 51)
 
 **Task:** T7.8 — Site Settings (singleton) admin

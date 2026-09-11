@@ -28,14 +28,14 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 50) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 52) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
 Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1), Articles/
 Categories admin (T7.2), Pages admin (Capabilities/Our Method/Legal/Footer, T7.3), Offers
 admin (the three core offers plus the Advisory Retainer, T7.4), Landing Pages admin
-(create-only, T7.5), Team admin (T7.6), and Diagnostic Configuration (T7.7) are all live; Site
-Settings, Subscribers, and article-resource attachment are next.
+(create-only, T7.5), Team admin (T7.6), Diagnostic Configuration (T7.7), Site Settings (T7.8),
+and Subscribers (T7.9) are all live; article-resource attachment (T7.10) is next.
 
 ---
 
@@ -499,6 +499,28 @@ immediately.
 
 ---
 
+## Managing Subscribers
+
+`/admin/subscribers` — click **Subscribers** in the sidebar, under Operations. Everyone who's
+ever ticked the Insights-subscription checkbox (on `/insights` or the Contact form) — both
+still subscribed and previously removed, so this is a full history, not just an active list.
+
+1. **Search** by email, or use the **status dropdown** to show only Subscribed or only
+   Unsubscribed.
+2. Click **Export** to download the current filtered view as a CSV file — exactly the rows on
+   screen at that moment, not the full list, if a search or status filter is applied.
+3. To remove someone, click **Remove** on their row, then confirm. This has the exact same
+   effect as that person clicking their own unsubscribe link in an email — their row stays
+   in the list, just marked Unsubscribed, never deleted. There's no way to undo this from the
+   admin screen itself (the person would need to re-subscribe themselves).
+
+**What this screen can't do yet:** actually send anything to this list. Subscribing captures
+consent and sends the one-time confirmation email only — a real, repeatable newsletter send is
+a separate, not-yet-built, Phase 2 capability (through the firm's Brevo account, not a
+custom-built sender).
+
+---
+
 ## Measurement & attribution
 
 No dedicated admin screen — this runs through Google Tag Manager's own console, not
@@ -567,8 +589,8 @@ depends on:
 - **Milestone 7 — Content Management Admin** (in progress): every piece of content seeded so
   far becomes partner-editable without a developer. Dashboard, Articles/Categories, Pages
   (Capabilities/Our Method/Legal/Footer), Offers (the three core offers plus the Advisory
-  Retainer), Landing Pages (create-only), Team, Diagnostic Configuration, and Site Settings are
-  all live; Subscribers and article-resource attachment are next.
+  Retainer), Landing Pages (create-only), Team, Diagnostic Configuration, Site Settings, and
+  Subscribers are all live; article-resource attachment is next.
 - **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
   diagnostic completions in one place.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
@@ -578,6 +600,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Subscribers admin (T7.9) went live — a partner can now search/filter the full Insights-subscriber list, export the current filtered view as a CSV, and manually remove someone (the exact same effect as that person's own one-click unsubscribe link — their record stays, just marked Unsubscribed) — `/admin/subscribers`. Still no way to actually send this list anything beyond the one-time confirmation email; a real newsletter send stays a separate, gated, not-yet-built capability.                                                                                                                 |
 | 2026-09-11 | Site Settings (T7.8) went live — a partner can now edit the firm's phone/WhatsApp/email/address/response-time commitment and social profile URLs themselves — `/admin/site-settings`. One save now reaches the footer, `/contact`, every WhatsApp button, and the Organization search listing at once (previously the footer still showed old hardcoded text even after a Site Settings edit — that gap is now closed, including the footer's scope-of-practice/registration text from the Legal Pages screen). A blank required field now correctly disappears from the site rather than showing a broken link. |
 | 2026-09-11 | Rewrote every admin section as a step-by-step "how to" walkthrough (exact screens, buttons, and what each field means) instead of a feature list — user feedback that the previous version told the firm _what_ exists but not _how_ to actually use it. No underlying platform change; documentation-only.                                                                                                                                                                                                                                                                                                      |
 | 2026-09-11 | Diagnostic Configuration (T7.7) went live — a partner can now add/edit/reorder/deactivate diagnostic questions (including choice-option labels/values), and edit dimension weights, triage thresholds, and score-band text — `/admin/diagnostic-questions` and `/admin/diagnostic-configuration`. Weights must total 100% before saving; the last active question in a dimension can't be deactivated; the scoring algorithm itself stays a developer-only change.                                                                                                                                               |
