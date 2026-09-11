@@ -2,6 +2,39 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T8.1, session 56) — `EnquiryRecord.status` is a real Prisma enum; `triagePriorityLevel` stays a plain string
+
+**Status:** Standing
+
+**Summary:** Two schema-shape calls made while extending `enquiry_record`
+(`enquiry-management.md`'s Data requirements), both precedent-driven rather than arbitrary,
+since T8.2/T8.3 (and any future write path) must follow the same shape:
+
+`status` is a real Prisma enum (`EnquiryStatus`: `new`/`contacted`/`closed`/`converted`/
+`not_a_fit`), not a plain `String` like `AdminUser.role`. Reasoning: `enquiry-management.md`
+itself names a fixed, closed 5-value vocabulary — the same category of thing that already
+makes `DiagnosticResponseType`/`AdminLoginAttemptKind` real enums in this schema, as opposed
+to `AdminUser.role`, which is deliberately open-ended (the firm can add roles later). One
+naming wrinkle: an enum member can't be a bare hyphenated identifier, so "not-a-fit" is
+modelled as `not_a_fit` — this is purely a Prisma-identifier constraint (confirmed the
+generated client emits enums as plain string-keyed const objects, not TS `enum`, so `new` as
+a member name — normally a reserved word — was also confirmed to compile and generate
+cleanly); nothing depends on the literal hyphenated spelling anywhere outside the schema
+file. Any future UI must map `not_a_fit` → "Not a fit" for display, same as this task's own
+`app/admin/(shell)/page.tsx` `STATUS_LABELS` does.
+
+`triagePriorityLevel` stays a plain `String?`, deliberately *not* an enum — mirrors the
+existing precedent and stated reasoning on `DiagnosticThreshold.triagePriorityLevel` (its own
+schema doc-comment): the firm's triage vocabulary is admin-tunable data (Milestone 7's
+Diagnostic Configuration screen), not a fixed set the schema should lock in, even though only
+"High"/"Medium"/"Low" exist today.
+
+**Related Documents:** `docs/features/enquiry-management.md`, `docs/tasks/08-enquiry-
+management.md` (T8.1), `prisma/schema.prisma` (`EnquiryStatus` enum and `EnquiryRecord`
+model doc-comments), `memory/technical-debt.md` (both entries this task resolved).
+
+---
+
 ## 2026-09-11 (T7.11, session 55) — Firm's byline policy: an unpublished author's existing articles credit "Kaalbert & Company Ltd," not a blank byline
 
 **Status:** Standing

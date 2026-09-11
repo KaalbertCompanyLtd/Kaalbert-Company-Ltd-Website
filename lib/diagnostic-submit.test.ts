@@ -32,6 +32,7 @@ const STUB_RESULT: DiagnosticScoringResult = {
   weakestDimensions: ["Structure"],
   indicativeCostStatement: "Overall score 62/100.",
   overallTriageFlag: false,
+  overallPriorityLevel: null,
 };
 
 beforeEach(() => {
@@ -61,6 +62,7 @@ describe("submitDiagnosticResponses", () => {
         scoreSummary: unknown;
         weakestDimensions: string[];
         triageFlag: boolean;
+        triagePriorityLevel: string | null;
         diagnosticResponses: {
           create: Array<{ sessionId: string; questionId: number; answerValue: string }>;
         };
@@ -70,6 +72,7 @@ describe("submitDiagnosticResponses", () => {
     expect(createArgs.data.scoreSummary).toEqual(STUB_RESULT);
     expect(createArgs.data.weakestDimensions).toEqual(STUB_RESULT.weakestDimensions);
     expect(createArgs.data.triageFlag).toBe(STUB_RESULT.overallTriageFlag);
+    expect(createArgs.data.triagePriorityLevel).toBe(STUB_RESULT.overallPriorityLevel);
 
     const responseCreates = createArgs.data.diagnosticResponses.create;
     expect(responseCreates).toHaveLength(2);

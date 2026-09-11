@@ -85,10 +85,14 @@ triage status, status). Everything on it is real, live data — there is nothing
 here.
 
 **What you can't do here yet:** open an enquiry, change its status, or filter the list — that
-arrives with Milestone 8 (Enquiry Management). Today's dashboard is look-but-not-touch. Every
-enquiry currently shows status "New" and Triage as Flagged/Not flagged only (not a
-High/Medium/Low priority) — both accurate today, not a bug; they become real once Milestone 8
-ships.
+arrives with the rest of Milestone 8 (Enquiry Management, T8.2/T8.3). Today's dashboard is
+look-but-not-touch. The Triage column now shows a real **High**/**Medium**/**Low** priority
+badge (or "Not flagged") for every enquiry submitted from this point on — a diagnostic
+submission from before this priority was tracked still shows "Not flagged" even if it was
+genuinely triage-flagged at the time (the underlying flag/count are still correct; only this
+one column's older rows can't show the priority word retroactively). Every enquiry still
+shows status "New" — not because it's a placeholder any more, but because nothing yet exists
+to change it (that arrives with T8.3's status editor).
 
 ---
 
@@ -594,14 +598,14 @@ depends on:
 
 ## What's coming next
 
-- **Milestone 7 — Content Management Admin** (nearly complete): every piece of content
-  seeded so far is now partner-editable without a developer. Dashboard, Articles/Categories
-  (with downloadable-resource attachment), Pages (Capabilities/Our Method/Legal/Footer),
-  Offers (the three core offers plus the Advisory Retainer), Landing Pages (create-only),
-  Team, Diagnostic Configuration, Site Settings, and Subscribers are all live; one internal
-  fix (T7.11, no admin screen of its own) remains before this milestone formally closes.
-- **Milestone 8 — Enquiry Management**: a screen to see and triage incoming enquiries and
-  diagnostic completions in one place.
+- **Milestone 7 — Content Management Admin** (complete): every piece of content seeded so
+  far is now partner-editable without a developer. Dashboard, Articles/Categories (with
+  downloadable-resource attachment), Pages (Capabilities/Our Method/Legal/Footer), Offers
+  (the three core offers plus the Advisory Retainer), Landing Pages (create-only), Team,
+  Diagnostic Configuration, Site Settings, and Subscribers are all live.
+- **Milestone 8 — Enquiry Management** (in progress): a screen to see and triage incoming
+  enquiries and diagnostic completions in one place. T8.1's schema groundwork is done (see
+  the Change log above); the actual list (`/admin/enquiries`) and detail screens are next.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
   GA4, Meta, Google Ads, and LinkedIn — begins with the deferred T5.5 above, then proceeds.
 
@@ -609,6 +613,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-11 | Enquiry schema extension (T8.1, the first Milestone 8 task) went live under the hood — no new screen yet, but the dashboard's Triage column now shows a real **High**/**Medium**/**Low** badge instead of a plain flagged/not-flagged one for any enquiry submitted from now on (older rows still show "Not flagged" — see the Admin dashboard section above). Status still shows "New" for everyone until T8.3 builds a way to change it. |
 | 2026-09-11 | Downloadable-resource attachment (T7.10) went live on the article editor — a partner can now attach a PDF to a published (or already-saved draft) article themselves, reorder or remove them, with the public article page's download list updating immediately — no developer needed. Previously the handful of existing downloadable resources had to be set up directly in the database.                                                                                                                                                                                                                      |
 | 2026-09-11 | Subscribers admin (T7.9) went live — a partner can now search/filter the full Insights-subscriber list, export the current filtered view as a CSV, and manually remove someone (the exact same effect as that person's own one-click unsubscribe link — their record stays, just marked Unsubscribed) — `/admin/subscribers`. Still no way to actually send this list anything beyond the one-time confirmation email; a real newsletter send stays a separate, gated, not-yet-built capability.                                                                                                                 |
 | 2026-09-11 | Site Settings (T7.8) went live — a partner can now edit the firm's phone/WhatsApp/email/address/response-time commitment and social profile URLs themselves — `/admin/site-settings`. One save now reaches the footer, `/contact`, every WhatsApp button, and the Organization search listing at once (previously the footer still showed old hardcoded text even after a Site Settings edit — that gap is now closed, including the footer's scope-of-practice/registration text from the Legal Pages screen). A blank required field now correctly disappears from the site rather than showing a broken link. |

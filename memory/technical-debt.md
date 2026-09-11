@@ -140,8 +140,9 @@ desktop widths.
 
 ## Enquiry-level triage priority (High/Medium/Low) is computed at diagnostic-scoring time but never persisted, so no admin screen can show it
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-11 (T7.1, session 44)
+**Date resolved:** 2026-09-11 (T8.1, session 56)
 **Reason:** Discovered building the admin dashboard's recent-enquiries panel to
 `ui/mockups/g-admin-content/admin-dashboard.html`, whose Triage column shows a High/Medium/
 Low priority badge (`badge-triage-high/medium/low`, `ui/mockups/_shared.css`).
@@ -169,15 +170,25 @@ add an `enquiry_record.triage_priority_level` (`String?`, null for contact-form 
 nullability precedent as `triage_flag`) column, and persist it in `lib/diagnostic-submit.ts`
 alongside the existing `triageFlag: result.overallTriageFlag` line.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T8.1 (`docs/tasks/08-enquiry-management.md`) — see that task's session-44
-addendum for the exact fields/files this touches.
+**Sequenced into:** T8.1 (`docs/tasks/08-enquiry-management.md`) — resolved. `EnquiryRecord`
+now has `triagePriorityLevel` (`String?`), `lib/diagnostic-scoring.ts`'s
+`DiagnosticScoringResult` returns `overallPriorityLevel`, `lib/diagnostic-submit.ts` persists
+it, and `app/admin/(shell)/page.tsx`'s Triage column renders the real High/Medium/Low badge
+(`TRIAGE_BADGE_CLASSES`) instead of the boolean Flagged/Not-flagged approximation. Verified
+live via Playwright MCP: a real diagnostic submission (enquiry #27, score 35/100) produced a
+"High" badge on the dashboard. Note: pre-existing rows (created before this migration) have
+`triagePriorityLevel: null` by design (no backfill — see this task's own Input → Output
+contract), so a historically triage-flagged row now displays "Not flagged" on this specific
+column even though `triageFlag`/the "Triage-flagged" stat card still correctly count it — an
+accepted, documented consequence of the migration, not a bug.
 
 ---
 
 ## Admin dashboard's New Enquiries stat and Status badge assume every enquiry is "new" because `enquiry_record` has no `status` column yet
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-11 (T7.1, session 44)
+**Date resolved:** 2026-09-11 (T8.1, session 56)
 **Reason:** `content-management-admin.md`'s dashboard spec defines "New enquiries" as
 `COUNT(enquiry_record)` filtered by `status = new`, and the accepted mockup
 (`ui/mockups/g-admin-content/admin-dashboard.html`) shows a per-row Status badge
@@ -203,8 +214,14 @@ real, silent staleness risk the moment T8.1 ships if not updated together.
 select/return the real `status` value instead of the hardcoded `"new"` literal, updating both
 functions' tests (`lib/admin-dashboard.test.ts`) alongside.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T8.1 (`docs/tasks/08-enquiry-management.md`) — see that task's session-44
-addendum.
+**Sequenced into:** T8.1 (`docs/tasks/08-enquiry-management.md`) — resolved. `status` is now a
+real `EnquiryStatus` enum column (`new/contacted/closed/converted/not_a_fit`, `@default(new)`,
+every pre-existing row backfilled to `new`). `getAdminDashboardStats` now filters
+`where: { status: EnquiryStatus.new }`; `getRecentEnquiries` selects/returns the real `status`
+column; both functions' tests updated. `app/admin/(shell)/page.tsx`'s Status badge now renders
+the real per-row label (`STATUS_LABELS`) instead of a hardcoded "New" string. Verified live via
+Playwright MCP (dashboard rendered "New Enquiries: 7", every visible row correctly labelled
+"New").
 
 ---
 

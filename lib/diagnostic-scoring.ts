@@ -41,6 +41,15 @@ export interface DiagnosticScoringResult {
   indicativeCostStatement: string;
   /** Whether the overall score breached a configured overall threshold (`dimensionId: null`) — what T3.5 writes to `enquiry_record.triage_flag` (FR-2.6). */
   overallTriageFlag: boolean;
+  /**
+   * The `diagnostic_threshold.triage_priority_level` word ("High"/"Medium"/"Low") the
+   * breached overall threshold carries, or `null` when no overall threshold was breached.
+   * Previously computed here and discarded after being embedded in
+   * `indicativeCostStatement`'s prose — added at T8.1 so `lib/diagnostic-submit.ts` can
+   * persist it to `enquiry_record.triage_priority_level` instead of losing it (see
+   * memory/technical-debt.md's now-resolved entry on this).
+   */
+  overallPriorityLevel: string | null;
 }
 
 interface ThresholdBand {
@@ -224,5 +233,6 @@ export async function scoreDiagnosticResponses(
       overallPriorityLevel,
     ),
     overallTriageFlag,
+    overallPriorityLevel,
   };
 }

@@ -48,6 +48,7 @@ export async function submitDiagnosticResponses(
       scoreSummary: result as unknown as Prisma.InputJsonValue,
       weakestDimensions: result.weakestDimensions,
       triageFlag: result.overallTriageFlag,
+      triagePriorityLevel: result.overallPriorityLevel,
       attributionId,
       diagnosticResponses: {
         create: answers.map((answer) => ({

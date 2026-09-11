@@ -391,9 +391,8 @@ model SiteSettings {
 /// now that would likely need replacing.
 ///
 /// `enquiry-management.md`'s own extension (`status`, `assigned_partner_id`,
-/// `internal_notes`, `status_updated_at`) is Milestone 8 scope, not anticipated here — no
-/// precedent in this task's own architecture constraints for adding it early, unlike the
-/// diagnostic-specific fields above.
+/// `internal_notes`, `status_updated_at`) was Milestone 8 scope, not anticipated at T2.6 — see
+/// the field-level doc-comments below for how T8.1 actually added it.
 model EnquiryRecord {
   id                  Int                  @id @default(autoincrement())
   name                String?
@@ -407,7 +406,45 @@ model EnquiryRecord {
   scoreSummary        Json?                @map("score_summary")
   weakestDimensions   String[]             @default([]) @map("weakest_dimensions")
   triageFlag          Boolean?             @map("triage_flag")
+  /// Added at T8.1 — `lib/diagnostic-scoring.ts`'s `resolveTriageBand` already computed this
+  /// per submission (`overallPriorityLevel`, "High"/"Medium"/"Low" from
+  /// `diagnostic_threshold.triagePriorityLevel`) but it was only ever embedded in
+  /// `indicativeCostStatement`'s prose, never persisted structurally — no admin screen could
+  /// read it back (memory/technical-debt.md's now-resolved "Enquiry-level triage priority...
+  /// never persisted" entry). Plain `String?`, not an enum, same reasoning as
+  /// `DiagnosticThreshold.triagePriorityLevel` above: the firm's triage vocabulary is tunable
+  /// admin data (Milestone 7), not a fixed closed set the schema should lock in. Null for
+  /// every contact-form-originated row and for a diagnostic row whose score breached no
+  /// threshold, same nullability precedent as `triageFlag`/`scoreSummary`.
+  triagePriorityLevel String?              @map("triage_priority_level")
   createdAt           DateTime             @default(now()) @map("created_at")
+  /// Added at T8.1 (`enquiry-management.md`'s own Data requirements) — the status-driven
+  /// triage workflow a partner works an enquiry through. A real, closed 5-value Prisma enum
+  /// (`EnquiryStatus`, see its own doc-comment below) rather than a plain string like
+  /// `AdminUser.role`: unlike `role`, this vocabulary is fixed by the feature doc itself, not
+  /// left open for the firm to extend — the same distinction that already puts
+  /// `DiagnosticResponseType`/`AdminLoginAttemptKind` in this schema as real enums.
+  /// `@default(new)` backfills every pre-T8.1 row to "new" (this task's own Input → Output
+  /// contract) and is the correct starting state for every row created from here on too.
+  status              EnquiryStatus        @default(new)
+  /// Added at T8.1 — nullable (`enquiry-management.md`: "an enquiry is not required to be
+  /// assigned to anyone"). `onDelete: SetNull`, not `Restrict` or `Cascade`: an admin_user
+  /// being deactivated/removed must never block or cascade-delete the enquiries they were
+  /// once assigned — the enquiry just becomes unassigned again, same defensive precedent as
+  /// `attributionId` above.
+  assignedPartnerId   Int?                 @map("assigned_partner_id")
+  assignedPartner     AdminUser?           @relation(fields: [assignedPartnerId], references: [id], onDelete: SetNull)
+  /// Added at T8.1 — admin-only, never visitor-facing (`enquiry-management.md`'s own business
+  /// rule). Free text, no structure: this is a partner's working notes on one enquiry, not
+  /// content with any admin-editable-content precedent elsewhere in this schema.
+  internalNotes       String?              @map("internal_notes")
+  /// Added at T8.1 — when `status` last changed. Defaults to `now()` so a backfilled
+  /// pre-T8.1 row has a real, honest timestamp (the moment this column started existing,
+  /// since no earlier status-change moment exists to record) rather than null; every future
+  /// write that changes `status` (T8.3's `PATCH` handler) must also set this explicitly —
+  /// it does not auto-update the way `updatedAt` columns elsewhere in this schema do, because
+  /// it tracks one specific field's change, not "last modified in any way."
+  statusUpdatedAt     DateTime             @default(now()) @map("status_updated_at")
   /// Added at T3.1 (`docs/tasks/03-diagnostic.md`) — the relation
   /// `business-health-check-diagnostic.md`'s own Data requirements section names for this
   /// entity, deferred at T2.6 because `DiagnosticResponse` didn't exist yet (see the model
@@ -505,6 +542,22 @@ enum DiagnosticResponseType {
   scale
   boolean
   choice
+}
+
+/// docs/features/enquiry-management.md "Data requirements" — T8.1. The fixed, closed
+/// 5-value workflow `EnquiryRecord.status` moves through (the feature doc's own
+/// "new/contacted/closed/converted/not-a-fit" list). `not_a_fit` is the Prisma-identifier
+/// spelling of that last value (an enum member name can't contain a hyphen) — the generated
+/// client emits it as a plain string-keyed const object (see `generated/prisma/enums.ts`'s
+/// existing `DiagnosticResponseType`/`AdminLoginAttemptKind` output), so this is purely an
+/// identifier-naming constraint, not a stored-value change; nothing outside this schema file
+/// depends on the literal spelling "not-a-fit".
+enum EnquiryStatus {
+  new
+  contacted
+  closed
+  converted
+  not_a_fit
 }
 
 /// docs/features/business-health-check-diagnostic.md "Data requirements" — a scoring
@@ -987,6 +1040,10 @@ model AdminUser {
   /// project's own local admin-provisioning script creates, which is deliberately not tied
   /// to any real partner's public profile.
   author                      Author?
+  /// Back-relation to `EnquiryRecord.assignedPartnerId` (T8.1) — every enquiry this partner
+  /// is currently assigned to. Empty for most accounts most of the time; assignment is
+  /// optional per `enquiry-management.md`.
+  assignedEnquiries           EnquiryRecord[]
 
   @@map("admin_user")
 }

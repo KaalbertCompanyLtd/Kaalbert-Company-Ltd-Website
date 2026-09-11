@@ -66,6 +66,7 @@ describe("scoreDiagnosticResponses", () => {
       { dimensionId: 2, name: "Records", score: 100, triageFlag: false },
     ]);
     expect(result.overallTriageFlag).toBe(false);
+    expect(result.overallPriorityLevel).toBeNull();
     // No dimension breached its threshold, so the "at least 2" fallback applies.
     expect(result.weakestDimensions).toHaveLength(2);
     expect(result.indicativeCostStatement).toContain("100/100");
@@ -93,6 +94,7 @@ describe("scoreDiagnosticResponses", () => {
       { dimensionId: 2, name: "Records", score: 0, triageFlag: true },
     ]);
     expect(result.overallTriageFlag).toBe(true);
+    expect(result.overallPriorityLevel).toBe("High");
     expect(result.weakestDimensions.sort()).toEqual(["Records", "Structure"]);
     expect(result.indicativeCostStatement).toContain("High priority");
   });

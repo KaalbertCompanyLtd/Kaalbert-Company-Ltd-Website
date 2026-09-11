@@ -14,6 +14,47 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T8.1, session 56)
+
+**Task:** T8.1 — Enquiry schema extension (Milestone 8's first task)
+**Summary:** Extended `enquiry_record` with `status` (new `EnquiryStatus` enum:
+new/contacted/closed/converted/not_a_fit, `@default(new)`, every pre-existing row backfilled),
+`assignedPartnerId` (nullable FK to `admin_user`, `onDelete: SetNull`), `internalNotes`
+(text), and `statusUpdatedAt` (defaults to `now()`), per `enquiry-management.md`'s Data
+requirements. While already extending this table, also added `triagePriorityLevel` (`String?`,
+no backfill — null for every pre-existing row by design) closing the T7.1-raised gap where
+`lib/diagnostic-scoring.ts` computed a real High/Medium/Low priority per submission but never
+returned or persisted it: `DiagnosticScoringResult` now exposes `overallPriorityLevel`, and
+`lib/diagnostic-submit.ts` writes it to the new column alongside the existing boolean
+`triageFlag`. Updated `lib/admin-dashboard.ts`'s `getAdminDashboardStats` (New Enquiries now
+filters `status: "new"` for real, no longer an unfiltered count) and `getRecentEnquiries`
+(selects/returns the real `status`/`triagePriorityLevel` columns), plus both functions' tests.
+Revisited T7.1's dashboard (`app/admin/(shell)/page.tsx`): the Triage column now renders the
+real High/Medium/Low badge (mirroring `ui/mockups/_shared.css`'s
+`badge-triage-high/medium/low` via Tailwind design tokens) instead of a boolean Flagged/Not
+flagged approximation, and the Status column renders the real per-row label instead of a
+hardcoded "New" string. Closed both technical-debt entries this task was sequenced into. No
+route or UI of its own beyond that dashboard revisit — T8.2/T8.3 build the actual
+list/detail screens against this schema.
+**Files Changed:** `prisma/schema.prisma`,
+`prisma/migrations/20260911232638_t8_1_enquiry_status_assignment_notes/migration.sql`,
+`lib/diagnostic-scoring.ts`, `lib/diagnostic-scoring.test.ts`, `lib/diagnostic-submit.ts`,
+`lib/diagnostic-submit.test.ts`, `lib/admin-dashboard.ts`, `lib/admin-dashboard.test.ts`,
+`app/admin/(shell)/page.tsx`
+**Related Feature:** `docs/features/enquiry-management.md`
+**Notes:** Verified live via Playwright MCP: logged into `/admin`, completed a real diagnostic
+submission (worst answer to every question) end-to-end, which created enquiry #27 scored
+35/100 with a real "High" `triagePriorityLevel`; confirmed the dashboard rendered a "High"
+triage badge and "New" status for that row, and correct stat-card counts, at desktop, tablet
+(768px), and mobile (390px) widths. One accepted, documented consequence of the no-backfill
+design: a pre-existing row that was already `triageFlag: true` now shows "Not flagged" in the
+dashboard's Triage column (since its `triagePriorityLevel` is null), even though the
+"Triage-flagged" stat card and `triageFlag` itself still correctly count/reflect it — this is
+exactly what the task's own Input → Output contract specifies (no backfill requirement for
+this column), not a bug.
+
+---
+
 ## 2026-09-11 (T7.11, session 55)
 
 **Task:** T7.11 — Article byline resolves against a real `author.published` check

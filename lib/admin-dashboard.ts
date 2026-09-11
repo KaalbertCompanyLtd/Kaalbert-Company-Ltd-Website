@@ -1,3 +1,4 @@
+import { EnquiryStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export interface AdminDashboardStats {
@@ -13,16 +14,10 @@ export interface RecentEnquiry {
   /** "Business Health Check" (diagnostic-originated) or "Contact form" — see resolveEnquirySource. */
   source: string;
   triageFlag: boolean;
-  /**
-   * Always "new" — `enquiry_record` has no `status` column yet (`content-management-
-   * admin.md`'s `status = new` filter and the mockup's Status badge both assume the
-   * `status`/`assigned_partner_id`/`internal_notes`/`status_updated_at` extension that
-   * `enquiry-management.md` defines but `docs/tasks/08-enquiry-management.md` T8.1 — not
-   * this task — actually builds; see the model doc-comment on `EnquiryRecord` in
-   * prisma/schema.prisma). Every row is honestly "new" today: no status-transition capability
-   * exists yet for it to be anything else. See memory/technical-debt.md for the tracked gap.
-   */
-  status: "new";
+  /** "High"/"Medium"/"Low", or null (contact-form-originated, or no threshold breached). */
+  triagePriorityLevel: string | null;
+  /** The real `enquiry_record.status` column (T8.1) — no longer a hardcoded placeholder. */
+  status: EnquiryStatus;
 }
 
 function currentMonthRange(now: Date): { start: Date; end: Date } {
@@ -34,8 +29,9 @@ function currentMonthRange(now: Date): { start: Date; end: Date } {
 
 /**
  * The four stat-card counts (`content-management-admin.md`'s "Admin dashboard" section).
- * "New enquiries" is `COUNT(enquiry_record)` with no filter — see `RecentEnquiry.status`'s
- * doc-comment for why that's the honest equivalent of "status = new" today.
+ * "New enquiries" filters on the real `status: "new"` column (T8.1) — previously an
+ * unfiltered `COUNT(enquiry_record)` worked around `status` not existing yet (see
+ * memory/technical-debt.md's now-resolved entry on this).
  * "Diagnostics this month" filters on `triageFlag: { not: null }` rather than `scoreSummary`
  * (both are diagnostic-only/null-for-contact-form per the `EnquiryRecord` model doc-comment)
  * because `triageFlag` is a plain nullable `Boolean`, not a nullable `Json` column, so `not:
@@ -47,7 +43,7 @@ export async function getAdminDashboardStats(now = new Date()): Promise<AdminDas
 
   const [newEnquiriesCount, triageFlaggedCount, diagnosticsThisMonthCount, publishedArticlesCount] =
     await Promise.all([
-      prisma.enquiryRecord.count(),
+      prisma.enquiryRecord.count({ where: { status: EnquiryStatus.new } }),
       prisma.enquiryRecord.count({ where: { triageFlag: true } }),
       prisma.enquiryRecord.count({
         where: { triageFlag: { not: null }, createdAt: { gte: start, lt: end } },
@@ -78,7 +74,7 @@ export async function getRecentEnquiries(): Promise<RecentEnquiry[]> {
   const rows = await prisma.enquiryRecord.findMany({
     orderBy: { createdAt: "desc" },
     take: 5,
-    select: { id: true, name: true, triageFlag: true },
+    select: { id: true, name: true, triageFlag: true, triagePriorityLevel: true, status: true },
   });
 
   return rows.map((row) => ({
@@ -86,6 +82,7 @@ export async function getRecentEnquiries(): Promise<RecentEnquiry[]> {
     name: row.name,
     source: resolveEnquirySource(row.triageFlag),
     triageFlag: row.triageFlag === true,
-    status: "new",
+    triagePriorityLevel: row.triagePriorityLevel,
+    status: row.status,
   }));
 }

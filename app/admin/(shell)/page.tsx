@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EnquiryStatus } from "@/generated/prisma/client";
 import { getAdminDashboardStats, getRecentEnquiries } from "@/lib/admin-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -26,6 +27,26 @@ const STAT_CARDS = [
   { key: "diagnosticsThisMonthCount", label: "Diagnostics This Month" },
   { key: "publishedArticlesCount", label: "Published Articles" },
 ] as const;
+
+/** `ui/mockups/g-admin-content/admin-dashboard.html`'s Status column labels/badges. */
+const STATUS_LABELS: Record<EnquiryStatus, string> = {
+  new: "New",
+  contacted: "Contacted",
+  closed: "Closed",
+  converted: "Converted",
+  not_a_fit: "Not a fit",
+};
+
+/**
+ * Mirrors `ui/mockups/_shared.css`'s `badge-triage-high/medium/low` classes (this project's
+ * Tailwind design tokens, not that raw CSS) — replaces the plain Flagged/Not-flagged boolean
+ * approximation T7.1 shipped before `triagePriorityLevel` existed (T8.1).
+ */
+const TRIAGE_BADGE_CLASSES: Record<string, string> = {
+  High: "bg-accent text-accent-foreground",
+  Medium: "border-brass-300 bg-brass-500/15 text-brass-500 border",
+  Low: "border-border text-muted-foreground border bg-transparent",
+};
 
 /**
  * Every href below points at a sidebar destination not yet built (Articles/Offers/Enquiries
@@ -95,14 +116,16 @@ export default async function AdminDashboardPage() {
                     <TableCell>{enquiry.name ?? "Not yet provided"}</TableCell>
                     <TableCell>{enquiry.source}</TableCell>
                     <TableCell>
-                      {enquiry.triageFlag ? (
-                        <Badge className="bg-accent text-accent-foreground">Flagged</Badge>
+                      {enquiry.triagePriorityLevel ? (
+                        <Badge className={TRIAGE_BADGE_CLASSES[enquiry.triagePriorityLevel]}>
+                          {enquiry.triagePriorityLevel}
+                        </Badge>
                       ) : (
                         <Badge variant="outline">Not flagged</Badge>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">New</Badge>
+                      <Badge variant="outline">{STATUS_LABELS[enquiry.status]}</Badge>
                     </TableCell>
                   </TableRow>
                 ))}

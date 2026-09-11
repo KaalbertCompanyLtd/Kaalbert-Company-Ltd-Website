@@ -21,8 +21,8 @@ beforeEach(() => {
 });
 
 describe("getAdminDashboardStats", () => {
-  it("counts all enquiry_record rows for New Enquiries — no status column exists yet, so every row is honestly new", async () => {
-    enquiryCountMock.mockResolvedValueOnce(7); // New enquiries — no where clause
+  it("counts New Enquiries filtered to the real status: new column (T8.1)", async () => {
+    enquiryCountMock.mockResolvedValueOnce(7); // New enquiries
     enquiryCountMock.mockResolvedValueOnce(2); // Triage-flagged
     enquiryCountMock.mockResolvedValueOnce(34); // Diagnostics this month
     articleCountMock.mockResolvedValueOnce(8); // Published articles
@@ -35,7 +35,7 @@ describe("getAdminDashboardStats", () => {
       diagnosticsThisMonthCount: 34,
       publishedArticlesCount: 8,
     });
-    expect(enquiryCountMock.mock.calls[0][0]).toBeUndefined();
+    expect(enquiryCountMock.mock.calls[0][0]).toEqual({ where: { status: "new" } });
   });
 
   it("filters Triage-flagged to triageFlag: true", async () => {
@@ -80,9 +80,15 @@ describe("getAdminDashboardStats", () => {
 describe("getRecentEnquiries", () => {
   it("returns the 5 most recent rows unfiltered, ordered newest-first", async () => {
     enquiryFindManyMock.mockResolvedValueOnce([
-      { id: 3, name: "Kwesi Owusu", triageFlag: true },
-      { id: 2, name: "Abena Frimpong", triageFlag: false },
-      { id: 1, name: null, triageFlag: null },
+      { id: 3, name: "Kwesi Owusu", triageFlag: true, triagePriorityLevel: "High", status: "new" },
+      {
+        id: 2,
+        name: "Abena Frimpong",
+        triageFlag: false,
+        triagePriorityLevel: null,
+        status: "contacted",
+      },
+      { id: 1, name: null, triageFlag: null, triagePriorityLevel: null, status: "new" },
     ] as never);
 
     const result = await getRecentEnquiries();
@@ -90,45 +96,55 @@ describe("getRecentEnquiries", () => {
     expect(enquiryFindManyMock).toHaveBeenCalledWith({
       orderBy: { createdAt: "desc" },
       take: 5,
-      select: { id: true, name: true, triageFlag: true },
+      select: { id: true, name: true, triageFlag: true, triagePriorityLevel: true, status: true },
     });
     expect(result).toHaveLength(3);
   });
 
   it("labels a diagnostic-originated row (triageFlag not null) as Business Health Check", async () => {
     enquiryFindManyMock.mockResolvedValueOnce([
-      { id: 1, name: "Efua Asante", triageFlag: true },
+      { id: 1, name: "Efua Asante", triageFlag: true, triagePriorityLevel: "High", status: "new" },
     ] as never);
 
     const [result] = await getRecentEnquiries();
 
     expect(result.source).toBe("Business Health Check");
     expect(result.triageFlag).toBe(true);
+    expect(result.triagePriorityLevel).toBe("High");
   });
 
   it("labels a contact-form-originated row (triageFlag null) as Contact form", async () => {
     enquiryFindManyMock.mockResolvedValueOnce([
-      { id: 1, name: "Abena Frimpong", triageFlag: null },
+      { id: 1, name: "Abena Frimpong", triageFlag: null, triagePriorityLevel: null, status: "new" },
     ] as never);
 
     const [result] = await getRecentEnquiries();
 
     expect(result.source).toBe("Contact form");
     expect(result.triageFlag).toBe(false);
+    expect(result.triagePriorityLevel).toBeNull();
   });
 
-  it("always reports status as new — no status column exists yet", async () => {
+  it("passes through the real status column instead of a hardcoded placeholder (T8.1)", async () => {
     enquiryFindManyMock.mockResolvedValueOnce([
-      { id: 1, name: "Yaw Mensah", triageFlag: false },
+      {
+        id: 1,
+        name: "Yaw Mensah",
+        triageFlag: false,
+        triagePriorityLevel: null,
+        status: "converted",
+      },
     ] as never);
 
     const [result] = await getRecentEnquiries();
 
-    expect(result.status).toBe("new");
+    expect(result.status).toBe("converted");
   });
 
   it("passes through a null name (no contact details submitted yet)", async () => {
-    enquiryFindManyMock.mockResolvedValueOnce([{ id: 1, name: null, triageFlag: true }] as never);
+    enquiryFindManyMock.mockResolvedValueOnce([
+      { id: 1, name: null, triageFlag: true, triagePriorityLevel: "Medium", status: "new" },
+    ] as never);
 
     const [result] = await getRecentEnquiries();
 
