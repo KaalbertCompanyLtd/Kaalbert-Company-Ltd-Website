@@ -8,6 +8,7 @@ vi.mock("@/lib/prisma", () => ({
 
 import {
   AdminLoginAttemptKind,
+  assertNotFlooded,
   assertNotRateLimited,
   RateLimitError,
   recordAttempt,
@@ -47,6 +48,36 @@ describe("assertNotRateLimited", () => {
         identifier: "partner@example.invalid",
         kind: AdminLoginAttemptKind.setup_confirm,
         success: false,
+        createdAt: { gte: expect.any(Date) },
+      },
+    });
+  });
+});
+
+describe("assertNotFlooded", () => {
+  it("passes when recent attempts are under the threshold", async () => {
+    countMock.mockResolvedValue(2);
+
+    await expect(
+      assertNotFlooded("partner@example.invalid", AdminLoginAttemptKind.password_reset_request),
+    ).resolves.toBeUndefined();
+  });
+
+  it("throws RateLimitError once recent attempts reach the threshold", async () => {
+    countMock.mockResolvedValue(3);
+
+    await expect(
+      assertNotFlooded("partner@example.invalid", AdminLoginAttemptKind.password_reset_request),
+    ).rejects.toBeInstanceOf(RateLimitError);
+  });
+
+  it("counts every attempt in the window, not just failures", async () => {
+    await assertNotFlooded("partner@example.invalid", AdminLoginAttemptKind.password_reset_request);
+
+    expect(countMock).toHaveBeenCalledWith({
+      where: {
+        identifier: "partner@example.invalid",
+        kind: AdminLoginAttemptKind.password_reset_request,
         createdAt: { gte: expect.any(Date) },
       },
     });

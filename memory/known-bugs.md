@@ -16,6 +16,35 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## `proxy.ts` didn't allowlist T6.7's two new unauthenticated pages
+
+**Status:** Fixed
+**Severity:** High — the entire feature was completely unreachable by its only real audience
+(an unauthenticated partner who forgot their password); compiled, typechecked, and linted
+with zero errors, so nothing short of actually loading the page in a browser would ever have
+caught it.
+**Date found:** 2026-09-11 (T6.7, session 43 — found live-testing via Playwright MCP: clicking
+`/admin/login`'s "Forgot password?" link, and navigating directly to `/admin/forgot-password`,
+both silently redirected to `/admin/login` instead of rendering the new page.)
+**Description:** `proxy.ts`'s `PUBLIC_ADMIN_PAGE_PATHS` set (added at T6.3, session 39) is the
+explicit allowlist of `/admin/*` pages reachable without a session — `/admin/login` and
+`/admin/setup-2fa` were the only two entries. T6.7 added two more unauthenticated pages
+(`/admin/forgot-password`, `/admin/reset-password`) but the set was never updated, so
+`proxy.ts`'s own fallback path (no valid session → redirect to `/admin/login`) caught both new
+pages exactly as if they required authentication, even though neither one does or ever could
+(an unauthenticated partner is the only visitor either page is ever reached by). The same
+class of "looks correct in every static check, silently never actually reachable" failure as
+the `app/proxy.ts`-vs-`proxy.ts` bug at T6.3.
+**Workaround:** None needed — found and fixed in the same session, before commit.
+**Planned Fix:** Added both new paths to `PUBLIC_ADMIN_PAGE_PATHS`; `proxy.ts`'s own
+doc-comment now names this specific failure explicitly, as a standing note for the next
+unauthenticated `/admin/*` page this project adds. Re-verified live afterward: both pages
+render correctly, and the full self-service reset flow (request → email → confirm → old
+password rejected → new password + TOTP logs in) works end-to-end.
+**Sequenced into:** N/A — already fixed in this same session/commit (T06-07).
+
+---
+
 ## `confirmTotpSetup` never retired a previous batch of unused backup codes
 
 **Status:** Fixed

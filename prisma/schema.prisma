@@ -908,29 +908,50 @@ model LandingPage {
 /// active until an admin says otherwise. No UI sets this yet (Milestone 7's Team area, per
 /// this task's own Input→Output line) — `lib/`-level only, same as `setupToken` before any
 /// screen read/wrote it.
+///
+/// `passwordResetToken`/`passwordResetTokenExpiresAt` — added at T6.7. Same opaque-single-use-
+/// link shape as `setupToken`/`setupTokenExpiresAt` above (and the same reasoning: an
+/// unauthenticated, third-party-clickable link needs a real unguessable identifier, never a
+/// sequential id), but deliberately a *separate* pair of columns rather than reusing
+/// `setupToken` itself — the two links serve unrelated purposes (one enrolls a TOTP device,
+/// the other only ever touches `password_hash`) and can legitimately be pending at once (e.g.
+/// a partner requests a password reset while a stale, never-completed setup link from T6.6 is
+/// still technically live) — collapsing them into one column would make issuing one silently
+/// invalidate the other. `passwordResetToken` is nulled the moment a reset completes
+/// (`lib/auth/password-reset.ts`'s `confirmPasswordReset`) or superseded by requesting a new
+/// one (`issuePasswordResetToken` always overwrites in place, so only the most recent request
+/// for a given account is ever valid); `passwordResetTokenExpiresAt` bounds how long a
+/// requested-but-unused link stays valid — a much shorter window (1 hour) than
+/// `setupTokenExpiresAt`'s 7 days, since this link is requested on demand by the partner who
+/// needs it right now, not handed over through an out-of-band channel with its own delay.
 model AdminUser {
-  id                   Int               @id @default(autoincrement())
-  name                 String
-  email                String            @unique
-  passwordHash         String            @map("password_hash")
-  role                 String            @default("partner")
+  id                       Int               @id @default(autoincrement())
+  name                     String
+  email                    String            @unique
+  passwordHash             String            @map("password_hash")
+  role                     String            @default("partner")
   /// AES-256-GCM ciphertext (iv/authTag/ciphertext, base64-joined) — never the raw secret.
   /// See model doc-comment.
-  totpSecret           String?           @map("totp_secret")
-  totpEnabled          Boolean           @default(false) @map("totp_enabled")
-  createdAt            DateTime          @default(now()) @map("created_at")
-  lastLoginAt          DateTime?         @map("last_login_at")
+  totpSecret               String?           @map("totp_secret")
+  totpEnabled              Boolean           @default(false) @map("totp_enabled")
+  createdAt                DateTime          @default(now()) @map("created_at")
+  lastLoginAt              DateTime?         @map("last_login_at")
   /// Opaque, single-use `/admin/setup-2fa` link token — see model doc-comment. Null once
   /// unused (never issued) or once consumed (setup completed).
-  setupToken           String?           @unique @map("setup_token")
-  setupTokenExpiresAt  DateTime?         @map("setup_token_expires_at")
+  setupToken               String?           @unique @map("setup_token")
+  setupTokenExpiresAt      DateTime?         @map("setup_token_expires_at")
   /// RFC 6238 time step of the last successfully verified login TOTP code — see model
   /// doc-comment. Null for an account that has never completed a login yet.
-  lastVerifiedTotpStep Int?              @map("last_verified_totp_step")
+  lastVerifiedTotpStep     Int?              @map("last_verified_totp_step")
   /// `false` once an admin deactivates this account — see model doc-comment.
-  active               Boolean           @default(true)
-  backupCodes          AdminBackupCode[]
-  sessions             AdminSession[]
+  active                   Boolean           @default(true)
+  /// Opaque, single-use `/admin/reset-password` link token — see model doc-comment. Null once
+  /// unused (never requested), once consumed (reset completed), or once superseded by a newer
+  /// request.
+  passwordResetToken       String?           @unique @map("password_reset_token")
+  passwordResetTokenExpiresAt DateTime?      @map("password_reset_token_expires_at")
+  backupCodes              AdminBackupCode[]
+  sessions                 AdminSession[]
 
   @@map("admin_user")
 }
@@ -1026,15 +1047,28 @@ model AdminLoginAttempt {
   @@map("admin_login_attempt")
 }
 
-/// The four code/credential-guessing steps `AdminLoginAttempt` rate-limits — see that
-/// model's own doc-comment for why `setup_confirm` (T6.2's endpoint) is included here even
-/// though this enum itself is new at T6.3. `backup_code` added at T6.4 for
+/// The code/credential-guessing and request-flood steps `AdminLoginAttempt` rate-limits —
+/// see that model's own doc-comment for why `setup_confirm` (T6.2's endpoint) is included
+/// here even though this enum itself is new at T6.3. `backup_code` added at T6.4 for
 /// `verify-backup-code`'s own recovery-code guessing surface.
+///
+/// `password_reset_request`/`password_reset_confirm` added at T6.7 for
+/// `lib/auth/password-reset.ts`'s two steps — deliberately *two* kinds, not one, because they
+/// guard different things: `password_reset_confirm` is a guessing surface exactly like
+/// `setup_confirm` (a submitted token/new-password pair, throttled by `assertNotRateLimited`'s
+/// existing failure-counting logic), while `password_reset_request` isn't guessable at all —
+/// every request "succeeds" from the caller's own point of view regardless of whether the
+/// submitted email matches a real account (`requestPasswordReset`'s own no-account-enumeration
+/// rule) — so it's throttled by `lib/auth/rate-limit.ts`'s separate `assertNotFlooded` (total
+/// attempts in a window, not failures) instead, guarding against a real account being
+/// flooded with reset emails rather than against credential-guessing.
 enum AdminLoginAttemptKind {
   password
   totp
   setup_confirm
   backup_code
+  password_reset_request
+  password_reset_confirm
 }
 
 /// docs/features/measurement-and-attribution.md "Data requirements" — T5.4. First-touch

@@ -18,6 +18,10 @@ login-time friction or a dependency on email deliverability.
 3. **Recovery**: a partner who has lost their device enters a backup code instead of a TOTP
    code; the code is consumed (single use) and the partner is prompted to re-enroll a new
    device.
+4. **Forgotten password** (T6.7): a partner who has forgotten their password requests a reset
+   link by email from `/admin/login`; the emailed link lets them choose a new password
+   directly, no other administrator involved — the account's TOTP enrolment is untouched, so
+   a reset alone can never complete a login on its own.
 
 ## Business rules
 
@@ -35,7 +39,8 @@ login-time friction or a dependency on email deliverability.
 ## Data requirements
 
 - `admin_user` — id, name, email, password_hash, role, totp_secret (encrypted), totp_enabled,
-  created_at, last_login_at.
+  created_at, last_login_at, password_reset_token (nullable, T6.7), password_reset_token_
+  expires_at (nullable, T6.7).
 - `admin_backup_code` — id, admin_user_id, code_hash, used_at (nullable).
 - `admin_session` — id, admin_user_id, created_at, expires_at.
 
@@ -48,6 +53,13 @@ login-time friction or a dependency on email deliverability.
 - `POST /api/admin/auth/verify-backup-code` — same shape, consumes the code.
 - `/admin/setup-2fa` — screen: QR code display, confirmation code entry, backup codes shown
   once.
+- `POST /api/admin/auth/request-password-reset` (T6.7) — request: `{email}`; response is
+  always the same generic message, regardless of whether the email matches a real account.
+- `POST /api/admin/auth/reset-password` (T6.7) — request: `{token, password}`; response:
+  success on a valid, unexpired, unconsumed token and a password meeting the minimum-length
+  rule.
+- `/admin/forgot-password` (T6.7) — screen: email entry, generic "check your email" response.
+- `/admin/reset-password` (T6.7) — screen: new-password entry, reached via `?token=...`.
 
 ## Edge cases
 
@@ -61,3 +73,10 @@ login-time friction or a dependency on email deliverability.
   either the password or the 6-digit code space.
 - A partner account is deactivated (e.g. leaves the firm): session invalidated immediately,
   not merely on next login.
+- Partner forgets their password (T6.7): self-service, via a time-limited (1 hour), single-use
+  emailed link — unlike lost 2FA, this never requires another administrator, since the
+  account's second factor is completely untouched by a password reset and a reset link alone
+  can never complete a login on its own. Requesting a reset for an email with no matching
+  account, or a deactivated one, returns the identical response as a real, active account —
+  never a signal either way. Completing a reset invalidates every other live session for that
+  account immediately, the same defense-in-depth precedent deactivation already set.

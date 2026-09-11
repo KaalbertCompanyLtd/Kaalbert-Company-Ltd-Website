@@ -16,17 +16,33 @@ import { SESSION_COOKIE_NAME, verifySession } from "@/lib/auth/session";
  *
  * Two path groups are deliberately excluded from the session check below, both because they
  * are how a session gets created in the first place: the auth-flow pages themselves
- * (`/admin/login`, `/admin/setup-2fa` — each protected by its own mechanism, a password/TOTP
- * form or a single-use setup token, not a session) and every `/api/admin/auth/*` route
- * (`login`, `verify-totp`, T6.2's `setup-2fa` confirm, and T6.4's future
- * `verify-backup-code`) — a prefix check so a future auth endpoint under that path doesn't
- * need a second edit here to stay reachable.
+ * (`/admin/login`, `/admin/setup-2fa`, and — added at T6.7 — `/admin/forgot-password`/
+ * `/admin/reset-password`; each protected by its own mechanism, a password/TOTP form or a
+ * single-use token, not a session) and every `/api/admin/auth/*` route (`login`,
+ * `verify-totp`, T6.2's `setup-2fa` confirm, T6.4's `verify-backup-code`, and T6.7's
+ * `request-password-reset`/`reset-password`) — a prefix check so a future auth endpoint
+ * under that path doesn't need a second edit here to stay reachable.
+ *
+ * **Real bug hit and fixed at T6.7 (session 43)**: `/admin/forgot-password` and
+ * `/admin/reset-password` were built without adding them to `PUBLIC_ADMIN_PAGE_PATHS` below
+ * — both pages compiled, typechecked, and linted cleanly, but every unauthenticated visitor
+ * (the only kind either page is ever reached by) was silently redirected straight back to
+ * `/admin/login` before rendering. Caught only via live Playwright verification against the
+ * real dev server, not by any static check — the same class of "compiles fine, never
+ * actually reachable" failure `app/proxy.ts` vs. `proxy.ts` itself was at T6.3 (see
+ * `memory/known-bugs.md`). Whenever a new unauthenticated `/admin/*` page is added, it must
+ * be added to this set in the same change, not discovered missing later.
  */
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
 
-const PUBLIC_ADMIN_PAGE_PATHS = new Set(["/admin/login", "/admin/setup-2fa"]);
+const PUBLIC_ADMIN_PAGE_PATHS = new Set([
+  "/admin/login",
+  "/admin/setup-2fa",
+  "/admin/forgot-password",
+  "/admin/reset-password",
+]);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

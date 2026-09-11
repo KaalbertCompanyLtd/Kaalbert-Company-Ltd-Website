@@ -136,8 +136,8 @@ initials on save, no separate publish step.
 
 **Addendum (session 42, 2026-09-10):** This task's editor is for the public-facing `author`
 record only — a distinct, real gap remains for managing the underlying **login** identity
-(`admin_user`), which this "Team" area is the natural home for too. Two concrete actions,
-both already fully built at the `lib/` layer with nothing calling them yet:
+(`admin_user`), which this "Team" area is the natural home for too. Three concrete actions,
+all already fully built at the `lib/` layer with nothing calling them yet:
 
 - **Deactivate/reactivate a partner's account** — `admin-authentication.md`'s own edge case,
   and T6.5's own Input→Output line already named this task's area as the intended home
@@ -152,9 +152,17 @@ both already fully built at the `lib/` layer with nothing calling them yet:
   script and T6.4's backup-code recovery both already call) — this task just needs a button
   that calls it for an _existing_ account and displays the resulting link, the same way
   T6.6's script prints one for a _new_ account.
+- **Reset an existing partner's password** — added at T6.7 (session 43): self-service
+  password reset (T6.7) covers the case a partner still has their own email access, but not
+  the case they don't (email compromised/inaccessible too, not just the password forgotten).
+  `lib/auth/password-reset.ts`'s `issuePasswordResetToken(adminUserId, {baseUrl})` is already
+  built and tested for exactly this reuse (T6.7's own doc-comment says so directly) — this
+  task just needs a button that calls it for an _existing_ account and displays the resulting
+  link, the same relay pattern as the other two actions above.
 
-See `memory/technical-debt.md` → "No admin-facing way to deactivate/reactivate an account or
-reset an existing partner's 2FA enrolment" for the full reasoning.
+See `memory/technical-debt.md` → "No admin-facing way to deactivate/reactivate an account,
+reset an existing partner's 2FA enrolment, or reset an existing partner's password" for the
+full reasoning.
 
 **Addendum (session 37, 2026-09-10):** Wire `Author.adminUserId` to a real Prisma relation
 against `AdminUser` (added at T6.1) — currently a schema-only placeholder `Int?` with nothing

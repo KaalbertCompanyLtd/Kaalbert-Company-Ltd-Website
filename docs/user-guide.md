@@ -23,9 +23,10 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-10 (session 42) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 43) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
-Authentication) complete. Next: Milestone 7, Content Management Admin.
+Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
+Next: Milestone 7, Content Management Admin.
 
 ---
 
@@ -142,6 +143,12 @@ without a valid session, checked on every single request.
 - **Password + authenticator app (TOTP)**, both required, every time — no admin action is
   ever available with just a password. A session then lasts up to 12 hours, or 30 minutes of
   inactivity, whichever comes first.
+- **Forgot your password?** A partner can reset it themselves from the login page's "Forgot
+  password?" link — enter your email, click the link that arrives (valid for 1 hour, works
+  once), choose a new password. No other partner or the developer needs to be involved, as
+  long as you still have access to your own email. This never bypasses two-factor
+  authentication — your authenticator app is untouched, so you still need it to actually log
+  in afterward.
 - **Lost your authenticator device?** A one-time backup code (8 were shown once, at setup)
   logs a partner back in and immediately forces them to set up a new device before continuing
   — there is no other way back in. If a partner has lost both their device _and_ their backup
@@ -159,19 +166,23 @@ without a valid session, checked on every single request.
   partners and new accounts created rarely, asking the developer each time is simpler than
   building and maintaining an invite flow for something that happens a handful of times ever.
 
-**What's not built yet:** Deactivating/reactivating an existing account, and resetting an
-existing partner's 2FA enrolment, both have a real, working mechanism behind them already —
-just no button anywhere to trigger either one. A developer can do both directly today;
-they're sequenced into Milestone 7's Team screen (T7.6) as follow-up work, not yet built
-(see `memory/technical-debt.md`).
+**What's not built yet:** Deactivating/reactivating an existing account, resetting an
+existing partner's 2FA enrolment, and resetting a partner's password **on their behalf**
+(i.e. if their email is unreachable too, not just their password forgotten) all have a real,
+working mechanism behind them already — just no button anywhere to trigger any of the three.
+A developer can do all three directly today; they're sequenced into Milestone 7's Team
+screen (T7.6) as follow-up work, not yet built (see `memory/technical-debt.md`). Note this is
+distinct from the self-service password reset above, which is already fully built and needs
+no one else's involvement.
 
 **What to monitor:** Nothing external — this milestone introduces no new third-party
 account/dashboard dependency, everything runs inside the app and its own database.
 
-**What a partner can do about it today:** Log in and reach a placeholder admin dashboard —
-there is nothing to actually edit yet (that's Milestone 7). Deactivating another partner's
-account, resetting a partner's 2FA, and creating a brand-new partner's first account all
-still require the developer directly.
+**What a partner can do about it today:** Log in, reset their own forgotten password
+self-service, and reach a placeholder admin dashboard — there is nothing to actually edit yet
+(that's Milestone 7). Deactivating another partner's account, resetting a partner's 2FA or
+password on their behalf, and creating a brand-new partner's first account all still require
+the developer directly.
 
 ---
 
@@ -202,5 +213,6 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                   |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-09-11 | Added self-service password reset (T6.7) to the Admin Login section — a partner can now reset a forgotten password themselves, no developer or other partner needed.           |
 | 2026-09-10 | Milestone 6 (Admin Login) complete — added its "What's live today" section, moved it out of "What's coming next", updated the two stale "no admin area yet" mentions above it. |
 | 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9).                                                |

@@ -14,6 +14,59 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T6.7, session 43)
+
+**Task:** T6.7 — Self-service password reset
+**Summary:** Added to `docs/tasks/06-admin-auth.md` and built in the same session, per the
+user's explicit request ("Start T6.7... fully build it here and now") after they asked how
+password reset works and the answer turned out to be: it doesn't exist yet, anywhere, for an
+existing account. Built `lib/auth/password-reset.ts` (`issuePasswordResetToken`,
+`requestPasswordReset`, `resolvePasswordReset`, `confirmPasswordReset`), two new API routes
+(`POST /api/admin/auth/request-password-reset`, `POST /api/admin/auth/reset-password`), two
+new screens (`/admin/forgot-password`, `/admin/reset-password`), and wired the login mockup's
+long-dormant "Forgot password?" link to the new flow. New `admin_user.passwordResetToken`/
+`passwordResetTokenExpiresAt` columns (migration `20260910233000_t6_7_admin_user_password_
+reset`) and two new `AdminLoginAttemptKind` values. A completed reset invalidates every other
+live session for the account (same precedent `deactivateAdminUser` set at T6.5) but leaves
+TOTP enrolment completely untouched — the reason this flow can safely be self-service at all.
+Reset requests are throttled by a new `assertNotFlooded` helper in `lib/auth/rate-limit.ts`
+(counts all attempts in a window, not just failures — the existing `assertNotRateLimited`
+shape doesn't fit a step with no "wrong guess" concept).
+Verified for real via Playwright MCP against the live dev server and a real test account
+(created via T6.6's script, TOTP-enrolled via a computed `otplib` code): full request → real
+Brevo email send (no error) → DB-confirmed token/expiry → confirm with a new password → old
+password rejected, new password + TOTP logs in successfully → a session that was live
+_before_ the reset was confirmed deleted from the database and rejected on its very next
+request in the same browser tab → a consumed token rejected on reuse → an invalid/missing
+token renders the correct "no longer valid" state → the flood limit (3/hour) correctly trips
+→ a too-short password is rejected server-side → a nonexistent email returns the identical
+generic response as a real one (no enumeration). All test data cleaned from the database
+afterward.
+**Caught and fixed live**: `proxy.ts`'s `PUBLIC_ADMIN_PAGE_PATHS` allowlist didn't include
+either new page — both compiled/typechecked/linted cleanly but were silently unreachable
+(redirected to `/admin/login`) until fixed in this same session. See
+`memory/known-bugs.md`.
+**Files Changed:** `prisma/schema.prisma` (`AdminUser.passwordResetToken`/
+`passwordResetTokenExpiresAt`, `AdminLoginAttemptKind.password_reset_request`/
+`password_reset_confirm`), `prisma/migrations/20260910233000_t6_7_admin_user_password_reset/`,
+`lib/auth/password-reset.ts` + `.test.ts` (new), `lib/auth/rate-limit.ts` + `.test.ts`
+(`assertNotFlooded`), `app/api/admin/auth/request-password-reset/route.ts` (new),
+`app/api/admin/auth/reset-password/route.ts` (new), `app/admin/forgot-password/page.tsx` +
+`forgot-password-form.tsx` (new), `app/admin/reset-password/page.tsx` +
+`reset-password-form.tsx` (new), `app/admin/login/login-form.tsx` (wired the link),
+`app/admin/login/page.tsx` (updated stale comment), `proxy.ts` (bug fix),
+`docs/tasks/06-admin-auth.md` (new T6.7 entry), `docs/tasks/07-content-admin.md` (T7.6
+addendum), `docs/features/admin-authentication.md`, `memory/technical-debt.md` (broadened
+entry), `memory/known-bugs.md`, `docs/user-guide.md`.
+**Related Feature:** `docs/features/admin-authentication.md`
+**Notes:** Quality gates all clean (lint, format:check, typecheck, 143/143 tests across 20
+files, 25 new). Milestone 6 was already complete as of T6.6 — this task adds to it after the
+fact, so the "Website Build Status" Artifact is **not** republished (milestone-completion
+status is unchanged); `docs/user-guide.md` + its mirror **are** updated, since this changes
+what a partner can do today.
+
+---
+
 ## 2026-09-10 (T6.6, session 42)
 
 **Task:** T6.6 — Admin account provisioning script

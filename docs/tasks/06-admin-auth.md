@@ -119,3 +119,58 @@ duplicated.
 **Size:** S **Dependencies:** T6.1, T6.2 (needs `admin_user`/`setup_token` and
 `lib/auth/totp-setup.ts`'s `issueSetupToken` already built there — reuses it rather than
 inventing a second one; T6.4's own re-enrolment redirect reuses the same function too).
+
+### T6.7 — Self-service password reset
+
+**Added at session 43, 2026-09-11** — discovered asking "what's the process for resetting a
+password" of a session that had just completed T6.6: there is no password-reset mechanism
+anywhere in this codebase, self-service or otherwise, for an _existing_ account. Every
+credential-recovery path this epic has so far covers the 2FA side only (T6.4's backup codes,
+the "another administrator resets 2FA" edge case) — nothing at all covers a forgotten
+_password_. The mockup itself already anticipated this (`ui/mockups/f-admin-auth/
+admin-login.html`'s `<a href="#">Forgot password?</a>`, present since T1.5) but no task ever
+built the screen behind it — `app/admin/login/page.tsx` carried an explicit comment
+explaining the link was deliberately left inert for exactly this reason, until now.
+**Build:** `POST /api/admin/auth/request-password-reset` (self-service, request: `{email}`,
+always returns the same generic "if an account exists..." response — no account-existence
+leakage, same discipline `loginWithPassword` already established) and `POST /api/admin/auth/
+reset-password` (request: `{token, password}`); `/admin/forgot-password` (email entry) and
+`/admin/reset-password?token=...` (new-password entry, same opaque-token-resolves-the-account
+shape `/admin/setup-2fa` already uses) screens; the reset email itself (via the shared
+`lib/email.ts` Brevo utility, T3.7). The underlying token-issuing mechanism
+(`lib/auth/password-reset.ts`'s `issuePasswordResetToken`) is built as a reusable primitive,
+the same way T6.2's `issueSetupToken` is — not self-service-specific — so a future
+admin-triggered "reset a colleague's password" action can call it directly. No mockup exists
+for either new screen (a genuinely new gap, not previously catalogued in `ui/screen-
+inventory.md`); inferred from `admin-login.html`'s own `.auth-card` layout via the existing
+`AuthShell`, the same pattern `/admin/setup-2fa` and `/admin/login` both already use.
+**Input → Output:** `{email}` → a reset link emailed to that account (if it exists and is
+active) → `{token, password}` → `admin_user.password_hash` updated, every live
+`admin_session` row for that account deleted (forces re-login everywhere, same
+defense-in-depth precedent T6.5's `deactivateAdminUser` already set), reset token consumed.
+**Acceptance criteria:** A partner who has forgotten their password can reset it and log back
+in using only access to their own email — no other administrator's involvement required
+(unlike lost 2FA); requesting a reset for a nonexistent or deactivated email returns the
+identical generic response as a real one; a consumed or expired token is rejected on reuse; a
+password reset does not touch `totpEnabled`/`totpSecret` at all — the account's second factor
+is completely unaffected, which is what makes this flow safe to be self-service in the first
+place; repeated requests for the same email are throttled (a request-volume limit, not a
+credential-guessing one — see `lib/auth/rate-limit.ts`'s `assertNotFlooded`).
+**Size:** M **Dependencies:** T6.1, T6.3 (reuses `lib/auth/session.ts`'s session-deletion
+precedent), T3.7 (the shared `lib/email.ts` Brevo utility).
+
+**Note (session 43, 2026-09-11):** Building and live-verifying this task caught a real bug in
+`proxy.ts` — the two new unauthenticated pages this task adds were not added to
+`PUBLIC_ADMIN_PAGE_PATHS`, so every unauthenticated visitor was silently redirected back to
+`/admin/login` before either page ever rendered. Compiled, typechecked, and linted cleanly;
+caught only via live Playwright verification. Fixed in the same session/commit — see
+`proxy.ts`'s own doc-comment and `memory/known-bugs.md`.
+
+**Addendum (session 43, 2026-09-11):** An admin-triggered "reset a colleague's password"
+action — for the case self-service genuinely can't work (e.g. the affected partner's email is
+also inaccessible, not just their password forgotten) — belongs on T7.6's Team screen,
+alongside the deactivate/reactivate and reset-2FA actions already addended there. It reuses
+this task's own `issuePasswordResetToken(adminUserId, {baseUrl})` directly (already built,
+already tested) rather than the self-service email path — another admin triggers it and
+relays the resulting link, the same pattern T6.6's provisioning script already uses for a
+brand-new account. See `memory/technical-debt.md`'s broadened entry for the full reasoning.

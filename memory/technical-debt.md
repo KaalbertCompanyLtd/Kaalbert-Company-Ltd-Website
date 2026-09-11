@@ -18,34 +18,39 @@ sequencing requirement:
 
 ---
 
-## No admin-facing way to deactivate/reactivate an account or reset an existing partner's 2FA enrolment
+## No admin-facing way to deactivate/reactivate an account, reset an existing partner's 2FA enrolment, or reset an existing partner's password
 
 **Status:** Open
-**Date raised:** 2026-09-10 (T6.6, session 42)
+**Date raised:** 2026-09-10 (T6.6, session 42); broadened 2026-09-11 (T6.7, session 43)
 **Reason:** Discovered writing `docs/user-guide.md`'s new Admin Login section, while
-double-checking a claim before publishing it. Two real gaps, same root cause: T6.5
-(deactivation) and T6.6 (this task, account creation) each built a real, working, fully
-tested `lib/`-layer mechanism, but neither task's own scope included the admin-facing UI to
-trigger it for an _already-existing_ account — T6.5's own Input→Output line explicitly
-named Milestone 7's Team area as that UI's intended home, and `admin-authentication.md`'s
-edge case ("lost device and lost backup codes... requires another administrator to reset 2FA
-enrolment") implies the same kind of action, but no task anywhere actually builds either
-one. Today, both require a developer running an ad hoc script directly (e.g. a one-off `tsx`
-invocation calling `deactivateAdminUser`/`issueSetupToken` — no packaged, repeatable command
-exists for either the way `npm run admin:create-user` now exists for brand-new accounts).
+double-checking a claim before publishing it. Three real gaps, same root cause: T6.5
+(deactivation), T6.6 (account creation), and T6.7 (self-service password reset) each built a
+real, working, fully tested `lib/`-layer mechanism, but none of their own scope included the
+admin-facing UI to trigger the equivalent action for an _already-existing_ account — T6.5's
+own Input→Output line explicitly named Milestone 7's Team area as that UI's intended home,
+`admin-authentication.md`'s edge case ("lost device and lost backup codes... requires another
+administrator to reset 2FA enrolment") implies the same kind of action, and T6.7's own
+self-service password reset only covers a partner who still has their own email access — not
+the case where email access is also lost, which needs the same "another administrator acts on
+this account" shape as the other two. No task anywhere actually builds any of the three.
+Today, all three require a developer running an ad hoc script directly (e.g. a one-off `tsx`
+invocation calling `deactivateAdminUser`/`issueSetupToken`/`issuePasswordResetToken` — no
+packaged, repeatable command exists for any of them the way `npm run admin:create-user` now
+exists for brand-new accounts).
 **Impact:** Low-to-medium and not urgent: a five-partner firm rarely needs to deactivate
-someone or hits the specific "lost device and lost backup codes" scenario, and a developer
-can already do both manually today (the underlying functions are real, tested, and working
-— this is a UI/packaging gap, not a missing capability). Becomes genuinely load-bearing the
-first time either scenario actually happens for real and a developer isn't immediately
-available.
+someone or hits either "lost device and lost backup codes" or "lost password and lost email
+access" simultaneously, and a developer can already do all three manually today (the
+underlying functions are real, tested, and working — this is a UI/packaging gap, not a
+missing capability). Becomes genuinely load-bearing the first time any of the three scenarios
+actually happens for real and a developer isn't immediately available.
 **Priority:** Low.
 **Possible Fix/Fixes:** Extend T7.6 (Team / author profile editor) — already the "Team"
-area's natural home — with two actions per `admin_user`, both wired to already-built,
-already-tested `lib/` functions: a deactivate/reactivate toggle
-(`lib/auth/session.ts`'s `deactivateAdminUser`) and a "reset 2FA enrolment" button
-(`lib/auth/totp-setup.ts`'s `issueSetupToken`, generating a fresh setup link the admin then
-relays to the affected partner, the same way T6.6's script already does for a new account).
+area's natural home — with three actions per `admin_user`, all wired to already-built,
+already-tested `lib/` functions: a deactivate/reactivate toggle (`lib/auth/session.ts`'s
+`deactivateAdminUser`), a "reset 2FA enrolment" button (`lib/auth/totp-setup.ts`'s
+`issueSetupToken`), and a "reset password" button (`lib/auth/password-reset.ts`'s
+`issuePasswordResetToken`) — the latter two both generate a fresh link the admin then relays
+to the affected partner, the same way T6.6's script already does for a new account.
 **Trigger type:** Task-sequenced.
 **Sequenced into:** T07-06 (Team / author profile editor)
 

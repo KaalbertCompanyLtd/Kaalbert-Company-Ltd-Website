@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -20,7 +21,9 @@ type Status = "idle" | "submitting" | "error";
  * `totp-setup-form.tsx` Step-1 `.code-input` pattern, per `docs/tasks/06-admin-auth.md`'s own
  * notes at T6.3/T6.4). Never imports `lib/auth/` (which touches `@/lib/prisma`) — same rule
  * `totp-setup-form.tsx` already follows — everything happens via `fetch` against the three
- * API routes this and the prior task add.
+ * API routes this and the prior task add. The "Forgot password?" link below navigates to
+ * `/admin/forgot-password` (T6.7) — a real link now, not the mockup's former inert
+ * placeholder.
  */
 export function LoginForm() {
   const router = useRouter();
@@ -253,7 +256,7 @@ export function LoginForm() {
             onChange={(event) => setEmail(event.target.value)}
           />
         </Field>
-        <Field className="mb-4">
+        <Field className="mb-1.5">
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input
             id="password"
@@ -265,6 +268,14 @@ export function LoginForm() {
             onChange={(event) => setPassword(event.target.value)}
           />
         </Field>
+        <p className="mb-4 text-right">
+          <Link
+            href="/admin/forgot-password"
+            className="text-caption text-primary font-semibold hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </p>
 
         {status === "error" && errorMessage && (
           <FieldError className="mb-3" role="alert">

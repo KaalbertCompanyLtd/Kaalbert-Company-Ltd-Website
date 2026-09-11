@@ -15,9 +15,9 @@ export const metadata: Metadata = {
  * verification happens via `POST /api/admin/auth/login`/`verify-totp` — so unlike
  * `/admin/setup-2fa` this page needs no `force-dynamic` export.
  *
- * The mockup's "Forgot password?" link is deliberately omitted: no password-reset task
- * exists anywhere in this epic (`docs/tasks/06-admin-auth.md`), and a link that does nothing
- * when clicked is worse than no link at all.
+ * The mockup's "Forgot password?" link is now wired to `/admin/forgot-password` (T6.7) —
+ * previously deliberately omitted here, since no password-reset task existed anywhere in
+ * this epic and a link that did nothing when clicked was worse than no link at all.
  */
 export default function LoginPage() {
   return (

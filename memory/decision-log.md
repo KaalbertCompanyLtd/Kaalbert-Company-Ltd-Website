@@ -2,6 +2,64 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T6.7, session 43) — Password reset is self-service by design (TOTP is untouched); a new task was added directly to the epic and built in the same session, at the user's explicit request
+
+**Status:** Standing
+
+**Summary:** The user asked how password reset works; the honest answer was that it doesn't
+exist anywhere in this codebase for an existing account — not self-service, not even an
+admin-triggered one, a genuine gap no prior session had caught. The user then explicitly
+asked for a new task to be added to this epic and built immediately, with anything needing
+Milestone 7 addended there instead of expanding this task's own scope. Several real design
+decisions made building T6.7:
+
+- **Self-service is safe here in a way it isn't for lost 2FA, and that asymmetry is the
+  reason this flow could be built without a Milestone 7 dependency at all.**
+  `admin-authentication.md`'s existing edge case ("lost device and lost backup codes...
+  requires another administrator") has no self-service path by design, because a password
+  alone was never sufficient to log in — TOTP is the actual gate. A password reset is the
+  mirror case: it only ever touches `password_hash`, never `totpEnabled`/`totpSecret`, so
+  even a fully self-service reset can't complete a login on its own. This is _why_ the whole
+  feature could ship as `/admin/forgot-password` + email, not a Milestone 7 "Team" screen
+  action — confirmed live (the new password correctly re-entered the TOTP step, never
+  skipped it).
+- **Two separate token columns, not a shared one with `setupToken`.** `passwordResetToken`/
+  `passwordResetTokenExpiresAt` are new, distinct `admin_user` columns rather than reusing
+  T6.2's `setupToken` — the two links serve genuinely unrelated purposes and can legitimately
+  both be pending on the same account at once; collapsing them would make requesting one
+  silently invalidate the other.
+- **A new rate-limit shape, `assertNotFlooded`, alongside the existing `assertNotRateLimited`.**
+  Every other rate-limited step in this epic (password, TOTP, backup code, setup confirm) is a
+  credential/code-_guessing_ surface, where only a wrong guess should count against the
+  caller's budget. `password_reset_request` has no such concept — `requestPasswordReset` does
+  the same amount of work and returns the same generic response whether or not the email is
+  real, so nothing about a single request is ever "wrong." `lib/auth/rate-limit.ts` gained a
+  second helper that counts _every_ attempt in a window (a flood limit — 3/hour), not just
+  failures, rather than force-fitting this onto the existing failure-counting one.
+- **A 1-hour token lifetime, not T6.2's 7 days.** `setupToken` is handed over through a slow,
+  out-of-band channel (a developer relaying it to a new partner) so it needs a long window; a
+  password-reset link is requested on demand by the partner who needs it right now, so a much
+  shorter window is both safer and sufficient.
+- **A 12-character minimum password length, decided here because nothing set one before.**
+  Every account's password until this task was either script-generated or operator-supplied —
+  this is the first flow where a partner ever types their own. Length over complexity rules
+  (NIST 800-63B), no forced digit/symbol/case mix.
+- **Real bug caught live, not by any static check**: `proxy.ts`'s unauthenticated-page
+  allowlist didn't include either new screen, so both were silently unreachable until fixed
+  in this same session — see `memory/known-bugs.md` and `proxy.ts`'s own doc-comment.
+- **Scope split with T7.6, decided explicitly rather than left ambiguous.** Self-service
+  covers "forgot password, still have email access." The mirror gap — email access is _also_
+  gone — needs another administrator to act on the account, the same shape as the
+  already-addended deactivate/reset-2FA actions. `docs/tasks/07-content-admin.md`'s T7.6
+  addendum was extended (not duplicated) to cover this third action, and
+  `memory/technical-debt.md`'s existing entry was broadened in place for the same reason.
+
+**Related Documents:** `docs/tasks/06-admin-auth.md` (T6.7), `docs/tasks/07-content-admin.md`
+(T7.6 addendum), `docs/features/admin-authentication.md`, `lib/auth/password-reset.ts`,
+`lib/auth/rate-limit.ts`, `proxy.ts`, `memory/technical-debt.md`, `memory/known-bugs.md`.
+
+---
+
 ## 2026-09-10 (T6.6, session 42) — Account provisioning is a CLI script, not an invite-flow UI; discovered a related, distinct gap (no UI for deactivate/reactivate or 2FA reset) while documenting, sequenced rather than built
 
 **Status:** Standing
