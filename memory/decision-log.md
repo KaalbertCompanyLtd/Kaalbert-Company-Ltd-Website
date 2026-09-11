@@ -2,6 +2,85 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.2, session 45) — Article editor built as a structured block editor against the real schema, not the mockup's literal contenteditable/field set; real image uploads via an interim base64 store; downloadable-resource attachment split into a new task
+
+**Status:** Standing
+
+**Summary:** T7.2 (Articles editor + Categories) surfaced more real gaps between
+`ui/mockups/g-admin-content/admin-article-editor.html` (drawn before T4.2/T4.3 evolved the
+`Article` schema) and what the schema actually requires — the same class of gap the
+pre-Phase-6 audit already found and fixed once for the Offer editor (`docs/dashboard.md`).
+Concrete decisions:
+
+- **Added three fields the mockup omits but the schema requires**: `excerpt` (a short teaser
+  distinct from meta description, required per `Article.excerpt`'s own doc-comment),
+  `metaTitle` (required, distinct from `metaDescription`, the mockup only ever showed the
+  latter), and the full `nextStepCta` panel (`heading`/`body`/`label`/`href` — FR-3.4's "never
+  a generic contact us" rule has no teeth without real per-article content here). All three
+  are validated server-side (`lib/articles.ts`'s `validateCommonFields`), not just present as
+  optional UI.
+- **Built a structured, add-a-block-of-type-X editor, not a freeform contenteditable/WYSIWYG**,
+  despite the mockup showing a toolbar (B/I/H2/quote/link/table/image/attach) over a
+  `contenteditable` div. `Article.body` is a strict `kind`-discriminated union with no
+  freeform HTML/markdown block kind (`lib/insights.ts`'s `ArticleBodyBlock`) — the same
+  "no admin editor yet to justify full relational modelling" shape already used for
+  `LegalPage.body`/`Offer.methodStages`. A real WYSIWYG library would need to map onto that
+  union somehow regardless, so a block-add UI (paragraph/heading/quote/list/table/figure,
+  each with its own small typed form) produces the real shape directly, needs no new
+  dependency (staying inside ADR 0001's minimal-dependency philosophy), and is what the
+  schema's own design already implies was intended. Added a `figure` block kind
+  (`{imageUrl, caption}`) that didn't exist before this task — the mockup's own toolbar names
+  "figures" as supported, but no accepted article had used one yet at T4.3 so the type never
+  existed; updated the public renderer (`app/insights/[slug]/page.tsx`'s `ArticleBlock`) in
+  the same change.
+- **Real image uploads (required preview image, `figure` blocks) via an interim base64
+  data-URI store, not local disk.** Cloudflare R2 (ADR 0004) isn't provisioned yet. Local-fs
+  storage — the general pattern the T7.5 debt entry had floated — was considered and
+  rejected: Railway's container filesystem isn't durable across deploys (no Volume
+  provisioned anywhere in this project), so a locally-written upload would silently vanish on
+  the next deploy, a real data-loss bug rather than a faithful stub. `lib/media-storage.ts`
+  instead base64-encodes into the same string column a real R2 URL would occupy, durable
+  today with zero new infrastructure and no call-site changes needed when R2 arrives later.
+  Capped at 2MB pre-encoding, tracked as debt (`memory/technical-debt.md`), sequenced into
+  T7.6 (the next task to touch this same mechanism, for author photos).
+- **The mockup's Status dropdown (Draft/Published, next to Publish/Save-draft) has no
+  scripted behaviour in that mockup** (unlike `admin-categories-list.html`, which does) —
+  treated as illustrative rather than a literal spec. Built as a plain read-only status
+  badge instead; this task builds no "unpublish" action (setting a published article back to
+  draft), since no acceptance criterion or business rule names one. "Save draft" on an
+  already-published article now only ever saves field edits, never touches `publishedAt` —
+  deliberately impossible to accidentally unpublish a live article via this screen.
+- **Article slugs are derived from the title once, at creation, and frozen thereafter** — a
+  later retitle never moves the URL, protecting published OG/search links. A slug collision
+  appends a numeric suffix automatically rather than rejecting the save (contrast
+  `Category.slug`, partner-authored and partner-visible, where a collision is surfaced
+  inline instead) — an article's slug is an incidental side effect of its title, not content
+  a partner is directly naming.
+- **`Article.revisedAt` is set on every save of an already-published article where `publish:
+true` is requested**, matching the schema doc-comment's own definition ("content
+  substantively revised after first publish... populated by the admin publish flow
+  (Milestone 7)") — this is that flow. `publishedAt` itself is only ever set once, on first
+  publish, never overwritten by a later save.
+- **Downloadable article-resource attachment (`article_resource`, the mockup's 📎 "Attach
+  file" toolbar button) was deliberately left out of this task** — T7.2's own "Build" line
+  names only "tables/pull-quotes/figures" as in-scope content types. Split into a new task,
+  T7.10, added to the epic file (dependency-ordered after T7.2, appended at the epic's end
+  rather than renumbering T7.3–T7.9) rather than silently expanding this already-large (Size
+  L) task's scope.
+- **Last-write-wins accepted as-is for this task's `PATCH` handler, no optimistic-locking/
+  staleness check added** — the conscious call this task's own session-04 addendum required
+  making (`memory/technical-debt.md`'s "Two-partner simultaneous page edits use
+  last-write-wins" entry, `content-management-admin.md`'s own edge case explicitly accepts
+  this for Phase 1 at five partners/low edit frequency). No new debt entry needed; the
+  existing one already covers this.
+
+**Related Documents:** `docs/features/content-management-admin.md`,
+`docs/features/insights-engine.md`, `docs/tasks/07-content-admin.md` (T7.2, T7.6, T7.10),
+`prisma/schema.prisma` (`Article`/`Category` model doc-comments), `lib/articles.ts`,
+`lib/categories.ts`, `lib/media-storage.ts`, `lib/insights.ts` (`ArticleBodyBlock`).
+
+---
+
 ## 2026-09-11 (T7.1, session 44) — Admin dashboard built against `enquiry_record` fields Milestone 8 hasn't added yet; gaps worked around honestly and sequenced forward rather than built early or fudged
 
 **Status:** Standing

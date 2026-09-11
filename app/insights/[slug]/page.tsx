@@ -161,6 +161,23 @@ function ArticleBlock({ block }: { block: ArticleBodyBlock }) {
           </TableBody>
         </Table>
       );
+
+    case "figure":
+      return (
+        <figure className="mb-8">
+          {/* eslint-disable-next-line @next/next/no-img-element -- admin-supplied, arbitrary-origin content (interim base64 data URI or a future R2 URL), not a static local asset next/image's optimizer is meant for — same precedent as components/insights-article-card.tsx's previewImage. */}
+          <img
+            src={block.imageUrl}
+            alt={block.caption}
+            className="w-full rounded-sm object-cover"
+          />
+          {block.caption && (
+            <figcaption className="text-caption text-muted-foreground mt-2">
+              {block.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
   }
 }
 

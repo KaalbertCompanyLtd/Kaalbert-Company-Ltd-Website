@@ -14,6 +14,73 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.2, session 45)
+
+**Task:** T7.2 — Articles editor + Categories
+**Summary:** Built the real Articles admin: a list screen (`/admin/articles`, search/status/
+category filters, client-side pagination), a structured block-based editor
+(`/admin/articles/new` and `/admin/articles/[id]`) supporting paragraph/heading/quote/list/
+table/figure blocks, a required-preview-image + 10.05-compliance publish gate (enforced both
+client-side, disabling Publish, and server-side in `lib/articles.ts`), and a Categories screen
+(`/admin/articles/categories`) with add/rename/retire (Dialog/AlertDialog-based, real
+duplicate-slug rejection). New `lib/media-storage.ts` + `POST /api/admin/media` +
+`components/admin-image-upload-button.tsx` give the article editor real image uploads (an
+interim base64 data-URI store, since Cloudflare R2 isn't provisioned yet). Business logic in
+`lib/articles.ts`/`lib/categories.ts`, route handlers in `app/api/admin/articles*`/`app/api/
+admin/categories*` parse/shape only.
+
+Fixed three real gaps between the accepted mockup and the actual (later-evolved) `Article`
+schema — added `excerpt`/`metaTitle` fields and a full `nextStepCta` panel the mockup never
+showed, same "mockup drawn before the schema grew" precedent as the Offer editor's earlier
+fix (`docs/dashboard.md`'s pre-Phase-6 audit). Added a new `figure` block kind to
+`ArticleBodyBlock` (`lib/insights.ts`) and its public renderer (`app/insights/[slug]/
+page.tsx`) — the mockup names "figures" as supported but no accepted article had used one
+yet, so the type never existed before this task. Deliberately split downloadable-resource
+attachment (`article_resource`, the mockup's 📎 button) into a new task, T7.10, rather than
+expanding this already-Size-L task further — see `memory/decision-log.md` for the full
+reasoning on all of the above, and `memory/technical-debt.md` for the two new tracked gaps
+(interim base64 image storage, resource attachment not yet built).
+
+**Conscious call on last-write-wins** (required by this task's own session-04 addendum,
+`memory/technical-debt.md`'s "Two-partner simultaneous page edits use last-write-wins"
+entry): shipped as documented — no optimistic-locking/staleness check added to `PATCH /api/
+admin/articles/[id]`. `content-management-admin.md`'s own edge case explicitly accepts this
+for Phase 1 (five partners, low edit frequency); the existing debt entry already covers it,
+no new one needed.
+
+Verified for real via Playwright MCP against the real dev database (not mocked): edited a
+real seeded article (id 20, "People Are the Plan") end to end — uploaded a real image as its
+preview image, checked the compliance box, published, and confirmed via direct Prisma query
+that `previewImage` held the correct base64 data URI, `publishedAt` was preserved unchanged
+(not overwritten on a re-save), and `revisedAt` was newly set. Created a brand-new article
+with a `figure` block from scratch, published it, and confirmed the figure (image + caption)
+rendered correctly on its real public `/insights/[slug]` page. Exercised Categories fully:
+rejected a duplicate-slug add inline, added a real category, renamed it (slug updated), and
+retired it — confirmed via direct query that retiring genuinely deletes the row (relying on
+`Article.categoryId`'s `onDelete: SetNull`, not a soft-delete flag). Checked all three screens
+(list/editor/categories) at mobile (390px — confirmed via `document.documentElement.scrollWidth`
+that none of them scroll horizontally at the page level, tables scroll within their own
+container instead), tablet (768px), and desktop (1280px).
+**Files Changed:** `lib/articles.ts`, `lib/articles.test.ts`, `lib/categories.ts`,
+`lib/categories.test.ts`, `lib/media-storage.ts`, `lib/media-storage.test.ts`,
+`lib/insights.ts` (`ArticleBodyBlock` `figure` kind), `app/insights/[slug]/page.tsx` (figure
+rendering), `app/admin/(shell)/articles/*` (list/editor/categories pages + client
+components + block editor), `app/api/admin/articles/route.ts`,
+`app/api/admin/articles/[id]/route.ts`, `app/api/admin/categories/route.ts`,
+`app/api/admin/categories/[id]/route.ts`, `app/api/admin/media/route.ts`,
+`components/admin-image-upload-button.tsx`, `docs/tasks/07-content-admin.md` (T7.6 addendum,
+new T7.10 task), `docs/user-guide.md`.
+**Related Feature:** `docs/features/content-management-admin.md`,
+`docs/features/insights-engine.md`
+**Notes:** Quality gates all clean (lint, format:check, `npm run typecheck`, 181/181 tests —
+29 new across the three new `lib/` test files). `docs/user-guide.md` updated (Milestone 4's
+Insights section — partners can now publish/edit articles and manage categories themselves,
+resolving its "Nothing via the site itself yet" note) and Artifact mirror republished. No
+milestone/epic completed this session (5 of Milestone 7's 10 tasks remain, including the new
+T7.10), so the "Website Build Status" Artifact was not updated, matching T7.1's own precedent.
+
+---
+
 ## 2026-09-11 (T7.1, session 44)
 
 **Task:** T7.1 — Admin dashboard — `/admin`

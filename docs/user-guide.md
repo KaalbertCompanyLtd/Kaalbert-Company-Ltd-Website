@@ -23,12 +23,12 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-11 (session 44) — Milestones 1–4 complete; Milestone 5 complete through
+**As of:** 2026-09-11 (session 45) — Milestones 1–4 complete; Milestone 5 complete through
 T5.1–T5.4 (T5.5 deliberately deferred to just before Milestone 9); Milestone 6 (Admin
 Authentication) complete, plus a self-service password reset (T6.7) added after the fact.
-Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1) is live; the
-rest of Milestone 7 (Articles, Pages, Offers, Landing Pages, Team, Diagnostic Configuration)
-is next.
+Milestone 7 (Content Management Admin) underway — the admin dashboard (T7.1) and Articles/
+Categories admin (T7.2) are both live; Pages, Offers, Landing Pages, Team, Diagnostic
+Configuration, Site Settings, Subscribers, and article-resource attachment (T7.10) are next.
 
 ---
 
@@ -77,18 +77,38 @@ question flow → instant results → a gated "email me the full written summary
 questions/weights/thresholds without a developer is Milestone 7's Diagnostic Configuration
 screen.
 
-### Insights (articles) — Milestone 4
+### Insights (articles) — Milestone 4, admin publishing added at Milestone 7 (T7.2)
 
-**What it does:** An articles index and article template, live with the firm's real eight
-articles, plus a reader email-subscribe capture on every article.
+**What it does:** An articles index and article template, live with the firm's real articles
+(9 published as of T7.2's own verification session), plus a reader email-subscribe capture on
+every article. **A partner can now write, edit, and publish an article themselves** — no
+developer involvement — including tables, pull-quotes, bulleted lists, and now images/figures
+in the body; and can create/rename/retire Insights categories themselves too.
 
 **What to monitor:**
 
 - Subscriber addresses are captured and get a one-time confirmation — **nothing further is
   ever sent to them yet.** There's no ongoing newsletter/campaign mechanism until Milestone
   17 (gated on the list reaching a size worth a partner's time to compose for).
+- **Article/figure images are stored as an interim data URI inside the database, not on a
+  real image host yet** (Cloudflare R2 isn't set up — see the Landing Pages/Measurement
+  sections above for the same R2 dependency). Uploads work correctly and are durable, but
+  every image a partner uploads adds real weight to that article's own page — worth knowing
+  if articles start carrying many large images before R2 is set up.
+- **Publishing an article requires two things, both enforced by the system, not just
+  reminders**: a preview image, and ticking "This complies with 10.05 Positioning and Claims
+  Guidance Note" — the Publish button stays disabled until both are done. A partner can still
+  save a draft with neither.
+- **Attaching a downloadable resource file to an article isn't built yet** (Milestone 7,
+  T7.10, not yet reached) — the handful of existing downloadable resources on articles were
+  set up directly by the developer; a partner can't add a new one to a new article yet.
 
-**What a partner can do about it today:** Nothing via the site itself yet — Milestone 7.
+**What a partner can do about it today:** Write, edit, and publish an article (with images) —
+`/admin/articles` → "New Article", or "Edit" on any existing one. Create, rename, or retire an
+Insights category from the same screen's "Manage categories" link — retiring one never
+deletes its articles, they just lose that category tag. Attaching a downloadable file to an
+article, and editing marketing/legal page copy, offers, landing pages, team profiles, and
+diagnostic questions, are all still Milestone 7 work not yet reached.
 
 ### Landing pages — Milestone 5 (T5.1–T5.2)
 
@@ -188,7 +208,7 @@ bug; both become real once Milestone 8 (Enquiry Management) ships.
 **What a partner can do about it today:** Log in, reset their own forgotten password
 self-service, and see the real admin dashboard (T7.1) — four at-a-glance counts (new
 enquiries, triage-flagged, diagnostics completed this month, published articles) and the 5
-most recent enquiries, both reading real, live data. There is nothing to actually *edit* yet
+most recent enquiries, both reading real, live data. There is nothing to actually _edit_ yet
 (that's the rest of Milestone 7), and no way yet to open an enquiry, change its status, or
 filter the list (that's Milestone 8) — today's dashboard is look-but-not-touch. Deactivating
 another partner's account, resetting a partner's 2FA or password on their behalf, and
@@ -221,9 +241,10 @@ depends on:
 
 ## Change log
 
-| Date       | What changed                                                                                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-09-11 | Admin dashboard (T7.1) went live — real stat counts and a recent-enquiries panel replace the old placeholder; noted the two honest placeholders (status always "New", Triage shown as flagged/not-flagged only) that resolve once Milestone 8 ships. |
-| 2026-09-11 | Added self-service password reset (T6.7) to the Admin Login section — a partner can now reset a forgotten password themselves, no developer or other partner needed.           |
-| 2026-09-10 | Milestone 6 (Admin Login) complete — added its "What's live today" section, moved it out of "What's coming next", updated the two stale "no admin area yet" mentions above it. |
-| 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9).                                                |
+| Date       | What changed                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-09-11 | Articles/Categories admin (T7.2) went live — a partner can now write, edit, and publish an article themselves (including images/figures), and create/rename/retire Insights categories, both fully self-service. Noted the two remaining gaps: image uploads use an interim storage method pending Cloudflare R2, and attaching a downloadable file to an article isn't built yet (T7.10). |
+| 2026-09-11 | Admin dashboard (T7.1) went live — real stat counts and a recent-enquiries panel replace the old placeholder; noted the two honest placeholders (status always "New", Triage shown as flagged/not-flagged only) that resolve once Milestone 8 ships.                                                                                                                                       |
+| 2026-09-11 | Added self-service password reset (T6.7) to the Admin Login section — a partner can now reset a forgotten password themselves, no developer or other partner needed.                                                                                                                                                                                                                       |
+| 2026-09-10 | Milestone 6 (Admin Login) complete — added its "What's live today" section, moved it out of "What's coming next", updated the two stale "no admin area yet" mentions above it.                                                                                                                                                                                                             |
+| 2026-09-10 | Guide created. Covers Milestones 1–4 (complete) and Milestone 5 (complete through T5.1–T5.4, T5.5 deferred before Milestone 9).                                                                                                                                                                                                                                                            |

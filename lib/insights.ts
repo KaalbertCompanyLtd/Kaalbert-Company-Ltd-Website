@@ -180,13 +180,22 @@ export async function getRelatedArticles(
  * convention this mirrors. Covers exactly the block kinds the accepted mockup
  * (`ui/mockups/b-insights/insight-owner-drawings.html`) actually uses: paragraphs, `<h2>`
  * subheadings, a pull-quote, a bulleted list, and a data table.
+ *
+ * `figure` added at T7.2 (`docs/tasks/07-content-admin.md`) — the admin editor task's own
+ * "Build" line names "figures" as a supported block alongside tables/pull-quotes, but no
+ * accepted article mockup had used one yet at T4.3, so it wasn't in the original union.
+ * `imageUrl` holds whatever `lib/media-storage.ts` returns (an interim base64 data URI until
+ * Cloudflare R2 is provisioned, a real object URL after — see that file's own doc-comment);
+ * `caption` is required (empty string, never omitted) so `<figcaption>` never silently
+ * disappears depending on how a block was authored.
  */
 export type ArticleBodyBlock =
   | { kind: "paragraph"; text: string }
   | { kind: "heading"; text: string }
   | { kind: "quote"; text: string }
   | { kind: "list"; items: string[] }
-  | { kind: "table"; headers: string[]; rows: string[][] };
+  | { kind: "table"; headers: string[]; rows: string[][] }
+  | { kind: "figure"; imageUrl: string; caption: string };
 
 /**
  * Matches `Article.nextStepCta`'s `Json` shape, revised at T4.3 from T4.1's original

@@ -18,6 +18,79 @@ sequencing requirement:
 
 ---
 
+## Article/author image uploads use an interim base64 data-URI store, not real Cloudflare R2
+
+**Status:** Open
+**Date raised:** 2026-09-11 (T7.2, session 45)
+**Reason:** T7.2 (article editor) is the first task to need real image upload (a required
+preview image, and the new `figure` body block) — but Cloudflare R2 (ADR 0004) is "added once
+media volume justifies it," not provisioned yet, confirmed via `CLAUDE.local.md`'s
+Credentials section (`CLOUDFLARE_R2_*` still unfilled). Writing uploads to local disk instead
+(the general "stubbed/local path" pattern floated by the T7.5 debt entry below) was
+considered and rejected: Railway's container filesystem is not durable across deploys (no
+Railway Volume is provisioned or documented anywhere in this project), so a locally-written
+file would silently vanish on the next deploy — a real data-loss bug, not a faithful stub.
+`lib/media-storage.ts`'s `encodeImageUpload` instead base64-encodes the upload as a `data:`
+URI and stores it directly in the same Postgres column a real object-storage URL would
+occupy (`Article.previewImage`, an `ArticleBodyBlock`'s `imageUrl`) — durable today with zero
+new infrastructure. Every call site already treats the column as "just a string URL"
+(`components/insights-article-card.tsx`'s `previewImage`, the new `figure` block renderer),
+so nothing about how images are _displayed_ needs to change when R2 replaces this.
+**Impact:** Low today (uploads work correctly, are durable, and render correctly). Real
+costs: (1) base64 inflates payload size ~33%, capped at 2MB pre-encoding
+(`MAX_UPLOAD_BYTES`) specifically because this data lives inside Postgres rows/JSON columns,
+not blob storage — a real ceiling a genuine object store wouldn't need; (2) every article
+page's response payload includes its own preview image's full base64 bytes inline, rather
+than a lightweight URL a CDN would cache and serve separately — a real, if currently
+low-traffic, performance cost.
+**Priority:** Medium — no functional defect, but a real, compounding performance/storage
+cost that grows with every image uploaded from here on; the earlier this is swapped to real
+R2, the fewer existing rows need backfilling later.
+**Possible Fix/Fixes:** Once Cloudflare R2 is provisioned, replace `lib/media-storage.ts`'s
+`encodeImageUpload` body with a real R2 upload call returning a real object URL — no other
+file changes, since `POST /api/admin/media` and every caller (the article editor's preview
+image/figure blocks, and T7.5/T7.6 once they reuse the same `AdminImageUploadButton`
+component) only ever treat its return value as an opaque URL string. Existing rows already
+holding a base64 `data:` URI would need a one-off backfill migration to re-upload them to R2
+at that point — not attempted here, since R2 doesn't exist yet to backfill into.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.6 (Team / author profile editor, `docs/tasks/07-content-admin.md`) —
+see that task's session-45 addendum: it's the next task to touch this same mechanism (author
+photo upload), and the natural checkpoint to check whether R2 is provisioned yet and swap
+over if so.
+
+---
+
+## Article downloadable-resource attachment (upload/attach a file to `article_resource`) is not built — T7.2 built preview-image/figure uploads only
+
+**Status:** Open
+**Date raised:** 2026-09-11 (T7.2, session 45)
+**Reason:** `ui/mockups/g-admin-content/admin-article-editor.html`'s toolbar shows an "Attach
+file" (📎) button alongside the image button, and `article_resource` (T4.1) already exists as
+a real entity with nothing in `/admin` that creates a row for it — every resource currently
+in the database was seeded directly (`prisma/seed.ts`), never uploaded through an admin
+screen. T7.2's own "Build" line names only "tables/pull-quotes/figures" as this task's
+in-scope content types, not downloadable attachments, so this was deliberately left out
+rather than silently dropped — a real, correctly-scoped gap, not an oversight.
+**Impact:** Low today (existing seeded resources still work; the public article page's
+`isResourceReachable` check and download link are unaffected). Real gap: a partner cannot
+attach a new downloadable resource to an article, or replace/remove an existing one, without
+a developer directly editing the database.
+**Priority:** Low — no acceptance criterion anywhere currently requires this, and it affects
+a minority of articles (most have zero resources per `insights-engine.md`'s own "typically
+0–1 resources per article" framing).
+**Possible Fix/Fixes:** Add a small resource-management panel to the article editor (list
+existing `article_resource` rows with label/file, add new via the same `AdminImageUploadButton`-
+style upload pattern generalized to non-image files, reorder via `sortOrder`, remove) — a
+real, separate S-sized task rather than folding into an already-large T7.2, per this file's
+own session-04 precedent for keeping tasks appropriately scoped. New task added:
+`docs/tasks/07-content-admin.md` T7.10.
+**Trigger type:** Task-sequenced
+**Sequenced into:** T7.10 (Article downloadable-resource management,
+`docs/tasks/07-content-admin.md`) — new task added this session.
+
+---
+
 ## Enquiry-level triage priority (High/Medium/Low) is computed at diagnostic-scoring time but never persisted, so no admin screen can show it
 
 **Status:** Open
@@ -247,14 +320,19 @@ become Medium once T7.5 is actually built, if that task's editor is shipped with
 this field — a partner would have no way to upload a real checklist file even once the admin
 exists.
 **Priority:** Low
-**Possible Fix/Fixes:** When T7.5 is built, add `downloadFileUrl` as an optional
-file-upload field on the Landing Pages editor, using whatever R2 upload mechanism T7.6
-establishes for author photos (build in whichever of T7.5/T7.6 lands first; don't duplicate
-the upload pipeline). Provisioning real R2 credentials is a separate, User-triggered
-precondition for uploads to work end-to-end (same category as every other external-account
-setup this project defers to the user) — the editor UI itself can still be built and tested
-against a stubbed/local path in the meantime, same as T1.6 built and verified the GTM
-snippet against a placeholder container ID before a real one existed.
+**Possible Fix/Fixes:** ~~When T7.5 is built, add `downloadFileUrl`... using whatever R2
+upload mechanism T7.6 establishes...~~ Update (session 45, T7.2): the mechanism now exists —
+`components/admin-image-upload-button.tsx` (`AdminImageUploadButton`) + `POST /api/admin/
+media` + `lib/media-storage.ts`, built for the article editor's preview image/figure blocks.
+When T7.5 is built, reuse that component/route directly for `downloadFileUrl` rather than
+duplicating an upload mechanism. It's still interim, not real R2 (`lib/media-storage.ts`
+returns a base64 `data:` URI, not an object-storage URL) — Provisioning real R2 credentials
+is a separate, User-triggered precondition for uploads to become real object-storage URLs
+(same category as every other external-account setup this project defers to the user); the
+editor UI itself works correctly against the interim mechanism in the meantime, same as T1.6
+built and verified the GTM snippet against a placeholder container ID before a real one
+existed. See `memory/technical-debt.md` → "Article/author image uploads use an interim
+base64 data-URI store, not real Cloudflare R2" for the swap-over-to-real-R2 tracking.
 **Trigger type:** Task-sequenced — building the editor field is normal engineering work once
 T7.5 is reached; only the underlying R2 credentials are User-triggered, and that's already
 covered by ADR 0004's own "added once justified" framing, not a new blocker to raise here.
@@ -300,14 +378,18 @@ with the rest of the page's data fetching) — acceptable for a low-traffic cont
 typically 0–1 resources per article, but a real cost that scales badly if an article ever has
 many resources, and a real dependency on every linked host staying responsive.
 **Priority:** Low
-**Possible Fix/Fixes:** Once Cloudflare R2 is provisioned (ADR 0004, T7.2's own "R2 media
-pipeline" for article previews/resources), replace the live HEAD check with R2's own
-existence signal — e.g. generate resource URLs only for objects confirmed to exist at
-publish time (T7.2's admin editor), or query R2's API directly, either of which is cheaper
-and more reliable than a live network round-trip per resource per visitor.
+**Possible Fix/Fixes:** Once Cloudflare R2 is provisioned (ADR 0004), replace the live HEAD
+check with R2's own existence signal — e.g. generate resource URLs only for objects confirmed
+to exist at upload time, or query R2's API directly, either of which is cheaper and more
+reliable than a live network round-trip per resource per visitor.
 **Trigger type:** Task-sequenced
-**Sequenced into:** T7.2 (Articles editor + Categories, `docs/tasks/07-content-admin.md`) —
-see that task's session-26 addendum.
+**Sequenced into:** T7.10 (Article downloadable-resource management,
+`docs/tasks/07-content-admin.md`) — re-sequenced from T7.2 (session 45): T7.2 built
+preview-image/figure uploads only, not `article_resource` attachment management (see
+`memory/technical-debt.md` → "Article downloadable-resource attachment... is not built" for
+why that was split into its own new task, T7.10) — this HEAD-check replacement can only
+happen once _something_ actually uploads resources through the admin for R2 to confirm
+existence of, which is T7.10's job, not T7.2's.
 
 ---
 

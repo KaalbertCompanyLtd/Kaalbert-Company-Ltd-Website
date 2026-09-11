@@ -182,6 +182,21 @@ partner's real photo. Three partners (Ama Wiafe, Joseph Bordoh, Albert Kwakye Am
 have no `credentials` value seeded — real designations may not exist for these roles at all;
 confirm with the firm before assuming a gap, rather than assuming one is missing.
 
+**Addendum (session 45, 2026-09-11):** T7.2 already built the R2 media pipeline this task's
+own "Build" line references ("via the same R2 media pipeline as article preview images") —
+reuse `components/admin-image-upload-button.tsx` (`AdminImageUploadButton`) and `POST /api/
+admin/media` directly for the photo field, don't build a second upload mechanism. As of T7.2,
+that pipeline is still an interim one: Cloudflare R2 itself (ADR 0004) is not provisioned, so
+`lib/media-storage.ts`'s `encodeImageUpload` returns a base64 `data:` URI stored straight in
+the DB column, not a real object-storage URL — see `memory/technical-debt.md` → "Article/
+author image uploads use an interim base64 data-URI store, not real Cloudflare R2." Check at
+this task whether R2 credentials exist yet (`CLAUDE.local.md`'s Credentials section); if so,
+this is the natural point to swap `lib/media-storage.ts`'s single function to a real upload
+call (every caller — this task's photo field, T7.2's preview image/figure blocks, T7.5's
+download file — already treats its return value as an opaque URL, so nothing else changes).
+If R2 still isn't provisioned, build this task's photo field against the interim mechanism
+exactly as T7.2 did, and leave the debt entry open.
+
 ### T7.7 — Diagnostic Configuration
 
 **Build:** Editor for `diagnostic_question` (text/order/active), `diagnostic_dimension`
@@ -280,3 +295,28 @@ underlying update, not a second code path).
 status column at Milestone 17 (`docs/tasks/17-subscriber-outreach.md`, T17.3) — Phase 2,
 gated, not built now. Nothing about this task's own build needs to anticipate that column
 structurally; it's a straightforward later addition to an existing table.
+
+### T7.10 — Article downloadable-resource management
+
+**Build:** A resource-management panel on the article editor (T7.2): list an article's
+existing `article_resource` rows (label, file), attach a new one, reorder (`sortOrder`),
+remove — reusing T7.2's `components/admin-image-upload-button.tsx` upload pattern
+generalized to accept non-image files (`lib/media-storage.ts`'s current `encodeImageUpload`
+is image-only; this task needs a parallel non-image variant, same interim base64/future-R2
+storage approach).
+**Input → Output:** Resource form submission (label + file) → `article_resource` row;
+reorder → updated `sortOrder` values; remove → row deleted.
+**Acceptance criteria:** A resource attached here appears correctly on the public article
+page's download list (`app/insights/[slug]/page.tsx`'s `ResourceLink`) in the same order set
+in the admin; removing a resource here removes its download link from the public page on the
+same request cycle.
+**Size:** S **Dependencies:** T7.2
+
+**Addendum (session 45, 2026-09-11):** Split out of T7.2, whose own "Build" line named only
+"tables/pull-quotes/figures" as in-scope content types — `article_resource` (downloadable
+attachments) was a real, deliberately out-of-scope gap for that task, not an oversight. See
+`memory/technical-debt.md` → "Article downloadable-resource attachment... is not built" for
+the full reasoning, and → "Article download-resource availability is checked via a live
+per-request HEAD fetch..." (T4.3, session 26) for the related, still-open live-HEAD-check
+replacement this task's own upload flow unblocks (generate/confirm a resource's URL at
+upload time instead of checking it live on every visitor page-render).
