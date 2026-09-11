@@ -56,6 +56,7 @@ describe("getArticleJsonLd", () => {
     title: "Owner Drawings",
     authorName: "Evans Agyemang",
     authorPracticeArea: "Financial Control & Compliance",
+    authorPublished: true,
     publishedAt: new Date("2026-08-03T00:00:00.000Z"),
     revisedAt: null,
     previewImage: null,
@@ -89,5 +90,16 @@ describe("getArticleJsonLd", () => {
     const data = getArticleJsonLd({ ...BASE_ARTICLE, previewImage: "/uploads/owner-drawings.jpg" });
 
     expect(data.image).toBe("https://www.kaalbert.com/uploads/owner-drawings.jpg");
+  });
+
+  it("describes the author as an Organization, not a Person with a blank job title, once the byline has fallen back to the firm (T7.11)", () => {
+    const data = getArticleJsonLd({
+      ...BASE_ARTICLE,
+      authorName: "Kaalbert & Company Ltd",
+      authorPracticeArea: "",
+      authorPublished: false,
+    });
+
+    expect(data.author).toEqual({ "@type": "Organization", name: "Kaalbert & Company Ltd" });
   });
 });

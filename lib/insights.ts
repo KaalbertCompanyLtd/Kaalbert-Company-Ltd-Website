@@ -2,6 +2,7 @@ import { HeadObjectCommand } from "@aws-sdk/client-s3";
 
 import { prisma } from "@/lib/prisma";
 import { getR2Bucket, getR2Client, getR2ObjectKeyFromUrl } from "@/lib/r2-client";
+import { FIRM_NAME } from "@/lib/seo";
 
 /**
  * `ui/mockups/b-insights/insights-index.html`'s own `PAGE_SIZE` — kept identical so the grid
@@ -112,7 +113,7 @@ export interface ArticleCardRow {
   excerpt: string;
   previewImage: string | null;
   category: { name: string; slug: string } | null;
-  author: { name: string; practiceArea: string };
+  author: { name: string; practiceArea: string; published: boolean };
 }
 
 /**
@@ -120,6 +121,12 @@ export interface ArticleCardRow {
  * follow-up, session 27) `lib/home.ts`'s featured-Insights section — exported so Home's own
  * query can produce a card in exactly the same shape the shared `ArticleCard` component
  * (`components/insights-article-card.tsx`) expects, rather than a second, drifting shape.
+ *
+ * T7.11: an unpublished author's existing bylines fall back to crediting the firm itself
+ * (`FIRM_NAME`) rather than a name/practice area no longer meant to be public — a firm-policy
+ * decision (see `memory/decision-log.md`), not a mechanical default. `authorPracticeArea`
+ * becomes an empty string in that case (there is no practice area for the firm itself to
+ * fabricate); callers rendering it must treat an empty value as "omit," same as `category`.
  */
 export function shapeArticleCard(row: ArticleCardRow): InsightsArticleCard {
   return {
@@ -128,8 +135,8 @@ export function shapeArticleCard(row: ArticleCardRow): InsightsArticleCard {
     excerpt: row.excerpt,
     previewImage: row.previewImage,
     category: row.category ? { name: row.category.name, slug: row.category.slug } : null,
-    authorName: row.author.name,
-    authorPracticeArea: row.author.practiceArea,
+    authorName: row.author.published ? row.author.name : FIRM_NAME,
+    authorPracticeArea: row.author.published ? row.author.practiceArea : "",
   };
 }
 
@@ -238,6 +245,12 @@ export interface ArticleDetail {
     title: string;
     practiceArea: string;
     bio: string;
+    /**
+     * T7.11: `false` means the byline fields above are already the firm-attribution fallback
+     * (`name: FIRM_NAME`, everything else blank), not the real author's data — the page uses
+     * this to skip the fuller bio-bearing byline block rather than rendering a bio-less card.
+     */
+    published: boolean;
   };
   resources: ArticleResourceItem[];
 }
@@ -280,11 +293,12 @@ export async function getArticleBySlug(slug: string): Promise<ArticleDetail | nu
       : null,
     categoryId: article.categoryId,
     author: {
-      name: article.author.name,
-      photoUrl: article.author.photoUrl,
-      title: article.author.title,
-      practiceArea: article.author.practiceArea,
-      bio: article.author.bio,
+      name: article.author.published ? article.author.name : FIRM_NAME,
+      photoUrl: article.author.published ? article.author.photoUrl : null,
+      title: article.author.published ? article.author.title : "",
+      practiceArea: article.author.published ? article.author.practiceArea : "",
+      bio: article.author.published ? article.author.bio : "",
+      published: article.author.published,
     },
     resources: article.resources.map((resource) => ({
       id: resource.id,

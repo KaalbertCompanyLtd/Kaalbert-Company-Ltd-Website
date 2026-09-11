@@ -2,6 +2,97 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.11, session 55) — Firm's byline policy: an unpublished author's existing articles credit "Kaalbert & Company Ltd," not a blank byline
+
+**Status:** Standing
+
+**Summary:** T7.11 required a real firm-policy answer before any code — asked directly via
+`AskUserQuestion` rather than picked unilaterally (per the task's own explicit instruction
+and `docs/tasks/07-content-admin.md`'s framing of this as a product decision, not a
+mechanical fix). Two options were on the table: (a) an unpublished author's existing article
+bylines fall back to a neutral attribution (either omitted entirely, or crediting "Kaalbert &
+Company Ltd"), or (b) a byline is a historical record that never changes regardless of the
+author's current profile state.
+
+**The firm chose (a), specifically the "credit 'Kaalbert & Company Ltd'" variant** — not
+omission, and not (b)'s "byline never changes" position. Implemented in `lib/insights.ts`:
+`shapeArticleCard` and `getArticleBySlug` both now check `author.published` and substitute
+`FIRM_NAME` (newly exported from `lib/seo.ts`, previously a private constant) for the
+author's name, blanking `authorPracticeArea`/`title`/`bio`/`photoUrl` rather than fabricating
+firm-specific versions of them — there is no practice area, bio, or photo for the firm itself
+to invent, so those fields become empty/`null` and every rendering site (`app/insights/
+[slug]/page.tsx`, `components/insights-article-card.tsx`) treats an empty practice area as
+"omit the separator," same pattern as an article with no assigned category. The article
+page's fuller, bio-bearing byline block is hidden entirely once unpublished, rather than
+rendering a bio-less card.
+
+A related, task-text-adjacent decision made while implementing, not explicitly asked for:
+`lib/seo.ts`'s `getArticleJsonLd` previously hardcoded the JSON-LD `author` as
+`@type: "Person"` unconditionally — crediting "Kaalbert & Company Ltd" (an organization) as a
+`Person` with a blank `jobTitle` would have been invalid structured data. Added an
+`authorPublished` flag so the JSON-LD author switches to `@type: "Organization"` (no
+`jobTitle`) in the fallback case — a correctness fix within the task's own scope (the byline
+this task governs), not a new decision requiring its own firm sign-off.
+
+Deliberately left `lib/articles.ts`'s admin Articles list (`content-management-admin.md`'s
+internal partner-facing management table) showing the real author name regardless of
+`published` state — a partner managing content needs to know who actually wrote a piece to
+make editorial decisions; this is a different concern from the public reader-facing byline
+T7.11's own text is about, so it was not brought into scope.
+
+Verified live against the real dev database (not mocked): flipped a real author's
+`published` flag directly via a throwaway script (bypassing the admin's own protective
+`updateAuthor` validation from T7.6 — exactly the scenario `memory/known-bugs.md`'s entry
+describes), confirmed the article detail page, the Insights index card, and the JSON-LD all
+showed the firm-attribution fallback correctly at both mobile (390px) and desktop widths,
+then flipped the flag back and confirmed the real byline returned with no regression. The
+throwaway verification scripts were deleted afterward, and the author's `published` value
+was restored to its original `true`.
+
+**This completes Milestone 7.** Every task in `docs/tasks/07-content-admin.md` (T7.1–T7.11)
+is now done — the "Website Build Status" Artifact was republished as Version 7 (milestone
+ledger row 7 flipped to Complete, progress track to 7/9, the headline stat recalculated from
+the same task-count-weighted method the ~64% figure at Milestone 6 used — 51 of the 62 tasks
+across all 9 milestones are now done, 51/62 ≈ 82% — and the "Your Team" usability panel
+flipped from "Login only" to "Live" now that content editing is real). `docs/user-guide.md`
+was not touched this session — T7.11 fixed a rendering-layer gap, not a new admin capability,
+and the guide's own content-editing sections were already written and versioned as each of
+T7.1–T7.10 shipped across sessions 44–53.
+
+**Follow-up, same session (user-flagged):** the user caught that Version 7's Milestone 5
+table row referenced "see note below" for its deferred ad-tracking piece, but no such note
+existed anywhere on the page — a genuine gap carried forward unedited from Version 6, not
+something this session introduced. Audited every currently-`Open` `memory/technical-debt.md`/
+`known-bugs.md` entry for anything else genuinely "waiting on the firm" that the Artifact was
+missing. Found two more real gaps and one stale entry:
+
+- The Milestone 5 row's blocker (T5.5, `docs/tasks/05-landing-and-measurement.md`) needs
+  `kaalbert.com` registered (`memory/technical-debt.md`'s "kaalbert.com not registered" entry
+  — Open since session 01, User-triggered) and real Meta/Google/LinkedIn ad accounts, neither
+  of which the Artifact mentioned anywhere. Both added to a rewritten, retitled "Waiting on
+  You" section (was "Two things we're waiting on from you," now 6 items).
+- Real partner photography (`memory/technical-debt.md`'s two "no real photography yet"
+  entries, About + Home) is now genuinely actionable by the firm alone — T7.6's Team editor
+  (session 49) added photo upload, so this stopped needing a developer at all partway through
+  Milestone 7 and the Artifact never caught up. Added.
+- Found, while auditing, that "Diagnostic summary email had no admin edit screen yet for its
+  new `emailDetail` content" was still marked `Open` with `Sequenced into: T7.7`, but T7.7
+  shipped at session 50 — confirmed directly in `app/admin/(shell)/diagnostic-configuration/
+configuration-client.tsx` that the Score bands section already has Label/On-screen
+  statement/Email detail fields exactly as that entry's `Possible Fix` described. Flipped to
+  `Resolved`; this was a pure memory-hygiene miss (the entry was simply never flipped when
+  T7.7 completed), not a discovery about the site itself.
+
+Republished as Version 8: the Milestone 5 ledger cell now names the real blockers instead of
+promising a note that didn't exist, and "Waiting on You" grew from 2 to 6 items, each marked
+whether it blocks launch. The final favicon confirmation and the response-time promise's
+"now a two-minute Site Settings edit, no developer" framing were both added for the same
+reason — accuracy the firm should actually have, not because anything code-level changed.
+
+**Related Documents:** `docs/tasks/07-content-admin.md` (T7.11), `memory/known-bugs.md`
+(the byline entry this resolves, now `Fixed`), `docs/features/insights-engine.md`, the
+"Website Build Status" Artifact (Version 7).
+
 ## 2026-09-11 (session 54) — Cloudflare R2 provisioned: one bucket (not two), same credentials across dev/prod (not rotated), HeadObjectCommand replaces the live HTTP HEAD check
 
 **Status:** Standing

@@ -52,8 +52,8 @@ export function ArticleCard({ article }: { article: InsightsArticleCard }) {
         </h3>
         <p className="text-body text-muted-foreground mb-0 flex-1">{article.excerpt}</p>
         <div className="border-border text-caption text-muted-foreground border-t pt-3">
-          <strong className="text-foreground">{article.authorName}</strong> ·{" "}
-          {article.authorPracticeArea}
+          <strong className="text-foreground">{article.authorName}</strong>
+          {article.authorPracticeArea && <> · {article.authorPracticeArea}</>}
         </div>
       </div>
     </Link>

@@ -14,6 +14,48 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.11, session 55)
+
+**Task:** T7.11 — Article byline resolves against a real `author.published` check
+**Summary:** Asked the firm directly (via `AskUserQuestion`, per the task's own explicit
+"requires a real product decision" instruction) which of two documented options should
+govern an unpublished author's existing article bylines. The firm chose: fall back to
+crediting "Kaalbert & Company Ltd" (not omit the byline, not leave it unchanged). Implemented
+in `lib/insights.ts`: `shapeArticleCard` and `getArticleBySlug` both now check
+`author.published` and substitute `FIRM_NAME` (newly exported from `lib/seo.ts`) for the
+author's name once unpublished, blanking `authorPracticeArea`/`title`/`bio`/`photoUrl` (there
+is no practice area/bio/photo for the firm itself to invent) rather than fabricating
+firm-specific versions of them. `app/insights/[slug]/page.tsx` and `components/insights-
+article-card.tsx` both treat an empty practice area as "omit the separator" (same pattern as
+an uncategorized article), and the article page's fuller, bio-bearing byline block is hidden
+entirely once unpublished rather than rendering a bio-less card. Also fixed `lib/seo.ts`'s
+`getArticleJsonLd`, found while implementing: it previously hardcoded the JSON-LD `author` as
+`@type: "Person"` unconditionally, which would have described "Kaalbert & Company Ltd" as a
+`Person` with a blank `jobTitle` — added an `authorPublished` flag so it emits
+`@type: "Organization"` (no `jobTitle`) in the fallback case instead. Deliberately left
+`lib/articles.ts`'s admin Articles list untouched — a partner managing content needs the real
+author name for editorial purposes, a different concern from the public byline this task
+governs. Verified live against the real dev database: flipped a real author's `published`
+flag directly (bypassing the admin's own protective validation, the exact scenario the
+originating known-bug describes), confirmed the article page/index card/JSON-LD all showed
+the fallback correctly at mobile and desktop widths, then restored the flag and confirmed the
+real byline returned with no regression.
+**Files Changed:** `lib/insights.ts`, `lib/insights.test.ts`, `lib/seo.ts`, `lib/seo.test.ts`,
+`lib/home.test.ts`, `app/insights/[slug]/page.tsx`, `components/insights-article-card.tsx`.
+**Related Feature:** `docs/features/insights-engine.md`, `docs/features/about-and-partners-
+page.md` (`author.published`'s existing, narrower documented scope this task extended).
+**Notes:** This completes every task in `docs/tasks/07-content-admin.md` — Milestone 7
+(Content Management Admin) is now fully shipped. Nothing in `docs/user-guide.md` changed —
+this task fixed a rendering-layer gap with no new admin capability or partner-visible
+control; the firm's byline-policy answer itself has no UI to operate, it's a fixed rule now
+baked into how the site renders. The "Website Build Status" Artifact was republished twice:
+Version 7 for Milestone 7's completion (milestone ledger, progress stat, "Your Team" usability
+panel), then Version 8 after the user caught a dangling "see note below" with no actual note
+on the Milestone 5 row — while fixing it, also surfaced two more real firm-facing gaps the
+Artifact was missing (domain registration, real partner photography now being genuinely
+actionable via T7.6's Team editor) and one stale technical-debt entry that had actually been
+resolved at T7.7 but never flipped. See `memory/decision-log.md` for the full audit.
+
 ## 2026-09-11 (session 54)
 
 **Task:** Provision Cloudflare R2 and close out the two R2-blocked technical-debt entries —

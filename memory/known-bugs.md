@@ -54,9 +54,10 @@ ask the user to trigger it (or approve the next `railway redeploy` call) directl
 
 ## Article byline rendering (`lib/insights.ts`) has no `author.published` check
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low
 **Date found:** 2026-09-11 (T7.6, session 49)
+**Date fixed:** 2026-09-11 (T7.11, session 55)
 **Description:** `lib/insights.ts`'s several `article.author` queries (index, related
 articles, `lib/home.ts`'s featured-Insights section) and `app/insights/[slug]/page.tsx`'s
 byline all read `author.name`/`author.practiceArea` directly with no `published` filter —
@@ -86,6 +87,26 @@ had already fully shipped, so nothing would ever reach it. Moved into Milestone 
 epic, still actively in progress) instead — see CLAUDE.md's tightened "Debt/bug fixes must be
 sequenced into a task, never left orphaned" rule and `memory/decision-log.md` for the full
 correction.
+**Resolution (session 55):** The firm confirmed option (a)'s "credit 'Kaalbert & Company
+Ltd'" variant (see `memory/decision-log.md`) — not option (b), and not the "omit entirely"
+variant of (a). `lib/insights.ts`'s `shapeArticleCard` and `getArticleBySlug` now select
+`author.published` and substitute `FIRM_NAME` (imported from `lib/seo.ts`, now exported) for
+`authorName`, with `authorPracticeArea`/`title`/`bio`/`photoUrl` all blanked rather than
+fabricated. `app/insights/[slug]/page.tsx` and `components/insights-article-card.tsx` treat
+an empty `authorPracticeArea` as "omit the separator," and the article page's fuller,
+bio-bearing byline block is hidden entirely for an unpublished author (no bio exists for the
+firm itself to show). `lib/seo.ts`'s `getArticleJsonLd` now takes an `authorPublished` flag
+and emits `@type: "Organization"` instead of `Person` with a blank `jobTitle` in that case —
+a correctness fix beyond the task's own text, found while implementing (a real `Person`
+schema.org author needs a name; crediting an organization as a `Person` is invalid
+structured data). Verified live: an author's `published` flag was flipped directly in the
+dev database (bypassing the admin's own protective validation, exactly the scenario this bug
+describes), the article page/index card/JSON-LD were confirmed to show the firm-attribution
+fallback correctly at desktop and mobile widths, then flipped back and confirmed the real
+byline returned with no regression. Deliberately left `lib/articles.ts`'s admin Articles list
+(`content-management-admin.md`'s internal partner-facing table) untouched — it shows the
+real author name regardless of `published` for editorial/management purposes, a different
+concern from the public-facing byline this task's own text is about.
 
 ---
 

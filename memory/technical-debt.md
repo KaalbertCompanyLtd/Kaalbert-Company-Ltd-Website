@@ -520,7 +520,7 @@ case: "pinned but later unpublished falls back to most-recent automatically") �
 
 ## Diagnostic summary email had no admin edit screen yet for its new `emailDetail` content
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-06 (T3.7 follow-up, session 23 — user asked whether the emailed
 summary's content was admin-editable and, on inspection, whether it was genuinely fuller
 than the on-screen result; it was neither)
@@ -547,6 +547,12 @@ textarea, not a single-line input, since it supports blank-line-separated paragr
 **Trigger type:** Task-sequenced
 **Sequenced into:** T7.7 (Diagnostic Configuration, `docs/tasks/07-content-admin.md`) — see
 that task's session-23 addendum for the exact field list this editor still needs to add.
+**Date resolved:** 2026-09-11 (T7.11, session 55 — caught stale while auditing open debt for
+the "Website Build Status" Artifact's Milestone 7 update; T7.7 itself, session 50, had
+already shipped exactly this: `/admin/diagnostic-configuration`'s Score bands section has a
+`Label` input, an `On-screen statement` textarea, and a separate `Email detail` textarea per
+band — confirmed directly in `app/admin/(shell)/diagnostic-configuration/
+configuration-client.tsx`. This entry was simply never flipped when T7.7 completed.)
 
 ---
 

@@ -13,7 +13,7 @@ import type { LegalPageBlock } from "@/lib/legal";
  * one), so this isn't new technical debt, just the same existing precedent centralized for
  * this file's own use.
  */
-const FIRM_NAME = "Kaalbert & Company Ltd";
+export const FIRM_NAME = "Kaalbert & Company Ltd";
 
 const META_DESCRIPTION_MAX_LENGTH = 160;
 
@@ -189,7 +189,9 @@ export interface ArticleJsonLdData {
   "@context": "https://schema.org";
   "@type": "Article";
   headline: string;
-  author: { "@type": "Person"; name: string; jobTitle: string };
+  author:
+    | { "@type": "Person"; name: string; jobTitle: string }
+    | { "@type": "Organization"; name: string };
   publisher: {
     "@type": "Organization";
     name: string;
@@ -211,11 +213,17 @@ export interface ArticleJsonLdData {
  * URL, otherwise (same "omit rather than fake" precedent as `getOrganizationJsonLd`'s
  * `sameAs`). Pure/sync — unlike `getOrganizationJsonLd`, every input is already in hand from
  * `getArticleBySlug`, so there's no reason for this to be async or to re-fetch anything.
+ *
+ * `authorPublished: false` (T7.11) means `lib/insights.ts` has already substituted `FIRM_NAME`
+ * for `authorName` and an empty string for `authorPracticeArea` — the `author` object here
+ * switches to `@type: "Organization"` (no `jobTitle`) to match, rather than describing the firm
+ * as a `Person` with a blank job title.
  */
 export function getArticleJsonLd(article: {
   title: string;
   authorName: string;
   authorPracticeArea: string;
+  authorPublished: boolean;
   publishedAt: Date;
   revisedAt: Date | null;
   previewImage: string | null;
@@ -226,7 +234,9 @@ export function getArticleJsonLd(article: {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.title,
-    author: { "@type": "Person", name: article.authorName, jobTitle: article.authorPracticeArea },
+    author: article.authorPublished
+      ? { "@type": "Person", name: article.authorName, jobTitle: article.authorPracticeArea }
+      : { "@type": "Organization", name: article.authorName },
     publisher: {
       "@type": "Organization",
       name: FIRM_NAME,

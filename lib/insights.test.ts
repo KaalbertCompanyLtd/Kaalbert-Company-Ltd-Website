@@ -22,8 +22,10 @@ import {
   getInsightsIndex,
   getRelatedArticles,
   isResourceReachable,
+  shapeArticleCard,
   INSIGHTS_PAGE_SIZE,
 } from "@/lib/insights";
+import { FIRM_NAME } from "@/lib/seo";
 
 const countMock = vi.mocked(prisma.article.count);
 const findManyMock = vi.mocked(prisma.article.findMany);
@@ -36,7 +38,11 @@ const ARTICLE_ROW = {
   excerpt: "Mixing personal and business cash is a habit that quietly sinks SMEs.",
   previewImage: null,
   category: { name: "Financial Control", slug: "financial-control" },
-  author: { name: "Evans Agyemang", practiceArea: "Financial Control & Compliance" },
+  author: {
+    name: "Evans Agyemang",
+    practiceArea: "Financial Control & Compliance",
+    published: true,
+  },
 };
 
 beforeEach(() => {
@@ -139,6 +145,25 @@ describe("getInsightsIndex", () => {
   });
 });
 
+describe("shapeArticleCard", () => {
+  it("uses the real author name/practice area when the author is published", () => {
+    const card = shapeArticleCard(ARTICLE_ROW);
+
+    expect(card.authorName).toBe("Evans Agyemang");
+    expect(card.authorPracticeArea).toBe("Financial Control & Compliance");
+  });
+
+  it("falls back to crediting the firm, with no practice area, when the author is unpublished (T7.11)", () => {
+    const card = shapeArticleCard({
+      ...ARTICLE_ROW,
+      author: { ...ARTICLE_ROW.author, published: false },
+    });
+
+    expect(card.authorName).toBe(FIRM_NAME);
+    expect(card.authorPracticeArea).toBe("");
+  });
+});
+
 const FULL_ARTICLE_ROW = {
   id: 1,
   slug: "owner-drawings",
@@ -159,6 +184,7 @@ const FULL_ARTICLE_ROW = {
     title: "Co-Founder",
     practiceArea: "Financial Control & Compliance",
     bio: "A chartered accountant...",
+    published: true,
   },
   resources: [{ id: 5, label: "Checklist", fileUrl: "https://example.com/file.pdf", sortOrder: 0 }],
 };
@@ -194,6 +220,31 @@ describe("getArticleBySlug", () => {
       categoryId: 10,
       nextStepCta: { heading: "Next", body: "Body", label: "Go", href: "/offers/x" },
       resources: [{ id: 5, label: "Checklist", fileUrl: "https://example.com/file.pdf" }],
+    });
+  });
+
+  it("falls back to firm attribution for the byline when the author is unpublished (T7.11)", async () => {
+    findUniqueMock.mockResolvedValue({
+      ...FULL_ARTICLE_ROW,
+      author: {
+        name: "Evans Agyemang",
+        photoUrl: "https://pub-test.r2.dev/images/evans.jpg",
+        title: "Co-Founder",
+        practiceArea: "Financial Control & Compliance",
+        bio: "A chartered accountant...",
+        published: false,
+      },
+    } as never);
+
+    const result = await getArticleBySlug("owner-drawings");
+
+    expect(result?.author).toEqual({
+      name: FIRM_NAME,
+      photoUrl: null,
+      title: "",
+      practiceArea: "",
+      bio: "",
+      published: false,
     });
   });
 });

@@ -3,7 +3,14 @@
 Roadmap milestone 8. The consuming counterpart to every write-side task built earlier
 (T2.6's contact form, T3.5's diagnostic submit) — those have been writing real
 `enquiry_record` rows since Milestones 2–3; this epic is where a partner first sees them.
-Builds to `ui/mockups/g-admin-content/` enquiries list/detail mockups.
+T8.2's list screen has no dedicated mockup — `ui/screen-inventory.md` documents it as
+"Can be inferred" from screen #26 (`AdminDataTable`, the same list-with-filters/sort pattern
+`app/admin/(shell)/articles/page.tsx` already establishes), with the `TriageBadge` variant.
+T8.3's detail screen has its own dedicated mockup, `ui/mockups/h-admin-enquiries/
+admin-enquiry-detail.html` — screen-inventory.md's own reasoning: "dense, unique layout" with
+no equivalent pattern elsewhere in the admin. (Corrected session 55, T7.11: this paragraph
+previously named a wrong directory, `g-admin-content`, and implied a dedicated list mockup
+that was never built or planned — see `memory/decision-log.md`.)
 
 ---
 

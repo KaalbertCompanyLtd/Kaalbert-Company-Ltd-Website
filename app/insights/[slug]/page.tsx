@@ -13,7 +13,7 @@ import {
 } from "@/lib/insights";
 import type { ArticleBodyBlock, ArticleResourceItem } from "@/lib/insights";
 import { getOfferNavLinks } from "@/lib/offers";
-import { buildPageMetadata, getSiteUrl, resolveMetaDescription } from "@/lib/seo";
+import { buildPageMetadata, FIRM_NAME, getSiteUrl, resolveMetaDescription } from "@/lib/seo";
 import { getSiteFooterContent } from "@/lib/site-settings";
 import { ArticleJsonLd } from "@/components/article-json-ld";
 import { InsightsSubscribeForm } from "@/components/insights-subscribe-form";
@@ -74,6 +74,18 @@ function formatPublishedDate(date: Date): string {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
+/**
+ * `getInitials` is documented and verified specifically for person names — "Kaalbert &
+ * Company Ltd" (T7.11's firm-attribution byline fallback, `FIRM_NAME`) naively splits into
+ * "Kaalbert"/"&", producing "K&" — the same class of bug `components/insights-article-
+ * card.tsx`'s `categoryInitials` was written to avoid for category names. `FIRM_NAME` is a
+ * fixed, known string here (not arbitrary input), so a direct special case is simpler than
+ * generalizing `getInitials` itself for a case that never occurs for a real person's name.
+ */
+function bylineInitials(name: string): string {
+  return name === FIRM_NAME ? "KC" : getInitials(name);
+}
+
 function BylineAvatar({
   name,
   photoUrl,
@@ -91,7 +103,7 @@ function BylineAvatar({
       <AvatarFallback
         className={`bg-primary text-brass-300 font-display rounded-sm font-bold ${textClasses}`}
       >
-        {getInitials(name)}
+        {bylineInitials(name)}
       </AvatarFallback>
     </Avatar>
   );
@@ -244,6 +256,7 @@ export default async function ArticlePage({ params }: ArticlePageParams) {
         title={article.title}
         authorName={article.author.name}
         authorPracticeArea={article.author.practiceArea}
+        authorPublished={article.author.published}
         publishedAt={article.publishedAt}
         revisedAt={article.revisedAt}
         previewImage={article.previewImage}
@@ -270,7 +283,8 @@ export default async function ArticlePage({ params }: ArticlePageParams) {
               />
               <div className="text-caption text-muted-foreground">
                 <strong className="text-foreground text-body block">{article.author.name}</strong>
-                {article.author.practiceArea} · Published {formatPublishedDate(article.publishedAt)}
+                {article.author.practiceArea && <>{article.author.practiceArea} · </>}Published{" "}
+                {formatPublishedDate(article.publishedAt)}
               </div>
             </div>
           </div>
@@ -346,23 +360,28 @@ export default async function ArticlePage({ params }: ArticlePageParams) {
             </div>
 
             {/* Named author byline with photo/practice area (FR-3.3) — the fuller, bio-bearing
-                version; the header above is the shorter identification. */}
-            <div className="border-border bg-card my-10 flex flex-col gap-5 rounded-md border p-7 sm:flex-row">
-              <BylineAvatar
-                name={article.author.name}
-                photoUrl={article.author.photoUrl}
-                size="lg"
-              />
-              <div>
-                <h3 className="font-display text-primary text-[1.0625rem] font-bold">
-                  {article.author.name}
-                </h3>
-                <span className="text-caption text-accent mb-2 block font-semibold tracking-[0.05em] uppercase">
-                  {article.author.title} · {article.author.practiceArea}
-                </span>
-                <p className="text-body text-foreground mb-0">{article.author.bio}</p>
+                version; the header above is the shorter identification. Omitted entirely once
+                the author is unpublished (T7.11): the byline has already fallen back to
+                crediting the firm itself, and there is no personal bio/title/photo to show for
+                that — a byline-with-fabricated-content would be worse than none here. */}
+            {article.author.published && (
+              <div className="border-border bg-card my-10 flex flex-col gap-5 rounded-md border p-7 sm:flex-row">
+                <BylineAvatar
+                  name={article.author.name}
+                  photoUrl={article.author.photoUrl}
+                  size="lg"
+                />
+                <div>
+                  <h3 className="font-display text-primary text-[1.0625rem] font-bold">
+                    {article.author.name}
+                  </h3>
+                  <span className="text-caption text-accent mb-2 block font-semibold tracking-[0.05em] uppercase">
+                    {article.author.title} · {article.author.practiceArea}
+                  </span>
+                  <p className="text-body text-foreground mb-0">{article.author.bio}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Contextual next-step CTA (FR-3.4) — never a generic "contact us"; heading/body
                 copy is authored per article via `Article.nextStepCta`. */}

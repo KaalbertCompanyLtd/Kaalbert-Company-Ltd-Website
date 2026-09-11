@@ -37,6 +37,7 @@ function row(
     author: {
       name: overrides.authorName ?? "Evans Agyemang",
       practiceArea: overrides.authorPracticeArea ?? "Financial Control & Compliance",
+      published: true,
     },
   };
 }
