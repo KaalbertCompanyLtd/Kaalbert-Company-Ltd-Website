@@ -18,6 +18,16 @@ task's "identical effect... not a second code path" acceptance criterion by cons
 removed row stays visible with its status flipped to Unsubscribed (never a hard delete, per
 `insights-engine.md`'s own rule).
 
+**Follow-up (same session, after user feedback):** "Export only producing only part of the
+required is not acceptable." Investigated empirically rather than guessing — seeded 16
+subscribers spanning two table pages and mixed statuses, verified live via Playwright that
+row-completeness was already correct (unfiltered export = all 16 rows across both pages;
+Subscribed-only filter = exactly the 12 matching rows). The real gap was column-completeness:
+`insights-engine.md` names five `subscriber` fields (id, email, subscribed_at, consent,
+unsubscribed_at) and the CSV only had four — `id` was missing. Added it as the export's first
+column. Re-verified live with the same two export scenarios; cleaned up all seeded test data
+afterward.
+
 ## Files Changed
 
 - `lib/admin-subscribers.ts` (new) — `getSubscriberList`/`removeSubscriber`.
@@ -34,6 +44,9 @@ removed row stays visible with its status flipped to Unsubscribed (never a hard 
   updated "What's coming next" and the change log.
 - Artifact mirror (`https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc`)
   republished to Version 12 with the same changes.
+- `app/admin/(shell)/subscribers/subscribers-list-client.tsx` (follow-up) — `downloadCsv` now
+  includes an `ID` column.
+- `memory/completed-work.md` (follow-up) — new "T7.9 follow-up" entry.
 
 ## Decisions Made
 

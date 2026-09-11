@@ -62,17 +62,25 @@ function csvField(value: string): string {
 }
 
 /**
- * Client-side CSV generation from the currently filtered `rows` (pre-pagination) — this
+ * Client-side CSV generation from the currently filtered `rows` (pre-pagination, so every
+ * page of the filtered set is included, not just the page currently on screen) — this
  * task's own acceptance criterion is "export produces a file matching the on-screen filtered
  * set," and every row this screen ever shows is already loaded in the browser (no separate
  * export endpoint exists in `content-management-admin.md`'s Interfaces list), so building the
  * file directly from the same array the table renders is the simplest way to guarantee the
  * two always match — there's no second query that could drift from what's on screen.
+ *
+ * Columns cover every field `insights-engine.md`'s "Data requirements" names for `subscriber`
+ * (id, email, subscribed_at, consent, unsubscribed_at) — `id` in particular is the row's own
+ * stable identifier and must be present for the export to be a complete, reconcilable record
+ * of who's on the list, not just a display convenience mirroring the on-screen table (which
+ * omits `id` since it has no display purpose there).
  */
 function downloadCsv(rows: SubscriberListRow[]) {
-  const header = ["Email", "Consent", "Subscribed at", "Status", "Unsubscribed at"];
+  const header = ["ID", "Email", "Consent", "Subscribed at", "Status", "Unsubscribed at"];
   const lines = rows.map((row) =>
     [
+      String(row.id),
       csvField(row.email),
       row.consent ? "Yes" : "No",
       csvField(row.subscribedAt),

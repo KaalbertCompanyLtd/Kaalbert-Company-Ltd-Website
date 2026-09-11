@@ -14,6 +14,36 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.9 follow-up, session 52 continued)
+
+**Task:** T7.9 follow-up — CSV export was missing the `subscriber` entity's own `id` field
+**Summary:** User feedback after T7.9 shipped: "Export only producing only part of the
+required is not acceptable." Investigated empirically before guessing at a fix — seeded 15
+extra test subscribers (16 total, spanning two table pages, mixed subscribed/unsubscribed)
+via a throwaway script, then verified live via Playwright that row-completeness was already
+correct: the unfiltered export produced all 16 rows (not just the current page's 10), and a
+Subscribed-only filtered export correctly produced exactly the 12 matching rows, zero
+Unsubscribed rows leaking through. That ruled out a row-completeness bug. The real gap was
+column-completeness: `docs/features/insights-engine.md`'s "Data requirements" names five
+`subscriber` fields — id, email, subscribed_at, consent, unsubscribed_at — and the exported
+CSV only ever had four of them; `id`, the row's own stable identifier, was never a column
+(the on-screen table also omits it, correctly, since it has no display purpose there — but
+an export is a data record, not a display convenience, and needs to be reconcilable back to
+the actual row). Added `ID` as the CSV's first column. Re-verified live: same 16/12-row
+tests, now with `id` present and correct in every row. Cleaned up all seeded test data and
+downloaded CSVs afterward; the one real dev subscriber (`kaalberto777@gmail.com`) was left
+exactly as it was.
+**Files Changed:** `app/admin/(shell)/subscribers/subscribers-list-client.tsx` (`downloadCsv`
+now includes an `ID` column, first field in the header and every row).
+**Related Feature:** `docs/features/insights-engine.md` (the `subscriber` entity's full field
+list — this is what "the required" fields for an export of this entity actually are).
+**Notes:** No test suite covers this client component's `downloadCsv` function directly —
+consistent with this codebase's existing convention of no `*.test.tsx` coverage for any
+admin list-client component anywhere in the project; verification here is the same
+Playwright-against-the-real-dev-server method already used for every other admin screen.
+
+---
+
 ## 2026-09-11 (T7.9, session 52)
 
 **Task:** T7.9 — Subscribers list
