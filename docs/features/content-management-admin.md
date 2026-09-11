@@ -153,7 +153,13 @@ response_time_commitment, social_profile_urls (list, nullable —
 ## Interfaces
 
 - `/admin` — authenticated area, screens per content type listed above.
-- `PATCH /api/admin/articles/[id]`, `PATCH /api/admin/pages/[id]`, `PATCH
+- `PATCH /api/admin/articles/[id]`, `PATCH /api/admin/pages/capabilities`, `PATCH
+/api/admin/pages/our-method` (T7.3 built these as two purpose-built routes rather than one
+  generic `PATCH /api/admin/pages/[id]` — each compound-updates its `page` row together with
+  its own linked repeating section, `capability`/`method_stage`, in one request; a single
+  generic-by-id route would need complex polymorphic body handling for two structurally
+  different payloads), `PATCH /api/admin/legal/[slug]`, `PATCH /api/admin/footer-content`,
+  `PATCH
 /api/admin/offers/[id]`, `POST /api/admin/landing-pages`, `PATCH /api/admin/authors/[id]`,
   `PATCH /api/admin/diagnostic-questions/[id]`, `PATCH /api/admin/diagnostic-dimensions/[id]`,
   `PATCH /api/admin/diagnostic-thresholds/[id]`, `PATCH /api/admin/diagnostic-score-bands/[id]`

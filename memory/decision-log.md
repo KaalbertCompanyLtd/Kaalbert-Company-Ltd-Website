@@ -2,6 +2,91 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-11 (T7.3, session 46) — Pages editor built as three purpose-built screens (Capabilities, Our Method, Legal+Footer) with no add/remove on the two fixed repeating sections; the 10.05 compliance gate reinterpreted for content with no draft/live distinction; no such gate for legal text
+
+**Status:** Standing
+
+**Summary:** T7.3 (Pages editor) required reconciling several real gaps between the task's
+own "Build" line (a general "linked repeating section" pattern borrowed from the Offer
+editor) and what `capabilities-page.md`/`our-method-page.md`'s own business rules actually
+allow, plus a genuine schema fact this task's own architecture-constraints section had
+already flagged as needing resolution before assuming T7.2's exact publish-gate mechanics
+transfer. Concrete decisions:
+
+- **No add/remove control on `capability` or `method_stage` rows** — `capabilities-page.md`'s
+  own business rule ("exactly eight service line summaries") and `our-method-page.md`'s ("all
+  four stages") both fix the count; this task edits eight/four rows' _content_ in place, never
+  the count. This is a materially simpler shape than T7.2's article body editor, which does
+  support open-ended add/remove — the two tasks only superficially look alike ("a repeating
+  section on a page editor").
+- **`Capability.slug` and `MethodStage.name`/`order` render read-only.** `slug` is the live
+  lookup key `lib/contact.ts`'s `resolveServiceContext` matches `/contact?service=[slug]`
+  against — editing it would silently break any already-shared enquiry link, the same
+  "identity fields stay frozen after creation" precedent T7.2 applied to `Article.slug`.
+  `method_stage`'s name/order represent the firm's actual fixed method (Discover → Diagnose →
+  Design → Deliver per `our-method-page.md`'s own goal), not an arbitrary display order —
+  reordering or renaming them here would misrepresent the method itself, not just edit copy.
+- **The compliance checkbox gates the Save action itself, not a separate Publish action, for
+  Capabilities/Our Method.** `Page`/`Capability`/`MethodStage` have no `publishedAt`-style
+  draft/live column at all — every row is live the instant it's saved — so there is no
+  intermediate "Publish" step the way T7.2's article editor has one. FR-5.4's sign-off gate
+  ("no page... marked publishable without a recorded firm sign-off") is honored by requiring
+  the checkbox before the one save action that exists, since for this content type that save
+  _is_ the publish moment.
+- **No 10.05-compliance checkbox on Legal pages or `footer_content`.** That gate is
+  specifically FR-5.4's Positioning-and-Claims review for promotional/marketing copy; legal
+  text goes through a different real review process the existing `isPlaceholder`/"Draft —
+  pending legal review" marker (T2.7) already gates. Surfaced that marker here as an editable
+  checkbox instead of a read-only badge — this is the first task able to actually clear it.
+- **`LegalPage.lastRevisedAt` is set only on a save that leaves `isPlaceholder: false`** —
+  matching `lib/legal.ts`'s own `formatRevisedDate` doc-comment ("once the firm has actually
+  revised the page"), the field means "genuinely legally reviewed," not "last edited." A save
+  that keeps the page a draft never touches it; verified live (toggled Cookie Notice from
+  draft to reviewed, confirmed `lastRevisedAt` was set and the public page's "Draft" marker
+  disappeared, then reverted both for real via the dev DB).
+- **`AdvisoryRetainer` is explicitly out of scope**, despite appearing on `/capabilities`
+  alongside the eight `capability` cards this task does edit — `capabilities-page.md`'s own
+  Data requirements section names it as edited via the Offers content area (T7.4), which its
+  own "Build" line confirms ("Same structured-fee discipline applies to Advisory Retainer").
+- **A new, small `LegalBlockEditor` was built rather than generalizing T7.2's
+  `block-editor.tsx`** to a shared configurable block-kind set. `LegalPageBlock`'s kinds
+  (statement/prose/pending/table) are a different, smaller set from `ArticleBodyBlock`'s
+  (paragraph/heading/quote/list/table/figure) — duplicating the same small add/move/remove
+  mechanics in miniature was judged lower-risk than refactoring T7.2's already-verified,
+  shipped article-editor code for what would be a one-time reuse.
+- **Two purpose-built routes (`PATCH /api/admin/pages/capabilities`, `PATCH /api/admin/pages/
+our-method`) instead of `content-management-admin.md`'s originally-sketched generic `PATCH
+/api/admin/pages/[id]`** — each compound-updates a `page` row together with its own linked
+  repeating section in one request; a single generic-by-id route would need polymorphic body
+  handling for two structurally different payloads. Feature doc updated to match what was
+  actually built, same "interfaces get refined once actually built" precedent as earlier
+  tasks' field additions.
+- **`footer_content` gets a real, working editor here, but `SiteFooter`/`ScopeOfPracticeNote`
+  still don't read it live** — that wiring gap is pre-existing, already tracked
+  (`memory/technical-debt.md` → "SiteFooter callers still pass hardcoded address/phone props"),
+  already sequenced into T7.8, and explicitly not this task's concern (`prisma/schema.prisma`'s
+  own `FooterContent` doc-comment already says so). Not re-logged as new debt; this task just
+  gives T7.8 a real admin screen to point the wiring at when it gets there.
+
+Verified for real via Playwright MCP against the live dev database: edited a real Capability's
+name, saved with the compliance checkbox, and confirmed `/capabilities` reflected it
+immediately (T7.3's own acceptance criterion), then reverted via direct query. Loaded the Our
+Method editor against all four real seeded stages (capability-transfer note correctly shown
+only for Deliver). Loaded the Legal/Footer screen against all four real legal pages including
+Scope of Practice's real, non-placeholder content (statement/prose/table blocks all rendering
+and editing correctly), toggled Cookie Notice's draft status live, and saved real
+`footer_content` — all reverted afterward. Checked all four new screens (Pages list,
+Capabilities, Our Method, Legal+Footer) at mobile/tablet/desktop with no page-level horizontal
+scroll (the Legal screen's table block editor scrolls within its own container instead).
+
+**Related Documents:** `docs/features/content-management-admin.md`,
+`docs/features/capabilities-page.md`, `docs/features/our-method-page.md`,
+`docs/features/legal-and-compliance-pages.md`, `docs/tasks/07-content-admin.md` (T7.3),
+`prisma/schema.prisma` (`Page`/`Capability`/`MethodStage`/`LegalPage`/`FooterContent` model
+doc-comments), `lib/admin-pages.ts`, `lib/admin-legal.ts`.
+
+---
+
 ## 2026-09-11 (T7.2, session 45) — Article editor built as a structured block editor against the real schema, not the mockup's literal contenteditable/field set; real image uploads via an interim base64 store; downloadable-resource attachment split into a new task
 
 **Status:** Standing

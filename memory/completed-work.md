@@ -14,6 +14,71 @@ Protocol):
 
 ---
 
+## 2026-09-11 (T7.3, session 46)
+
+**Task:** T7.3 — Pages editor (marketing pages incl. Capabilities, Our Method; legal pages)
+**Summary:** Built three admin screens under a shared "Pages" area: `/admin/pages` (a simple
+list linking to the two marketing-page editors plus an inline link to the Legal area, same
+"one nav entry, second screen via inline link" pattern T7.2 already used for Categories),
+`/admin/pages/capabilities` (hero fields + the eight fixed `capability` rows, edited in
+place, no add/remove), `/admin/pages/our-method` (hero + intro fields + the four fixed
+`method_stage` rows), and `/admin/pages/legal` (all four `legal_page` rows via a selector,
+each with its own `LegalPageBlock` editor and an editable "still a draft" checkbox, plus the
+shared `footer_content` singleton). New `lib/admin-pages.ts` (Capabilities/Our Method) and
+`lib/admin-legal.ts` (Legal/Footer) hold all business logic; route handlers parse/shape only.
+
+Reconciled two real gaps between this task's own "Build" line (borrowing the Offer editor's
+generic "linked repeating section" pattern) and the actual content rules: `capabilities-
+page.md`/`our-method-page.md` both fix their row counts ("exactly eight"/"all four"), so
+this editor never adds or removes rows, only edits their content in place — a materially
+simpler shape than T7.2's open-ended article body editor. And `Page`/`Capability`/
+`MethodStage` have no draft/live distinction in the schema at all, so the 10.05-compliance
+checkbox gates the Save action itself rather than a separate Publish step. Legal pages get no
+such checkbox — a different review process, already gated by the existing `isPlaceholder`
+marker, now surfaced here as something a partner can actually toggle. Full reasoning for
+these and several smaller calls (read-only `Capability.slug`/`MethodStage.name`/`order`,
+`AdvisoryRetainer` explicitly out of scope, a new small `LegalBlockEditor` rather than
+generalizing T7.2's, two purpose-built PATCH routes instead of the feature doc's originally-
+sketched generic one) in `memory/decision-log.md`.
+
+**Conscious call on last-write-wins** (required by this task's own session-04 addendum,
+independently of whatever T7.2 chose): shipped as documented — no optimistic-locking/
+staleness check added to any of this task's five PATCH handlers (`pages/capabilities`,
+`pages/our-method`, `legal/[slug]`, `footer-content`). Same reasoning as T7.2: `content-
+management-admin.md`'s own edge case explicitly accepts this for Phase 1 (five partners, low
+edit frequency), and this task's content is edited even less often than articles (marketing
+page copy, legal text). Existing debt entry already covers it, no new one needed.
+
+Verified for real via Playwright MCP against the live dev database: edited a real Capability
+and confirmed `/capabilities` updated immediately with no deploy (T7.3's own acceptance
+criterion), loaded Our Method against all four real stages, loaded Legal against all four
+real legal pages (including Scope of Practice's real non-placeholder content, exercising
+every `LegalPageBlock` kind including the table sub-editor), toggled a legal page's draft
+status live and confirmed the public page's "Draft" marker responded, and saved real footer
+content — every test change reverted afterward via direct query so the dev DB is exactly as
+it was before this session. Checked all four screens at mobile (390px)/tablet (768px)/desktop
+(1280px), no page-level horizontal scroll anywhere (the Legal table editor scrolls within its
+own container).
+**Files Changed:** `lib/admin-pages.ts`, `lib/admin-pages.test.ts`, `lib/admin-legal.ts`,
+`lib/admin-legal.test.ts`, `app/admin/(shell)/pages/*` (list, capabilities, our-method,
+legal screens + their client forms and the `LegalBlockEditor`), `app/api/admin/pages/
+capabilities/route.ts`, `app/api/admin/pages/our-method/route.ts`, `app/api/admin/legal/
+[slug]/route.ts`, `app/api/admin/footer-content/route.ts`, `docs/features/content-
+management-admin.md` (Interfaces section updated to match the real routes built).
+**Related Feature:** `docs/features/content-management-admin.md`,
+`docs/features/capabilities-page.md`, `docs/features/our-method-page.md`,
+`docs/features/legal-and-compliance-pages.md`
+**Notes:** Quality gates all clean (lint, format:check, `npm run typecheck`, 200/200 tests —
+19 new across the two new `lib/` test files). `docs/user-guide.md` updated (Public website
+pages section) and its Artifact mirror republished; also caught and fixed a real drift from
+T7.2 while there — that session's Artifact-only edit to this same section's "what a partner
+can do" line was never applied to `docs/user-guide.md` itself, so the two had silently
+diverged for one task. No milestone/epic completed this session (6 of Milestone 7's 10 tasks
+remain), so the "Website Build Status" Artifact was not updated, matching T7.1/T7.2's own
+precedent.
+
+---
+
 ## 2026-09-11 (T7.2, session 45)
 
 **Task:** T7.2 — Articles editor + Categories
