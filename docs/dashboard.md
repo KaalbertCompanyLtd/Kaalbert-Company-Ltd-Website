@@ -86,7 +86,7 @@ and the Railway config-as-code migration. None blocks Phase 1 progress.
 
 **First Task:** `tasks/01-foundation.md`, T1.1 — Repo, Next.js app, and deploy pipeline
 **Blocked On:** Nothing for Phase 1 (Milestones 1–9) — fully unblocked, sequenced, and ready
-to start at T1.1. Three items are blocked within later scope, all flagged rather than assumed:
+to start at T1.1. Two items are blocked within later scope, all flagged rather than assumed:
 
 - **Known placeholder content (T2.7, session 13, 2026-09-05):** `/legal/privacy-notice`,
   `/legal/cookie-notice`, and `/legal/terms-of-use` are live at their stable URLs (structurally
@@ -97,11 +97,14 @@ to start at T1.1. Three items are blocked within later scope, all flagged rather
   publicly reachable — this is a genuine pre-launch content gate, not an engineering task. The
   fourth legal page, `/legal/scope-of-practice`, is real, non-placeholder content (sourced from
   `Company Docs/07.10 Scope of Practice and Regulatory Boundary Policy.docx`, verified at T2.5).
-- `tasks/08-enquiry-management.md` T8.4 (personal-data deletion for a _converted_ enquiry) —
-  blocked on the firm confirming the retention/deletion boundary; not an engineering gap.
 - `tasks/16-paid-diagnostic-suite.md` (P2-7, gated) — blocked on its own evidence trigger
   (free-diagnostic conversion data), plus an open refund-policy question flagged for the firm
   before T16.2/T16.3 build.
+
+`tasks/08-enquiry-management.md` T8.4 (personal-data deletion for a _converted_ enquiry) was
+resolved at session 59 (2026-09-12): the firm confirmed a converted enquiry is deleted exactly
+like any other — no special retention exception. No longer a blocker; see
+`memory/decision-log.md`.
 
 **Scope Status:** In scope for v1 — Milestones 1–9 (`roadmap.md`), as defined in `scope.md`'s
 Phase 1 launch scope. Milestones 10–16 are fully planned but explicitly out of v1 scope until

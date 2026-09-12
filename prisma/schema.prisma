@@ -394,18 +394,18 @@ model SiteSettings {
 /// `internal_notes`, `status_updated_at`) was Milestone 8 scope, not anticipated at T2.6 — see
 /// the field-level doc-comments below for how T8.1 actually added it.
 model EnquiryRecord {
-  id                  Int                  @id @default(autoincrement())
-  name                String?
-  email               String?
-  phone               String?
-  message             String?
-  serviceLine         String?              @map("service_line")
-  contactConsent      Boolean?             @map("contact_consent")
-  marketingConsent    Boolean              @default(false) @map("marketing_consent")
+  id                    Int                  @id @default(autoincrement())
+  name                  String?
+  email                 String?
+  phone                 String?
+  message               String?
+  serviceLine           String?              @map("service_line")
+  contactConsent        Boolean?             @map("contact_consent")
+  marketingConsent      Boolean              @default(false) @map("marketing_consent")
   /// Diagnostic-specific, null for every contact-form-originated row (see model doc-comment).
-  scoreSummary        Json?                @map("score_summary")
-  weakestDimensions   String[]             @default([]) @map("weakest_dimensions")
-  triageFlag          Boolean?             @map("triage_flag")
+  scoreSummary          Json?                @map("score_summary")
+  weakestDimensions     String[]             @default([]) @map("weakest_dimensions")
+  triageFlag            Boolean?             @map("triage_flag")
   /// Added at T8.1 — `lib/diagnostic-scoring.ts`'s `resolveTriageBand` already computed this
   /// per submission (`overallPriorityLevel`, "High"/"Medium"/"Low" from
   /// `diagnostic_threshold.triagePriorityLevel`) but it was only ever embedded in
@@ -416,8 +416,8 @@ model EnquiryRecord {
   /// admin data (Milestone 7), not a fixed closed set the schema should lock in. Null for
   /// every contact-form-originated row and for a diagnostic row whose score breached no
   /// threshold, same nullability precedent as `triageFlag`/`scoreSummary`.
-  triagePriorityLevel String?              @map("triage_priority_level")
-  createdAt           DateTime             @default(now()) @map("created_at")
+  triagePriorityLevel   String?              @map("triage_priority_level")
+  createdAt             DateTime             @default(now()) @map("created_at")
   /// Added at T8.1 (`enquiry-management.md`'s own Data requirements) — the status-driven
   /// triage workflow a partner works an enquiry through. A real, closed 5-value Prisma enum
   /// (`EnquiryStatus`, see its own doc-comment below) rather than a plain string like
@@ -426,31 +426,42 @@ model EnquiryRecord {
   /// `DiagnosticResponseType`/`AdminLoginAttemptKind` in this schema as real enums.
   /// `@default(new)` backfills every pre-T8.1 row to "new" (this task's own Input → Output
   /// contract) and is the correct starting state for every row created from here on too.
-  status              EnquiryStatus        @default(new)
+  status                EnquiryStatus        @default(new)
   /// Added at T8.1 — nullable (`enquiry-management.md`: "an enquiry is not required to be
   /// assigned to anyone"). `onDelete: SetNull`, not `Restrict` or `Cascade`: an admin_user
   /// being deactivated/removed must never block or cascade-delete the enquiries they were
   /// once assigned — the enquiry just becomes unassigned again, same defensive precedent as
   /// `attributionId` above.
-  assignedPartnerId   Int?                 @map("assigned_partner_id")
-  assignedPartner     AdminUser?           @relation(fields: [assignedPartnerId], references: [id], onDelete: SetNull)
+  assignedPartnerId     Int?                 @map("assigned_partner_id")
+  assignedPartner       AdminUser?           @relation(fields: [assignedPartnerId], references: [id], onDelete: SetNull)
   /// Added at T8.1 — admin-only, never visitor-facing (`enquiry-management.md`'s own business
   /// rule). Free text, no structure: this is a partner's working notes on one enquiry, not
   /// content with any admin-editable-content precedent elsewhere in this schema.
-  internalNotes       String?              @map("internal_notes")
+  internalNotes         String?              @map("internal_notes")
   /// Added at T8.1 — when `status` last changed. Defaults to `now()` so a backfilled
   /// pre-T8.1 row has a real, honest timestamp (the moment this column started existing,
   /// since no earlier status-change moment exists to record) rather than null; every future
   /// write that changes `status` (T8.3's `PATCH` handler) must also set this explicitly —
   /// it does not auto-update the way `updatedAt` columns elsewhere in this schema do, because
   /// it tracks one specific field's change, not "last modified in any way."
-  statusUpdatedAt     DateTime             @default(now()) @map("status_updated_at")
+  statusUpdatedAt       DateTime             @default(now()) @map("status_updated_at")
+  /// Added at T8.4 (FR-6.4) — when a partner deleted this enquiry's personal data on request
+  /// (`lib/admin-enquiries.ts`'s `deletePersonalData`, which nulls `name`/`email`/`phone`/
+  /// `message` but leaves this row and its non-personal fields intact for KPI counting). Null
+  /// for the overwhelming majority of rows, which have never had a deletion request; this
+  /// column exists specifically so the admin UI can tell "this visitor never gave a name"
+  /// (also null, but `personalDataDeletedAt` too) apart from "this visitor's name existed and
+  /// was deleted on request" — collapsing both into an indistinguishable null `name` would
+  /// silently misrepresent a real deletion as if it had simply never happened. The firm
+  /// confirmed at T8.4 (session 59, 2026-09-12) that a `converted` enquiry is deleted exactly
+  /// like any other status — no special-cased retention exists here.
+  personalDataDeletedAt DateTime?            @map("personal_data_deleted_at")
   /// Added at T3.1 (`docs/tasks/03-diagnostic.md`) — the relation
   /// `business-health-check-diagnostic.md`'s own Data requirements section names for this
   /// entity, deferred at T2.6 because `DiagnosticResponse` didn't exist yet (see the model
   /// doc-comment above). Empty for every contact-form-originated row, same as
   /// `scoreSummary`/`weakestDimensions`/`triageFlag`.
-  diagnosticResponses DiagnosticResponse[]
+  diagnosticResponses   DiagnosticResponse[]
   /// Added at T5.4 — the foreign key `measurement-and-attribution.md`'s Data requirements
   /// section names ("every enquiry_record carries a foreign key to its originating
   /// attribution row"), deferred at T2.6 because `Attribution` didn't exist yet (see
@@ -462,8 +473,8 @@ model EnquiryRecord {
   /// `EnquiryRecord` that still exists at that point already has no other Attribution to lose
   /// (the job explicitly skips referenced rows), but `SetNull` is the correct, defensive
   /// choice regardless of deletion order.
-  attributionId       Int?                 @map("attribution_id")
-  attribution         Attribution?         @relation(fields: [attributionId], references: [id], onDelete: SetNull)
+  attributionId         Int?                 @map("attribution_id")
+  attribution           Attribution?         @relation(fields: [attributionId], references: [id], onDelete: SetNull)
 
   @@map("enquiry_record")
 }

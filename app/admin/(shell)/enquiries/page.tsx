@@ -143,7 +143,11 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
                 );
                 return (
                   <TableRow key={enquiry.id}>
-                    <TableCell>{enquiry.name ?? "Not yet provided"}</TableCell>
+                    <TableCell>
+                      {enquiry.personalDataDeletedAt
+                        ? "Personal data deleted"
+                        : (enquiry.name ?? "Not yet provided")}
+                    </TableCell>
                     <TableCell>{enquiry.source}</TableCell>
                     <TableCell>{enquiry.score !== null ? `${enquiry.score}/100` : "—"}</TableCell>
                     <TableCell>

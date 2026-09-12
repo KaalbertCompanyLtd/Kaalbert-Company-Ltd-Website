@@ -14,6 +14,42 @@ Protocol):
 
 ---
 
+## 2026-09-12 (T8.4, session 59)
+
+**Task:** T8.4 — Personal-data deletion — `DELETE /api/admin/enquiries/[id]/personal-data`
+**Summary:** Unblocked this session — asked the firm directly (`AskUserQuestion`) whether a
+converted enquiry needs special retention treatment; the firm chose "delete regardless of
+status," recorded in `docs/tasks/08-enquiry-management.md`, `docs/features/enquiry-
+management.md`, and `docs/dashboard.md`'s "Blocked On" list before any code was written. Built
+`deletePersonalData` (nulls `name`/`email`/`phone`/`message`, retains everything else,
+idempotent), a new `personalDataDeletedAt` column so the admin UI can distinguish a real
+deletion from a name that was simply never given, the `DELETE` route, and a **Delete personal
+data** button on the T8.3 detail screen behind a real `AlertDialog` confirmation. This
+completes Milestone 8 (Enquiry Management) in full.
+**Files Changed:** `prisma/schema.prisma` (`EnquiryRecord.personalDataDeletedAt`),
+`prisma/migrations/20260912012155_t8_4_enquiry_personal_data_deletion/`, `lib/admin-
+enquiries.ts` (`deletePersonalData`, `EnquiryWriteValidationError` — renamed from
+`EnquiryUpdateValidationError`, now shared by update and delete), `lib/admin-enquiries.test.ts`
+(+3 tests, 27 total), `app/api/admin/enquiries/[id]/personal-data/route.ts` (new, `DELETE`),
+`app/admin/(shell)/enquiries/[id]/delete-personal-data-button.tsx` (new), `app/admin/(shell)/
+enquiries/[id]/page.tsx` (renders the deleted state), `app/admin/(shell)/enquiries/page.tsx`
+(list shows "Personal data deleted" instead of a blank name), `docs/tasks/08-enquiry-
+management.md`, `docs/features/enquiry-management.md`, `docs/dashboard.md`, `docs/user-
+guide.md` + Artifact mirror, Website Build Status Artifact (Milestone 8 now Complete with no
+caveat, resolved "Waiting on you" item removed).
+**Related Feature:** `docs/features/enquiry-management.md`
+**Notes:** Verified live via Playwright MCP: deleted a real contact-form enquiry's personal
+data end-to-end (confirmation dialog → confirm → `router.refresh()` shows "Personal data
+deleted" immediately on both the detail screen and the Enquiries list, with the deletion date
+shown), confirmed every other field (score, status, notes, attribution, consent) stayed
+intact. Checked at desktop/tablet(768px)/mobile(390px). All quality gates pass (338/338
+tests). Milestone 8 (T8.1–T8.4) is now fully shipped — the next real roadmap task is T5.5
+(resequenced into Milestone 9's start per `docs/roadmap.md`), itself still blocked on real
+ad-platform accounts and domain registration the firm hasn't provisioned yet; see the session
+summary's own handoff for the details.
+
+---
+
 ## 2026-09-12 (T8.3, session 58)
 
 **Task:** T8.3 — Enquiry detail — `/admin/enquiries/[id]`

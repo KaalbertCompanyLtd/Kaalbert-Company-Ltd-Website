@@ -5,6 +5,7 @@ import { getEnquiryDetail, listAssignablePartners } from "@/lib/admin-enquiries"
 import { resolveTriageBadge, type EnquiryStatusValue } from "@/lib/enquiry-list-options";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DeletePersonalDataButton } from "./delete-personal-data-button";
 import { EnquiryEditorForm } from "./enquiry-editor-form";
 
 /**
@@ -47,7 +48,9 @@ export default async function EnquiryDetailPage({ params }: DetailPageProps) {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-display text-h2 text-primary font-bold">
-            {detail.name ?? "Not yet provided"}
+            {detail.personalDataDeletedAt
+              ? "Personal data deleted"
+              : (detail.name ?? "Not yet provided")}
           </h1>
           <p className="text-body text-muted-foreground mt-1">
             <Link href="/admin/enquiries" className="hover:underline">
@@ -125,21 +128,42 @@ export default async function EnquiryDetailPage({ params }: DetailPageProps) {
         <div className="flex flex-col gap-6">
           <Card className="p-6">
             <h3 className="mb-4 text-[0.9375rem] font-semibold">Contact details</h3>
-            <div className="text-body mb-1 font-semibold">{detail.name ?? "Not yet provided"}</div>
-            <div className="text-muted-foreground text-sm">
-              {detail.email ?? "Not yet provided"}
-            </div>
-            <div className="text-muted-foreground text-sm">{detail.phone ?? "Not provided"}</div>
-            {detail.serviceLine && (
-              <div className="text-muted-foreground mt-2 text-sm">
-                Service interest: {detail.serviceLine}
-              </div>
-            )}
-            {detail.message && (
-              <div className="mt-3">
-                <div className="text-muted-foreground text-[0.8125rem]">Message</div>
-                <p className="text-body mt-1 whitespace-pre-wrap">{detail.message}</p>
-              </div>
+            {detail.personalDataDeletedAt ? (
+              <p className="text-body text-muted-foreground">
+                Personal data deleted on{" "}
+                {detail.personalDataDeletedAt.toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}{" "}
+                — name, email, phone, and message were removed on request.
+              </p>
+            ) : (
+              <>
+                <div className="text-body mb-1 font-semibold">
+                  {detail.name ?? "Not yet provided"}
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  {detail.email ?? "Not yet provided"}
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  {detail.phone ?? "Not provided"}
+                </div>
+                {detail.serviceLine && (
+                  <div className="text-muted-foreground mt-2 text-sm">
+                    Service interest: {detail.serviceLine}
+                  </div>
+                )}
+                {detail.message && (
+                  <div className="mt-3">
+                    <div className="text-muted-foreground text-[0.8125rem]">Message</div>
+                    <p className="text-body mt-1 whitespace-pre-wrap">{detail.message}</p>
+                  </div>
+                )}
+                <div className="mt-4">
+                  <DeletePersonalDataButton enquiryId={detail.id} />
+                </div>
+              </>
             )}
           </Card>
 

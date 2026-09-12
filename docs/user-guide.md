@@ -28,10 +28,9 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-12 (session 58) — Milestones 1–7 complete. Milestone 8 (Enquiry Management)
-in progress: T8.1's schema groundwork, T8.2's enquiries list, and T8.3's enquiry detail screen
-(open one enquiry, see everything about it, edit its status/notes/assignment) are all live.
-T8.4 (personal-data deletion) remains blocked on a firm policy decision, not scheduled.
+**As of:** 2026-09-12 (session 59) — Milestones 1–8 complete. Enquiry Management now covers
+the full loop: see every enquiry, filter/sort them, open one to see everything about it, edit
+its status/notes/assignment, and delete a person's data on request.
 
 ---
 
@@ -135,7 +134,8 @@ here).
   screen lets you change them.
 - **Contact details** — name/email/phone ("Not yet provided"/"Not provided" if missing), the
   service line they were interested in if they came via a `?service=` link, and their message
-  if they used the contact form.
+  if they used the contact form. A **Delete personal data** button sits at the bottom of this
+  card — see below.
 - **Consent** — two separate boxes, **Contact consent** and **Marketing consent**, each its
   own Given/Not given/Not yet provided — always shown distinctly, never merged into one
   "consented" flag, so you can never accidentally market to someone who only agreed to be
@@ -144,11 +144,27 @@ here).
   Campaign if captured, and the Landing page they first arrived on. Reads "No attribution
   captured for this enquiry" if none exists (a row from before attribution tracking existed,
   or capture failed for that visit — this never blocks anything else on the screen).
-- **Status & notes** — the one editable panel on this screen:
+- **Status & notes** — the one other editable panel on this screen:
   1. **Status** dropdown — New/Contacted/Closed/Converted/Not a fit.
   2. **Assigned to** dropdown — Unassigned, or any active partner.
   3. **Internal notes** — free text, never shown to the visitor.
   4. Click **Save changes** — updates immediately; the button reads "Saved" for confirmation.
+
+**How to delete someone's personal data (on their request):**
+
+1. Click **Delete personal data** at the bottom of the Contact details card.
+2. A confirmation dialog explains exactly what happens — read it, then click **Delete personal
+   data** again to confirm, or **Cancel** to back out.
+3. Their name, email, phone, and message are permanently removed. The enquiry itself, its
+   score/responses, status, notes, and assignment all stay exactly as they were — the row
+   still counts toward every aggregate number on the dashboard (e.g. "Diagnostics this
+   month"), it just no longer shows who it was.
+4. The page and the Enquiries list both immediately show **"Personal data deleted"** in place
+   of the name, with the deletion date shown on this screen — so it's never confused with an
+   enquiry that simply never gave a name.
+5. **This is permanent — there is no undo.** It's applied exactly the same way regardless of
+   the enquiry's status, including a **Converted** (paying client) enquiry — the firm
+   confirmed there's no special exception for that case (T8.4, 2026-09-12).
 
 **Watch for:** if two partners save the same enquiry at the same time, the second save simply
 overwrites the first (last-write-wins) — same accepted simplification as the rest of this
@@ -663,20 +679,22 @@ depends on:
   downloadable-resource attachment), Pages (Capabilities/Our Method/Legal/Footer), Offers
   (the three core offers plus the Advisory Retainer), Landing Pages (create-only), Team,
   Diagnostic Configuration, Site Settings, and Subscribers are all live.
-- **Milestone 8 — Enquiry Management** (nearly complete): a screen to see and triage incoming
-  enquiries and diagnostic completions in one place. T8.1's schema groundwork, T8.2's
-  enquiries list, and T8.3's enquiry detail screen (open one, see everything, edit its status/
-  notes/assignment) are all done (see the Change log above). T8.4 (personal-data deletion) is
-  the one remaining task, and it's blocked on a firm policy decision — see
-  `docs/dashboard.md`'s "Blocked On" list — not scheduled until the firm answers it.
+- **Milestone 8 — Enquiry Management** (complete): a full screen to see, triage, and act on
+  incoming enquiries and diagnostic completions — the list (`/admin/enquiries`), the detail
+  screen (open one, see everything, edit its status/notes/assignment), and personal-data
+  deletion on request, applied the same way regardless of status (see the Change log above).
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
-  GA4, Meta, Google Ads, and LinkedIn — begins with the deferred T5.5 above, then proceeds.
+  GA4, Meta, Google Ads, and LinkedIn. Begins with T5.5 (Meta CAPI, Google Ads import,
+  LinkedIn Insight Tag, domain verification) — itself still waiting on real ad-platform
+  accounts and the kaalbert.com domain, none of which exist yet — then proceeds to the
+  dashboards themselves.
 
 ## Change log
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-12 | Enquiry detail (T8.3) went live — click **Open** on any row in the Enquiries list to see everything about it (full diagnostic responses in plain language, score breakdown, contact details, distinctly-shown contact/marketing consent, attribution) and edit its status, assign it to a partner, or add internal notes — see "Enquiry detail" above. A visitor's own submitted responses stay read-only everywhere on this screen. Milestone 8 is now complete except T8.4 (personal-data deletion), which stays blocked on a firm policy decision.                                                                                                                                                           |
+| 2026-09-12 | Personal-data deletion (T8.4) went live — a **Delete personal data** button on the Enquiry detail screen permanently removes someone's name/email/phone/message on request, applied exactly the same way regardless of status (the firm confirmed a Converted/paying-client enquiry gets no special exception) — see "Enquiry detail" above. This completes Milestone 8 in full. The affected row now shows "Personal data deleted" everywhere instead of a blank name, so it's never confused with an enquiry that simply never gave one.                                                                                                                                                                      |
+| 2026-09-12 | Enquiry detail (T8.3) went live — click **Open** on any row in the Enquiries list to see everything about it (full diagnostic responses in plain language, score breakdown, contact details, distinctly-shown contact/marketing consent, attribution) and edit its status, assign it to a partner, or add internal notes — see "Enquiry detail" above. A visitor's own submitted responses stay read-only everywhere on this screen.                                                                                                                                                                                                                                                                            |
 | 2026-09-12 | Enquiries list (T8.2) went live — `/admin/enquiries`, reached via **Enquiries** in the sidebar. A partner can now filter by status/triage/source/date range and sort the full enquiry history themselves, triage-flagged rows always surfaced first — see "Enquiries list" above. Genuinely paginated (20/page), unlike this project's other admin lists, so it stays fast as the list grows over the years. Also fixed a real bug found while building this: a pre-T8.1 enquiry that was truly triage-flagged but had no priority word was showing "Not flagged" everywhere (dashboard included) — it now shows a plain "Flagged" badge instead, so filtering to "Flagged" never shows a contradictory result. |
 | 2026-09-11 | Enquiry schema extension (T8.1, the first Milestone 8 task) went live under the hood — no new screen yet, but the dashboard's Triage column started showing a real **High**/**Medium**/**Low** badge instead of a plain flagged/not-flagged one for any enquiry submitted from now on. Status started showing the real per-enquiry value (still "New" for everyone, since nothing yet exists to change it).                                                                                                                                                                                                                                                                                                     |
 | 2026-09-11 | Downloadable-resource attachment (T7.10) went live on the article editor — a partner can now attach a PDF to a published (or already-saved draft) article themselves, reorder or remove them, with the public article page's download list updating immediately — no developer needed. Previously the handful of existing downloadable resources had to be set up directly in the database.                                                                                                                                                                                                                                                                                                                     |

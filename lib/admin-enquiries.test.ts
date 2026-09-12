@@ -9,8 +9,9 @@ vi.mock("@/lib/prisma", () => ({
 
 import { prisma } from "@/lib/prisma";
 import {
+  deletePersonalData,
   ENQUIRIES_PAGE_SIZE,
-  EnquiryUpdateValidationError,
+  EnquiryWriteValidationError,
   getEnquiryDetail,
   listAssignablePartners,
   listEnquiries,
@@ -28,6 +29,7 @@ const adminUserFindUniqueMock = vi.mocked(prisma.adminUser.findUnique);
 const ROW = {
   id: 1,
   name: "Ama Owusu",
+  personalDataDeletedAt: null,
   triageFlag: true,
   triagePriorityLevel: "High",
   status: "new",
@@ -190,6 +192,7 @@ describe("listEnquiries", () => {
       {
         id: 1,
         name: "Ama Owusu",
+        personalDataDeletedAt: null,
         source: "Business Health Check",
         score: 62,
         triagePriorityLevel: "High",
@@ -220,6 +223,7 @@ const DIAGNOSTIC_DETAIL_ROW = {
   email: null,
   phone: null,
   message: null,
+  personalDataDeletedAt: null,
   serviceLine: null,
   contactConsent: null,
   marketingConsent: false,
@@ -287,6 +291,7 @@ const CONTACT_DETAIL_ROW = {
   email: "abena@example.com",
   phone: "0558000000",
   message: "Need help with cash flow.",
+  personalDataDeletedAt: null,
   serviceLine: "financial-clarity",
   contactConsent: true,
   marketingConsent: false,
@@ -369,7 +374,7 @@ describe("updateEnquiry", () => {
   it("rejects an invalid status without touching the database", async () => {
     await expect(
       updateEnquiry(1, { status: "bogus" as never, internalNotes: null, assignedPartnerId: null }),
-    ).rejects.toBeInstanceOf(EnquiryUpdateValidationError);
+    ).rejects.toBeInstanceOf(EnquiryWriteValidationError);
     expect(findUniqueMock).not.toHaveBeenCalled();
   });
 
@@ -378,7 +383,7 @@ describe("updateEnquiry", () => {
 
     await expect(
       updateEnquiry(999, { status: "new", internalNotes: null, assignedPartnerId: null } as never),
-    ).rejects.toBeInstanceOf(EnquiryUpdateValidationError);
+    ).rejects.toBeInstanceOf(EnquiryWriteValidationError);
     expect(updateMock).not.toHaveBeenCalled();
   });
 
@@ -388,7 +393,7 @@ describe("updateEnquiry", () => {
 
     await expect(
       updateEnquiry(1, { status: "new", internalNotes: null, assignedPartnerId: 999 } as never),
-    ).rejects.toBeInstanceOf(EnquiryUpdateValidationError);
+    ).rejects.toBeInstanceOf(EnquiryWriteValidationError);
     expect(updateMock).not.toHaveBeenCalled();
   });
 
@@ -424,5 +429,43 @@ describe("updateEnquiry", () => {
     expect(adminUserFindUniqueMock).not.toHaveBeenCalled();
     const updateArgs = updateMock.mock.calls[0][0] as { data: Record<string, unknown> };
     expect(updateArgs.data.assignedPartnerId).toBeNull();
+  });
+});
+
+describe("deletePersonalData", () => {
+  it("rejects an id that doesn't exist", async () => {
+    findUniqueMock.mockResolvedValue(null);
+
+    await expect(deletePersonalData(999)).rejects.toBeInstanceOf(EnquiryWriteValidationError);
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("nulls name/email/phone/message and sets personalDataDeletedAt, applied the same way regardless of status", async () => {
+    findUniqueMock.mockResolvedValue({ personalDataDeletedAt: null } as never);
+
+    await deletePersonalData(5);
+
+    const updateArgs = updateMock.mock.calls[0][0] as {
+      where: { id: number };
+      data: Record<string, unknown>;
+    };
+    expect(updateArgs.where).toEqual({ id: 5 });
+    expect(updateArgs.data).toMatchObject({
+      name: null,
+      email: null,
+      phone: null,
+      message: null,
+    });
+    expect(updateArgs.data.personalDataDeletedAt).toBeInstanceOf(Date);
+  });
+
+  it("is idempotent — a second call preserves the original deletion timestamp rather than overwriting it", async () => {
+    const originalDeletion = new Date("2026-09-01T00:00:00Z");
+    findUniqueMock.mockResolvedValue({ personalDataDeletedAt: originalDeletion } as never);
+
+    await deletePersonalData(5);
+
+    const updateArgs = updateMock.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(updateArgs.data.personalDataDeletedAt).toBe(originalDeletion);
   });
 });

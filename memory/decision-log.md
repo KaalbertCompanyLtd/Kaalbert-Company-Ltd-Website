@@ -2,6 +2,60 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (T8.4, session 59) — Firm policy: a converted enquiry's personal data is deleted exactly like any other, no special exception
+
+**Status:** Standing
+
+**Summary:** T8.4 was explicitly blocked pending a real firm decision (`docs/tasks/
+08-enquiry-management.md`'s own "not an engineering gap" framing; `docs/features/enquiry-
+management.md`'s Edge cases section): when a deletion request arrives for an enquiry already
+marked `converted` (an active/former paying client), does deleting identifying data conflict
+with legitimate engagement record-keeping, or does it get the same treatment as any other
+enquiry? Asked directly via `AskUserQuestion` at the start of this session (session 59,
+2026-09-12), presenting three real options (delete regardless, refuse/block for converted
+enquiries, or delete-but-retain-a-minimal-separate-record). **The firm/user chose: delete
+identifying data regardless of status** — a converted enquiry gets exactly the same treatment
+as any other, no special case, no separate minimal-record retention. Recorded in
+`docs/tasks/08-enquiry-management.md`'s T8.4 entry, `docs/features/enquiry-management.md`'s
+Business rules/Edge cases, and `docs/dashboard.md`'s "Blocked On" list (T8.4 removed from the
+blocked list) — all updated _before_ any implementation code was written, per this project's
+own documentation-before-code discipline for a Rollback/Revision-adjacent firm decision.
+
+**Related Documents:** `docs/tasks/08-enquiry-management.md` (T8.4), `docs/features/enquiry-
+management.md`, `docs/dashboard.md`.
+
+---
+
+## 2026-09-12 (T8.4, session 59) — Personal-data deletion nulls fields in place and records when, rather than deleting the row or using a bare boolean flag
+
+**Status:** Standing
+
+**Summary:** FR-6.4's own contract ("identifying fields nulled, non-personal fields
+retained") only specifies _what_ gets nulled, not how the admin UI tells a genuine deletion
+apart from an enquiry whose `name`/`email`/`phone` were simply never given in the first place
+— both render as the exact same `null` otherwise, and a partner seeing a blank name would
+have no way to know which case they're looking at. Added `EnquiryRecord.personalDataDeletedAt`
+(`DateTime?`) rather than a bare boolean, so the admin UI (Enquiries list and detail screen)
+can show a real, honest "Personal data deleted on [date]" message instead of the same "Not
+yet provided" placeholder used for a name that was never captured. `lib/admin-enquiries.ts`'s
+`deletePersonalData` is idempotent — a second call preserves the original timestamp rather
+than overwriting it — and nulls `name`/`email`/`phone`/`message` (the visitor's own free-text
+submission, treated as identifying since it can contain anything they chose to write)
+while explicitly leaving `scoreSummary`/`triageFlag`/`triagePriorityLevel`/`status`/
+`internalNotes`/`assignedPartnerId`/`createdAt` and the row itself untouched, so every
+aggregate KPI keeps counting it exactly as before. The one destructive, irreversible action
+on the detail screen goes through a real `AlertDialog` confirmation (Base UI, same pattern as
+`admin-user-actions-panel.tsx`'s "Deactivate account"), never a bare click — and `EnquiryUpdate
+ValidationError` was renamed to `EnquiryWriteValidationError` at the same time, since it's now
+shared by both `updateEnquiry` and `deletePersonalData` (mirrors this codebase's existing
+one-validation-error-class-per-lib-file convention, e.g. `ArticleValidationError`).
+
+**Related Documents:** `prisma/schema.prisma` (`EnquiryRecord.personalDataDeletedAt`),
+`lib/admin-enquiries.ts` (`deletePersonalData`, `EnquiryWriteValidationError`),
+`app/admin/(shell)/enquiries/[id]/delete-personal-data-button.tsx`.
+
+---
+
 ## 2026-09-12 (T8.3, session 58) — A diagnostic response's human-readable answer is reconstructed from its normalized value, not stored separately
 
 **Status:** Standing

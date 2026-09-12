@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { EnquiryStatus } from "@/generated/prisma/client";
-import { EnquiryUpdateValidationError, updateEnquiry } from "@/lib/admin-enquiries";
+import { EnquiryWriteValidationError, updateEnquiry } from "@/lib/admin-enquiries";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -49,7 +49,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     });
     return NextResponse.json({ status: "ok" }, { status: 200 });
   } catch (error) {
-    if (error instanceof EnquiryUpdateValidationError) {
+    if (error instanceof EnquiryWriteValidationError) {
       return NextResponse.json({ status: "error", message: error.message }, { status: 400 });
     }
     throw error;

@@ -43,6 +43,8 @@ export interface EnquiryListQuery {
 export interface EnquiryListItem {
   id: number;
   name: string | null;
+  /** Set once this row's personal data has been deleted (T8.4/FR-6.4) — distinguishes a real deletion from a `name` that was simply never given. */
+  personalDataDeletedAt: Date | null;
   source: string;
   /** The diagnostic's overall 0–100 score, or `null` for a contact-form-originated row. */
   score: number | null;
@@ -141,6 +143,7 @@ export async function listEnquiries(query: EnquiryListQuery = {}): Promise<Enqui
     select: {
       id: true,
       name: true,
+      personalDataDeletedAt: true,
       triageFlag: true,
       triagePriorityLevel: true,
       status: true,
@@ -152,6 +155,7 @@ export async function listEnquiries(query: EnquiryListQuery = {}): Promise<Enqui
   const items: EnquiryListItem[] = rows.map((row) => ({
     id: row.id,
     name: row.name,
+    personalDataDeletedAt: row.personalDataDeletedAt,
     source: resolveEnquirySource(row.triageFlag),
     score: extractScore(row.scoreSummary),
     triagePriorityLevel: row.triagePriorityLevel,
@@ -194,6 +198,8 @@ export interface EnquiryDetail {
   email: string | null;
   phone: string | null;
   message: string | null;
+  /** Set once this enquiry's personal data has been deleted (T8.4/FR-6.4). */
+  personalDataDeletedAt: Date | null;
   serviceLine: string | null;
   contactConsent: boolean | null;
   marketingConsent: boolean;
@@ -281,6 +287,7 @@ export async function getEnquiryDetail(id: number): Promise<EnquiryDetail | null
     email: row.email,
     phone: row.phone,
     message: row.message,
+    personalDataDeletedAt: row.personalDataDeletedAt,
     serviceLine: row.serviceLine,
     contactConsent: row.contactConsent,
     marketingConsent: row.marketingConsent,
@@ -324,7 +331,7 @@ export async function listAssignablePartners(): Promise<AssignablePartner[]> {
   });
 }
 
-export class EnquiryUpdateValidationError extends Error {}
+export class EnquiryWriteValidationError extends Error {}
 
 export interface EnquiryUpdateInput {
   status: EnquiryStatus;
@@ -343,7 +350,7 @@ export interface EnquiryUpdateInput {
  */
 export async function updateEnquiry(id: number, input: EnquiryUpdateInput): Promise<void> {
   if (!(input.status in EnquiryStatus)) {
-    throw new EnquiryUpdateValidationError("Invalid status.");
+    throw new EnquiryWriteValidationError("Invalid status.");
   }
 
   const existing = await prisma.enquiryRecord.findUnique({
@@ -351,7 +358,7 @@ export async function updateEnquiry(id: number, input: EnquiryUpdateInput): Prom
     select: { status: true },
   });
   if (!existing) {
-    throw new EnquiryUpdateValidationError("Enquiry not found.");
+    throw new EnquiryWriteValidationError("Enquiry not found.");
   }
 
   if (input.assignedPartnerId !== null) {
@@ -360,7 +367,7 @@ export async function updateEnquiry(id: number, input: EnquiryUpdateInput): Prom
       select: { id: true },
     });
     if (!partner) {
-      throw new EnquiryUpdateValidationError("Invalid assigned partner.");
+      throw new EnquiryWriteValidationError("Invalid assigned partner.");
     }
   }
 
@@ -371,6 +378,38 @@ export async function updateEnquiry(id: number, input: EnquiryUpdateInput): Prom
       internalNotes: input.internalNotes,
       assignedPartnerId: input.assignedPartnerId,
       ...(existing.status !== input.status ? { statusUpdatedAt: new Date() } : {}),
+    },
+  });
+}
+
+/**
+ * `DELETE /api/admin/enquiries/[id]/personal-data` (T8.4, FR-6.4) — nulls contact details/
+ * identifying information while retaining every non-personal field (`scoreSummary`,
+ * `triageFlag`/`triagePriorityLevel`, `status`, `internalNotes`, `assignedPartnerId`,
+ * `createdAt`, the row itself) so aggregate KPIs (e.g. "diagnostics this month") keep counting
+ * this row exactly as before. Applied identically regardless of `status` — the firm confirmed
+ * at T8.4 (session 59, 2026-09-12) that a `converted` enquiry gets no special treatment (see
+ * `memory/decision-log.md`). Idempotent: calling this again on an already-deleted row is a
+ * harmless no-op (the fields are already null) and preserves the original
+ * `personalDataDeletedAt` timestamp rather than overwriting it with a later one.
+ */
+export async function deletePersonalData(id: number): Promise<void> {
+  const existing = await prisma.enquiryRecord.findUnique({
+    where: { id },
+    select: { personalDataDeletedAt: true },
+  });
+  if (!existing) {
+    throw new EnquiryWriteValidationError("Enquiry not found.");
+  }
+
+  await prisma.enquiryRecord.update({
+    where: { id },
+    data: {
+      name: null,
+      email: null,
+      phone: null,
+      message: null,
+      personalDataDeletedAt: existing.personalDataDeletedAt ?? new Date(),
     },
   });
 }

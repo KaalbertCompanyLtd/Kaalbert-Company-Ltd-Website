@@ -41,9 +41,10 @@ opening that enquiry already knows the business's shape").
 - Triage-flagged enquiries (FR-2.6) are visually distinguished and sorted first by default.
 - Supports deletion of an individual's personal data on request (FR-6.4) — deleting contact
   details and identifying information from an enquiry record while the record's non-personal
-  aggregate data (e.g. that a diagnostic was completed, for KPI counting) may be retained;
-  the exact retention/deletion boundary is a firm policy decision, not an engineering one —
-  flagged here for the firm to confirm before this is built, not assumed.
+  aggregate data (e.g. that a diagnostic was completed, for KPI counting) is retained. Applied
+  uniformly regardless of `status` — the firm confirmed at T8.4 (session 59, 2026-09-12) that
+  a converted enquiry (an active/former paying client) gets exactly the same treatment as any
+  other, no special case. See `memory/decision-log.md` for the full record of this decision.
 - An enquiry may originate from the diagnostic (full responses and score present) or the
   plain contact form (`contact-and-enquiry.md`, no diagnostic fields) — both render in the
   same list and detail view, with diagnostic-specific fields simply absent for the latter.
@@ -54,15 +55,17 @@ Extends the `enquiry_record` entity already defined in
 `business-health-check-diagnostic.md` (shared across both diagnostic- and contact-form-
 originated enquiries) with: `status` (new/contacted/closed/converted/not-a-fit),
 `assigned_partner_id` (nullable, references `admin_user`), `internal_notes` (text,
-admin-only), `status_updated_at`.
+admin-only), `status_updated_at`. T8.4 (FR-6.4) adds `personal_data_deleted_at` (nullable
+timestamp) — set the moment a partner deletes this enquiry's personal data, so the admin UI
+can tell a genuine deletion apart from a `name`/`email`/`phone` that was simply never given
+(both render as null otherwise).
 
 ## Interfaces
 
 - `/admin/enquiries` — list screen with filters and sort.
 - `/admin/enquiries/[id]` — detail screen.
 - `PATCH /api/admin/enquiries/[id]` — update status, notes, or assignment.
-- `DELETE /api/admin/enquiries/[id]/personal-data` — supports FR-6.4, pending the firm's
-  retention-policy confirmation above.
+- `DELETE /api/admin/enquiries/[id]/personal-data` — supports FR-6.4.
 
 ## Edge cases
 
@@ -71,7 +74,7 @@ admin-only), `status_updated_at`.
 - Two partners edit the same enquiry simultaneously: last-write-wins, the same accepted
   simplification noted in `content-management-admin.md`.
 - A deletion request arrives for an enquiry already marked "converted" (became a paying
-  client): deleting identifying data may conflict with legitimate engagement record-keeping
-  — this is the firm policy question flagged above, not resolved unilaterally here.
+  client): deleted exactly the same way as any other enquiry — the firm confirmed at T8.4
+  (session 59) that no special retention exception applies here.
 - The enquiry list must stay performant as records accumulate over years — paginated, not
   loaded in full on every visit.

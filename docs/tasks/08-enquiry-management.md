@@ -76,18 +76,20 @@ session.
 
 ### T8.4 — Personal-data deletion — `DELETE /api/admin/enquiries/[id]/personal-data`
 
-**Status: blocked on firm policy confirmation, not an engineering gap.**
-`enquiry-management.md` explicitly flags the retention/deletion boundary — specifically,
-what happens when a deletion request arrives for an enquiry already marked "converted" (a
-paying client), where deleting identifying data may conflict with legitimate engagement
-record-keeping — as a firm decision the build must not assume. This is carried into
-`docs/dashboard.md`'s "Blocked On" list rather than resolved unilaterally here.
-**Build (once unblocked):** An endpoint deleting contact details/identifying information from
-an `enquiry_record` while retaining non-personal aggregate data (e.g. that a diagnostic was
-completed, for KPI counting), per FR-6.4.
+**Status: unblocked (session 59, 2026-09-12).** `enquiry-management.md` flagged the retention/
+deletion boundary as a firm decision the build must not assume: what happens when a deletion
+request arrives for an enquiry already marked "converted" (a paying client), where deleting
+identifying data may conflict with legitimate engagement record-keeping. **The firm's answer:
+delete identifying data regardless of status** — a converted enquiry is treated exactly like
+any other; no special case, no separate minimal-record retention. See
+`memory/decision-log.md` for the full record of this decision.
+**Build:** An endpoint deleting contact details/identifying information from an
+`enquiry_record` while retaining non-personal aggregate data (e.g. that a diagnostic was
+completed, for KPI counting), per FR-6.4 — applied uniformly regardless of `status`.
 **Input → Output:** Enquiry ID → identifying fields nulled, non-personal fields retained.
-**Acceptance criteria (once unblocked):** A deleted enquiry no longer displays name/email/
-phone anywhere in the admin, but still counts toward aggregate KPIs (e.g. "diagnostics this
-month" on the dashboard, T7.1) exactly as before deletion.
-**Size:** S **Dependencies:** T8.1, **firm confirmation of the retention/deletion policy for
-converted enquiries — required before work starts, not during**
+**Acceptance criteria:** A deleted enquiry no longer displays name/email/phone anywhere in the
+admin, but still counts toward aggregate KPIs (e.g. "diagnostics this month" on the dashboard,
+T7.1) exactly as before deletion. A converted enquiry is deleted exactly the same way as any
+other status — no additional confirmation step or refusal path tied specifically to
+`status: converted`.
+**Size:** S **Dependencies:** T8.1 (the `status`/`enquiry_record` schema this operates on)
