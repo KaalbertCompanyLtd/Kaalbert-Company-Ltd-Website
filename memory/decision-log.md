@@ -2,6 +2,58 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (T8.2, session 57) — Triage badge is a real 3-state resolver (High/Medium/Low, plain "Flagged", or "Not flagged"), not a 2-state fallback
+
+**Status:** Standing
+
+**Summary:** Building T8.2's own Triage filter (which correctly filters on the authoritative
+`triageFlag` boolean, per `enquiry-management.md`'s "triage-flagged... sorted first by
+default" rule) surfaced a real display bug in T8.1's dashboard badge logic, live since
+session 56: a pre-T8.1 enquiry can have `triageFlag: true` with `triagePriorityLevel: null`
+(no backfill, by that task's own design), and the dashboard rendered that combination as "Not
+flagged" — which becomes actively misleading, not just imprecise, the moment a partner can
+filter specifically to "Flagged" and see rows in the result labelled "Not flagged". Fixed by
+extracting a shared `resolveTriageBadge(triageFlag, triagePriorityLevel)` into
+`lib/enquiry-list-options.ts`, used identically by both the dashboard
+(`app/admin/(shell)/page.tsx`) and the new enquiries list
+(`app/admin/(shell)/enquiries/page.tsx`): a real priority word renders High/Medium/Low as
+before; `triageFlag: true` with no priority word renders a plain "Flagged" badge (new); only a
+genuinely non-flagged row renders "Not flagged". No technical-debt entry — found and fixed in
+the same session, no future task dependency.
+
+**Related Documents:** `lib/enquiry-list-options.ts` (`resolveTriageBadge`,
+`lib/enquiry-list-options.test.ts`), `docs/tasks/08-enquiry-management.md` (T8.2).
+
+---
+
+## 2026-09-12 (T8.2, session 57) — Server-side (skip/take) pagination is this codebase's first real admin-list pagination pattern; `enquiry-management.md`'s "business" column never had backing data
+
+**Status:** Standing
+
+**Summary:** Two build-time findings from T8.2 (`/admin/enquiries`):
+
+1. Every existing admin list (Articles/Subscribers/Offers/Landing Pages) loads its full,
+   unfiltered row set and paginates/filters client-side — acceptable for their row counts, but
+   explicitly ruled out for this list by its own acceptance criterion ("must stay performant
+   as records accumulate over years... not loaded in full," tested for real against 520
+   synthetic rows inserted and then removed via a throwaway script, never committed).
+   `lib/admin-enquiries.ts`'s `listEnquiries` instead mirrors `lib/insights.ts`'s
+   `getInsightsIndex` precedent exactly: count first, clamp the requested page into
+   `[1, totalPages]`, then a real Prisma `skip`/`take` query — the template for any future
+   admin list expected to grow large (T8.2 itself cites this as the reason it couldn't reuse
+   the Articles list's own established client-side pattern).
+2. `enquiry-management.md`'s User flow step 2 named a "business" column, but no field
+   anywhere in this schema, the contact form, or the diagnostic ever captures a business/
+   company name — corrected in the feature doc directly (no technical-debt entry: there is no
+   concrete fix to sequence, since adding such a field would be a real, unrequested product
+   decision — collecting a business name on two separate write paths — not an engineering
+   gap this task left open).
+
+**Related Documents:** `lib/admin-enquiries.ts`, `lib/insights.ts` (`getInsightsIndex`),
+`docs/features/enquiry-management.md`, `docs/tasks/08-enquiry-management.md` (T8.2).
+
+---
+
 ## 2026-09-11 (T8.1, session 56) — `EnquiryRecord.status` is a real Prisma enum; `triagePriorityLevel` stays a plain string
 
 **Status:** Standing
@@ -23,7 +75,7 @@ cleanly); nothing depends on the literal hyphenated spelling anywhere outside th
 file. Any future UI must map `not_a_fit` → "Not a fit" for display, same as this task's own
 `app/admin/(shell)/page.tsx` `STATUS_LABELS` does.
 
-`triagePriorityLevel` stays a plain `String?`, deliberately *not* an enum — mirrors the
+`triagePriorityLevel` stays a plain `String?`, deliberately _not_ an enum — mirrors the
 existing precedent and stated reasoning on `DiagnosticThreshold.triagePriorityLevel` (its own
 schema doc-comment): the firm's triage vocabulary is admin-tunable data (Milestone 7's
 Diagnostic Configuration screen), not a fixed set the schema should lock in, even though only

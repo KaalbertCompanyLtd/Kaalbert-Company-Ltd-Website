@@ -1,4 +1,5 @@
 import { EnquiryStatus } from "@/generated/prisma/client";
+import { resolveEnquirySource } from "@/lib/admin-enquiries";
 import { prisma } from "@/lib/prisma";
 
 export interface AdminDashboardStats {
@@ -57,11 +58,6 @@ export async function getAdminDashboardStats(now = new Date()): Promise<AdminDas
     diagnosticsThisMonthCount,
     publishedArticlesCount,
   };
-}
-
-/** `triageFlag` is null only for a contact-form-originated row (see model doc-comment). */
-function resolveEnquirySource(triageFlag: boolean | null): string {
-  return triageFlag !== null ? "Business Health Check" : "Contact form";
 }
 
 /**

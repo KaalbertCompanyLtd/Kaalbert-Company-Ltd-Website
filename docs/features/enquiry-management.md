@@ -13,8 +13,11 @@ opening that enquiry already knows the business's shape").
 ## User flow
 
 1. Partner logs into `/admin` (see `admin-authentication.md`) and opens Enquiries.
-2. Sees a list of enquiries, triage-flagged ones surfaced first, with name, business, score
-   summary (if from the diagnostic), source, date, and status at a glance.
+2. Sees a list of enquiries, triage-flagged ones surfaced first, with name, score summary (if
+   from the diagnostic), source, date, and status at a glance. (Corrected at T8.2: this line
+   previously also named a "business" column — no field anywhere in this schema, the contact
+   form, or the diagnostic ever captures a business/company name, so there was never real data
+   to show there. See `memory/decision-log.md`, session 57.)
 3. Filters/sorts by status (new/contacted/closed/converted/not-a-fit), triage flag, date
    range, or source.
 4. Opens an enquiry to see full detail: complete diagnostic responses and score breakdown (if

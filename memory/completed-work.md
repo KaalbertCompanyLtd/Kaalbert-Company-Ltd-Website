@@ -14,6 +14,50 @@ Protocol):
 
 ---
 
+## 2026-09-12 (T8.2, session 57)
+
+**Task:** T8.2 — Enquiries list — `/admin/enquiries`
+**Summary:** Built the first real screen a partner uses to see incoming enquiries: a
+filterable, sortable, server-side-paginated list of every `enquiry_record` row. Triage-flagged
+rows sort first by default (`ORDER BY triage_flag DESC NULLS LAST, created_at DESC` — Postgres
+defaults `NULLS FIRST` on a `DESC` sort, which would otherwise put every contact-form row,
+`triageFlag: null`, ahead of genuinely flagged diagnostic rows). Filters: status (real
+`EnquiryStatus` enum), triage (flagged/not flagged, filtering on the authoritative
+`triageFlag` boolean), source (Business Health Check/Contact form), and an inclusive date
+range; sort: triage priority (default), newest, or oldest — all URL-driven (`useRouter` +
+Base UI `Select`s pushing a real, shareable query string), never client-only state, matching
+`app/insights/page.tsx`'s established precedent for exactly this problem. Pagination is real
+server-side `skip`/`take` (20/page) — this is the first admin list in the codebase built this
+way (every prior one loads its full set and paginates client-side), required because this
+list's own acceptance criterion explicitly rules out loading the full set. While building the
+Triage filter, found and fixed a real display bug in T8.1's dashboard badge (see
+`memory/decision-log.md`): a pre-T8.1 enquiry with `triageFlag: true` but no
+`triagePriorityLevel` was rendering "Not flagged," which became actively misleading once a
+partner could filter to "Flagged" and see contradictory badges in the result. Fixed via a
+shared `resolveTriageBadge` now used by both screens. Also corrected
+`enquiry-management.md`'s User flow, which named a "business" column with no backing field
+anywhere in this schema (see decision-log for why this wasn't logged as debt).
+**Files Changed:** `lib/admin-enquiries.ts` (new), `lib/admin-enquiries.test.ts` (new),
+`lib/enquiry-list-options.ts` (new), `lib/enquiry-list-options.test.ts` (new),
+`app/admin/(shell)/enquiries/page.tsx` (new), `app/admin/(shell)/enquiries/enquiries-
+filters.tsx` (new), `app/admin/(shell)/page.tsx` (Triage/Status badge logic now shared with
+the new list), `lib/admin-dashboard.ts` (reuses `resolveEnquirySource` from `lib/admin-
+enquiries.ts` instead of its own private copy), `docs/features/enquiry-management.md`
+(User flow correction), `docs/user-guide.md` + Artifact mirror.
+**Related Feature:** `docs/features/enquiry-management.md`
+**Notes:** Verified live via Playwright MCP at desktop/tablet(768px)/mobile(390px): logged
+into `/admin/enquiries`, exercised every filter (status, triage, source, date range, sort),
+confirmed the empty state ("No enquiries match" + Clear filters) for a filter combination with
+zero results, and confirmed real pagination against a temporary seed of 520 synthetic rows
+(527 total) — 27 pages, correct triage-first ordering across the full set, correct mixed
+diagnostic/contact-form rendering on the last page, "Next"/page links behaving correctly at
+both ends. The synthetic rows and the throwaway seed/cleanup scripts used to create them were
+both removed before ending the session — dev DB is back to its real 7 rows. No detail screen
+or status/notes/assignment editing yet (`/admin/enquiries/[id]` links render but 404 until
+T8.3) — out of this task's own scope by design.
+
+---
+
 ## 2026-09-11 (T8.1, session 56)
 
 **Task:** T8.1 — Enquiry schema extension (Milestone 8's first task)

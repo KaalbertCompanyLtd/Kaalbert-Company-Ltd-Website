@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { EnquiryStatus } from "@/generated/prisma/client";
 import { getAdminDashboardStats, getRecentEnquiries } from "@/lib/admin-dashboard";
+import { resolveTriageBadge, STATUS_LABELS } from "@/lib/enquiry-list-options";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -28,32 +28,7 @@ const STAT_CARDS = [
   { key: "publishedArticlesCount", label: "Published Articles" },
 ] as const;
 
-/** `ui/mockups/g-admin-content/admin-dashboard.html`'s Status column labels/badges. */
-const STATUS_LABELS: Record<EnquiryStatus, string> = {
-  new: "New",
-  contacted: "Contacted",
-  closed: "Closed",
-  converted: "Converted",
-  not_a_fit: "Not a fit",
-};
-
-/**
- * Mirrors `ui/mockups/_shared.css`'s `badge-triage-high/medium/low` classes (this project's
- * Tailwind design tokens, not that raw CSS) — replaces the plain Flagged/Not-flagged boolean
- * approximation T7.1 shipped before `triagePriorityLevel` existed (T8.1).
- */
-const TRIAGE_BADGE_CLASSES: Record<string, string> = {
-  High: "bg-accent text-accent-foreground",
-  Medium: "border-brass-300 bg-brass-500/15 text-brass-500 border",
-  Low: "border-border text-muted-foreground border bg-transparent",
-};
-
-/**
- * Every href below points at a sidebar destination not yet built (Articles/Offers/Enquiries
- * are Milestones 7.2/7.4/8) — same not-yet-built-but-real-route precedent already accepted
- * in `components/admin-sidebar-nav.tsx` since T1.5/T6.2. Only the 2FA link resolves to a real
- * page today.
- */
+/** Every href below now resolves to a real, built page (Milestone 7 and T8.2 both shipped). */
 const QUICK_ACTIONS = [
   { label: "Publish a new Insights article", href: "/admin/articles" },
   { label: "Update a core offer's fee band", href: "/admin/offers" },
@@ -111,24 +86,28 @@ export default async function AdminDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentEnquiries.map((enquiry) => (
-                  <TableRow key={enquiry.id}>
-                    <TableCell>{enquiry.name ?? "Not yet provided"}</TableCell>
-                    <TableCell>{enquiry.source}</TableCell>
-                    <TableCell>
-                      {enquiry.triagePriorityLevel ? (
-                        <Badge className={TRIAGE_BADGE_CLASSES[enquiry.triagePriorityLevel]}>
-                          {enquiry.triagePriorityLevel}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Not flagged</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{STATUS_LABELS[enquiry.status]}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {recentEnquiries.map((enquiry) => {
+                  const triageBadge = resolveTriageBadge(
+                    enquiry.triageFlag,
+                    enquiry.triagePriorityLevel,
+                  );
+                  return (
+                    <TableRow key={enquiry.id}>
+                      <TableCell>{enquiry.name ?? "Not yet provided"}</TableCell>
+                      <TableCell>{enquiry.source}</TableCell>
+                      <TableCell>
+                        {triageBadge.className ? (
+                          <Badge className={triageBadge.className}>{triageBadge.label}</Badge>
+                        ) : (
+                          <Badge variant="outline">{triageBadge.label}</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{STATUS_LABELS[enquiry.status]}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

@@ -15,9 +15,10 @@ added `triagePriorityLevel` (`String?`, no backfill) to close a gap T7.1 raised:
 diagnostic-scoring engine already computed a real High/Medium/Low priority per submission but
 discarded it after embedding it in prose. `lib/diagnostic-scoring.ts` now returns it
 (`overallPriorityLevel`), `lib/diagnostic-submit.ts` persists it, and `lib/admin-dashboard.ts`
-+ `app/admin/(shell)/page.tsx` were updated to read/render the real `status`/
-`triagePriorityLevel` columns instead of the placeholders T7.1 shipped before this schema
-existed. Both technical-debt entries this task was sequenced into are now Resolved.
+
+- `app/admin/(shell)/page.tsx` were updated to read/render the real `status`/
+  `triagePriorityLevel` columns instead of the placeholders T7.1 shipped before this schema
+  existed. Both technical-debt entries this task was sequenced into are now Resolved.
 
 ## Files Changed
 
