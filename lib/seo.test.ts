@@ -21,7 +21,7 @@ function openGraphType(metadata: ReturnType<typeof buildPageMetadata>): string |
 }
 
 describe("buildPageMetadata", () => {
-  it("defaults to the site logo and type: website when no imageUrl/type is given", () => {
+  it("defaults to the site OG image and type: website when no imageUrl/type is given", () => {
     const metadata = buildPageMetadata({
       title: "Capabilities",
       description: "Desc.",
@@ -30,9 +30,9 @@ describe("buildPageMetadata", () => {
 
     expect(openGraphType(metadata)).toBe("website");
     expect(metadata.openGraph?.images).toEqual([
-      { url: "https://www.kaalbert.com/brand/logo-primary.png" },
+      { url: "https://www.kaalbert.com/brand/og-default.png" },
     ]);
-    expect(metadata.twitter?.images).toEqual(["https://www.kaalbert.com/brand/logo-primary.png"]);
+    expect(metadata.twitter?.images).toEqual(["https://www.kaalbert.com/brand/og-default.png"]);
   });
 
   it("uses an article's own previewImage and type: article when given", () => {

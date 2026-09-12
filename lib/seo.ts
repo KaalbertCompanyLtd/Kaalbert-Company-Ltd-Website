@@ -101,7 +101,7 @@ export function buildPageMetadata({
   const url = new URL(path, baseUrl).toString();
   const imageUrl = imageOverride
     ? new URL(imageOverride, baseUrl).toString()
-    : new URL("/brand/logo-primary.png", baseUrl).toString();
+    : new URL("/brand/og-default.png", baseUrl).toString();
 
   return {
     title,

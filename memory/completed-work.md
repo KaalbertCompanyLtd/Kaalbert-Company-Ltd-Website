@@ -14,6 +14,34 @@ Protocol):
 
 ---
 
+## 2026-09-12 (T2.8 follow-up, session 60)
+
+**Task:** T2.8 follow-up — use a dedicated Open Graph share image instead of the primary logo
+**Summary:** Start of production-hardening work: the firm supplied a purpose-built 2000×1050
+share image (`Company Docs/Brand assets/Logo_OG_Image_2000x1050.png`, same aspect ratio as
+the standard ~1200×630 OG/Twitter card) specifically for link previews, distinct from
+`/brand/logo-primary.png` (which stays in use for the Organization JSON-LD `logo` field —
+a different purpose, unchanged). Copied it to `public/brand/og-default.png` and pointed
+`lib/seo.ts`'s `buildPageMetadata` default-image fallback at it (an article's own
+`previewImage` still overrides this exactly as before — nothing about that path changed).
+Milestone 2 (`docs/tasks/02-public-presentation.md`) already fully shipped, so per CLAUDE.md's
+"small fix, owning task already shipped → fix now" rule this was done immediately and logged
+as a follow-up rather than opening a technical-debt entry. Also fixed one pre-existing
+`format:check` failure found while running the full quality gate (`docs/sessions/session-59-
+enquiry-personal-data-deletion.md` had unformatted Prettier output) so the branch stays clean.
+**Files Changed:** `public/brand/og-default.png` (new asset), `lib/seo.ts`,
+`lib/seo.test.ts`, `docs/sessions/session-59-enquiry-personal-data-deletion.md` (formatting
+only).
+**Related Feature:** `docs/features/seo-and-search-foundation.md`.
+**Notes:** Verified live via a local dev server: `curl`'d the home page and confirmed the
+rendered `og:image`/`twitter:image` tags now resolve to `/brand/og-default.png`, and that the
+file itself is served at `200 image/png`. Full quality gate re-run clean after the change:
+`npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test` (338 tests) all
+pass. No production deploy implication beyond the next normal push — this is a static asset
+plus a metadata default, not an env/infra change.
+
+---
+
 ## 2026-09-12 (T8.4, session 59)
 
 **Task:** T8.4 — Personal-data deletion — `DELETE /api/admin/enquiries/[id]/personal-data`

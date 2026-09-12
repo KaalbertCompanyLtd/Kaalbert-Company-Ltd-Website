@@ -12,7 +12,7 @@ a deletion request arrives for an enquiry already marked `converted` (an active/
 client), does it get special retention treatment, or exactly the same treatment as any other
 enquiry? **The firm chose: delete identifying data regardless of status, no special case.**
 Recorded that decision in the epic file, feature doc, and `docs/dashboard.md`'s "Blocked On"
-list *before* writing any code, then built `DELETE /api/admin/enquiries/[id]/personal-data`:
+list _before_ writing any code, then built `DELETE /api/admin/enquiries/[id]/personal-data`:
 nulls name/email/phone/message, retains everything else (score, status, notes, assignment,
 the row itself, for KPI counting), records a new `personalDataDeletedAt` timestamp so the
 admin UI can tell a genuine deletion apart from an enquiry that simply never gave a name, and
