@@ -296,14 +296,22 @@ screen with (e.g. a from-scratch environment, or every Owner account somehow los
    when linking a profile titled "Lead Partner," editable either way — see
    `docs/features/admin-authentication.md`'s Roles section for what each tier can do).
 4. Click **Send invite**. This generates a real random password, creates the `admin_user`
-   row (and the `author` link, or a brand-new `author` row), and emails the partner a
-   temporary password plus a 2FA setup link via the firm's own Brevo account — no separate
-   step, no manual relay needed in the normal case.
-5. **If the email fails to send** (e.g. Brevo misconfigured), the account is still created —
-   the response surfaces the one-time password and setup link on screen instead, for you to
-   relay manually the same way the old script's output worked. This is the only case where
-   you still handle credentials directly.
-6. The partner follows the link, sets/confirms nothing extra (the password is already set —
+   row (and the `author` link, or a brand-new `author` row), and attempts to email the
+   partner a temporary password plus a 2FA setup link via the firm's own Brevo account. What
+   you see next depends on whether that email actually sent — these are the only two
+   outcomes, nothing in between:
+   - **Normal case — the email sent successfully.** The screen shows a plain confirmation
+     ("An invite email... has been sent to \<address\>") and **nothing else** — no password, no
+     setup link, on screen or anywhere else. This is deliberate, not a shortened success
+     message: once Brevo has accepted delivery, this app never displays a live credential
+     again, the same discipline as every other credential in this system (a backup code, a
+     reset link). If you see this message, there is nothing further for you to relay — the
+     partner's own inbox has everything they need.
+   - **Only if the email genuinely fails to send** (e.g. Brevo misconfigured or down) — the
+     account is still created, but the screen instead shows the one-time password and setup
+     link directly, for you to relay manually the same way the old script's output worked.
+     This is the _only_ case where you ever see or handle these credentials yourself.
+5. The partner follows the link, sets/confirms nothing extra (the password is already set —
    they can change it later from their own `/admin/account`), and completes TOTP enrollment:
    scanning a QR code, then saving the 8 single-use backup codes shown once.
 

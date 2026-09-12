@@ -494,10 +494,16 @@ Click **"Add partner"** on the Team list (only visible to Owners) to open `/admi
 4. Either way, enter their **Login email** and choose a **Role** (Owner or Partner — this
    defaults to Owner automatically when linking a profile titled "Lead Partner", but you can
    change it).
-5. Click **Send invite**. An email is sent to that address with a temporary password and a
-   link to set up their authenticator app — both are needed the first time they sign in. If
-   the email can't be sent for some reason, the password and setup link are shown on screen
-   once instead, so you can relay them another way.
+5. Click **Send invite**. There are only two things that can happen next, depending on
+   whether the email actually goes out:
+   - **Normal case:** the screen just confirms the email was sent — it never shows you the
+     password or setup link itself, on screen or anywhere else, once delivery succeeds. The
+     partner's inbox has everything they need (a temporary password and a link to set up
+     their authenticator app — both are required the first time they sign in); there is
+     nothing further for you to do or relay.
+   - **Only if the email can't be sent** (a real delivery failure, not the normal case): the
+     account is still created, but the screen shows the password and setup link once instead,
+     so you can relay them to the partner another way.
 
 ### Managing a colleague's login (Owner only, once they have one)
 
