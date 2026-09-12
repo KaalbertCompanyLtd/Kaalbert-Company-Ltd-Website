@@ -6,12 +6,14 @@ what's left before this can be called properly launched, how to run the operatio
 developer can run (creating partner accounts, managing secrets, Railway infrastructure), and
 what to keep doing on an ongoing basis after launch.
 
-**Last updated:** 2026-09-12 (session 60, second pass — closed out most of the gaps this
-guide itself flagged in its first pass the same session). Update this file the same way
-`docs/user-guide.md` is updated — incrementally, the session something changes, never as a
-big end-of-project catch-up (`memory/decision-log.md`'s incremental-docs decision applies to
-this file too, even though it isn't one of the two formal Firm-Facing Documentation
-artifacts).
+**Last updated:** 2026-09-12 (session 61) — Section 8 rewritten after session 60's later
+passes replaced the CLI-script-only account creation model with a real in-app invite flow
+(`/admin/team/new`) and a genuine Owner/Partner role system; session 61 additionally made
+enquiry assignment visible on the list (no vendor-facing change from that one, noted here
+only for the record). Update this file the same way `docs/user-guide.md` is updated —
+incrementally, the session something changes, never as a big end-of-project catch-up
+(`memory/decision-log.md`'s incremental-docs decision applies to this file too, even though
+it isn't one of the two formal Firm-Facing Documentation artifacts).
 
 ---
 
@@ -273,22 +275,54 @@ stop — this is exactly the mistake that caused the admin-secrets incident in S
 
 ## 8. Creating partner (admin) user accounts
 
-There is **no self-service "invite a partner" UI**, and that's a deliberate choice
-(`scripts/create-admin-user.ts`'s own doc comment): with a fixed five partners and accounts
-created rarely, a developer-run script is proportionate — a full invite UI would be more
-process than this firm's scale justifies.
+**Superseded later in session 60 — the CLI script below is no longer the primary path.**
+This section originally said there's no self-service invite UI and a developer-run script is
+proportionate for five partners created rarely. That reasoning was directly overridden by the
+user the same session, after testing the live app surfaced how much it was actually blocking
+(zero of the 5 real partners had ever gotten a login as a result). A real in-app invite flow
+now exists — use it. The CLI script is kept documented below only as a **disaster-recovery
+fallback**: it's the one way to create a login when no Owner account exists to use the invite
+screen with (e.g. a from-scratch environment, or every Owner account somehow lost at once).
 
-**How to create one — corrected this session, after your own attempt caught a real bug in
-the first version of this guide.**
+### The normal way — invite from inside `/admin` (Owner-only)
 
-The first version told you to run `railway run --service kaalbert-web -- npm run
-admin:create-user ...`. **That doesn't work, and can't be made to work as written**:
+1. Log in as an Owner account, go to **Team** in the sidebar, click **"Add partner"**
+   (`/admin/team/new` — not visible to a Partner-role account, by design).
+2. Choose **"Link an existing profile"** for one of the partner profiles already seeded
+   (`Author.adminUserId` is still `null` on all 5 real partners as of session 61 — none has
+   actually been invited yet, that's the firm's own call to make whenever ready), or **"Create
+   a brand-new partner"** to build both the profile and the login together.
+3. Enter the partner's real **email** and pick a **Role** (defaults to Owner automatically
+   when linking a profile titled "Lead Partner," editable either way — see
+   `docs/features/admin-authentication.md`'s Roles section for what each tier can do).
+4. Click **Send invite**. This generates a real random password, creates the `admin_user`
+   row (and the `author` link, or a brand-new `author` row), and emails the partner a
+   temporary password plus a 2FA setup link via the firm's own Brevo account — no separate
+   step, no manual relay needed in the normal case.
+5. **If the email fails to send** (e.g. Brevo misconfigured), the account is still created —
+   the response surfaces the one-time password and setup link on screen instead, for you to
+   relay manually the same way the old script's output worked. This is the only case where
+   you still handle credentials directly.
+6. The partner follows the link, sets/confirms nothing extra (the password is already set —
+   they can change it later from their own `/admin/account`), and completes TOTP enrollment:
+   scanning a QR code, then saving the 8 single-use backup codes shown once.
+
+Full field-by-field walkthrough (this exact flow, plus every other Team screen action) is in
+`docs/user-guide.md`'s "Editing your team profile" section and its published Artifact mirror
+— that's the canonical, kept-current version; don't let this guide's own copy of the steps
+drift from it.
+
+### The fallback way — `scripts/create-admin-user.ts`, when no Owner exists to invite from
+
+Same real script as before, same real caveats about `railway run` vs. running it locally —
+unchanged since last verified session 60:
+
+`railway run --service kaalbert-web -- npm run admin:create-user ...` **does not work**:
 `railway run` executes the command on _your own machine_, only injecting the live service's
-environment variables into it. `kaalbert-web`'s `DATABASE_URL` is declared as
-`${{Postgres.DATABASE_URL}}`, which resolves to the **private-network** hostname
-`postgres.railway.internal` — a hostname that only resolves _inside_ Railway's own
-infrastructure. Injected into a process running on your laptop, it's simply unreachable —
-exactly the `Can't reach database server at postgres.railway.internal` error you hit.
+environment variables into it. `kaalbert-web`'s `DATABASE_URL` resolves to the
+**private-network** hostname `postgres.railway.internal`, unreachable from your laptop —
+exactly the `Can't reach database server at postgres.railway.internal` error a first attempt
+hits.
 
 **What actually works — run it locally, no `railway run` wrapper:**
 
@@ -299,72 +333,48 @@ NEXT_PUBLIC_SITE_URL="https://kaalbert.up.railway.app" \
 
 This works because of something §7 already establishes: there is only **one** Postgres
 instance, and your own `.env.local` already holds a working connection string to it — the
-public TCP proxy (`metro.proxy.rlwy.net:...`), reachable from your own machine, pointed at
-the exact same database the live app reads from `postgres.railway.internal`. Running the
-script bare (letting `dotenv` load `.env.local` normally) reaches that same database
-directly — no Railway wrapper needed at all. Verified working session 60: `npx prisma
-migrate status` confirmed connectivity first, then the real command created a real account
-and printed a real, working setup link.
+public TCP proxy, reachable from your own machine, pointed at the exact same database the
+live app reads from `postgres.railway.internal`. Running the script bare (letting `dotenv`
+load `.env.local` normally) reaches that same database directly.
 
 The `NEXT_PUBLIC_SITE_URL` override matters **only until `kaalbert.com` is registered and
-that variable is set on the live service (§3)** — without it, `getSiteUrl()`'s fallback
-would print a setup link pointing at `https://www.kaalbert.com`, a domain that doesn't
-resolve to anything yet, and the partner's link would be dead on arrival. Once the domain is
-live and `NEXT_PUBLIC_SITE_URL` is set for real, drop the override — the script will pick up
-the right base URL on its own.
+that variable is set on the live service (§3)** — without it, `getSiteUrl()`'s fallback would
+print a setup link pointing at a domain that doesn't resolve yet. Once the domain is live,
+drop the override.
 
-1. Run the command above (omit `--password` to have the script generate a strong random one).
-2. The script prints two things to your terminal — **never anywhere else, never logged, never
-   stored a second time**: the generated initial password (skip this line if you supplied
-   your own), and a one-time setup link, valid **7 days**.
-3. **Send both to the partner over a secure channel** (not plaintext email if you can help
-   it — WhatsApp or a password manager's sharing feature is better).
-4. The partner opens the setup link, sets/confirms their password, and is walked through TOTP
-   enrollment: scanning a QR code with an authenticator app (Google Authenticator, Authy,
-   1Password, etc.) and saving the **8 single-use backup codes** shown once at enrollment —
-   tell them explicitly to save these somewhere durable, since there's no way to view them
-   again later.
-5. From then on, the partner logs in normally at `/admin/login` with their email/password,
-   then their live 6-digit TOTP code.
+The script prints the generated password and a one-time setup link to your terminal — never
+anywhere else. Relay both to the partner over a secure channel, same as the invite flow's own
+email-failure fallback above. **One real gap this path has that the in-app invite doesn't**:
+it only ever creates a brand-new `admin_user` row with no `Author` — it can't link the new
+login to one of the 5 real partner profiles already seeded the way the in-app "Link an
+existing profile" mode does. There's no CLI equivalent of that linking step; in practice,
+prefer the in-app invite flow whenever any Owner account is reachable, and treat this script
+as truly last-resort — the case it actually exists for.
 
-### Can this be run "on Railway" instead of locally?
-
-Yes, via `railway ssh` — **not** `railway run`. `railway ssh --service kaalbert-web -- <cmd>`
-opens a real connection into the actual running container, executing the command inside
-Railway's own network (where `postgres.railway.internal` genuinely does resolve, and where
-the live service's real env vars are the ones that apply — no `NEXT_PUBLIC_SITE_URL`
-override needed once that's set for real). Tested session 60:
+Can also be run inside the live container instead of locally, via `railway ssh` (not
+`railway run`) — needs `railway ssh keys add` done once first:
 
 ```bash
 railway ssh --service kaalbert-web -- npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
 ```
 
-**One-time prerequisite**: this account has no SSH key registered yet — the first attempt
-failed with `No registered SSH keys found`. Register one before this will work:
+### Lost device and lost backup codes, together
 
-```bash
-railway ssh keys add        # generates/registers a new key, or
-railway ssh keys github     # imports from your GitHub account
-```
-
-This is a one-time step tied to your Railway account/identity, not something to do
-automatically inside an agent session — do it yourself, once, then `railway ssh` works from
-any terminal you're logged into Railway from. Until then, the local method above is the one
-that actually works today, and is arguably simpler anyway (no SSH key management, and you
-were going to need `.env.local` working for ordinary local dev regardless).
-
-**Lost device and lost backup codes, together:** there is no self-service 2FA bypass anywhere
-in this system, by design (`CLAUDE.md`'s Auth Pattern section). Another administrator has to
-reset that partner's 2FA enrollment directly — there's no built `/admin` screen for this yet
-either (5 partners, rare event); for now this means a direct database update
-(`admin_user.totpSecret = null`, `totpVerifiedAt = null`) run by you, followed by the partner
-going through `/admin/setup-2fa` again. If this becomes a recurring need, it's a small,
-real candidate for a future admin-facing task — not built speculatively now.
+**No longer a raw database update — a real Owner-facing button exists.** An Owner opens that
+partner's entry under **Team**, and the **"Login account"** panel (only rendered for an
+Owner viewer, once the partner actually has a linked login) has a **"Reset 2FA enrolment"**
+button — click it, relay the one-time re-enrollment link it returns. This calls the same
+`reissueSetupToken` mechanism session 60 fixed a real bug in (the original version issued a
+link that could never actually be completed for an already-enrolled account — see
+`memory/known-bugs.md`). There is still no self-service bypass of 2FA itself for the case
+where a partner has genuinely lost both their device and their backup codes, by design
+(`CLAUDE.md`'s Auth Pattern section) — but voluntarily switching devices while still holding
+the old one is self-service now too, from that partner's own `/admin/account` → "Set up a new
+device."
 
 **Verified working, session 60**: created a real account this way (`admin_user #15`), got a
-real printed password and a real, resolving setup link at
-`https://kaalbert.up.railway.app/admin/setup-2fa?token=...`. §9 covers the admin-login
-secrets question this used to raise — now resolved.
+real printed password and a real, resolving setup link. §9 covers the admin-login secrets
+question this used to raise — now resolved.
 
 ---
 
@@ -424,8 +434,12 @@ These don't stop once the domain is live — they're the recurring part of the j
 ## 11. Quick command reference
 
 ```bash
-# Create a new partner admin account (reaches the one shared database via .env.local's
-# public proxy connection — see §8 for why `railway run` does NOT work for this)
+# Normal way to create a partner account: log in as an Owner, Team → "Add partner"
+# (/admin/team/new) — see §8. The commands below are the disaster-recovery fallback only,
+# for when no Owner account exists to invite from.
+
+# Fallback: create a new admin account via the CLI script (reaches the one shared database
+# via .env.local's public proxy connection — see §8 for why `railway run` does NOT work)
 NEXT_PUBLIC_SITE_URL="https://kaalbert.up.railway.app" \
   npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
 
