@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import type { LandingPageDetail } from "@/lib/admin-landing-pages";
 import type { LandingPageBodyBlock } from "@/lib/landing-pages";
 import { AdminDownloadUploadButton } from "@/components/admin-download-upload-button";
 import { Button } from "@/components/ui/button";
@@ -13,44 +13,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { LandingPageBlockEditor } from "../landing-page-block-editor";
 
 /**
- * Creates a new instance (`landing-page-template.md`'s FR-4.3: "a non-technical partner can
- * create a new landing page instance from the template without vendor involvement" — the
- * literal AC-6 bar). Editing an already-live instance is a separate screen/form
- * (`../[slug]/edit-landing-page-form.tsx`, added session 60) with one deliberate difference:
- * the URL slug is only ever entered here, at creation, and is fixed from then on — see
- * `lib/admin-landing-pages.ts`'s `updateLandingPage` doc-comment for why. The slug is a real
- * field here, not auto-derived from the headline the way `Article.slug` is — a campaign
- * landing page's URL is deliberately chosen to match the ad/print/QR copy that points at it,
- * closer to `Category.slug`'s "partner-authored, partner-visible, worth surfacing a
- * collision inline" precedent than to an article's incidental permalink.
+ * Added session 60, correcting T7.5's original create-only scope (`memory/decision-log.md`,
+ * session 48 and session 60) — every field is editable here except the URL `slug`, shown as
+ * a fixed reference rather than an input: see `lib/admin-landing-pages.ts`'s
+ * `updateLandingPage` doc-comment for why the URL stays fixed once a page is live. Deliberately
+ * mirrors `NewLandingPageForm`'s field set and layout rather than sharing a component with
+ * it — the two forms differ in exactly one field (an editable slug input vs. a fixed slug
+ * display) plus their submit verb/endpoint, and this project's own precedent
+ * (`LandingPageBlockEditor` vs. `LegalBlockEditor`) already favors small, deliberate
+ * duplication over a one-time-reuse abstraction for a difference this narrow.
  */
-export function NewLandingPageForm() {
-  const router = useRouter();
-  const [slug, setSlug] = useState("");
-  const [kicker, setKicker] = useState("");
-  const [headline, setHeadline] = useState("");
-  const [openingParagraph, setOpeningParagraph] = useState("");
-  const [bodyContent, setBodyContent] = useState<LandingPageBodyBlock[]>([]);
-  const [ctaLabel, setCtaLabel] = useState("");
-  const [ctaHref, setCtaHref] = useState("");
-  const [downloadFileUrl, setDownloadFileUrl] = useState<string | null>(null);
-  const [campaignReference, setCampaignReference] = useState("");
-  const [metaTitle, setMetaTitle] = useState("");
-  const [metaDescription, setMetaDescription] = useState("");
+export function EditLandingPageForm({ initial }: { initial: LandingPageDetail }) {
+  const [kicker, setKicker] = useState(initial.kicker);
+  const [headline, setHeadline] = useState(initial.headline);
+  const [openingParagraph, setOpeningParagraph] = useState(initial.openingParagraph);
+  const [bodyContent, setBodyContent] = useState<LandingPageBodyBlock[]>(initial.bodyContent);
+  const [ctaLabel, setCtaLabel] = useState(initial.ctaLabel);
+  const [ctaHref, setCtaHref] = useState(initial.ctaHref);
+  const [downloadFileUrl, setDownloadFileUrl] = useState<string | null>(initial.downloadFileUrl);
+  const [campaignReference, setCampaignReference] = useState(initial.campaignReference);
+  const [metaTitle, setMetaTitle] = useState(initial.metaTitle);
+  const [metaDescription, setMetaDescription] = useState(initial.metaDescription);
   const [complianceChecked, setComplianceChecked] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleCreate() {
+  async function handleSave() {
     setStatus("saving");
     setErrorMessage(null);
 
     try {
-      const response = await fetch("/api/admin/landing-pages", {
-        method: "POST",
+      const response = await fetch(`/api/admin/landing-pages/${initial.slug}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          slug,
           kicker,
           headline,
           openingParagraph,
@@ -64,14 +60,14 @@ export function NewLandingPageForm() {
           complianceChecked,
         }),
       });
-      const data: { status: string; slug?: string; message?: string } = await response.json();
-      if (!response.ok || !data.slug) {
+      const data: { status: string; message?: string } = await response.json();
+      if (!response.ok) {
         setStatus("error");
         setErrorMessage(data.message ?? "Something went wrong — please try again.");
         return;
       }
-      router.push("/admin/landing-pages");
-      router.refresh();
+      setStatus("idle");
+      setComplianceChecked(false);
     } catch {
       setStatus("error");
       setErrorMessage("Something went wrong — check your connection and try again.");
@@ -90,18 +86,13 @@ export function NewLandingPageForm() {
       )}
 
       <Field>
-        <FieldLabel htmlFor="lpSlug">
-          URL slug{" "}
+        <FieldLabel>
+          URL{" "}
           <span className="text-muted-foreground font-normal">
-            kaalbert.com/lp/&#8203;{slugPreview(slug)}
+            fixed once created — a new URL means a new landing page
           </span>
         </FieldLabel>
-        <Input
-          id="lpSlug"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder="e.g. spring-2026-promo"
-        />
+        <p className="text-muted-foreground font-mono text-sm">kaalbert.com/lp/{initial.slug}</p>
       </Field>
 
       <Field>
@@ -220,27 +211,11 @@ export function NewLandingPageForm() {
         type="button"
         disabled={!complianceChecked || status === "saving"}
         title={!complianceChecked ? "Confirm 10.05 compliance first" : undefined}
-        onClick={handleCreate}
+        onClick={handleSave}
         className="w-fit"
       >
-        Create landing page
+        Save changes
       </Button>
     </div>
-  );
-}
-
-/**
- * Duplicates `lib/categories.ts`'s `slugify` logic rather than importing it — that file also
- * imports `@/lib/prisma`, and CLAUDE.md's rule against a `"use client"` component importing
- * a value from a `@/lib/prisma`-importing `lib/` file applies here. This is a preview only;
- * the real, authoritative slugify runs server-side in `lib/admin-landing-pages.ts`.
- */
-function slugPreview(value: string): string {
-  return (
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || "your-slug"
   );
 }

@@ -46,6 +46,7 @@ export default async function LandingPagesListPage() {
               <TableHead>URL</TableHead>
               <TableHead>Campaign reference</TableHead>
               <TableHead>Last updated</TableHead>
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,6 +72,14 @@ export default async function LandingPagesListPage() {
                     month: "short",
                     year: "numeric",
                   })}
+                </TableCell>
+                <TableCell>
+                  <Link
+                    href={`/admin/landing-pages/${landingPage.slug}`}
+                    className="text-primary text-sm font-semibold hover:underline"
+                  >
+                    Edit
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

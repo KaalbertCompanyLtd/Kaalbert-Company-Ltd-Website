@@ -40,8 +40,10 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
 5. **Update a fee range**: select a core offer page or the Advisory Retainer, edit the
    published fee band field (structured, not free text — see `core-offer-pages.md`,
    `capabilities-page.md`), save.
-6. **Create a landing page**: select the landing page template, set the independently-
-   editable headline and opening paragraph, save — a new live `/lp/` page exists.
+6. **Create or edit a landing page**: select the landing page template, set the
+   independently-editable headline and opening paragraph, save — a new live `/lp/` page
+   exists. An already-live instance can be edited the same way (every field except its URL,
+   which is fixed once created) via the same list's Edit link.
 7. **Maintain a profile**: a partner opens their own entry under Team and edits their
    photograph, title (their rank — "Lead Partner"/"Partner"), practice area, credentials, and
    personal statement — the `author` record used by both `about-and-partners-page.md` and
@@ -160,7 +162,8 @@ response_time_commitment, social_profile_urls (list, nullable —
   generic-by-id route would need complex polymorphic body handling for two structurally
   different payloads), `PATCH /api/admin/legal/[slug]`, `PATCH /api/admin/footer-content`,
   `PATCH
-/api/admin/offers/[id]`, `POST /api/admin/landing-pages`, `PATCH /api/admin/authors/[id]`,
+/api/admin/offers/[id]`, `POST /api/admin/landing-pages`, `PATCH
+/api/admin/landing-pages/[slug]` (every field except `slug` itself, added session 60), `PATCH /api/admin/authors/[id]`,
   `PATCH /api/admin/diagnostic-questions/[id]`, `PATCH /api/admin/diagnostic-dimensions/[id]`,
   `PATCH /api/admin/diagnostic-thresholds/[id]`, `PATCH /api/admin/diagnostic-score-bands/[id]`
   (label/statement/email_detail), `PATCH /api/admin/site-settings`, `POST

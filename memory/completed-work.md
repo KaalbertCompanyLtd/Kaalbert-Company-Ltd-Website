@@ -14,6 +14,69 @@ Protocol):
 
 ---
 
+## 2026-09-12 (T07-05 follow-up, session 60)
+
+**Task:** T7.5 follow-up — allow editing an already-live landing page, not just creating one
+**Summary:** User asked why landing pages couldn't be edited once live, pointing out edits to
+a campaign page are inevitable. Traced the original create-only scope to a real gap (never a
+deliberate immutability decision — see `memory/decision-log.md`) and built the correction:
+`getLandingPageForEdit`/`updateLandingPage` in `lib/admin-landing-pages.ts` (sharing
+validation with `createLandingPage` via a new `validateLandingPageContent` helper, and
+sharing request parsing via a new exported `parseLandingPageContentInput`, mirroring
+`lib/articles.ts`'s `parseArticleSaveInput` convention), a new `PATCH
+/api/admin/landing-pages/[slug]` route, a new `/admin/landing-pages/[slug]` edit screen
+(`EditLandingPageForm`, reusing the existing `LandingPageBlockEditor`), and an Edit link on
+the list screen. The URL slug stays fixed after creation — not shown as an input at all on
+the edit form, just a read-only reference — since it's the literal destination printed on ad/
+QR/campaign copy.
+**Files Changed:** `lib/admin-landing-pages.ts`, `lib/admin-landing-pages.test.ts`,
+`app/api/admin/landing-pages/route.ts`, `app/api/admin/landing-pages/[slug]/route.ts` (new),
+`app/admin/(shell)/landing-pages/page.tsx`, `app/admin/(shell)/landing-pages/[slug]/page.tsx`
+(new), `app/admin/(shell)/landing-pages/[slug]/edit-landing-page-form.tsx` (new),
+`app/admin/(shell)/landing-pages/new/new-landing-page-form.tsx` (doc-comment only),
+`docs/features/landing-page-template.md`, `docs/features/content-management-admin.md`,
+`docs/user-guide.md` (+ Artifact republish), `memory/decision-log.md`.
+**Related Feature:** `docs/features/landing-page-template.md`,
+`docs/features/content-management-admin.md`.
+**Notes:** Verified live via Playwright: opened the real edit screen for
+`business-health-check` (a seeded instance), confirmed every field populated with its real
+current content, edited and saved the kicker field, confirmed it persisted across a fresh
+page load, confirmed the public `/lp/business-health-check` page still rendered afterward,
+then reverted the test edit back to its original value. Also confirmed the compliance
+checkbox resets to unchecked after every save (a fresh promotional-copy sign-off each time,
+never inherited) and checked the form at mobile width (390px). Full quality gate clean:
+`npm run lint && npm run format:check && npm run typecheck && npm run test` (352 tests, 18 in
+`lib/admin-landing-pages.test.ts` alone). Milestone 7 (Content Admin) had already fully
+shipped, so per CLAUDE.md's "small fix on an already-shipped task → do it now" rule this was
+built directly rather than filed as a new task.
+
+---
+
+## 2026-09-12 (T01-05 follow-up, session 60)
+
+**Task:** T1.5 follow-up — admin sidebar nav never highlighted a nested detail/editor page
+**Summary:** User reported the sidebar doesn't highlight a section's tab on an inner page
+(e.g. an article's edit screen). `components/admin-sidebar-nav.tsx` compared `pathname ===
+item.href` exactly, so every detail/editor route (`/admin/articles/42`, `/admin/team/7`,
+`/admin/landing-pages/new`, etc.) never lit up its own section. Extracted a new, exported,
+directly-tested `isNavItemActive(pathname, href)`: active on an exact match or any nested
+path, with `/admin` (Dashboard) as the one exact-match-only exception since every other href
+nests under it. Also normalizes `/admin/diagnostic-configuration` (a second screen reached by
+an inline link from `/admin/diagnostic-questions`, not its own sidebar item) to its parent
+path so that section stays highlighted there too.
+**Files Changed:** `components/admin-sidebar-nav.tsx`,
+`components/admin-sidebar-nav.test.ts` (new).
+**Related Feature:** N/A — presentational/navigation logic, not a feature doc's concern.
+**Notes:** Verified live via Playwright on both the persistent desktop sidebar and the mobile
+off-canvas drawer (both render this same component) — an article detail page, a team member
+detail page, and the diagnostic-configuration second screen all correctly kept their parent
+tab highlighted. This project's first pure-logic test extracted specifically for component
+testability (no RTL render needed, per CLAUDE.md's "business logic ... never inside a
+component beyond what's needed to call into `lib/`" spirit applied to presentational logic
+too). Full quality gate clean.
+
+---
+
 ## 2026-09-12 (production-hardening follow-up, session 60, second pass)
 
 **Task:** Close the closable security/SEO gaps flagged by `docs/vendor-operations-guide.md`'s

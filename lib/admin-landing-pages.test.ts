@@ -2,31 +2,53 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    landingPage: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn() },
+    landingPage: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   },
 }));
 
 import { prisma } from "@/lib/prisma";
 import {
   createLandingPage,
+  getLandingPageForEdit,
   getLandingPageList,
   LandingPageValidationError,
+  parseLandingPageContentInput,
+  updateLandingPage,
 } from "@/lib/admin-landing-pages";
-import type { LandingPageCreateInput } from "@/lib/admin-landing-pages";
+import type { LandingPageCreateInput, LandingPageUpdateInput } from "@/lib/admin-landing-pages";
 
 const findManyMock = vi.mocked(prisma.landingPage.findMany);
 const findUniqueMock = vi.mocked(prisma.landingPage.findUnique);
 const createMock = vi.mocked(prisma.landingPage.create);
+const updateMock = vi.mocked(prisma.landingPage.update);
 
 beforeEach(() => {
   findManyMock.mockReset();
   findUniqueMock.mockReset();
   createMock.mockReset();
+  updateMock.mockReset();
 });
 
 function validInput(overrides: Partial<LandingPageCreateInput> = {}): LandingPageCreateInput {
   return {
     slug: "Spring 2026 Promo",
+    kicker: "Limited-time",
+    headline: "A stronger case, faster",
+    openingParagraph: "Everything you need to approach a lender with confidence.",
+    bodyContent: [{ kind: "heading", text: "Why now" }],
+    ctaLabel: "Start a conversation",
+    ctaHref: "/contact?service=funding-readiness-pack",
+    downloadFileUrl: null,
+    campaignReference: "SM/2026-10",
+    metaTitle: "Spring 2026 Promo — Kaalbert & Company Ltd",
+    metaDescription: "A stronger case, faster.",
+    complianceChecked: true,
+    ...overrides,
+  };
+}
+
+function validUpdateInput(overrides: Partial<LandingPageUpdateInput> = {}): LandingPageUpdateInput {
+  return {
     kicker: "Limited-time",
     headline: "A stronger case, faster",
     openingParagraph: "Everything you need to approach a lender with confidence.",
@@ -120,5 +142,92 @@ describe("createLandingPage", () => {
         data: expect.objectContaining({ isPlaceholder: false, downloadFileUrl: null }),
       }),
     );
+  });
+});
+
+describe("getLandingPageForEdit", () => {
+  it("returns null for a slug with no matching row", async () => {
+    findUniqueMock.mockResolvedValueOnce(null);
+    expect(await getLandingPageForEdit("no-such-slug")).toBeNull();
+  });
+
+  it("returns the row's fields with complianceChecked reset to false", async () => {
+    findUniqueMock.mockResolvedValueOnce({
+      slug: "business-health-check",
+      kicker: "Kicker",
+      headline: "Headline",
+      openingParagraph: "Opening.",
+      bodyContent: [{ kind: "heading", text: "Why now" }],
+      ctaLabel: "Start",
+      ctaHref: "/contact",
+      downloadFileUrl: null,
+      campaignReference: "SM/2026-09",
+      metaTitle: "Meta title",
+      metaDescription: "Meta description.",
+    } as never);
+
+    const result = await getLandingPageForEdit("business-health-check");
+    expect(result?.slug).toBe("business-health-check");
+    expect(result?.complianceChecked).toBe(false);
+  });
+});
+
+describe("updateLandingPage", () => {
+  it("rejects a save with the 10.05 compliance box unchecked", async () => {
+    await expect(
+      updateLandingPage("business-health-check", validUpdateInput({ complianceChecked: false })),
+    ).rejects.toThrow(LandingPageValidationError);
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an update for a slug with no matching row", async () => {
+    findUniqueMock.mockResolvedValueOnce(null);
+    await expect(updateLandingPage("no-such-slug", validUpdateInput())).rejects.toThrow(
+      /no landing page found/i,
+    );
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("never accepts a slug field — the URL is fixed once a page is created", () => {
+    const input = validUpdateInput();
+    expect(input).not.toHaveProperty("slug");
+  });
+
+  it("updates the row and always resets isPlaceholder to false on a valid save", async () => {
+    findUniqueMock.mockResolvedValueOnce({ id: 1 } as never);
+    updateMock.mockResolvedValueOnce({} as never);
+
+    await updateLandingPage("business-health-check", validUpdateInput());
+
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { slug: "business-health-check" },
+        data: expect.objectContaining({
+          isPlaceholder: false,
+          headline: "A stronger case, faster",
+        }),
+      }),
+    );
+  });
+});
+
+describe("parseLandingPageContentInput", () => {
+  it("returns null for a missing required field", () => {
+    expect(parseLandingPageContentInput({ kicker: "Only this" })).toBeNull();
+    expect(parseLandingPageContentInput(null)).toBeNull();
+  });
+
+  it("returns null for a malformed body content block", () => {
+    expect(
+      parseLandingPageContentInput({
+        ...validUpdateInput(),
+        bodyContent: [{ kind: "list", items: [1, 2] }],
+      }),
+    ).toBeNull();
+  });
+
+  it("parses a valid payload, defaulting downloadFileUrl through as given", () => {
+    const result = parseLandingPageContentInput(validUpdateInput());
+    expect(result).toEqual(validUpdateInput());
   });
 });

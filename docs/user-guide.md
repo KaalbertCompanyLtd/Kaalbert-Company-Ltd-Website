@@ -28,9 +28,10 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-12 (session 59) — Milestones 1–8 complete. Enquiry Management now covers
+**As of:** 2026-09-12 (session 60) — Milestones 1–8 complete. Enquiry Management now covers
 the full loop: see every enquiry, filter/sort them, open one to see everything about it, edit
-its status/notes/assignment, and delete a person's data on request.
+its status/notes/assignment, and delete a person's data on request. Landing Pages is no
+longer create-only — an already-live campaign page can now be edited too.
 
 ---
 
@@ -356,10 +357,6 @@ From `/admin/articles`, click **"Manage categories"**.
 `/admin/landing-pages` — click **Landing Pages** in the sidebar for the list of existing
 campaign pages. Click **"New Landing Page"** to start one.
 
-**Important:** this is create-only. Once you save a landing page, it cannot be edited or
-removed from this screen afterward — get it right (or plan to hand the fix to the developer)
-before you save.
-
 1. Choose a **URL slug** — this becomes the page's real address,
    `kaalbert.com/lp/your-slug`, shown live above the field as you type. Pick something that
    matches whatever ad, print piece, or QR code will point to this page (e.g.
@@ -393,8 +390,24 @@ before you save.
    landing page"** button stays disabled until you do.
 9. Click **"Create landing page."**
 
-**What to monitor:** the PDF upload uses the same interim storage as article images —
-durable, but not a real image host yet (Cloudflare R2 isn't set up).
+## Editing a landing page
+
+`/admin/landing-pages` — click **Edit** on any row in the list to open that campaign page's
+editor. Every field can be changed here except the **URL** itself, shown at the top as a
+fixed reference (`kaalbert.com/lp/your-slug`) rather than an input — the URL is set once, at
+creation, since it's the actual address printed on an ad, a QR code, or campaign copy, and
+changing it later would silently break whatever already points at it. If a campaign needs a
+genuinely new URL, create a new landing page instead of trying to change this one's.
+
+1. Edit **Kicker**, **Headline**, **Opening paragraph**, and the **Body content** blocks
+   exactly as described above for creating one.
+2. Edit the **Call-to-action label**/**link**, replace or remove the **Download file**, and
+   edit **Campaign reference**/**Meta title**/**Meta description** as needed.
+3. Tick **"This complies with 10.05 Positioning and Claims Guidance Note"** again — this box
+   is never pre-checked from a previous save, even if you checked it last time, so every edit
+   gets its own conscious sign-off.
+4. Click **"Save changes."** The page stays open after saving so you can keep editing or
+   check your changes went through.
 
 ---
 
@@ -677,7 +690,7 @@ depends on:
 - **Milestone 7 — Content Management Admin** (complete): every piece of content seeded so
   far is now partner-editable without a developer. Dashboard, Articles/Categories (with
   downloadable-resource attachment), Pages (Capabilities/Our Method/Legal/Footer), Offers
-  (the three core offers plus the Advisory Retainer), Landing Pages (create-only), Team,
+  (the three core offers plus the Advisory Retainer), Landing Pages (create and edit), Team,
   Diagnostic Configuration, Site Settings, and Subscribers are all live.
 - **Milestone 8 — Enquiry Management** (complete): a full screen to see, triage, and act on
   incoming enquiries and diagnostic completions — the list (`/admin/enquiries`), the detail
@@ -693,6 +706,8 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-12 | Landing Pages admin (T7.5 follow-up) is no longer create-only — click **Edit** on any row in the list to change every field of an already-live campaign page (headline, opening paragraph, body content, CTA, download file, campaign reference, meta tags), re-confirming 10.05 compliance on each save. The page's URL is still fixed once created, shown as a reference rather than an editable field — see "Editing a landing page" above.                                                                                                                                                                                                                                                                  |
+| 2026-09-12 | Small fix: the admin sidebar now stays highlighted on a section's own detail/editor screens (e.g. an article or team member's edit page) — previously it only lit up on that section's own list page, going dark the moment you opened an individual item.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 2026-09-12 | Personal-data deletion (T8.4) went live — a **Delete personal data** button on the Enquiry detail screen permanently removes someone's name/email/phone/message on request, applied exactly the same way regardless of status (the firm confirmed a Converted/paying-client enquiry gets no special exception) — see "Enquiry detail" above. This completes Milestone 8 in full. The affected row now shows "Personal data deleted" everywhere instead of a blank name, so it's never confused with an enquiry that simply never gave one.                                                                                                                                                                      |
 | 2026-09-12 | Enquiry detail (T8.3) went live — click **Open** on any row in the Enquiries list to see everything about it (full diagnostic responses in plain language, score breakdown, contact details, distinctly-shown contact/marketing consent, attribution) and edit its status, assign it to a partner, or add internal notes — see "Enquiry detail" above. A visitor's own submitted responses stay read-only everywhere on this screen.                                                                                                                                                                                                                                                                            |
 | 2026-09-12 | Enquiries list (T8.2) went live — `/admin/enquiries`, reached via **Enquiries** in the sidebar. A partner can now filter by status/triage/source/date range and sort the full enquiry history themselves, triage-flagged rows always surfaced first — see "Enquiries list" above. Genuinely paginated (20/page), unlike this project's other admin lists, so it stays fast as the list grows over the years. Also fixed a real bug found while building this: a pre-T8.1 enquiry that was truly triage-flagged but had no priority word was showing "Not flagged" everywhere (dashboard included) — it now shows a plain "Flagged" badge instead, so filtering to "Flagged" never shows a contradictory result. |

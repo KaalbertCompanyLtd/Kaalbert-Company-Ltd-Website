@@ -2,6 +2,68 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (T7.5 follow-up, session 60) — Landing Pages admin: editing an already-live instance is now built; the URL slug stays fixed
+
+**Status:** Standing
+
+**Summary:** The user asked directly why an already-live landing page couldn't be edited,
+pointing out "edits to a campaign page is inevitable." Traced the original create-only scope
+(session 48, above) back to its actual source before changing anything: `landing-page-
+template.md`'s Interfaces line named only `POST`, which in turn just reflected FR-4.3's
+literal acceptance bar ("a partner can create a new instance without vendor involvement") —
+nobody had ever asked for editing to be _excluded_, and every other content type in
+`content-management-admin.md`'s own User flow (articles, page copy, fee ranges) explicitly
+supports edit. Confirmed this was a real, unintentional gap, not a considered design
+constraint, and built the correction the same session: `PATCH /api/admin/landing-pages/
+[slug]`, an edit screen at `/admin/landing-pages/[slug]` reusing the existing
+`LandingPageBlockEditor`, and an Edit link on the list. **One deliberate constraint kept, not
+loosened**: the URL `slug` itself is still not editable after creation — a landing page's
+`/lp/[slug]` is the literal destination printed on an ad, a QR code, or campaign copy, so
+silently moving it would break whatever already points at it, the same reasoning
+`lib/articles.ts`'s `generateUniqueArticleSlug` doc-comment already gives for an article's
+slug. A partner who needs a new URL creates a new landing page. The 10.05-compliance
+checkbox re-gates every edit save exactly as it gates a create save (`getLandingPageForEdit`
+always returns `complianceChecked: false`, never the row's own prior value) — an edit is
+still a promotional-copy save under FR-5.4, and a partner should consciously re-affirm
+compliance for what they just changed, not inherit an old confirmation. `isPlaceholder` is
+reset to `false` on every edit too, same as create — an edit a partner makes and signs off is
+real content even if the row started as one of the three seeded, mockup-derived placeholder
+instances.
+
+**Related Documents:** `docs/features/landing-page-template.md`, `docs/features/content-
+management-admin.md`, `docs/tasks/07-content-admin.md` (T7.5), `lib/admin-landing-pages.ts`,
+`lib/admin-landing-pages.test.ts`, `app/api/admin/landing-pages/[slug]/route.ts`,
+`app/admin/(shell)/landing-pages/[slug]/`.
+
+---
+
+## 2026-09-12 (T01-05 follow-up, session 60) — Admin sidebar nav highlighted only an exact-path match, never a nested detail/editor screen
+
+**Status:** Standing
+
+**Summary:** The user reported the admin sidebar doesn't highlight a section's tab while on
+one of its inner pages (e.g. editing a specific article). Root cause:
+`components/admin-sidebar-nav.tsx`'s active-state check was `pathname === item.href` —
+exact match only, so `/admin/articles/42`, `/admin/team/7`, `/admin/landing-pages/new`, etc.
+never matched their own section's nav item. Fixed by extracting a small, directly-tested
+`isNavItemActive(pathname, href)` function: a nav item is active on its own exact path or any
+path nested beneath it (`pathname === href || pathname.startsWith(href + "/")`), with `/admin`
+(Dashboard) kept as an exact-match-only special case since every other href nests under it.
+Also handles `/admin/diagnostic-configuration` — a second screen reached by an inline link
+from `/admin/diagnostic-questions` (CLAUDE.md's "one nav entry, second screen via inline
+link" pattern), not its own sidebar item, normalized to its parent path for this purpose so
+it activates the "Diagnostic Configuration" tab too. Verified live via Playwright (desktop
+and mobile drawer, both reuse this same component) across article/team/diagnostic-
+configuration detail pages, and via a new `components/admin-sidebar-nav.test.ts` covering the
+pure-function logic directly rather than mounting the component (this project's first
+component-adjacent test; no React Testing Library render was needed since the logic worth
+locking in is pure path matching, not rendering).
+
+**Related Documents:** `components/admin-sidebar-nav.tsx`,
+`components/admin-sidebar-nav.test.ts`.
+
+---
+
 ## 2026-09-12 (T8.4, session 59) — Firm policy: a converted enquiry's personal data is deleted exactly like any other, no special exception
 
 **Status:** Standing
@@ -586,11 +648,19 @@ schema.prisma`.
 **Summary:** T7.5 (Landing Pages admin) built `/admin/landing-pages` (list) and `/admin/
 landing-pages/new` (create). Concrete decisions:
 
-- **Create-only, no edit/delete.** `landing-page-template.md`'s own Interfaces line names
-  `POST /api/admin/landing-pages` alone; `content-management-admin.md`'s User flow step 6
-  describes only "select the template, set headline/opening paragraph, save — a new live
-  page exists." Editing or retiring an already-live campaign page was never in this task's
-  scope, so no `PATCH`/`DELETE` route or UI was built. The list screen is read-only.
+- **Create-only, no edit/delete.** **Superseded 2026-09-12 (session 60) — see that session's
+  own entry below.** The user asked directly why this was so, given "edits to a campaign
+  page is inevitable"; re-checked the actual chain and confirmed it traced only to scope
+  (`landing-page-template.md`'s Interfaces line naming `POST` alone, `content-management-
+admin.md`'s User flow step 6 describing only creation), not any deliberate immutability
+  rationale — nobody had ever asked for editing to be _excluded_. Editing is now built;
+  delete/retire still isn't (a separate, smaller gap, not raised by this session — the list
+  screen remains otherwise read-only). Original reasoning, for the record: `landing-page-
+template.md`'s own Interfaces line names `POST /api/admin/landing-pages` alone;
+  `content-management-admin.md`'s User flow step 6 describes only "select the template, set
+  headline/opening paragraph, save — a new live page exists." Editing or retiring an
+  already-live campaign page was never in this task's scope, so no `PATCH`/`DELETE` route or
+  UI was built.
 - **The URL slug is a real, partner-typed field, not auto-derived from the headline.**
   `Article.slug` (T7.2) is auto-derived from the title with a silent numeric-suffix
   collision fallback, because an article's URL is an incidental side effect of its title.

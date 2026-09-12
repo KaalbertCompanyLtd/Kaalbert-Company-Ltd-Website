@@ -37,6 +37,99 @@ export interface LandingPageCreateInput {
   complianceChecked: boolean;
 }
 
+/**
+ * Every editable field except `slug` — deliberately excluded, not merely unused: see
+ * `updateLandingPage`'s own doc-comment for why the URL is fixed once a page is created.
+ */
+export type LandingPageUpdateInput = Omit<LandingPageCreateInput, "slug">;
+
+export interface LandingPageDetail extends LandingPageUpdateInput {
+  slug: string;
+}
+
+function parseBodyBlockInput(row: Record<string, unknown>): LandingPageBodyBlock | null {
+  switch (row.kind) {
+    case "heading":
+    case "paragraph":
+      return typeof row.text === "string" ? { kind: row.kind, text: row.text } : null;
+    case "list": {
+      if (!Array.isArray(row.items) || row.items.some((v) => typeof v !== "string")) return null;
+      return { kind: "list", items: row.items as string[] };
+    }
+    case "stats": {
+      if (!Array.isArray(row.items)) return null;
+      const items: { value: string; label: string }[] = [];
+      for (const item of row.items) {
+        const i = item as Record<string, unknown>;
+        if (typeof i.value !== "string" || typeof i.label !== "string") return null;
+        items.push({ value: i.value, label: i.label });
+      }
+      return { kind: "stats", items };
+    }
+    case "steps": {
+      if (!Array.isArray(row.items)) return null;
+      const items: { title: string; description: string }[] = [];
+      for (const item of row.items) {
+        const i = item as Record<string, unknown>;
+        if (typeof i.title !== "string" || typeof i.description !== "string") return null;
+        items.push({ title: i.title, description: i.description });
+      }
+      return { kind: "steps", items };
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * Every field `LandingPageCreateInput`/`LandingPageUpdateInput` share (everything except
+ * `slug`, which only a create request carries — the create route reads it separately, the
+ * update route takes it from the URL). Shared between `POST /api/admin/landing-pages` and
+ * `PATCH /api/admin/landing-pages/[slug]`, same convention as `lib/articles.ts`'s
+ * `parseArticleSaveInput` being imported by both its create and edit routes.
+ */
+export function parseLandingPageContentInput(body: unknown): LandingPageUpdateInput | null {
+  if (!body || typeof body !== "object") return null;
+  const c = body as Record<string, unknown>;
+
+  if (
+    typeof c.kicker !== "string" ||
+    typeof c.headline !== "string" ||
+    typeof c.openingParagraph !== "string" ||
+    !Array.isArray(c.bodyContent) ||
+    typeof c.ctaLabel !== "string" ||
+    typeof c.ctaHref !== "string" ||
+    (c.downloadFileUrl !== null && typeof c.downloadFileUrl !== "string") ||
+    typeof c.campaignReference !== "string" ||
+    typeof c.metaTitle !== "string" ||
+    typeof c.metaDescription !== "string" ||
+    typeof c.complianceChecked !== "boolean"
+  ) {
+    return null;
+  }
+
+  const bodyContent: LandingPageBodyBlock[] = [];
+  for (const row of c.bodyContent) {
+    const block = parseBodyBlockInput(row as Record<string, unknown>);
+    if (!block) return null;
+    bodyContent.push(block);
+  }
+
+  return {
+    kicker: c.kicker,
+    headline: c.headline,
+    openingParagraph: c.openingParagraph,
+    bodyContent,
+    ctaLabel: c.ctaLabel,
+    ctaHref: c.ctaHref,
+    downloadFileUrl: c.downloadFileUrl as string | null,
+    campaignReference: c.campaignReference,
+    metaTitle: c.metaTitle,
+    metaDescription: c.metaDescription,
+    complianceChecked: c.complianceChecked,
+  };
+}
+
 function requireNonBlank(value: string, message: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -90,27 +183,18 @@ function validateBodyBlock(block: LandingPageBodyBlock): LandingPageBodyBlock {
 }
 
 /**
- * `landing-page-template.md`'s FR-4.3 acceptance bar: a non-technical partner creates a new
- * `/lp/` instance without vendor involvement. Create-only — this task's own Interfaces line
- * names `POST /api/admin/landing-pages` alone, no `PATCH`; editing an already-live campaign
- * page isn't this task's scope. The 10.05-compliance checkbox gates this the same way it
- * gates every other promotional-copy save in this admin (`content-management-admin.md`'s
- * FR-5.4) — a landing page is paid-ad destination copy, the literal case that rule names.
- * `isPlaceholder` is never set here (always created `false`): unlike the three seeded
- * mockup-derived instances, a landing page a partner builds through this form is real content
- * they wrote and signed off via the compliance checkbox, not illustrative placeholder text.
+ * Every non-slug field, validated the same way for both a create and an edit save — the
+ * 10.05-compliance checkbox gates both identically (`content-management-admin.md`'s FR-5.4:
+ * a landing page is paid-ad destination copy, the literal case that rule names, and editing
+ * it is still a promotional-copy save).
  */
-export async function createLandingPage(input: LandingPageCreateInput): Promise<{ slug: string }> {
+function validateLandingPageContent(input: LandingPageUpdateInput) {
   if (!input.complianceChecked) {
     throw new LandingPageValidationError(
       "Confirm this complies with 10.05 Positioning and Claims Guidance Note before saving.",
     );
   }
 
-  const slug = slugify(input.slug);
-  if (!slug) {
-    throw new LandingPageValidationError("A URL slug is required.");
-  }
   const kicker = requireNonBlank(input.kicker, "Kicker is required.");
   const headline = requireNonBlank(input.headline, "Headline is required.");
   const openingParagraph = requireNonBlank(
@@ -131,6 +215,35 @@ export async function createLandingPage(input: LandingPageCreateInput): Promise<
   }
   const bodyContent = input.bodyContent.map(validateBodyBlock);
 
+  return {
+    kicker,
+    headline,
+    openingParagraph,
+    bodyContent,
+    ctaLabel,
+    ctaHref,
+    downloadFileUrl: input.downloadFileUrl,
+    campaignReference,
+    metaTitle,
+    metaDescription,
+  };
+}
+
+/**
+ * `landing-page-template.md`'s FR-4.3 acceptance bar: a non-technical partner creates a new
+ * `/lp/` instance without vendor involvement. `isPlaceholder` is never set here (always
+ * created `false`): unlike the three seeded mockup-derived instances, a landing page a
+ * partner builds through this form is real content they wrote and signed off via the
+ * compliance checkbox, not illustrative placeholder text.
+ */
+export async function createLandingPage(input: LandingPageCreateInput): Promise<{ slug: string }> {
+  const content = validateLandingPageContent(input);
+
+  const slug = slugify(input.slug);
+  if (!slug) {
+    throw new LandingPageValidationError("A URL slug is required.");
+  }
+
   const existing = await prisma.landingPage.findUnique({ where: { slug } });
   if (existing) {
     throw new LandingPageValidationError(
@@ -141,19 +254,74 @@ export async function createLandingPage(input: LandingPageCreateInput): Promise<
   await prisma.landingPage.create({
     data: {
       slug,
-      kicker,
-      headline,
-      openingParagraph,
-      bodyContent: bodyContent as unknown as Prisma.InputJsonValue,
-      ctaLabel,
-      ctaHref,
-      downloadFileUrl: input.downloadFileUrl,
-      campaignReference,
-      metaTitle,
-      metaDescription,
+      ...content,
+      bodyContent: content.bodyContent as unknown as Prisma.InputJsonValue,
       isPlaceholder: false,
     },
   });
 
   return { slug };
+}
+
+/**
+ * `content-management-admin.md`'s Landing Pages editor screen — returns `null` for a slug
+ * with no matching row, same `null`-means-404 contract as `lib/landing-pages.ts`'s own
+ * public-facing `getLandingPageBySlug`.
+ */
+export async function getLandingPageForEdit(slug: string): Promise<LandingPageDetail | null> {
+  const landingPage = await prisma.landingPage.findUnique({ where: { slug } });
+  if (!landingPage) {
+    return null;
+  }
+
+  return {
+    slug: landingPage.slug,
+    kicker: landingPage.kicker,
+    headline: landingPage.headline,
+    openingParagraph: landingPage.openingParagraph,
+    bodyContent: landingPage.bodyContent as unknown as LandingPageBodyBlock[],
+    ctaLabel: landingPage.ctaLabel,
+    ctaHref: landingPage.ctaHref,
+    downloadFileUrl: landingPage.downloadFileUrl,
+    campaignReference: landingPage.campaignReference,
+    metaTitle: landingPage.metaTitle,
+    metaDescription: landingPage.metaDescription,
+    complianceChecked: false,
+  };
+}
+
+/**
+ * Edits an already-live campaign page — added session 60, correcting T7.5's original
+ * create-only scope (`memory/decision-log.md`, session 48): that decision traced back to
+ * `landing-page-template.md`'s Interfaces line naming only `POST`, which in turn just
+ * reflected FR-4.3's literal acceptance bar ("a partner can create a new instance") — nobody
+ * ever asked for editing to be *excluded*, and a live campaign needing a copy fix or a
+ * corrected CTA link is the ordinary case, not the exception. The URL `slug` is deliberately
+ * still not editable here — same reasoning `lib/articles.ts`'s `generateUniqueArticleSlug`
+ * doc-comment already gives for an article's slug: it's the actual destination printed on an
+ * ad, a QR code, or campaign copy, so changing it after launch would silently break whatever
+ * already points at it. A partner who genuinely needs a new URL creates a new landing page
+ * instead. `isPlaceholder` is set to `false` on every save, same as `createLandingPage` — an
+ * edit a partner makes and signs off via the compliance checkbox is real content, even if the
+ * row started as one of the three seeded, mockup-derived placeholder instances.
+ */
+export async function updateLandingPage(
+  slug: string,
+  input: LandingPageUpdateInput,
+): Promise<void> {
+  const content = validateLandingPageContent(input);
+
+  const existing = await prisma.landingPage.findUnique({ where: { slug } });
+  if (!existing) {
+    throw new LandingPageValidationError(`No landing page found with the URL slug "${slug}".`);
+  }
+
+  await prisma.landingPage.update({
+    where: { slug },
+    data: {
+      ...content,
+      bodyContent: content.bodyContent as unknown as Prisma.InputJsonValue,
+      isPlaceholder: false,
+    },
+  });
 }
