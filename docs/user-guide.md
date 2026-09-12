@@ -124,19 +124,27 @@ word to show (any diagnostic submitted before this priority was tracked, i.e. be
 enquiry: **Name** (or "Not yet provided" — a diagnostic result is visible before a visitor
 ever gives their name), **Source** ("Business Health Check" or "Contact form"), **Score**
 (the diagnostic's overall 0–100 result, or "—" for a contact-form enquiry), **Triage** (same
-badge as the dashboard), **Status**, and **Date**. Triage-flagged rows are surfaced first by
+badge as the dashboard), **Status**, **Assigned to** (the partner's name, "You" for your own
+assignments, or "Unassigned"), and **Date**. Triage-flagged rows are surfaced first by
 default, so the most urgent enquiries are always at the top.
 
 1. **Status** dropdown — narrow the list to one status (New/Contacted/Closed/Converted/Not a
    fit), or leave it on "All statuses."
 2. **Triage** dropdown — "Flagged" or "Not flagged," or "All."
 3. **Source** dropdown — "Business Health Check" or "Contact form," or "All sources."
-4. **From**/**To** date fields — narrow the list to enquiries submitted within a date range.
+4. **Assigned to** dropdown — narrow the list to one partner, "Unassigned," or leave it on
+   "All partners."
+5. **From**/**To** date fields — narrow the list to enquiries submitted within a date range.
    Either can be left blank (an open-ended range).
-5. **Sort by** dropdown — "Triage priority (default)," "Newest first," or "Oldest first."
-6. Every filter/sort choice updates the page immediately and changes the page's own URL, so a
+6. **Sort by** dropdown — "Triage priority (default)," "Newest first," or "Oldest first."
+7. **"My enquiries"** button — a one-click shortcut that sets the Assigned to filter to your
+   own account, so you can jump straight to what's yours without hunting through the dropdown
+   (session 61 — any partner can assign or reassign any enquiry to anyone, including
+   themselves, from the detail screen below; this is simply the fastest way back to your own
+   list of them).
+8. Every filter/sort choice updates the page immediately and changes the page's own URL, so a
    filtered view can be bookmarked or shared with another partner.
-7. Click **Open** on any row to see everything about that enquiry — see "Enquiry detail"
+9. Click **Open** on any row to see everything about that enquiry — see "Enquiry detail"
    below.
 
 **Watch for:** this list is genuinely paginated (20 per page) so it stays fast no matter how

@@ -34,6 +34,8 @@ const ROW = {
   triagePriorityLevel: "High",
   status: "new",
   scoreSummary: { score: 62 },
+  assignedPartnerId: null,
+  assignedPartner: null,
   createdAt: new Date("2026-09-01T00:00:00Z"),
 };
 
@@ -198,6 +200,8 @@ describe("listEnquiries", () => {
         triagePriorityLevel: "High",
         triageFlag: true,
         status: "new",
+        assignedPartnerId: null,
+        assignedPartnerName: null,
         createdAt: ROW.createdAt,
       },
     ]);
@@ -214,6 +218,49 @@ describe("listEnquiries", () => {
     expect(item.score).toBeNull();
     expect(item.triageFlag).toBe(false);
     expect(item.source).toBe("Contact form");
+  });
+
+  it("resolves assignedPartnerName from the included relation when assigned", async () => {
+    countMock.mockResolvedValue(1);
+    findManyMock.mockResolvedValue([
+      { ...ROW, assignedPartnerId: 3, assignedPartner: { name: "Ama Wiafe" } },
+    ] as never);
+
+    const [item] = (await listEnquiries()).items;
+
+    expect(item.assignedPartnerId).toBe(3);
+    expect(item.assignedPartnerName).toBe("Ama Wiafe");
+  });
+
+  it("filters assignedTo: unassigned to assignedPartnerId: null", async () => {
+    countMock.mockResolvedValue(0);
+    findManyMock.mockResolvedValue([]);
+
+    await listEnquiries({ assignedTo: "unassigned" });
+
+    const countArgs = countMock.mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(countArgs.where.AND).toContainEqual({ assignedPartnerId: null });
+  });
+
+  it("filters assignedTo: <id> to that exact assignedPartnerId", async () => {
+    countMock.mockResolvedValue(0);
+    findManyMock.mockResolvedValue([]);
+
+    await listEnquiries({ assignedTo: "3" });
+
+    const countArgs = countMock.mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(countArgs.where.AND).toContainEqual({ assignedPartnerId: 3 });
+  });
+
+  it("ignores assignedTo: all, and a non-numeric value, rather than filtering or throwing", async () => {
+    countMock.mockResolvedValue(0);
+    findManyMock.mockResolvedValue([]);
+
+    await listEnquiries({ assignedTo: "all" });
+    expect(countMock).toHaveBeenCalledWith({ where: {} });
+
+    await listEnquiries({ assignedTo: "not-a-number" });
+    expect(countMock).toHaveBeenCalledWith({ where: {} });
   });
 });
 

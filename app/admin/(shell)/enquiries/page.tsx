@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { EnquiryStatus } from "@/generated/prisma/client";
-import { listEnquiries } from "@/lib/admin-enquiries";
+import { listAssignablePartners, listEnquiries } from "@/lib/admin-enquiries";
+import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import {
+  ASSIGNMENT_FILTER_ALL,
+  ASSIGNMENT_FILTER_UNASSIGNED,
   resolveTriageBadge,
   STATUS_LABELS,
   type EnquirySortValue,
@@ -33,6 +36,7 @@ interface EnquiriesPageProps {
     status?: string | string[];
     triage?: string | string[];
     source?: string | string[];
+    assignedTo?: string | string[];
     sort?: string | string[];
     from?: string | string[];
     to?: string | string[];
@@ -48,11 +52,19 @@ function isEnquiryStatus(value: string | undefined): value is EnquiryStatus {
   return !!value && value in EnquiryStatus;
 }
 
+/** `"all"` (default) unless the value is `"unassigned"` or parses as a positive whole id. */
+function normalizeAssignedTo(value: string | undefined): string {
+  if (value === ASSIGNMENT_FILTER_UNASSIGNED) return ASSIGNMENT_FILTER_UNASSIGNED;
+  if (value && Number.isInteger(Number(value)) && Number(value) > 0) return value;
+  return ASSIGNMENT_FILTER_ALL;
+}
+
 /** Builds a shareable `/admin/enquiries` URL — same reasoning as `app/insights/page.tsx`'s `buildInsightsHref`. */
 function buildEnquiriesHref(params: {
   status: string;
   triage: string;
   source: string;
+  assignedTo: string;
   sort: string;
   from: string;
   to: string;
@@ -62,6 +74,7 @@ function buildEnquiriesHref(params: {
   if (params.status !== "all") search.set("status", params.status);
   if (params.triage !== "all") search.set("triage", params.triage);
   if (params.source !== "all") search.set("source", params.source);
+  if (params.assignedTo !== ASSIGNMENT_FILTER_ALL) search.set("assignedTo", params.assignedTo);
   if (params.sort !== "triage") search.set("sort", params.sort);
   if (params.from) search.set("from", params.from);
   if (params.to) search.set("to", params.to);
@@ -83,21 +96,28 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
   const status = isEnquiryStatus(statusParam) ? statusParam : "all";
   const triage = triageParam === "flagged" || triageParam === "not_flagged" ? triageParam : "all";
   const source = sourceParam === "diagnostic" || sourceParam === "contact" ? sourceParam : "all";
+  const assignedTo = normalizeAssignedTo(firstValue(params.assignedTo));
   const sort = sortParam === "newest" || sortParam === "oldest" ? sortParam : "triage";
 
-  const result = await listEnquiries({
-    status,
-    triage,
-    source,
-    sort,
-    dateFrom: from || undefined,
-    dateTo: to || undefined,
-    page: Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1,
-  });
+  const [result, partners, currentUser] = await Promise.all([
+    listEnquiries({
+      status,
+      triage,
+      source,
+      assignedTo,
+      sort,
+      dateFrom: from || undefined,
+      dateTo: to || undefined,
+      page: Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1,
+    }),
+    listAssignablePartners(),
+    getCurrentAdminUser(),
+  ]);
 
-  const hasActiveFilters = status !== "all" || triage !== "all" || source !== "all" || from || to;
+  const hasActiveFilters =
+    status !== "all" || triage !== "all" || source !== "all" || assignedTo !== "all" || from || to;
   const hrefFor = (page: number) =>
-    buildEnquiriesHref({ status, triage, source, sort, from, to, page });
+    buildEnquiriesHref({ status, triage, source, assignedTo, sort, from, to, page });
 
   return (
     <div>
@@ -110,7 +130,11 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
         </p>
       </div>
 
-      <EnquiriesFilters value={{ status, triage, source, sort, dateFrom: from, dateTo: to }} />
+      <EnquiriesFilters
+        value={{ status, triage, source, assignedTo, sort, dateFrom: from, dateTo: to }}
+        partners={partners}
+        currentUserId={currentUser?.id ?? null}
+      />
 
       {result.items.length === 0 ? (
         <p className="text-body text-muted-foreground">
@@ -131,6 +155,7 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
                 <TableHead>Score</TableHead>
                 <TableHead>Triage</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Assigned to</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead />
               </TableRow>
@@ -159,6 +184,17 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{STATUS_LABELS[enquiry.status]}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {enquiry.assignedPartnerName ? (
+                        enquiry.assignedPartnerId === currentUser?.id ? (
+                          <span className="font-semibold">You</span>
+                        ) : (
+                          enquiry.assignedPartnerName
+                        )
+                      ) : (
+                        <span className="text-muted-foreground">Unassigned</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {enquiry.createdAt.toLocaleDateString("en-GB", {

@@ -16,6 +16,34 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## `assignedPartnerId` was write-only — no way for a partner to ever find their own assigned enquiries again
+
+**Status:** Fixed
+**Severity:** Medium — the write path worked and was already exercised (one real enquiry was
+already assigned), but there was no way to discover it afterward short of opening every
+enquiry one at a time
+**Date found:** 2026-09-12 (session 61)
+**Date fixed:** 2026-09-12 (session 61)
+**Description:** The user asked directly how a partner sees their assigned enquiries.
+Grepping the whole enquiries admin surface (`lib/admin-enquiries.ts`, the list page, the
+list's filters, the dashboard) for `assignedPartnerId` found exactly one place it was ever
+read or written: the individual enquiry detail screen's own dropdown (T8.3). It was never a
+list column, never a filter option, and never surfaced on the dashboard — so assigning an
+enquiry to someone gave them no way to ever find it again, short of opening every single
+enquiry to check. Same "looks built, never actually reachable" pattern as session 60's whole
+plan, found one layer deeper: the write path was real and already exercised (confirmed one
+real enquiry was already assigned, from earlier verification), it just had no read-side
+surface at all.
+**Workaround:** N/A — fixed the same session before this reached production use.
+**Planned Fix:** Added an "Assigned to" filter (specific partner/"Unassigned"/"All partners")
+and column to `/admin/enquiries`, a "My enquiries" one-click shortcut on that filter, and a
+"My assigned enquiries" quick-action link on the dashboard — see `memory/decision-log.md`'s
+session-61 entry for the full detail and the separate "should this be Owner-only" decision
+made in the same conversation.
+**Sequenced into:** None — already fixed this session, no future task needed.
+
+---
+
 ## Three client components importing the `AdminRole` enum value from `@/generated/prisma/client` broke `/admin`'s entire Turbopack compile
 
 **Status:** Fixed

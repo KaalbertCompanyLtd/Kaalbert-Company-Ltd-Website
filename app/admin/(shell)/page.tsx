@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getAdminDashboardStats, getRecentEnquiries } from "@/lib/admin-dashboard";
+import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { resolveTriageBadge, STATUS_LABELS } from "@/lib/enquiry-list-options";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -39,18 +40,37 @@ const STAT_CARDS = [
  * not a login-recovery flow they could ever complete. Now points at `/admin/account`, the
  * real self-service page this same session built.
  */
-const QUICK_ACTIONS = [
-  { label: "Publish a new Insights article", href: "/admin/articles" },
-  { label: "Update a core offer's fee band", href: "/admin/offers" },
-  { label: "Review flagged enquiries", href: "/admin/enquiries" },
-  { label: "Manage my account & 2FA", href: "/admin/account" },
-] as const;
+/**
+ * `"My assigned enquiries"` added session 61 — `assignedPartnerId` (T8.1) was write-only
+ * until now: settable on an enquiry's detail screen, but with no way for a partner to ever
+ * find their own assigned enquiries again afterward. Built as a link into the enquiries
+ * list's own new `assignedTo` filter (`enquiries-filters.tsx`) rather than a separate
+ * mechanism, so it's the exact same "My enquiries" button that screen now has.
+ */
+function buildQuickActions(currentUserId: number | null): Array<{ label: string; href: string }> {
+  return [
+    { label: "Publish a new Insights article", href: "/admin/articles" },
+    { label: "Update a core offer's fee band", href: "/admin/offers" },
+    { label: "Review flagged enquiries", href: "/admin/enquiries" },
+    ...(currentUserId !== null
+      ? [
+          {
+            label: "My assigned enquiries",
+            href: `/admin/enquiries?assignedTo=${currentUserId}`,
+          },
+        ]
+      : []),
+    { label: "Manage my account & 2FA", href: "/admin/account" },
+  ];
+}
 
 export default async function AdminDashboardPage() {
-  const [stats, recentEnquiries] = await Promise.all([
+  const [stats, recentEnquiries, currentUser] = await Promise.all([
     getAdminDashboardStats(),
     getRecentEnquiries(),
+    getCurrentAdminUser(),
   ]);
+  const quickActions = buildQuickActions(currentUser?.id ?? null);
 
   return (
     <div>
@@ -126,7 +146,7 @@ export default async function AdminDashboardPage() {
         <Card className="p-6">
           <h2 className="mb-4 text-[1.0625rem] font-semibold">Quick actions</h2>
           <div className="flex flex-col gap-2.5">
-            {QUICK_ACTIONS.map((action) => (
+            {quickActions.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}

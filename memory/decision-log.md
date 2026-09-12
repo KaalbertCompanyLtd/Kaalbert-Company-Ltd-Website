@@ -2,6 +2,58 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (session 61) — Enquiry assignment stays open to every partner, not folded into session 60's Owner-only account lockdown; fixed a real write-only-field gap the same session
+
+**Status:** Standing
+
+**Summary:** After session 60 shipped a real Owner/Partner role split for account/profile
+control, the user asked directly whether `assignedPartnerId` (T8.1's enquiry-assignment
+field) should move to Owner-only too, "in addition to the account and profile control." Gave
+a direct recommendation rather than a non-committal "it depends," and the user approved
+proceeding on it:
+
+- **Keep enquiry assignment open to every partner.** The distinction drawn: everything locked
+  to Owner at session 60 — inviting logins, deactivating accounts, resetting someone else's
+  password/2FA, editing someone else's public profile — shares one property, real
+  account/security control, where a mistake has a security blast radius (a compromised
+  account, a locked-out partner, a silently altered private profile). Enquiry assignment
+  isn't that: it doesn't gate _visibility_ (every partner already sees every enquiry's full
+  contents regardless of who it's assigned to), it only marks who's nominally on point for
+  follow-up. Restricting it to Owner-only would add a routing bottleneck (every reassignment
+  waiting on an Owner's availability) for no corresponding security gain, working against
+  `enquiry-management.md`'s own stated goal (Document 13.03, Section 6: fast, informed
+  follow-up). Stays in the same "open to any partner" category as every other day-to-day
+  content/operations action (Articles, Offers, Pages, Site Settings, Landing Pages),
+  unchanged from session 60's own explicit scoping.
+- **While investigating, found and fixed a real, separate gap in the same session**:
+  `assignedPartnerId` was write-only — settable on the enquiry detail screen (T8.3), but
+  with zero read-side surface anywhere else. Confirmed by grepping the entire enquiries admin
+  surface: no list column, no filter option, no dashboard mention. A partner assigned an
+  enquiry had no way to ever find it again short of opening every enquiry one at a time —
+  the same "looks built, never actually reachable" pattern session 60's whole plan was about,
+  just found one layer deeper (assignment _works_, it just isn't _visible_ afterward).
+  Fixed: an "Assigned to" filter (a specific partner/"Unassigned"/"All partners") and column
+  on the enquiries list, a "My enquiries" one-click shortcut on that same filter, and a "My
+  assigned enquiries" quick-action link on the dashboard. `listAssignablePartners()` (already
+  built, session 60's own reachability audit had flagged it as the dropdown's data source)
+  is now also the filter dropdown's data source — no new partner-listing mechanism needed.
+
+Verified live via Playwright against the real dev server: confirmed the "My enquiries" button
+correctly pre-filters to the signed-in account's own id (with a visible pressed state), the
+"Assigned to" column shows "You" for the viewer's own assignments and the partner's name for
+anyone else's, and the "Unassigned" filter correctly isolated the 7 of 8 real enquiries with
+no assignment (the 1 already-assigned real row, from session 57/58's own verification,
+correctly excluded). Checked at mobile width (390px) — the new filter and button stack
+cleanly with the rest of the existing filter row, no layout changes needed there.
+
+**Related Documents:** `docs/features/enquiry-management.md`, `docs/features/admin-
+authentication.md` (Roles section, for the account/security-control category this decision
+explicitly distinguishes assignment from), `lib/admin-enquiries.ts`, `lib/admin-
+enquiries.test.ts`, `lib/enquiry-list-options.ts`, `app/admin/(shell)/enquiries/
+enquiries-filters.tsx`, `app/admin/(shell)/enquiries/page.tsx`, `app/admin/(shell)/page.tsx`.
+
+---
+
 ## 2026-09-12 (session 60) — Real Owner/Partner roles, an invite/link flow, sidebar identity + sign-out, and a manual publish toggle — reversing two prior "proportionate for five partners" scope calls after the user found the whole user system unreachable in practice
 
 **Status:** Standing

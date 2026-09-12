@@ -7,10 +7,12 @@ import {
 import type { DiagnosticScoringResult } from "@/lib/diagnostic-scoring";
 import { prisma } from "@/lib/prisma";
 import type {
+  EnquiryAssignmentFilterValue,
   EnquirySortValue,
   EnquirySourceFilterValue,
   EnquiryTriageFilterValue,
 } from "@/lib/enquiry-list-options";
+import { ASSIGNMENT_FILTER_UNASSIGNED } from "@/lib/enquiry-list-options";
 
 /**
  * `/admin/enquiries` (T8.2) — mirrors `INSIGHTS_PAGE_SIZE`'s precedent in `lib/insights.ts`:
@@ -31,6 +33,8 @@ export interface EnquiryListQuery {
   status?: EnquiryStatus | "all";
   triage?: EnquiryTriageFilterValue;
   source?: EnquirySourceFilterValue;
+  /** `"all"` (default), `"unassigned"`, or a real `admin_user.id` as a string — session 61. */
+  assignedTo?: EnquiryAssignmentFilterValue;
   /** Inclusive, `YYYY-MM-DD`. Invalid/unparsable values are ignored, never thrown. */
   dateFrom?: string;
   /** Inclusive, `YYYY-MM-DD` — the whole day is included (23:59:59.999 local). */
@@ -51,6 +55,9 @@ export interface EnquiryListItem {
   triagePriorityLevel: string | null;
   triageFlag: boolean;
   status: EnquiryStatus;
+  assignedPartnerId: number | null;
+  /** `null` when unassigned — session 61, so the list/dashboard can finally show who an enquiry is assigned to without opening it. */
+  assignedPartnerName: string | null;
   createdAt: Date;
 }
 
@@ -89,6 +96,14 @@ function buildWhere(query: EnquiryListQuery): Prisma.EnquiryRecordWhereInput {
     AND.push({ triageFlag: { not: null } });
   } else if (query.source === "contact") {
     AND.push({ triageFlag: null });
+  }
+  if (query.assignedTo === ASSIGNMENT_FILTER_UNASSIGNED) {
+    AND.push({ assignedPartnerId: null });
+  } else if (query.assignedTo && query.assignedTo !== "all") {
+    const partnerId = Number.parseInt(query.assignedTo, 10);
+    if (Number.isInteger(partnerId)) {
+      AND.push({ assignedPartnerId: partnerId });
+    }
   }
   const from = parseDateBoundary(query.dateFrom, false);
   if (from) {
@@ -148,6 +163,8 @@ export async function listEnquiries(query: EnquiryListQuery = {}): Promise<Enqui
       triagePriorityLevel: true,
       status: true,
       scoreSummary: true,
+      assignedPartnerId: true,
+      assignedPartner: { select: { name: true } },
       createdAt: true,
     },
   });
@@ -161,6 +178,8 @@ export async function listEnquiries(query: EnquiryListQuery = {}): Promise<Enqui
     triagePriorityLevel: row.triagePriorityLevel,
     triageFlag: row.triageFlag === true,
     status: row.status,
+    assignedPartnerId: row.assignedPartnerId,
+    assignedPartnerName: row.assignedPartner?.name ?? null,
     createdAt: row.createdAt,
   }));
 

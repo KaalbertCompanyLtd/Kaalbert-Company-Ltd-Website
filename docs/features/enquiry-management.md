@@ -24,7 +24,14 @@ opening that enquiry already knows the business's shape").
    applicable), contact details, which consent was given (contact vs. marketing, shown
    distinctly), and the attribution (campaign, source, landing page) it arrived with.
 5. Updates the enquiry's status and adds internal notes (never visitor-facing).
-6. Optionally assigns or reassigns the enquiry to a specific partner.
+6. Optionally assigns or reassigns the enquiry to a specific partner. Any signed-in partner
+   can assign or reassign any enquiry to anyone — deliberately not restricted to Owners
+   (session 61, decided explicitly, not an oversight): assignment doesn't gate _visibility_
+   (every partner already sees every enquiry's full contents regardless of assignment), it
+   only marks who's on point for follow-up, so it stays in the same "open to any partner"
+   category as every other day-to-day content/operations action in this admin, not the
+   account/security-control category `admin-authentication.md`'s Roles section locked down
+   to Owners at session 60.
 
 ## Business rules
 
@@ -48,6 +55,11 @@ opening that enquiry already knows the business's shape").
 - An enquiry may originate from the diagnostic (full responses and score present) or the
   plain contact form (`contact-and-enquiry.md`, no diagnostic fields) — both render in the
   same list and detail view, with diagnostic-specific fields simply absent for the latter.
+- **Real gap found and fixed at session 61**: `assigned_partner_id` (T8.1) was write-only for
+  its first two sessions of existence — settable on the detail screen, but with no way for a
+  partner to ever find "my assigned enquiries" again afterward (no list column, no filter, no
+  dashboard surface). The list screen now has an "Assigned to" filter/column, and the
+  dashboard's Quick Actions has a "My assigned enquiries" link straight into that filter.
 
 ## Data requirements
 
@@ -62,7 +74,9 @@ can tell a genuine deletion apart from a `name`/`email`/`phone` that was simply 
 
 ## Interfaces
 
-- `/admin/enquiries` — list screen with filters and sort.
+- `/admin/enquiries` — list screen with filters and sort, including an "Assigned to" filter
+  (a specific partner, "Unassigned," or "All partners") and an "Assigned to" column
+  (session 61 — see this section's own note below on why this was added after the fact).
 - `/admin/enquiries/[id]` — detail screen.
 - `PATCH /api/admin/enquiries/[id]` — update status, notes, or assignment.
 - `DELETE /api/admin/enquiries/[id]/personal-data` — supports FR-6.4.

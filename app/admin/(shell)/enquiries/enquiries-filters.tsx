@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 
+import type { AssignablePartner } from "@/lib/admin-enquiries";
 import {
+  ASSIGNMENT_FILTER_ALL,
+  ASSIGNMENT_FILTER_UNASSIGNED,
   SOURCE_FILTER_OPTIONS,
   SORT_OPTIONS,
   STATUS_FILTER_OPTIONS,
@@ -22,6 +25,7 @@ export interface EnquiriesFiltersValue {
   status: string;
   triage: string;
   source: string;
+  assignedTo: string;
   sort: string;
   dateFrom: string;
   dateTo: string;
@@ -36,7 +40,22 @@ export interface EnquiriesFiltersValue {
  * operates on plain string props/`@/lib/enquiry-list-options` (never a `lib/` import that
  * touches `@/lib/prisma`) — safe for a `"use client"` component per CLAUDE.md's rule.
  */
-export function EnquiriesFilters({ value }: { value: EnquiriesFiltersValue }) {
+/**
+ * `partners`/`currentUserId` added session 61, alongside the new `assignedTo` filter — the
+ * "My enquiries" button is just this same filter pre-set to the signed-in partner's own id,
+ * not a separate mechanism, so it stays a shareable/bookmarkable URL like every other filter
+ * here. `currentUserId` is `null` for the rare account with no session (shouldn't happen
+ * behind `proxy.ts`, but the button simply doesn't render rather than assuming).
+ */
+export function EnquiriesFilters({
+  value,
+  partners,
+  currentUserId,
+}: {
+  value: EnquiriesFiltersValue;
+  partners: AssignablePartner[];
+  currentUserId: number | null;
+}) {
   const router = useRouter();
 
   function navigate(next: Partial<EnquiriesFiltersValue>) {
@@ -45,6 +64,7 @@ export function EnquiriesFilters({ value }: { value: EnquiriesFiltersValue }) {
     if (merged.status !== "all") params.set("status", merged.status);
     if (merged.triage !== "all") params.set("triage", merged.triage);
     if (merged.source !== "all") params.set("source", merged.source);
+    if (merged.assignedTo !== ASSIGNMENT_FILTER_ALL) params.set("assignedTo", merged.assignedTo);
     if (merged.sort !== "triage") params.set("sort", merged.sort);
     if (merged.dateFrom) params.set("from", merged.dateFrom);
     if (merged.dateTo) params.set("to", merged.dateTo);
@@ -56,6 +76,11 @@ export function EnquiriesFilters({ value }: { value: EnquiriesFiltersValue }) {
   const triageItems = Object.fromEntries(TRIAGE_FILTER_OPTIONS.map((o) => [o.value, o.label]));
   const sourceItems = Object.fromEntries(SOURCE_FILTER_OPTIONS.map((o) => [o.value, o.label]));
   const sortItems = Object.fromEntries(SORT_OPTIONS.map((o) => [o.value, o.label]));
+  const assignedToItems = Object.fromEntries([
+    [ASSIGNMENT_FILTER_ALL, "All partners"],
+    [ASSIGNMENT_FILTER_UNASSIGNED, "Unassigned"],
+    ...partners.map((partner): [string, string] => [String(partner.id), partner.name]),
+  ]);
 
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -120,6 +145,28 @@ export function EnquiriesFilters({ value }: { value: EnquiriesFiltersValue }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
+        <Label htmlFor="enquiries-filter-assigned">Assigned to</Label>
+        <Select
+          value={value.assignedTo}
+          onValueChange={(v) => navigate({ assignedTo: v ?? ASSIGNMENT_FILTER_ALL })}
+          items={assignedToItems}
+        >
+          <SelectTrigger id="enquiries-filter-assigned" className="w-full sm:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ASSIGNMENT_FILTER_ALL}>All partners</SelectItem>
+            <SelectItem value={ASSIGNMENT_FILTER_UNASSIGNED}>Unassigned</SelectItem>
+            {partners.map((partner) => (
+              <SelectItem key={partner.id} value={String(partner.id)}>
+                {partner.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="enquiries-filter-from">From</Label>
         <Input
           id="enquiries-filter-from"
@@ -160,6 +207,17 @@ export function EnquiriesFilters({ value }: { value: EnquiriesFiltersValue }) {
           </SelectContent>
         </Select>
       </div>
+
+      {currentUserId !== null && (
+        <button
+          type="button"
+          onClick={() => navigate({ assignedTo: String(currentUserId) })}
+          aria-pressed={value.assignedTo === String(currentUserId)}
+          className="border-border text-foreground hover:border-accent aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground h-8 shrink-0 rounded-sm border px-3 text-sm font-semibold transition-colors"
+        >
+          My enquiries
+        </button>
+      )}
     </div>
   );
 }

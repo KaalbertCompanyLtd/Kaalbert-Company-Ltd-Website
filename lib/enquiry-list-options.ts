@@ -50,6 +50,20 @@ export const SOURCE_FILTER_OPTIONS: ReadonlyArray<{
   { value: "contact", label: "Contact form" },
 ];
 
+/**
+ * `"all"` (no filter) or `"unassigned"` are the two fixed values; anything else is a real
+ * `admin_user.id` as a string (the partner list itself is dynamic, fetched from the DB via
+ * `lib/admin-enquiries.ts`'s `listAssignablePartners`, so it can't be a static union the way
+ * every other filter type on this page is) — added session 61 after the user pointed out
+ * `assignedPartnerId` was write-only: settable on the detail screen, but with no way for a
+ * partner to ever find "my assigned enquiries" again afterward (no list column, no filter, no
+ * dashboard surface).
+ */
+export type EnquiryAssignmentFilterValue = "all" | "unassigned" | string;
+
+export const ASSIGNMENT_FILTER_ALL = "all";
+export const ASSIGNMENT_FILTER_UNASSIGNED = "unassigned";
+
 export type EnquirySortValue = "triage" | "newest" | "oldest";
 
 export const SORT_OPTIONS: ReadonlyArray<{ value: EnquirySortValue; label: string }> = [

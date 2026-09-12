@@ -14,6 +14,43 @@ Protocol):
 
 ---
 
+## 2026-09-12 (session 61) — Enquiry assignment made visible (list filter/column, "My enquiries" shortcut, dashboard link); confirmed it stays open to every partner, not Owner-only
+
+**Task:** User-directed follow-up — asked how a partner sees their assigned enquiries, and
+for a recommendation on whether assignment should move to Owner-only alongside session 60's
+account/profile lockdown.
+**Summary:** Investigated first, rather than assuming: grepped the whole enquiries admin
+surface and confirmed `assignedPartnerId` (T8.1) had been write-only since it was built —
+settable on the detail screen, with zero read-side surface (no list column, no filter, no
+dashboard mention). Recommended keeping assignment open to every partner (it's day-to-day
+operational routing, not account/security control — doesn't gate visibility, only marks who's
+on point) and fixing the visibility gap instead; the user approved proceeding on that
+recommendation. Built: an "Assigned to" filter (a specific partner/"Unassigned"/"All
+partners") and column on `/admin/enquiries`, a "My enquiries" one-click shortcut button on
+that same filter (pre-fills it to the signed-in partner's own id), and a "My assigned
+enquiries" quick-action link on the dashboard.
+**Files Changed:** `lib/admin-enquiries.ts` (`EnquiryListQuery.assignedTo`, `buildWhere`
+filter branch, `EnquiryListItem` gained `assignedPartnerId`/`assignedPartnerName`, the
+`assignedPartner` relation now selected), `lib/admin-enquiries.test.ts` (+5 tests),
+`lib/enquiry-list-options.ts` (`EnquiryAssignmentFilterValue`,
+`ASSIGNMENT_FILTER_ALL`/`ASSIGNMENT_FILTER_UNASSIGNED`), `app/admin/(shell)/enquiries/
+enquiries-filters.tsx` (new "Assigned to" `Select` + "My enquiries" button, new `partners`/
+`currentUserId` props), `app/admin/(shell)/enquiries/page.tsx` (parses/validates the new
+`assignedTo` search param, fetches `listAssignablePartners()`/`getCurrentAdminUser()`
+alongside `listEnquiries`, renders the new column), `app/admin/(shell)/page.tsx`
+(`buildQuickActions` now takes the signed-in user's id and adds "My assigned enquiries"),
+`docs/features/enquiry-management.md`, `docs/user-guide.md` (+ Artifact republished),
+`memory/decision-log.md`, `memory/known-bugs.md`.
+**Related Feature:** `docs/features/enquiry-management.md`.
+**Notes:** Full quality gate passing (lint/format:check/typecheck/test — 391/391, +4 new
+tests). Verified live via Playwright against the real dev server: the "My enquiries" button's
+pressed state, the "Assigned to" column showing "You" for the viewer's own row, the
+"Unassigned" filter correctly isolating 7 of the 8 real enquiries (the 1 already-assigned row
+correctly excluded), and clean mobile-width (390px) layout with no changes needed to the
+existing filter row's own responsive behavior.
+
+---
+
 ## 2026-09-12 (session 60) — Real Owner/Partner roles, invite/link flow, sidebar identity + sign-out, self-service account page, manual publish toggle
 
 **Task:** User-directed overhaul of the whole admin user/account system, superseding T6.6's
