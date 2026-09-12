@@ -14,6 +14,42 @@ Protocol):
 
 ---
 
+## 2026-09-12 (production-hardening follow-up, session 60, second pass)
+
+**Task:** Close the closable security/SEO gaps flagged by `docs/vendor-operations-guide.md`'s
+first pass; close the admin-login secrets bug; fix a real bug in the guide's own
+admin-account-creation instructions.
+**Summary:** Added baseline HTTP security headers (`next.config.ts`'s `headers()` —
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`,
+`Strict-Transport-Security`) and a new `app/robots.ts` (allow all, disallow `/admin`, points
+at the dynamic sitemap) — both verified live via a local dev server (`curl -I`, `curl
+/robots.txt`). Closed `memory/known-bugs.md`'s admin-secrets entry to `Fixed` after the user
+confirmed a real redeploy happened following session 54's `railway variable set`. Separately,
+the user's own attempt to run this guide's documented `railway run --service kaalbert-web --
+npm run admin:create-user ...` command failed for real
+(`Can't reach database server at postgres.railway.internal`) — diagnosed the root cause
+(`railway run` executes locally but injects the live service's **private-network**
+`DATABASE_URL`, which only resolves inside Railway's own infrastructure), rewrote §8 with the
+actually-working method (run the script bare, letting `.env.local`'s public-proxy connection
+reach the same single shared database, with a `NEXT_PUBLIC_SITE_URL` override so the printed
+setup link resolves before the real domain exists), and created the user's real admin account
+this way (`admin_user #15`). Also tested and documented `railway ssh` as the genuine
+"run it on Railway itself" alternative the user asked about — confirmed it needs a one-time
+`railway ssh keys add`/`railway ssh keys github` first (the user's account had none
+registered), which was left for the user to do themselves rather than run automatically.
+**Files Changed:** `next.config.ts`, `app/robots.ts` (new), `memory/known-bugs.md`,
+`docs/vendor-operations-guide.md`, its Artifact mirror (republished).
+**Related Feature:** `docs/features/seo-and-search-foundation.md`,
+`docs/features/admin-authentication.md`.
+**Notes:** Not tied to any `docs/tasks/*.md` task ID — vendor/operations work outside the
+formal roadmap, same bucket as the guide itself. Full quality gate re-run clean after every
+change (`npm run lint && npm run format:check && npm run typecheck && npm run test`, 338
+tests). Left deliberately open, per the guide's own reasoning: Content-Security-Policy (needs
+a live domain to test against safely) and persistent rate-limit storage (only matters once
+the service scales beyond one instance).
+
+---
+
 ## 2026-09-12 (T2.8 follow-up, session 60)
 
 **Task:** T2.8 follow-up — use a dedicated Open Graph share image instead of the primary logo

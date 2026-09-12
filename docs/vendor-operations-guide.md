@@ -6,8 +6,8 @@ what's left before this can be called properly launched, how to run the operatio
 developer can run (creating partner accounts, managing secrets, Railway infrastructure), and
 what to keep doing on an ongoing basis after launch.
 
-**Last updated:** 2026-09-12 (session 60), immediately after Milestone 8 (Enquiry Management)
-closed out Phase 1's launch scope (`docs/roadmap.md`). Update this file the same way
+**Last updated:** 2026-09-12 (session 60, second pass — closed out most of the gaps this
+guide itself flagged in its first pass the same session). Update this file the same way
 `docs/user-guide.md` is updated — incrementally, the session something changes, never as a
 big end-of-project catch-up (`memory/decision-log.md`'s incremental-docs decision applies to
 this file too, even though it isn't one of the two formal Firm-Facing Documentation
@@ -41,8 +41,7 @@ technical-debt.md`). This is the single biggest thing blocking a "real" producti
 
 ## 2. This session's production-hardening changes (already done, verify only)
 
-Two small, safe fixes were made directly (both matched CLAUDE.md's "small fix on an
-already-shipped task/hazard → do it now" rule rather than needing a new task):
+**First pass:**
 
 1. **Default OG/share image** — `lib/seo.ts`'s `buildPageMetadata` now falls back to
    `public/brand/og-default.png` (the firm-supplied `Logo_OG_Image_2000x1050.png`) instead of
@@ -56,14 +55,25 @@ already-shipped task/hazard → do it now" rule rather than needing a new task):
    silently deleted every one of them from the live service (the exact hazard CLAUDE.md
    already documents for this file). Added `preserve()` for all seven; confirmed with
    `railway config plan` that this is a true no-op against the live project (no drift).
-   **You still need to `git push` this commit** (or the next one that includes it) for the
-   fix to matter — it only protects the file from a _future_ `railway config apply`, it
-   doesn't need one itself.
 
-**Not committed to `docs/tasks/*.md` scope, deliberately left for you to decide** (see
-Section 4 for the reasoning on each): HTTP security headers, CSP, `robots.txt`, and
-persistent rate-limit storage. These are real gaps, but changing them safely needs either a
-live domain to test against or a scoped decision only you should make — see below.
+**Second pass, same session, once you confirmed a redeploy had already happened:**
+
+3. **Baseline HTTP security headers** — `next.config.ts` now sets `X-Content-Type-Options`,
+   `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and `Strict-Transport-Security`
+   on every route. Verified live on a local dev server (`curl -I`), including on `/admin/login`.
+4. **`app/robots.ts` added** — allows everything except `/admin`, points crawlers at the
+   dynamic sitemap. Verified live at `/robots.txt`.
+5. **Admin-login secrets bug closed** — you confirmed a real redeploy happened after the
+   secrets were set (session 54); combined with the deployment-timeline evidence and the
+   `GET /admin/login` 200 already gathered, `memory/known-bugs.md`'s entry is now `Fixed`.
+6. **Your own admin account was created for real** — see §8's corrected instructions below;
+   the ones in this guide's first pass had a real bug in them (`railway run` doesn't work for
+   this, caught by your own attempt failing with `Can't reach database server at
+postgres.railway.internal`).
+
+**Still deliberately left open — see §4/§5 for why:** Content-Security-Policy and persistent
+rate-limit storage. Both need either a live domain to test against safely or a scoped
+decision that's genuinely yours to make, not a same-session mechanical fix.
 
 ---
 
@@ -122,39 +132,19 @@ public site — which, practically, is exactly what it is right now.
   (ADR 0011).
 - Personal-data deletion for enquiries (T8.4, just shipped) — the firm confirmed a converted
   enquiry is deleted the same as any other, no special retention carve-out.
+- **Baseline HTTP security headers** (added session 60) — `next.config.ts`'s `headers()`
+  sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`,
+  `Referrer-Policy: strict-origin-when-cross-origin`,
+  `Permissions-Policy: camera=(), microphone=(), geolocation=()`, and
+  `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` on every route.
+  HSTS already takes effect today — it only needs HTTPS, which Railway's raw domain already
+  serves.
+- **`app/robots.ts`** (added session 60) — allows everything except `/admin`, points at the
+  dynamic sitemap. Verified live at `/robots.txt`.
 
-**Real gaps — recommended as your next scoped piece of work, not done in this session
-because none of them are a "small fix to something already shipped," and CSP specifically
-needs a live domain to test against without risking breaking GTM/fonts/images:**
+**Real gaps — still your next scoped piece of work, deliberately not done this session:**
 
-1. **No HTTP security headers at all today** — `next.config.ts` is the default empty
-   scaffold. Add a `headers()` block for the safe, non-breaking baseline (none of these need
-   a live domain to test):
-
-   ```ts
-   async headers() {
-     return [
-       {
-         source: "/(.*)",
-         headers: [
-           { key: "X-Content-Type-Options", value: "nosniff" },
-           { key: "X-Frame-Options", value: "SAMEORIGIN" },
-           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-           {
-             key: "Strict-Transport-Security",
-             value: "max-age=63072000; includeSubDomains; preload",
-           },
-         ],
-       },
-     ];
-   }
-   ```
-
-   HSTS is safe to add now even before the domain move — it only takes effect over HTTPS,
-   which Railway's raw domain already serves.
-
-2. **Content-Security-Policy — deliberately not drafted here.** A CSP has to allowlist GTM's
+1. **Content-Security-Policy — deliberately not drafted.** A CSP has to allowlist GTM's
    script host, Google Fonts (if used), the Cloudflare R2 public URL for images
    (`CLOUDFLARE_R2_PUBLIC_URL`), and Brevo/whatever else fires client-side — get any of that
    wrong and pages silently break (blocked scripts/images, no error surfaced to a visitor).
@@ -162,17 +152,13 @@ needs a live domain to test against without risking breaking GTM/fonts/images:**
    (home, an article with an R2 image, the diagnostic, `/admin`) via Playwright MCP with the
    browser console open before calling it done.
 
-3. **Rate-limit state is in-memory** (flagged during T6.x build,
+2. **Rate-limit state is in-memory** (flagged during T6.x build,
    `docs/sessions/session-38-admin-2fa-setup-flow.md`) — it resets on every Railway
    redeploy/restart and wouldn't be shared across multiple instances if the service ever
    scales beyond one. Fine at current traffic/instance-count; revisit if the service is ever
    scaled horizontally (move the counter to Postgres or a shared store).
 
-4. **`robots.txt` doesn't exist** (`app/sitemap.ts` does, and is dynamic/complete). Add
-   `app/robots.ts` referencing the sitemap once the real domain is live — low priority, since
-   its absence doesn't block indexing, it just skips an explicit crawl directive.
-
-5. **Dependency advisories**: `npm audit` shows 4 high-severity advisories, all inside
+3. **Dependency advisories**: `npm audit` shows 4 high-severity advisories, all inside
    Prisma CLI's **dev-only** dependency tree (`mysql2`, unrelated to this project's Postgres
    usage) — already tracked in `memory/technical-debt.md`, not a production runtime risk, no
    action needed beyond periodically checking whether a non-breaking Prisma CLI update
@@ -192,13 +178,13 @@ needs a live domain to test against without risking breaking GTM/fonts/images:**
 - Dynamic, always-fresh XML sitemap (`app/sitemap.ts`) covering home/offers/pages/legal/
   articles.
 - **Default OG/share image now uses the firm's dedicated image** (this session's fix, Section 2) instead of the plain logo — verified rendering correctly.
+- **`robots.txt`** (added session 60) — see Section 4.
 
 **Still open:**
 
 1. **Domain verification (Google Search Console + Meta Business Manager)** — blocked on
    domain registration (Section 3), then part of T5.5.
-2. **`robots.txt`** — see Section 4, item 4.
-3. **Placeholder content still live** — this is the part of "full SEO" that isn't a code
+2. **Placeholder content still live** — this is the part of "full SEO" that isn't a code
    problem: indexing pages with clearly-marked draft/placeholder text is a real quality
    signal search engines and visitors both notice.
    - **3 of 4 legal pages** (`/legal/privacy-notice`, `/legal/cookie-notice`,
@@ -216,7 +202,7 @@ needs a live domain to test against without risking breaking GTM/fonts/images:**
      `isPlaceholder` to `false` there; don't re-run `prisma/seed.ts` for this (seeding is
      idempotent but is the _initial_ content source, not the ongoing edit path once `/admin`
      exists).
-4. **T5.5's Meta/Google Ads/LinkedIn pieces** — see Section 3, needs the domain plus real ad
+3. **T5.5's Meta/Google Ads/LinkedIn pieces** — see Section 3, needs the domain plus real ad
    accounts (Meta Business Manager + Pixel + CAPI token, Google Ads account, LinkedIn
    Campaign Manager access) that don't exist yet. Not a launch blocker per
    `docs/roadmap.md` — only needed once the firm is ready to run paid campaigns.
@@ -229,19 +215,19 @@ Set on the live `kaalbert-web` Railway service unless noted otherwise. Never put
 in this file, `CLAUDE.md`, or anywhere committed — `CLAUDE.local.md` (gitignored) is where
 your own local notes on these live.
 
-| Variable                                                                                         | Status on live service                                | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference)       | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set; **verify it's actually live** — see Section 8 | Was missing entirely until session 54 (2026-09-11); the fix was set via `railway variable set --skip-deploys`, meaning it only took effect on the **next** deploy. The current live deployment (`2026-09-11 22:40:34`) postdates that variable-set, and `GET /admin/login` returns `200` (not the crash it would if this were still unset) — strong evidence it's already live, but not yet confirmed by an actual successful login. Do that first (Section 8) and then flip `memory/known-bugs.md`'s matching entry from Open to Fixed. |
-| `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set; same verification status as above             | Same incident, same fix, same "verify then close the bug" step.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `NEXT_PUBLIC_SITE_URL`                                                                           | ❌ Not set                                            | Falls back to `https://www.kaalbert.com` in code (`lib/seo.ts`), which is correct once that domain is live — but set it explicitly once it is, per Section 3.                                                                                                                                                                                                                                                                                                                                                                            |
-| `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                               | Real container, live.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                                   | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | ✅ Set                                                | Real account, verified sender, live. Re-check the sender address once `kaalbert.com` exists (Section 3).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `CLOUDFLARE_R2_ACCOUNT_ID` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` / `_BUCKET` / `_PUBLIC_URL` | ✅ Set                                                | Provisioned session 54; now also correctly `preserve()`d in `.railway/railway.ts` (this session's fix).                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `PAYSTACK_SECRET_KEY`                                                                            | Not needed yet                                        | Milestone 13 (Phase 2, gated) — do not add until that trigger is met.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Calendar-sync credentials                                                                        | Not needed yet                                        | Milestone 10 (Phase 2, gated).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| CRM webhook target + auth                                                                        | Not needed yet                                        | Milestone 15 (Phase 2, gated).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Variable                                                                                         | Status on live service                          | Notes                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference) | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                       |
+| `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set and confirmed live — see Section 9       | Was missing entirely until session 54 (2026-09-11), which hard-blocked every real admin login. Confirmed live and working session 60 (a real account was created end-to-end, and the redeploy that picked up the fix was confirmed) — `memory/known-bugs.md`'s entry is closed. |
+| `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set and confirmed live — same as above       | Same incident, same fix, now confirmed.                                                                                                                                                                                                                                         |
+| `NEXT_PUBLIC_SITE_URL`                                                                           | ❌ Not set                                      | Falls back to `https://www.kaalbert.com` in code (`lib/seo.ts`), which is correct once that domain is live — but set it explicitly once it is, per Section 3.                                                                                                                   |
+| `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                         | Real container, live.                                                                                                                                                                                                                                                           |
+| `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                             | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                               |
+| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | ✅ Set                                          | Real account, verified sender, live. Re-check the sender address once `kaalbert.com` exists (Section 3).                                                                                                                                                                        |
+| `CLOUDFLARE_R2_ACCOUNT_ID` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` / `_BUCKET` / `_PUBLIC_URL` | ✅ Set                                          | Provisioned session 54; now also correctly `preserve()`d in `.railway/railway.ts` (this session's fix).                                                                                                                                                                         |
+| `PAYSTACK_SECRET_KEY`                                                                            | Not needed yet                                  | Milestone 13 (Phase 2, gated) — do not add until that trigger is met.                                                                                                                                                                                                           |
+| Calendar-sync credentials                                                                        | Not needed yet                                  | Milestone 10 (Phase 2, gated).                                                                                                                                                                                                                                                  |
+| CRM webhook target + auth                                                                        | Not needed yet                                  | Milestone 15 (Phase 2, gated).                                                                                                                                                                                                                                                  |
 
 **Adding a new variable safely, going forward:** set it live with `railway variable set
 KEY=value --service kaalbert-web`, **then immediately add a matching `preserve()` entry to
@@ -281,7 +267,7 @@ Both point at the same physical database. This means:
 **A local `.env.local`/`.env.production` file is never read by the deployed app** (ADR 0008
 — no dual-host portability design, so there's deliberately no "load from a file" fallback in
 production). Every value the live app needs must be set directly on the Railway service, full
-stop — this is exactly the mistake that caused the admin-secrets incident in Section 8.
+stop — this is exactly the mistake that caused the admin-secrets incident in Section 9.
 
 ---
 
@@ -292,35 +278,80 @@ There is **no self-service "invite a partner" UI**, and that's a deliberate choi
 created rarely, a developer-run script is proportionate — a full invite UI would be more
 process than this firm's scale justifies.
 
-**How to create one:**
+**How to create one — corrected this session, after your own attempt caught a real bug in
+the first version of this guide.**
 
-1. Run the script against the **live** database (not your local dev database) via Railway,
-   so the new account actually exists where the firm logs in:
+The first version told you to run `railway run --service kaalbert-web -- npm run
+admin:create-user ...`. **That doesn't work, and can't be made to work as written**:
+`railway run` executes the command on _your own machine_, only injecting the live service's
+environment variables into it. `kaalbert-web`'s `DATABASE_URL` is declared as
+`${{Postgres.DATABASE_URL}}`, which resolves to the **private-network** hostname
+`postgres.railway.internal` — a hostname that only resolves _inside_ Railway's own
+infrastructure. Injected into a process running on your laptop, it's simply unreachable —
+exactly the `Can't reach database server at postgres.railway.internal` error you hit.
 
-   ```bash
-   railway run --service kaalbert-web -- npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
-   ```
+**What actually works — run it locally, no `railway run` wrapper:**
 
-   (Omit `--password` to have the script generate a strong random one; only pass it
-   explicitly if you have a specific reason to.)
+```bash
+NEXT_PUBLIC_SITE_URL="https://kaalbert.up.railway.app" \
+  npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
+```
 
+This works because of something §7 already establishes: there is only **one** Postgres
+instance, and your own `.env.local` already holds a working connection string to it — the
+public TCP proxy (`metro.proxy.rlwy.net:...`), reachable from your own machine, pointed at
+the exact same database the live app reads from `postgres.railway.internal`. Running the
+script bare (letting `dotenv` load `.env.local` normally) reaches that same database
+directly — no Railway wrapper needed at all. Verified working session 60: `npx prisma
+migrate status` confirmed connectivity first, then the real command created a real account
+and printed a real, working setup link.
+
+The `NEXT_PUBLIC_SITE_URL` override matters **only until `kaalbert.com` is registered and
+that variable is set on the live service (§3)** — without it, `getSiteUrl()`'s fallback
+would print a setup link pointing at `https://www.kaalbert.com`, a domain that doesn't
+resolve to anything yet, and the partner's link would be dead on arrival. Once the domain is
+live and `NEXT_PUBLIC_SITE_URL` is set for real, drop the override — the script will pick up
+the right base URL on its own.
+
+1. Run the command above (omit `--password` to have the script generate a strong random one).
 2. The script prints two things to your terminal — **never anywhere else, never logged, never
-   stored a second time**:
-   - The generated initial password (skip this line if you supplied your own).
-   - A one-time setup link, valid **7 days**.
-
-3. **Send both to the partner over a secure channel** (not email in plaintext if you can help
-   it — WhatsApp or a password manager's sharing feature is better) — the same "send once,
-   never persist" discipline the script's own comment describes.
-
+   stored a second time**: the generated initial password (skip this line if you supplied
+   your own), and a one-time setup link, valid **7 days**.
+3. **Send both to the partner over a secure channel** (not plaintext email if you can help
+   it — WhatsApp or a password manager's sharing feature is better).
 4. The partner opens the setup link, sets/confirms their password, and is walked through TOTP
    enrollment: scanning a QR code with an authenticator app (Google Authenticator, Authy,
    1Password, etc.) and saving the **8 single-use backup codes** shown once at enrollment —
    tell them explicitly to save these somewhere durable, since there's no way to view them
    again later.
-
 5. From then on, the partner logs in normally at `/admin/login` with their email/password,
    then their live 6-digit TOTP code.
+
+### Can this be run "on Railway" instead of locally?
+
+Yes, via `railway ssh` — **not** `railway run`. `railway ssh --service kaalbert-web -- <cmd>`
+opens a real connection into the actual running container, executing the command inside
+Railway's own network (where `postgres.railway.internal` genuinely does resolve, and where
+the live service's real env vars are the ones that apply — no `NEXT_PUBLIC_SITE_URL`
+override needed once that's set for real). Tested session 60:
+
+```bash
+railway ssh --service kaalbert-web -- npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
+```
+
+**One-time prerequisite**: this account has no SSH key registered yet — the first attempt
+failed with `No registered SSH keys found`. Register one before this will work:
+
+```bash
+railway ssh keys add        # generates/registers a new key, or
+railway ssh keys github     # imports from your GitHub account
+```
+
+This is a one-time step tied to your Railway account/identity, not something to do
+automatically inside an agent session — do it yourself, once, then `railway ssh` works from
+any terminal you're logged into Railway from. Until then, the local method above is the one
+that actually works today, and is arguably simpler anyway (no SSH key management, and you
+were going to need `.env.local` working for ordinary local dev regardless).
 
 **Lost device and lost backup codes, together:** there is no self-service 2FA bypass anywhere
 in this system, by design (`CLAUDE.md`'s Auth Pattern section). Another administrator has to
@@ -330,49 +361,31 @@ either (5 partners, rare event); for now this means a direct database update
 going through `/admin/setup-2fa` again. If this becomes a recurring need, it's a small,
 real candidate for a future admin-facing task — not built speculatively now.
 
-**Before you use this for a real partner, verify it end-to-end first** — see the next
-section; the exact secrets this script and the login flow both depend on
-(`ADMIN_CHALLENGE_TOKEN_SECRET`, `ADMIN_TOTP_ENCRYPTION_KEY`) have an open question mark on
-whether they're actually live in production yet.
+**Verified working, session 60**: created a real account this way (`admin_user #15`), got a
+real printed password and a real, resolving setup link at
+`https://kaalbert.up.railway.app/admin/setup-2fa?token=...`. §9 covers the admin-login
+secrets question this used to raise — now resolved.
 
 ---
 
-## 9. Urgent: confirm admin login actually works in production, then close the bug
+## 9. Resolved: admin login secrets bug
 
-`memory/known-bugs.md` currently has an **Open, High-severity** entry: the live
-`kaalbert-web` service was found (session 54, 2026-09-11) to be missing
-`ADMIN_CHALLENGE_TOKEN_SECRET`/`ADMIN_TOTP_ENCRYPTION_KEY` entirely, meaning every real
-`/admin/login` attempt was hard-erroring. The values were set that session
-(`railway variable set ... --skip-deploys`), but the follow-up redeploy needed to actually
-pick them up was never triggered by that session (a Production Deploy action requiring your
-explicit approval, which agent sessions can't self-grant).
+`memory/known-bugs.md` carried an **Open, High-severity** entry: the live `kaalbert-web`
+service was found (session 54, 2026-09-11) missing `ADMIN_CHALLENGE_TOKEN_SECRET`/
+`ADMIN_TOTP_ENCRYPTION_KEY` entirely, meaning every real `/admin/login` attempt was
+hard-erroring. The values were set that session, but the follow-up redeploy needed to pick
+them up was never confirmed as having actually happened.
 
-**This session's own evidence suggests it's already fixed**, just never confirmed or closed
-out:
+**Closed session 60**: you confirmed a real redeploy did happen after the variables were set
+— your own normal push, picked up automatically by `kaalbert-web`'s GitHub auto-deploy
+wiring, with no separate manual `railway redeploy` ever actually needed. Combined with this
+session's own evidence (the live deployment timestamp postdating the variable-set, and a
+clean `200` from `GET /admin/login` rather than a crash) and this session's own account
+creation succeeding end-to-end (§8), `memory/known-bugs.md`'s entry is now `Status: Fixed`.
 
-- The live deployment currently running (`2026-09-11 22:40:34`, `SUCCESS`) is timestamped
-  _after_ the variable-set, and since `kaalbert-web` auto-deploys on every push to `main`
-  (`.railway/railway.ts`'s `source: github(...)`), a normal push you made that same session
-  would have redeployed and picked the variables up automatically.
-- `GET https://kaalbert.up.railway.app/admin/login` returns a clean `200`, not the crash this
-  bug describes.
-- A full login attempt (`POST /api/admin/auth/login` with real credentials) could not be
-  verified in this session — sending real credentials over a live network call was blocked by
-  this session's own permission model as a credential-handling action requiring your explicit
-  approval, which is the correct behavior, not a workaround to route around.
-
-**What you need to do:** actually log in at `https://kaalbert.up.railway.app/admin/login`
-with the dev admin account (`CLAUDE.local.md`'s Dev admin account section has the current
-credentials) or a real partner account, complete the TOTP step, and confirm you land on the
-authenticated `/admin` shell. Once confirmed:
-
-- Flip `memory/known-bugs.md`'s matching entry's `Status` from `Open` to `Fixed`, with a
-  `Date fixed` and a short note that it was confirmed via a real login rather than assumed
-  from the deploy timeline.
-- If it turns out **not** to be fixed (a real login still 500s), the fix is exactly what the
-  bug entry's `Planned Fix` already says: trigger a redeploy —
-  `railway redeploy --service kaalbert-web` (or the Railway dashboard's Redeploy button) — no
-  code change needed, the variables are already set.
+Nothing further to do here. If admin login ever regresses again, the first thing to check is
+still the same: `railway variables --service kaalbert-web` for both secrets being present,
+then whether the live deployment actually postdates any recent variable change.
 
 ---
 
@@ -392,7 +405,7 @@ These don't stop once the domain is live — they're the recurring part of the j
 - **Watch `memory/known-bugs.md` and `memory/technical-debt.md`** — check them at the start
   of a session touching related code, not just when something breaks.
 - **Dependency hygiene** — periodically re-run `npm audit`, and keep an eye on whether a
-  non-breaking Prisma CLI release clears the dev-only `mysql2` advisories (Section 4, item 5).
+  non-breaking Prisma CLI release clears the dev-only `mysql2` advisories (Section 4, item 3).
 - **Respect the Phase 2 gate** — don't build or scope any of Milestones 10–17 until
   `docs/scope.md`'s specific evidence trigger for that capability is met _and_ the user says
   to proceed. This applies to you as much as it applies to any agent session.
@@ -411,8 +424,14 @@ These don't stop once the domain is live — they're the recurring part of the j
 ## 11. Quick command reference
 
 ```bash
-# Create a new partner admin account (live database)
-railway run --service kaalbert-web -- npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
+# Create a new partner admin account (reaches the one shared database via .env.local's
+# public proxy connection — see §8 for why `railway run` does NOT work for this)
+NEXT_PUBLIC_SITE_URL="https://kaalbert.up.railway.app" \
+  npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
+
+# Same, but executed inside the live container over Railway's own network instead
+# (needs `railway ssh keys add` done once first)
+railway ssh --service kaalbert-web -- npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
 
 # Check what's currently set on the live service
 railway variables --service kaalbert-web
