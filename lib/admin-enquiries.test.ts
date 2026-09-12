@@ -2,15 +2,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    enquiryRecord: { count: vi.fn(), findMany: vi.fn() },
+    enquiryRecord: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    adminUser: { findMany: vi.fn(), findUnique: vi.fn() },
   },
 }));
 
 import { prisma } from "@/lib/prisma";
-import { ENQUIRIES_PAGE_SIZE, listEnquiries, resolveEnquirySource } from "@/lib/admin-enquiries";
+import {
+  ENQUIRIES_PAGE_SIZE,
+  EnquiryUpdateValidationError,
+  getEnquiryDetail,
+  listAssignablePartners,
+  listEnquiries,
+  resolveEnquirySource,
+  updateEnquiry,
+} from "@/lib/admin-enquiries";
 
 const countMock = vi.mocked(prisma.enquiryRecord.count);
 const findManyMock = vi.mocked(prisma.enquiryRecord.findMany);
+const findUniqueMock = vi.mocked(prisma.enquiryRecord.findUnique);
+const updateMock = vi.mocked(prisma.enquiryRecord.update);
+const adminUserFindManyMock = vi.mocked(prisma.adminUser.findMany);
+const adminUserFindUniqueMock = vi.mocked(prisma.adminUser.findUnique);
 
 const ROW = {
   id: 1,
@@ -25,6 +38,10 @@ const ROW = {
 beforeEach(() => {
   countMock.mockReset();
   findManyMock.mockReset();
+  findUniqueMock.mockReset();
+  updateMock.mockReset();
+  adminUserFindManyMock.mockReset();
+  adminUserFindUniqueMock.mockReset();
 });
 
 describe("resolveEnquirySource", () => {
@@ -194,5 +211,218 @@ describe("listEnquiries", () => {
     expect(item.score).toBeNull();
     expect(item.triageFlag).toBe(false);
     expect(item.source).toBe("Contact form");
+  });
+});
+
+const DIAGNOSTIC_DETAIL_ROW = {
+  id: 27,
+  name: null,
+  email: null,
+  phone: null,
+  message: null,
+  serviceLine: null,
+  contactConsent: null,
+  marketingConsent: false,
+  triageFlag: true,
+  triagePriorityLevel: "High",
+  status: "new",
+  internalNotes: null,
+  assignedPartnerId: null,
+  createdAt: new Date("2026-09-11T10:00:00Z"),
+  scoreSummary: {
+    score: 35,
+    dimensionScores: [
+      { dimensionId: 1, name: "Structure", score: 33, triageFlag: true },
+      { dimensionId: 2, name: "Records", score: 90, triageFlag: false },
+    ],
+    weakestDimensions: ["Structure"],
+    indicativeCostStatement: "",
+    overallTriageFlag: true,
+  },
+  diagnosticResponses: [
+    {
+      questionId: 101,
+      answerValue: "1",
+      question: { promptText: "Is it registered?", responseType: "boolean", choiceOptions: null },
+    },
+    {
+      questionId: 102,
+      answerValue: "0.4",
+      question: { promptText: "Rate your records", responseType: "scale", choiceOptions: null },
+    },
+    {
+      questionId: 103,
+      answerValue: "0.66",
+      question: {
+        promptText: "Applied for funding?",
+        responseType: "choice",
+        choiceOptions: [
+          { label: "Never applied", value: "0" },
+          { label: "3–12 months ago", value: "0.66" },
+        ],
+      },
+    },
+    {
+      questionId: 104,
+      answerValue: "0.99",
+      question: {
+        promptText: "An edited-away choice",
+        responseType: "choice",
+        choiceOptions: [{ label: "Only option left", value: "0.1" }],
+      },
+    },
+  ],
+  attribution: {
+    utmSource: "meta",
+    utmMedium: "paid_social",
+    utmCampaign: "bhc-launch-accra",
+    landingPage: "/lp/business-health-check",
+    firstSeen: new Date("2026-09-11T09:55:00Z"),
+  },
+};
+
+const CONTACT_DETAIL_ROW = {
+  id: 5,
+  name: "Abena Frimpong",
+  email: "abena@example.com",
+  phone: "0558000000",
+  message: "Need help with cash flow.",
+  serviceLine: "financial-clarity",
+  contactConsent: true,
+  marketingConsent: false,
+  triageFlag: null,
+  triagePriorityLevel: null,
+  status: "contacted",
+  internalNotes: "Called back, waiting on documents.",
+  assignedPartnerId: 3,
+  createdAt: new Date("2026-09-05T14:00:00Z"),
+  scoreSummary: null,
+  diagnosticResponses: [],
+  attribution: null,
+};
+
+describe("getEnquiryDetail", () => {
+  it("returns null for a missing id", async () => {
+    findUniqueMock.mockResolvedValue(null);
+
+    expect(await getEnquiryDetail(999)).toBeNull();
+  });
+
+  it("shapes a diagnostic-originated row: dimension scores, weakest flag, and human-readable response labels", async () => {
+    findUniqueMock.mockResolvedValue(DIAGNOSTIC_DETAIL_ROW as never);
+
+    const detail = await getEnquiryDetail(27);
+
+    expect(detail?.isDiagnosticOriginated).toBe(true);
+    expect(detail?.source).toBe("Business Health Check");
+    expect(detail?.dimensionScores).toEqual([
+      { dimensionId: 1, name: "Structure", score: 33, weakest: true },
+      { dimensionId: 2, name: "Records", score: 90, weakest: false },
+    ]);
+    expect(detail?.responses).toEqual([
+      { questionId: 101, promptText: "Is it registered?", answerLabel: "Yes" },
+      { questionId: 102, promptText: "Rate your records", answerLabel: "2 / 5" },
+      { questionId: 103, promptText: "Applied for funding?", answerLabel: "3–12 months ago" },
+      // No current option matches "0.99" (an edited-away choice) — falls back to the raw value.
+      { questionId: 104, promptText: "An edited-away choice", answerLabel: "0.99" },
+    ]);
+    expect(detail?.attribution).toEqual({
+      utmSource: "meta",
+      utmMedium: "paid_social",
+      utmCampaign: "bhc-launch-accra",
+      landingPage: "/lp/business-health-check",
+      firstSeen: DIAGNOSTIC_DETAIL_ROW.attribution.firstSeen,
+    });
+  });
+
+  it("shapes a contact-form-originated row: not diagnostic-originated, empty responses/dimensions, no attribution", async () => {
+    findUniqueMock.mockResolvedValue(CONTACT_DETAIL_ROW as never);
+
+    const detail = await getEnquiryDetail(5);
+
+    expect(detail?.isDiagnosticOriginated).toBe(false);
+    expect(detail?.source).toBe("Contact form");
+    expect(detail?.dimensionScores).toEqual([]);
+    expect(detail?.responses).toEqual([]);
+    expect(detail?.attribution).toBeNull();
+    expect(detail?.message).toBe("Need help with cash flow.");
+    expect(detail?.assignedPartnerId).toBe(3);
+  });
+});
+
+describe("listAssignablePartners", () => {
+  it("lists only active partners, ordered by name", async () => {
+    adminUserFindManyMock.mockResolvedValue([{ id: 1, name: "Ama Owusu" }] as never);
+
+    const partners = await listAssignablePartners();
+
+    expect(adminUserFindManyMock).toHaveBeenCalledWith({
+      where: { active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+    expect(partners).toEqual([{ id: 1, name: "Ama Owusu" }]);
+  });
+});
+
+describe("updateEnquiry", () => {
+  it("rejects an invalid status without touching the database", async () => {
+    await expect(
+      updateEnquiry(1, { status: "bogus" as never, internalNotes: null, assignedPartnerId: null }),
+    ).rejects.toBeInstanceOf(EnquiryUpdateValidationError);
+    expect(findUniqueMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an id that doesn't exist", async () => {
+    findUniqueMock.mockResolvedValue(null);
+
+    await expect(
+      updateEnquiry(999, { status: "new", internalNotes: null, assignedPartnerId: null } as never),
+    ).rejects.toBeInstanceOf(EnquiryUpdateValidationError);
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an assignedPartnerId that doesn't reference a real admin_user", async () => {
+    findUniqueMock.mockResolvedValue({ status: "new" } as never);
+    adminUserFindUniqueMock.mockResolvedValue(null);
+
+    await expect(
+      updateEnquiry(1, { status: "new", internalNotes: null, assignedPartnerId: 999 } as never),
+    ).rejects.toBeInstanceOf(EnquiryUpdateValidationError);
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("sets statusUpdatedAt only when status actually changes", async () => {
+    findUniqueMock.mockResolvedValue({ status: "new" } as never);
+
+    await updateEnquiry(1, { status: "contacted", internalNotes: "hi", assignedPartnerId: null });
+
+    const updateArgs = updateMock.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(updateArgs.data.status).toBe("contacted");
+    expect(updateArgs.data.statusUpdatedAt).toBeInstanceOf(Date);
+  });
+
+  it("leaves statusUpdatedAt untouched for a notes-only save (status unchanged)", async () => {
+    findUniqueMock.mockResolvedValue({ status: "new" } as never);
+
+    await updateEnquiry(1, {
+      status: "new",
+      internalNotes: "updated notes",
+      assignedPartnerId: null,
+    });
+
+    const updateArgs = updateMock.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(updateArgs.data.internalNotes).toBe("updated notes");
+    expect(updateArgs.data.statusUpdatedAt).toBeUndefined();
+  });
+
+  it("allows assignedPartnerId: null (unassigning) without a lookup", async () => {
+    findUniqueMock.mockResolvedValue({ status: "new" } as never);
+
+    await updateEnquiry(1, { status: "new", internalNotes: null, assignedPartnerId: null });
+
+    expect(adminUserFindUniqueMock).not.toHaveBeenCalled();
+    const updateArgs = updateMock.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(updateArgs.data.assignedPartnerId).toBeNull();
   });
 });

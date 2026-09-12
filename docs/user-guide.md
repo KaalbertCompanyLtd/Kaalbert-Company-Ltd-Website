@@ -28,9 +28,10 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-12 (session 57) — Milestones 1–7 complete. Milestone 8 (Enquiry Management)
-in progress: T8.1's schema groundwork and T8.2's enquiries list (`/admin/enquiries`) are both
-live; T8.3's detail screen (open one enquiry, edit its status/notes/assignment) is next.
+**As of:** 2026-09-12 (session 58) — Milestones 1–7 complete. Milestone 8 (Enquiry Management)
+in progress: T8.1's schema groundwork, T8.2's enquiries list, and T8.3's enquiry detail screen
+(open one enquiry, see everything about it, edit its status/notes/assignment) are all live.
+T8.4 (personal-data deletion) remains blocked on a firm policy decision, not scheduled.
 
 ---
 
@@ -78,14 +79,12 @@ triage status, status). Everything on it is real, live data — there is nothing
 here.
 
 **What you can't do here yet:** open an enquiry or change its status directly from this panel
-— click **Enquiries** in the sidebar for that (see "Enquiries list" below); this dashboard
-panel itself is still look-but-not-touch, just the 5 most recent rows at a glance. The Triage
-column shows a real **High**/**Medium**/**Low** badge for a submission that breached a
-threshold, a plain **Flagged** badge when it's flagged but has no priority word to show (any
-diagnostic submitted before this priority was tracked, i.e. before 2026-09-11), or **Not
-flagged** for a genuinely unflagged row. Every enquiry still shows status "New" — not because
-it's a placeholder any more, but because nothing yet exists to change it (that arrives with
-T8.3's status editor).
+— click **Enquiries** in the sidebar for that (see "Enquiries list" and "Enquiry detail"
+below); this dashboard panel itself is still look-but-not-touch, just the 5 most recent rows
+at a glance. The Triage column shows a real **High**/**Medium**/**Low** badge for a submission
+that breached a threshold, a plain **Flagged** badge when it's flagged but has no priority
+word to show (any diagnostic submitted before this priority was tracked, i.e. before
+2026-09-11), or **Not flagged** for a genuinely unflagged row.
 
 ---
 
@@ -109,14 +108,51 @@ default, so the most urgent enquiries are always at the top.
 5. **Sort by** dropdown — "Triage priority (default)," "Newest first," or "Oldest first."
 6. Every filter/sort choice updates the page immediately and changes the page's own URL, so a
    filtered view can be bookmarked or shared with another partner.
-7. Click **Open** on any row — today this is a placeholder link (the detail screen arrives
-   with T8.3); nothing happens yet.
+7. Click **Open** on any row to see everything about that enquiry — see "Enquiry detail"
+   below.
 
-**What you can't do here yet:** open an enquiry to see its full diagnostic responses/contact
-details, change its status, add internal notes, or assign it to a partner — all T8.3. The list
-itself is genuinely paginated (20 per page) so it stays fast no matter how many enquiries
-accumulate over the years, unlike every other admin list in this project (which loads its
-full set at once — fine for their much smaller row counts, not appropriate here).
+**Watch for:** this list is genuinely paginated (20 per page) so it stays fast no matter how
+many enquiries accumulate over the years, unlike every other admin list in this project
+(which loads its full set at once — fine for their much smaller row counts, not appropriate
+here).
+
+---
+
+## Enquiry detail
+
+`/admin/enquiries/[id]` — click **Open** on any row in the Enquiries list.
+
+**What it shows, top to bottom:**
+
+- The enquiry's name (or "Not yet provided") as the heading, a **← Back to Enquiries** link,
+  the submission date/time, and the same Triage badge as the list.
+- **Business Health Check — score summary** — every scored dimension and its 0–100%, the
+  weakest ones labelled "— weakest." For a contact-form enquiry this reads "Not applicable —
+  this enquiry came through the contact form, not the diagnostic" instead of being blank.
+- **Full diagnostic responses** — every question the visitor answered, in plain language (not
+  the raw stored number) — e.g. "5 / 5," "Yes," "Never applied." Same "Not applicable" message
+  for a contact-form enquiry. These are the visitor's own words/answers — nothing on this
+  screen lets you change them.
+- **Contact details** — name/email/phone ("Not yet provided"/"Not provided" if missing), the
+  service line they were interested in if they came via a `?service=` link, and their message
+  if they used the contact form.
+- **Consent** — two separate boxes, **Contact consent** and **Marketing consent**, each its
+  own Given/Not given/Not yet provided — always shown distinctly, never merged into one
+  "consented" flag, so you can never accidentally market to someone who only agreed to be
+  contacted about this one enquiry.
+- **Attribution** — Source (or "Direct" if they arrived with no campaign link), Medium and
+  Campaign if captured, and the Landing page they first arrived on. Reads "No attribution
+  captured for this enquiry" if none exists (a row from before attribution tracking existed,
+  or capture failed for that visit — this never blocks anything else on the screen).
+- **Status & notes** — the one editable panel on this screen:
+  1. **Status** dropdown — New/Contacted/Closed/Converted/Not a fit.
+  2. **Assigned to** dropdown — Unassigned, or any active partner.
+  3. **Internal notes** — free text, never shown to the visitor.
+  4. Click **Save changes** — updates immediately; the button reads "Saved" for confirmation.
+
+**Watch for:** if two partners save the same enquiry at the same time, the second save simply
+overwrites the first (last-write-wins) — same accepted simplification as the rest of this
+admin area, not a bug.
 
 ---
 
@@ -627,10 +663,12 @@ depends on:
   downloadable-resource attachment), Pages (Capabilities/Our Method/Legal/Footer), Offers
   (the three core offers plus the Advisory Retainer), Landing Pages (create-only), Team,
   Diagnostic Configuration, Site Settings, and Subscribers are all live.
-- **Milestone 8 — Enquiry Management** (in progress): a screen to see and triage incoming
-  enquiries and diagnostic completions in one place. T8.1's schema groundwork and T8.2's
-  enquiries list (`/admin/enquiries`) are both done (see the Change log above); the detail
-  screen (open one enquiry, edit its status/notes/assignment) is next.
+- **Milestone 8 — Enquiry Management** (nearly complete): a screen to see and triage incoming
+  enquiries and diagnostic completions in one place. T8.1's schema groundwork, T8.2's
+  enquiries list, and T8.3's enquiry detail screen (open one, see everything, edit its status/
+  notes/assignment) are all done (see the Change log above). T8.4 (personal-data deletion) is
+  the one remaining task, and it's blocked on a firm policy decision — see
+  `docs/dashboard.md`'s "Blocked On" list — not scheduled until the firm answers it.
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
   GA4, Meta, Google Ads, and LinkedIn — begins with the deferred T5.5 above, then proceeds.
 
@@ -638,6 +676,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-12 | Enquiry detail (T8.3) went live — click **Open** on any row in the Enquiries list to see everything about it (full diagnostic responses in plain language, score breakdown, contact details, distinctly-shown contact/marketing consent, attribution) and edit its status, assign it to a partner, or add internal notes — see "Enquiry detail" above. A visitor's own submitted responses stay read-only everywhere on this screen. Milestone 8 is now complete except T8.4 (personal-data deletion), which stays blocked on a firm policy decision.                                                                                                                                                           |
 | 2026-09-12 | Enquiries list (T8.2) went live — `/admin/enquiries`, reached via **Enquiries** in the sidebar. A partner can now filter by status/triage/source/date range and sort the full enquiry history themselves, triage-flagged rows always surfaced first — see "Enquiries list" above. Genuinely paginated (20/page), unlike this project's other admin lists, so it stays fast as the list grows over the years. Also fixed a real bug found while building this: a pre-T8.1 enquiry that was truly triage-flagged but had no priority word was showing "Not flagged" everywhere (dashboard included) — it now shows a plain "Flagged" badge instead, so filtering to "Flagged" never shows a contradictory result. |
 | 2026-09-11 | Enquiry schema extension (T8.1, the first Milestone 8 task) went live under the hood — no new screen yet, but the dashboard's Triage column started showing a real **High**/**Medium**/**Low** badge instead of a plain flagged/not-flagged one for any enquiry submitted from now on. Status started showing the real per-enquiry value (still "New" for everyone, since nothing yet exists to change it).                                                                                                                                                                                                                                                                                                     |
 | 2026-09-11 | Downloadable-resource attachment (T7.10) went live on the article editor — a partner can now attach a PDF to a published (or already-saved draft) article themselves, reorder or remove them, with the public article page's download list updating immediately — no developer needed. Previously the handful of existing downloadable resources had to be set up directly in the database.                                                                                                                                                                                                                                                                                                                     |

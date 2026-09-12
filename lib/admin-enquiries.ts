@@ -1,6 +1,11 @@
-import { EnquiryStatus, Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { DiagnosticResponseType, EnquiryStatus, Prisma } from "@/generated/prisma/client";
+import {
+  DIAGNOSTIC_BOOLEAN_OPTIONS,
+  DIAGNOSTIC_SCALE_OPTIONS,
+  type DiagnosticChoiceOption,
+} from "@/lib/diagnostic-flow-options";
 import type { DiagnosticScoringResult } from "@/lib/diagnostic-scoring";
+import { prisma } from "@/lib/prisma";
 import type {
   EnquirySortValue,
   EnquirySourceFilterValue,
@@ -156,4 +161,216 @@ export async function listEnquiries(query: EnquiryListQuery = {}): Promise<Enqui
   }));
 
   return { items, page, totalPages, totalCount };
+}
+
+// ---------------------------------------------------------------------------
+// Detail — T8.3
+// ---------------------------------------------------------------------------
+
+export interface EnquiryDetailDimensionScore {
+  dimensionId: number;
+  name: string;
+  score: number;
+  weakest: boolean;
+}
+
+export interface EnquiryDetailResponse {
+  questionId: number;
+  promptText: string;
+  answerLabel: string;
+}
+
+export interface EnquiryAttribution {
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  landingPage: string;
+  firstSeen: Date;
+}
+
+export interface EnquiryDetail {
+  id: number;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  message: string | null;
+  serviceLine: string | null;
+  contactConsent: boolean | null;
+  marketingConsent: boolean;
+  source: string;
+  /** `false` only for a contact-form-originated row — see `resolveEnquirySource`. */
+  isDiagnosticOriginated: boolean;
+  score: number | null;
+  triagePriorityLevel: string | null;
+  triageFlag: boolean;
+  dimensionScores: EnquiryDetailDimensionScore[];
+  responses: EnquiryDetailResponse[];
+  attribution: EnquiryAttribution | null;
+  status: EnquiryStatus;
+  internalNotes: string | null;
+  assignedPartnerId: number | null;
+  createdAt: Date;
+}
+
+export interface AssignablePartner {
+  id: number;
+  name: string;
+}
+
+/**
+ * Finds the option (from a question's fixed scale/boolean set, or its own admin-authored
+ * `choiceOptions`) whose normalized `value` matches this response's stored `answerValue`, and
+ * returns its human-readable `label` — reconstructing what the mockup shows as a plain answer
+ * ("Rough notes", "2 / 5", "No") from what this schema actually stores (only the normalized
+ * 0–1 string, per `lib/diagnostic-scoring.ts`'s own convention). Falls back to the raw stored
+ * value itself if no option matches (e.g. a choice question's options were edited since this
+ * response was submitted) — never fabricates a label that isn't traceable to real data.
+ */
+function resolveAnswerLabel(
+  responseType: DiagnosticResponseType,
+  answerValue: string,
+  choiceOptions: Prisma.JsonValue | null,
+): string {
+  if (responseType === DiagnosticResponseType.boolean) {
+    const match = DIAGNOSTIC_BOOLEAN_OPTIONS.find((option) => option.value === answerValue);
+    return match?.label ?? answerValue;
+  }
+  if (responseType === DiagnosticResponseType.scale) {
+    const match = DIAGNOSTIC_SCALE_OPTIONS.find((option) => option.value === answerValue);
+    return match ? `${match.label} / 5` : answerValue;
+  }
+  const options = Array.isArray(choiceOptions)
+    ? (choiceOptions as unknown as DiagnosticChoiceOption[])
+    : [];
+  const match = options.find((option) => option.value === answerValue);
+  return match?.label ?? answerValue;
+}
+
+function extractDimensionScores(
+  scoreSummary: Prisma.JsonValue | null,
+): EnquiryDetailDimensionScore[] {
+  if (!scoreSummary || typeof scoreSummary !== "object") return [];
+  const result = scoreSummary as unknown as DiagnosticScoringResult;
+  const weakest = new Set(result.weakestDimensions ?? []);
+  return (result.dimensionScores ?? []).map((dimension) => ({
+    dimensionId: dimension.dimensionId,
+    name: dimension.name,
+    score: dimension.score,
+    weakest: weakest.has(dimension.name),
+  }));
+}
+
+export async function getEnquiryDetail(id: number): Promise<EnquiryDetail | null> {
+  const row = await prisma.enquiryRecord.findUnique({
+    where: { id },
+    include: {
+      diagnosticResponses: {
+        orderBy: { id: "asc" },
+        include: {
+          question: { select: { promptText: true, responseType: true, choiceOptions: true } },
+        },
+      },
+      attribution: true,
+    },
+  });
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    message: row.message,
+    serviceLine: row.serviceLine,
+    contactConsent: row.contactConsent,
+    marketingConsent: row.marketingConsent,
+    source: resolveEnquirySource(row.triageFlag),
+    isDiagnosticOriginated: row.triageFlag !== null,
+    score: extractScore(row.scoreSummary),
+    triagePriorityLevel: row.triagePriorityLevel,
+    triageFlag: row.triageFlag === true,
+    dimensionScores: extractDimensionScores(row.scoreSummary),
+    responses: row.diagnosticResponses.map((response) => ({
+      questionId: response.questionId,
+      promptText: response.question.promptText,
+      answerLabel: resolveAnswerLabel(
+        response.question.responseType,
+        response.answerValue,
+        response.question.choiceOptions,
+      ),
+    })),
+    attribution: row.attribution
+      ? {
+          utmSource: row.attribution.utmSource,
+          utmMedium: row.attribution.utmMedium,
+          utmCampaign: row.attribution.utmCampaign,
+          landingPage: row.attribution.landingPage,
+          firstSeen: row.attribution.firstSeen,
+        }
+      : null,
+    status: row.status,
+    internalNotes: row.internalNotes,
+    assignedPartnerId: row.assignedPartnerId,
+    createdAt: row.createdAt,
+  };
+}
+
+/** Every active partner, for the detail screen's assignment dropdown — no existing precedent for this anywhere else in the admin. */
+export async function listAssignablePartners(): Promise<AssignablePartner[]> {
+  return prisma.adminUser.findMany({
+    where: { active: true },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+export class EnquiryUpdateValidationError extends Error {}
+
+export interface EnquiryUpdateInput {
+  status: EnquiryStatus;
+  internalNotes: string | null;
+  assignedPartnerId: number | null;
+}
+
+/**
+ * `PATCH /api/admin/enquiries/[id]` (T8.3) — updates only the firm's own fields; a visitor's
+ * submitted responses/contact details are never touched here (`enquiry-management.md`'s own
+ * business rule — enforced by this function simply never accepting them as input, not by a
+ * runtime check). `statusUpdatedAt` is set to `now()` only when `status` actually changes —
+ * see its own doc-comment on `EnquiryRecord` in `prisma/schema.prisma`: it tracks one specific
+ * field's change, not "last modified in any way," so a notes-only or assignment-only save
+ * must leave it untouched.
+ */
+export async function updateEnquiry(id: number, input: EnquiryUpdateInput): Promise<void> {
+  if (!(input.status in EnquiryStatus)) {
+    throw new EnquiryUpdateValidationError("Invalid status.");
+  }
+
+  const existing = await prisma.enquiryRecord.findUnique({
+    where: { id },
+    select: { status: true },
+  });
+  if (!existing) {
+    throw new EnquiryUpdateValidationError("Enquiry not found.");
+  }
+
+  if (input.assignedPartnerId !== null) {
+    const partner = await prisma.adminUser.findUnique({
+      where: { id: input.assignedPartnerId },
+      select: { id: true },
+    });
+    if (!partner) {
+      throw new EnquiryUpdateValidationError("Invalid assigned partner.");
+    }
+  }
+
+  await prisma.enquiryRecord.update({
+    where: { id },
+    data: {
+      status: input.status,
+      internalNotes: input.internalNotes,
+      assignedPartnerId: input.assignedPartnerId,
+      ...(existing.status !== input.status ? { statusUpdatedAt: new Date() } : {}),
+    },
+  });
 }

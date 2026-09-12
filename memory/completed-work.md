@@ -14,6 +14,42 @@ Protocol):
 
 ---
 
+## 2026-09-12 (T8.3, session 58)
+
+**Task:** T8.3 — Enquiry detail — `/admin/enquiries/[id]`
+**Summary:** Built the screen a partner actually acts on an enquiry from: full diagnostic
+responses reconstructed into plain language (see `memory/decision-log.md`'s
+`resolveAnswerLabel` entry — this schema only ever stored the normalized 0–1 value, never the
+original label), dimension score breakdown with weakest-dimension highlighting, contact
+details, contact/marketing consent shown as two visibly distinct boxes (never merged),
+attribution (source/medium/campaign/landing page, or "No attribution captured" if none
+exists), and the one editable panel — status, assigned partner, internal notes, with a real
+`PATCH /api/admin/enquiries/[id]`. A contact-form-originated enquiry shows "Not applicable"
+for the two diagnostic-only panels instead of blank/broken. `statusUpdatedAt` only changes
+when `status` actually changes (a notes-only or assignment-only save leaves it untouched, per
+its own doc-comment from T8.1). This completes Milestone 8 except T8.4, which stays blocked on
+a firm policy decision (not scheduled).
+**Files Changed:** `lib/admin-enquiries.ts` (added `getEnquiryDetail`, `listAssignablePartners`,
+`updateEnquiry`, `resolveAnswerLabel`), `lib/admin-enquiries.test.ts` (+24 tests total),
+`app/api/admin/enquiries/[id]/route.ts` (new, PATCH), `app/admin/(shell)/enquiries/[id]/
+page.tsx` (new), `app/admin/(shell)/enquiries/[id]/enquiry-editor-form.tsx` (new),
+`docs/user-guide.md` + Artifact mirror (new "Enquiry detail" section), Website Build Status
+Artifact (Milestone 8 marked Complete with the T8.4 caveat, ~90% overall progress).
+**Related Feature:** `docs/features/enquiry-management.md`
+**Notes:** Verified live via Playwright MCP at desktop/tablet(768px)/mobile(390px): opened a
+real diagnostic-originated enquiry (#27, all 15 responses rendered correctly, including scale
+answers as "5 / 5" and choice answers as their real labels), changed its status to Contacted,
+assigned it to the dev partner account, added notes, saved, reloaded to confirm persistence,
+and confirmed the list screen (T8.2) reflected the update. Also submitted a real contact-form
+enquiry and confirmed its detail page correctly shows "Not applicable" for both diagnostic
+panels, the real message/service-line/consent, and a real "Given"/"Not given" consent
+distinction. Confirmed `notFound()` (real 404) for a nonexistent enquiry id. No admin-facing
+way exists yet to see a partner's _own_ assigned-enquiries list (e.g. "my enquiries") — not
+named anywhere in `enquiry-management.md`'s own scope, so not built; a partner filters/opens
+from the shared list instead.
+
+---
+
 ## 2026-09-12 (T8.2, session 57)
 
 **Task:** T8.2 — Enquiries list — `/admin/enquiries`

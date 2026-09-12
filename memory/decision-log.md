@@ -2,6 +2,55 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (T8.3, session 58) — A diagnostic response's human-readable answer is reconstructed from its normalized value, not stored separately
+
+**Status:** Standing
+
+**Summary:** `enquiry-management.md`'s User flow requires the detail screen to show "complete
+diagnostic responses," and the accepted mockup (`ui/mockups/h-admin-enquiries/admin-enquiry-
+detail.html`) shows plain-language answers ("Rough notes," "2 / 5," "Never applied") — but
+`DiagnosticResponse.answerValue` only ever stores the normalized 0–1 string every response
+type shares (`lib/diagnostic-scoring.ts`'s own convention, T3.2), never the original label.
+Rather than adding a new column to capture the label at submission time (a schema change this
+task's own scope didn't call for, and a second source of truth that could drift from the
+question's current wording), `lib/admin-enquiries.ts`'s `resolveAnswerLabel` reconstructs the
+label at read time: it matches the stored normalized value against the question's own current
+option set (`DIAGNOSTIC_SCALE_OPTIONS`/`DIAGNOSTIC_BOOLEAN_OPTIONS` for scale/boolean, the
+question's own `choiceOptions` for choice) and falls back to the raw stored value itself if
+nothing matches (e.g. a choice question's options were edited since this response was
+submitted) — never fabricates a label with no traceable source. Verified for real via
+Playwright MCP against a genuine diagnostic submission (enquiry #27's 15 real responses all
+resolved correctly, including scale answers rendered as "5 / 5").
+
+**Related Documents:** `lib/admin-enquiries.ts` (`resolveAnswerLabel`), `lib/diagnostic-flow-
+options.ts`, `docs/tasks/08-enquiry-management.md` (T8.3).
+
+---
+
+## 2026-09-12 (T8.3, session 58) — "Website Build Status" marks Milestone 8 Complete despite T8.4 remaining open, mirroring Milestone 5's own precedent for T5.5
+
+**Status:** Standing
+
+**Summary:** T8.4 (personal-data deletion for a converted enquiry) is explicitly blocked on a
+firm policy decision (`docs/dashboard.md`'s "Blocked On" list; `docs/tasks/08-enquiry-
+management.md`'s own "not an engineering gap" framing) — it is not scheduled and cannot be
+started until the firm answers a real question. Rather than leaving Milestone 8 marked "Not
+started"/"In progress" on the firm-facing Website Build Status Artifact indefinitely (stale
+the moment the firm forgets this is the reason), it's marked **Complete** with an inline note
+naming the one deferred piece and pointing to a new "Waiting on you" item asking the firm to
+actually answer the policy question — the exact same treatment the artifact already gives
+Milestone 5 (marked Complete despite T5.5 being deferred pending ad accounts the firm doesn't
+have). Progress figure moved from ~82% (7/9 milestones) to ~90% (8/9); the estimate is a
+rough, illustrative figure for the firm, not tied to a literal task-count formula anywhere in
+this project — future sessions adjusting it should keep that same rough-estimate spirit
+rather than trying to reverse-engineer false precision from it.
+
+**Related Documents:** Website Build Status Artifact
+(`https://claude.ai/code/artifact/a26811bf-998b-4899-b3ad-0d03ce7c828f`), `docs/dashboard.md`,
+`docs/tasks/08-enquiry-management.md` (T8.4).
+
+---
+
 ## 2026-09-12 (T8.2, session 57) — Triage badge is a real 3-state resolver (High/Medium/Low, plain "Flagged", or "Not flagged"), not a 2-state fallback
 
 **Status:** Standing
