@@ -47,7 +47,13 @@ tests). Verified live via Playwright against the real dev server: the "My enquir
 pressed state, the "Assigned to" column showing "You" for the viewer's own row, the
 "Unassigned" filter correctly isolating 7 of the 8 real enquiries (the 1 already-assigned row
 correctly excluded), and clean mobile-width (390px) layout with no changes needed to the
-existing filter row's own responsive behavior.
+existing filter row's own responsive behavior. **Final audit, same session:** re-swept every
+model in `prisma/schema.prisma` against every admin list screen's rendered columns and every
+write API route against its display surface, specifically hunting the "write works, no read
+surface exists at all" failure signature (distinct from session 60's own audit, which checked
+conditional-rendering gates instead). No further instance found — full detail in
+`memory/decision-log.md`'s update to this session's own entry. No code changes resulted; the
+session's real fix remains the one committed as `baf22bc`.
 
 ---
 

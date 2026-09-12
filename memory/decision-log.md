@@ -46,6 +46,32 @@ no assignment (the 1 already-assigned real row, from session 57/58's own verific
 correctly excluded). Checked at mobile width (390px) — the new filter and button stack
 cleanly with the rest of the existing filter row, no layout changes needed there.
 
+**Update (same session, after the fix above shipped):** the user asked directly for one more
+pass to confirm no other field has this exact "write path works, no read path surfaces the
+result" shape. Session 60's own reachability audit had checked every admin screen's
+_conditional-rendering gates_ (things that render blank/dead under certain data) — a
+different failure signature from this one, which is a display surface that was never built
+at all, gated on nothing. Re-swept on that specific signature: every `model` in
+`prisma/schema.prisma` cross-referenced against every admin list screen's actual rendered
+columns (`TableHead` in every `app/admin/(shell)/**/page.tsx` and its client list
+components), plus every `app/api/admin/**/route.ts` write endpoint cross-referenced against
+a known display surface for whatever it writes. Every other per-row boolean/status/relation
+field found already has a real display surface: `Article.authorId`/`status`/`publishedAt`
+(list columns), `Article.revisedAt` ("Last revised" on the editor itself),
+`AdminUser.role`/`active`, `Author.published` (Team list, all session 60), `Subscriber.
+consent`/`subscribedAt`/`unsubscribedAt` (list columns), `DiagnosticQuestion.active`/
+`isPlaceholder` (list columns), `Category` retirement (a real delete, not a hidden flag —
+immediately visible as the row disappearing). `LandingPage.isPlaceholder` is seed-only and
+always force-cleared to `false` by every admin save — no admin action ever sets it `true`,
+so there's no "current state" a partner could need to check. **No further instance of the
+bug found** — `assignedPartnerId` was the one real case. One smaller, genuinely different
+item noted but deliberately not built as part of this pass: `/admin/account` shows no count
+of remaining unused backup codes. Not the same bug (the actual write — regenerating —
+already shows its full result immediately, the one-time reveal of the new 8 codes, same
+security-appropriate pattern 2FA setup itself uses); the gap, if any, is a separate
+"remaining count" convenience metric a partner might want between regenerations, raised here
+so it isn't lost rather than fixed unasked.
+
 **Related Documents:** `docs/features/enquiry-management.md`, `docs/features/admin-
 authentication.md` (Roles section, for the account/security-control category this decision
 explicitly distinguishes assignment from), `lib/admin-enquiries.ts`, `lib/admin-

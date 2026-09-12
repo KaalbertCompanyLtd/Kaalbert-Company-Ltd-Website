@@ -73,8 +73,16 @@ the signed-in account's own id with a visible pressed state, the "Assigned to" c
 "You" for the viewer's own assignment, the "Unassigned" filter correctly isolated 7 of the 8
 real enquiries (the 1 already-assigned real row correctly excluded), and the new filter/
 button stack cleanly at mobile width (390px) with no changes needed to the existing filter
-row's own responsive layout. Not yet committed to git as of this file being written — see
-next steps.
+row's own responsive layout. Committed as `baf22bc`.
+
+**Final audit (same session, after the fix above was committed):** the user asked for one
+more pass confirming no other field has this exact "write path works, no read path surfaces
+the result" shape. Every model in `prisma/schema.prisma` cross-referenced against every admin
+list screen's actual rendered columns, plus every `app/api/admin/**/route.ts` write endpoint
+cross-referenced against a known display surface — full detail in `memory/decision-log.md`'s
+update to this session's own entry. **No further instance found**; `assignedPartnerId` was
+the one real case. This session is closed out — no code changes resulted from the final
+audit, so no further commit was needed.
 
 ## Blockers
 
