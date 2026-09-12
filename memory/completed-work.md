@@ -14,6 +14,31 @@ Protocol):
 
 ---
 
+## 2026-09-12 (session 61 follow-up) — Added "Ongoing work, at a glance" table (Phase 1 + Phase 2) to the user guide and its Artifact
+
+**Task:** User-directed documentation addition — after being walked through what recurring
+partner work looks like today and what each Phase 2 capability adds once it ships, the user
+asked for that same picture as a single table in the user guide and Artifact, "since I think
+it will simplify things for them at a glance."
+**Summary:** Consolidated Phase 1's live recurring work (enquiries, Insights articles at the
+firm's own ~2/month cadence, landing pages, occasional edits elsewhere, and Milestone 9's
+still-blocked performance monitoring) and all 8 Phase 2 capabilities' own ongoing workload
+once each one's trigger is met (`docs/scope.md`), into one 3-column table (What / Frequency
+once live / Status: Live, Planned, or Gated) — added as a new "Ongoing work, at a glance"
+section in both the markdown file and its Artifact mirror.
+**Files Changed:** `docs/user-guide.md` (new section before Change log, + a change-log row),
+Platform User Guide Artifact (Version 23 — new `#glance` section with matching jump-nav
+entry, new `.status-live`/`.status-planned`/`.status-gated` CSS classes reusing the existing
+`monitor-table` pattern).
+**Related Feature:** `docs/scope.md` (Phase 2 capability list — the source of every Phase 2
+row's trigger wording, not re-derived from memory).
+**Notes:** Documentation-only; no code changed. Confirmed the table's own accuracy against
+`docs/scope.md` directly before writing it (e.g. P2-3 Client Portal's `docs/scope.md`
+Section 14 wording and P2-8's "outside kaalbert.com's own admin" ADR 0012 constraint) rather
+than restating from the earlier conversational answer alone.
+
+---
+
 ## 2026-09-12 (session 61 follow-up) — Fixed "My enquiries" fake-toggle bug; added name/email search after a personal-data-deletion process question
 
 **Task:** User-directed follow-up, two parts. (1) Reported the "My enquiries" button "acts
