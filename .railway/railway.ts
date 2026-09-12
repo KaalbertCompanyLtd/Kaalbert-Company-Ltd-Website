@@ -26,6 +26,21 @@ export default defineRailway(() => {
       BREVO_SENDER_EMAIL: preserve(),
       BREVO_SENDER_NAME: preserve(),
       GTM_CONTAINER_ID: preserve(),
+      // Set directly on the live service via `railway variable set` (session 54,
+      // 2026-09-11) — never declared here, so a `railway config apply` would have deleted
+      // both on the very next run (CLAUDE.md's own documented hazard for this exact
+      // pattern). Added as a production-hardening pass, session 60 — see
+      // `memory/known-bugs.md`'s ADMIN_CHALLENGE_TOKEN_SECRET/ADMIN_TOTP_ENCRYPTION_KEY
+      // entry.
+      ADMIN_CHALLENGE_TOKEN_SECRET: preserve(),
+      ADMIN_TOTP_ENCRYPTION_KEY: preserve(),
+      // Cloudflare R2 object storage (provisioned 2026-09-11, session 54) — same
+      // never-declared-until-now gap as the two admin secrets above.
+      CLOUDFLARE_R2_ACCOUNT_ID: preserve(),
+      CLOUDFLARE_R2_ACCESS_KEY_ID: preserve(),
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: preserve(),
+      CLOUDFLARE_R2_BUCKET: preserve(),
+      CLOUDFLARE_R2_PUBLIC_URL: preserve(),
     },
   });
 
