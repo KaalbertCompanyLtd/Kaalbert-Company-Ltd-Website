@@ -50,6 +50,30 @@ export interface AdminSidebarNavProps {
   onNavigate?: () => void;
 }
 
+/**
+ * `/admin/diagnostic-configuration` is a second screen reached by an inline link from
+ * `/admin/diagnostic-questions` (CLAUDE.md's "one nav entry, second screen via inline link"
+ * pattern), not its own sidebar item — treat a visit there as if it were the parent path for
+ * active-state purposes, the same way any other nested route already behaves.
+ */
+function normalizeForActiveMatch(pathname: string): string {
+  if (pathname === "/admin/diagnostic-configuration") return "/admin/diagnostic-questions";
+  return pathname;
+}
+
+/**
+ * A nav item is active on its own exact path or any nested route beneath it (e.g.
+ * `/admin/articles/42` or `/admin/articles/new` for the `/admin/articles` item) — an exact-
+ * match-only check left every detail/editor screen with no active tab at all. `/admin`
+ * (Dashboard) is the one exception: every other href is nested under it, so it only matches
+ * its own exact path, never a prefix.
+ */
+export function isNavItemActive(pathname: string, href: string): boolean {
+  const normalized = normalizeForActiveMatch(pathname);
+  if (href === "/admin") return normalized === "/admin";
+  return normalized === href || normalized.startsWith(`${href}/`);
+}
+
 export function AdminSidebarNav({ onNavigate }: AdminSidebarNavProps = {}) {
   const pathname = usePathname();
 
@@ -63,7 +87,7 @@ export function AdminSidebarNav({ onNavigate }: AdminSidebarNavProps = {}) {
             </span>
           )}
           {section.items.map((item) => {
-            const active = pathname === item.href;
+            const active = isNavItemActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
