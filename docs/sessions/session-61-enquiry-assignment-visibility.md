@@ -120,7 +120,7 @@ losing its `assignedTo` param and the "Assigned to" dropdown resetting to "All p
 Full quality gate re-run clean (lint/format/typecheck/test, 393/393 passing, +2 net new
 tests). Docs/memory updated (`docs/features/enquiry-management.md`, `docs/user-guide.md` +
 Artifact republished as Version 22, `memory/known-bugs.md`, `memory/decision-log.md`,
-`memory/completed-work.md`). Committed as `<pending — see git log>`.
+`memory/completed-work.md`). Committed as `9a27db4`.
 
 ## Blockers
 
