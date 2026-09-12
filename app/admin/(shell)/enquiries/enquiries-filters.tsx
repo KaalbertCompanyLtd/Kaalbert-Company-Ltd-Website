@@ -26,6 +26,8 @@ export interface EnquiriesFiltersValue {
   triage: string;
   source: string;
   assignedTo: string;
+  /** Case-insensitive name/email substring match — added session 61, see `lib/admin-enquiries.ts`. */
+  search: string;
   sort: string;
   dateFrom: string;
   dateTo: string;
@@ -46,6 +48,12 @@ export interface EnquiriesFiltersValue {
  * not a separate mechanism, so it stays a shareable/bookmarkable URL like every other filter
  * here. `currentUserId` is `null` for the rare account with no session (shouldn't happen
  * behind `proxy.ts`, but the button simply doesn't render rather than assuming).
+ *
+ * It renders with `aria-pressed`/a solid active state, i.e. it looks like a toggle — so
+ * clicking it again while already active must actually un-apply the filter (back to "All
+ * partners"), not just re-navigate to the same URL. Without that, it reads as a tab with no
+ * way back except rediscovering the "Assigned to" dropdown underneath it (real gap found by
+ * the user, session 61 follow-up).
  */
 export function EnquiriesFilters({
   value,
@@ -65,6 +73,7 @@ export function EnquiriesFilters({
     if (merged.triage !== "all") params.set("triage", merged.triage);
     if (merged.source !== "all") params.set("source", merged.source);
     if (merged.assignedTo !== ASSIGNMENT_FILTER_ALL) params.set("assignedTo", merged.assignedTo);
+    if (merged.search) params.set("search", merged.search);
     if (merged.sort !== "triage") params.set("sort", merged.sort);
     if (merged.dateFrom) params.set("from", merged.dateFrom);
     if (merged.dateTo) params.set("to", merged.dateTo);
@@ -84,6 +93,28 @@ export function EnquiriesFilters({
 
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          const input = event.currentTarget.elements.namedItem(
+            "enquiries-filter-search",
+          ) as HTMLInputElement;
+          navigate({ search: input.value.trim() });
+        }}
+        className="flex flex-col gap-1.5"
+      >
+        <Label htmlFor="enquiries-filter-search">Search name or email</Label>
+        <Input
+          key={value.search}
+          id="enquiries-filter-search"
+          name="enquiries-filter-search"
+          type="search"
+          defaultValue={value.search}
+          placeholder="Search name or email…"
+          className="w-full sm:w-56"
+        />
+      </form>
+
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="enquiries-filter-status">Status</Label>
         <Select
@@ -211,7 +242,14 @@ export function EnquiriesFilters({
       {currentUserId !== null && (
         <button
           type="button"
-          onClick={() => navigate({ assignedTo: String(currentUserId) })}
+          onClick={() =>
+            navigate({
+              assignedTo:
+                value.assignedTo === String(currentUserId)
+                  ? ASSIGNMENT_FILTER_ALL
+                  : String(currentUserId),
+            })
+          }
           aria-pressed={value.assignedTo === String(currentUserId)}
           className="border-border text-foreground hover:border-accent aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground h-8 shrink-0 rounded-sm border px-3 text-sm font-semibold transition-colors"
         >

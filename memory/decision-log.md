@@ -2,6 +2,24 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (session 61 follow-up) — Personal-data-deletion requests stay a manual, out-of-band process; only the "find the enquiry" step gets a fix (name/email search), not a tracked request queue
+
+**Status:** Standing
+
+**Summary:** The user asked how a data-deletion request is seen/tracked and what the actual
+process is for making one. Investigated and reported honestly: FR-6.4 was always scoped as
+"the firm can act on a request once it arrives," never "the visitor can submit one" — there
+is no public intake form, and `personal_data_deleted_at` only ever records the after-the-fact
+result, never a "requested" state. The real, concrete bottleneck found while checking: the
+enquiries list had no search by name or email, so finding the one enquiry a request refers to
+meant paging through the list by eye. Presented three options directly: (1) add name/email
+search only, (2) add search plus a tracked "deletion requested" flag/queue with an audit
+trail, (3) leave the process as-is. The user chose (1) — search only — explicitly declining
+the larger tracked-request-queue feature as more than what today's actual gap called for.
+**Related Documents:** `docs/features/enquiry-management.md` (Business rules — the deletion
+process is now documented as a real, named limitation, not a silent gap), `lib/admin-
+enquiries.ts` (`EnquiryListQuery.search`), `memory/completed-work.md`.
+
 ## 2026-09-12 (session 61) — Enquiry assignment stays open to every partner, not folded into session 60's Owner-only account lockdown; fixed a real write-only-field gap the same session
 
 **Status:** Standing

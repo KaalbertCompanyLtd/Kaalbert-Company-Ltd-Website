@@ -16,6 +16,30 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## "My enquiries" button looked like a toggle but had no way to switch back
+
+**Status:** Fixed
+**Severity:** Low — the underlying `assignedTo` filter always worked correctly and could
+still be cleared via the "Assigned to" dropdown or the "Clear filters" link; the bug was
+purely that the button itself, once you'd used it, gave no indication how to undo it
+**Date found:** 2026-09-12 (session 61 follow-up), reported directly by the user: "the my
+enquiries does not really act as a tab or more specific, it's a tab but with no other tab to
+switch back to once clicked on, all the rest of the things there are filters"
+**Description:** The button rendered with `aria-pressed`/a solid `bg-primary` active state —
+visually indistinguishable from a real toggle/tab — but its `onClick` always navigated to the
+same `assignedTo=<currentUserId>` URL regardless of current state, so clicking it a second
+time while already active was a no-op. The only way back to "All partners" was noticing the
+"Assigned to" dropdown underneath it, which the button's own pressed appearance actively
+worked against (it reads as "this is now the active view," not "there's another way out").
+**Workaround:** Use the "Assigned to" dropdown directly, or the "Clear filters" link when
+one was showing.
+**Planned Fix:** Made the click handler check current state: active → `ASSIGNMENT_FILTER_ALL`,
+inactive → the signed-in partner's id. Verified live via Playwright — clicking it twice
+returns to the full, unfiltered list.
+**Sequenced into:** Fixed immediately, same session — see `memory/completed-work.md`.
+
+---
+
 ## `assignedPartnerId` was write-only — no way for a partner to ever find their own assigned enquiries again
 
 **Status:** Fixed

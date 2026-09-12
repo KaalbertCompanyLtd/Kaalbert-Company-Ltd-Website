@@ -60,6 +60,22 @@ opening that enquiry already knows the business's shape").
   partner to ever find "my assigned enquiries" again afterward (no list column, no filter, no
   dashboard surface). The list screen now has an "Assigned to" filter/column, and the
   dashboard's Quick Actions has a "My assigned enquiries" link straight into that filter.
+- **Second real gap found and fixed the same session**: the "My enquiries" button rendered
+  with `aria-pressed`/a solid active state — visually a toggle — but clicking it again while
+  already active just re-navigated to the same URL, with no way back except rediscovering the
+  "Assigned to" dropdown underneath it. It's now a genuine toggle: clicking it again reverts
+  to "All partners."
+- **Personal-data deletion (FR-6.4) has no request-intake mechanism at all, by design, and
+  that's a real limitation to flag, not a bug**: nothing in this system tracks that a
+  deletion request came in, who asked, when, or via what channel — `personal_data_deleted_at`
+  only records the after-the-fact result. The person contacts the firm directly (phone,
+  email — outside this app; there's no public "request my data be deleted" form), and a
+  partner then has to find that person's specific enquiry to act on it. Session 61 added a
+  name/email search field to the list specifically to make that lookup possible (previously
+  the only way was paging through the list by eye) — but there is still no queue, no pending
+  state, and no audit trail of the request itself, only of the deletion once it happens. If
+  the firm ever wants a tracked request queue, that's a separate, larger feature (a new field/
+  workflow), not something this session's fix attempted.
 
 ## Data requirements
 
@@ -76,7 +92,10 @@ can tell a genuine deletion apart from a `name`/`email`/`phone` that was simply 
 
 - `/admin/enquiries` — list screen with filters and sort, including an "Assigned to" filter
   (a specific partner, "Unassigned," or "All partners") and an "Assigned to" column
-  (session 61 — see this section's own note below on why this was added after the fact).
+  (session 61 — see this section's own note below on why this was added after the fact), plus
+  a case-insensitive name/email search field (session 61 follow-up — the concrete process gap
+  it closes: finding the one enquiry a personal-data-deletion request refers to, previously
+  only possible by paging through the list by eye).
 - `/admin/enquiries/[id]` — detail screen.
 - `PATCH /api/admin/enquiries/[id]` — update status, notes, or assignment.
 - `DELETE /api/admin/enquiries/[id]/personal-data` — supports FR-6.4.

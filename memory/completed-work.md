@@ -14,6 +14,44 @@ Protocol):
 
 ---
 
+## 2026-09-12 (session 61 follow-up) — Fixed "My enquiries" fake-toggle bug; added name/email search after a personal-data-deletion process question
+
+**Task:** User-directed follow-up, two parts. (1) Reported the "My enquiries" button "acts
+like a tab but with no other tab to switch back to." (2) Asked how a personal-data-deletion
+request is seen/tracked and what the actual request process is — surfaced while reviewing
+the enquiries list built the same session.
+**Summary:** (1) Confirmed the bug directly: the button renders with `aria-pressed`/a solid
+active state (visually a toggle) but clicking it again while active just re-navigated to the
+identical URL — no way back except rediscovering the "Assigned to" dropdown underneath it.
+Fixed by making the click handler toggle: active → reverts to "All partners," inactive →
+sets to the signed-in partner's id. Verified live via Playwright (logged in as the dev/Owner
+test account): clicking twice now correctly returns to the unfiltered 8-enquiry list. (2)
+Investigated the actual deletion-request flow end to end and reported honestly: there is no
+request-intake mechanism anywhere in this system (no public form, no tracked "requested"
+state — `personal_data_deleted_at` only ever records the after-the-fact deletion) — the
+person contacts the firm directly, outside the app, and a partner must then find their
+specific enquiry manually. Found the concrete bottleneck in that manual step: the list had no
+search by name or email, only status/triage/source/assigned-to/date filters. Asked the user
+what to build given three options (search only / search + a tracked request queue / leave
+as-is); the user chose search only, as the smallest fix for the actual bottleneck, explicitly
+declining the larger tracked-request-queue feature.
+**Files Changed:** `app/admin/(shell)/enquiries/enquiries-filters.tsx` (My-enquiries toggle
+fix; new `search` field in `EnquiriesFiltersValue`, a `<form onSubmit>`-based search input —
+following `app/insights/page.tsx`'s established real-navigation-on-submit pattern rather than
+firing a request per keystroke), `lib/admin-enquiries.ts` (`EnquiryListQuery.search`,
+case-insensitive `OR` on `name`/`email` in `buildWhere`), `lib/admin-enquiries.test.ts` (+2
+tests: OR-filter shape, trims/ignores blank search), `app/admin/(shell)/enquiries/page.tsx`
+(`search` searchParam plumbed through `buildEnquiriesHref`/`hasActiveFilters`/the value
+passed to `EnquiriesFilters`), `docs/features/enquiry-management.md`, `docs/user-guide.md` (+
+Artifact republish pending), `memory/known-bugs.md`, `memory/decision-log.md`.
+**Related Feature:** `docs/features/enquiry-management.md` (T8.1/T8.2/T8.4, session 61).
+**Notes:** The deletion-request-tracking gap (no queue, no "requested" state, no audit trail
+of the request itself) was deliberately left unbuilt per the user's own choice — documented
+in `enquiry-management.md`'s Business rules as a real, named limitation so it isn't
+rediscovered as a surprise later, not left as a silent gap.
+
+---
+
 ## 2026-09-12 (session 61) — Enquiry assignment made visible (list filter/column, "My enquiries" shortcut, dashboard link); confirmed it stays open to every partner, not Owner-only
 
 **Task:** User-directed follow-up — asked how a partner sees their assigned enquiries, and

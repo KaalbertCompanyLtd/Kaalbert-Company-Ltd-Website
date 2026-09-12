@@ -49,6 +49,14 @@ assigned enquiries" quick-action link on the dashboard.
 - `memory/known-bugs.md` — new Fixed entry for the write-only-field gap.
 - `memory/completed-work.md` — new session-61 entry.
 
+**Follow-up (same session — see "Current State" below for full detail):** further changes to
+`app/admin/(shell)/enquiries/enquiries-filters.tsx` (My-enquiries toggle fix, new search
+field), `lib/admin-enquiries.ts`/`lib/admin-enquiries.test.ts` (`search` query param),
+`app/admin/(shell)/enquiries/page.tsx` (search searchParam plumbing), `docs/features/
+enquiry-management.md`, `docs/user-guide.md` (+ Artifact Version 22), `docs/
+vendor-operations-guide.md` (+ its own Artifact), `memory/known-bugs.md`,
+`memory/decision-log.md`.
+
 ## Decisions Made
 
 - **Enquiry assignment stays open to every signed-in partner, not Owner-only.** The
@@ -81,8 +89,38 @@ the result" shape. Every model in `prisma/schema.prisma` cross-referenced agains
 list screen's actual rendered columns, plus every `app/api/admin/**/route.ts` write endpoint
 cross-referenced against a known display surface — full detail in `memory/decision-log.md`'s
 update to this session's own entry. **No further instance found**; `assignedPartnerId` was
-the one real case. This session is closed out — no code changes resulted from the final
-audit, so no further commit was needed.
+the one real case. Committed as `7a41a4a` (docs-only, no code changes resulted).
+
+**Documentation clarification (same session, after the audit):** the user reported that the
+invite flow's "if the email fails, the password/setup link show on screen" wording read as if
+that also covered the normal (success) case in production — it doesn't; the success case
+shows nothing at all, by design. Corrected in all four documentation surfaces (`docs/
+vendor-operations-guide.md`, `docs/user-guide.md`, both their Artifact mirrors) to spell out
+the two branches explicitly. Committed as `2b990ae` (stale vendor-ops-guide account-creation
+instructions, found while re-verifying "are all artifacts actually correct") and `e8ef12b`
+(the invite-email wording fix itself).
+
+**Follow-up fixes (same session, after the docs fix above):** the user reported two more
+things while using the enquiries screen this session built. (1) "My enquiries" rendered as a
+pressed toggle (`aria-pressed`, solid active state) but clicking it again while active was a
+no-op — no way back except rediscovering the "Assigned to" dropdown underneath it. Fixed:
+the click handler now toggles, active → "All partners," inactive → the signed-in partner's
+id. (2) Asked how a personal-data-deletion request is seen/tracked and what the actual
+process is; investigated honestly and found there is no request-intake mechanism anywhere in
+this system (FR-6.4 was always scoped as "the firm can act on a request when it arrives," not
+"the visitor can submit one") — the real bottleneck was that the enquiries list had no search
+by name or email, so finding the right row to action meant paging through by eye. Presented
+three options (search only / search + a tracked request queue / leave as-is); the user chose
+search only. Added a case-insensitive name/email search field to `/admin/enquiries`, wired
+through `lib/admin-enquiries.ts`'s `buildWhere` as an `OR` on `name`/`email`. Both fixes
+verified live via Playwright against the real dev server (logged in as the Owner dev/test
+account): searching "albert" correctly narrowed 8 enquiries to the 1 matching row; clicking
+"My enquiries" twice correctly returned to the full unfiltered list, confirmed by the URL
+losing its `assignedTo` param and the "Assigned to" dropdown resetting to "All partners."
+Full quality gate re-run clean (lint/format/typecheck/test, 393/393 passing, +2 net new
+tests). Docs/memory updated (`docs/features/enquiry-management.md`, `docs/user-guide.md` +
+Artifact republished as Version 22, `memory/known-bugs.md`, `memory/decision-log.md`,
+`memory/completed-work.md`). Committed as `<pending — see git log>`.
 
 ## Blockers
 

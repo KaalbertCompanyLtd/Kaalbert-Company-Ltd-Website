@@ -262,6 +262,41 @@ describe("listEnquiries", () => {
     await listEnquiries({ assignedTo: "not-a-number" });
     expect(countMock).toHaveBeenCalledWith({ where: {} });
   });
+
+  it("filters search as a case-insensitive OR across name and email", async () => {
+    countMock.mockResolvedValue(0);
+    findManyMock.mockResolvedValue([]);
+
+    await listEnquiries({ search: "ama" });
+
+    const countArgs = countMock.mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(countArgs.where.AND).toContainEqual({
+      OR: [
+        { name: { contains: "ama", mode: "insensitive" } },
+        { email: { contains: "ama", mode: "insensitive" } },
+      ],
+    });
+  });
+
+  it("trims search and ignores it entirely when blank/whitespace-only", async () => {
+    countMock.mockResolvedValue(0);
+    findManyMock.mockResolvedValue([]);
+
+    await listEnquiries({ search: "  ama  " });
+    const countArgs = countMock.mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(countArgs.where.AND).toContainEqual({
+      OR: [
+        { name: { contains: "ama", mode: "insensitive" } },
+        { email: { contains: "ama", mode: "insensitive" } },
+      ],
+    });
+
+    await listEnquiries({ search: "   " });
+    expect(countMock).toHaveBeenNthCalledWith(2, { where: {} });
+
+    await listEnquiries({ search: "" });
+    expect(countMock).toHaveBeenNthCalledWith(3, { where: {} });
+  });
 });
 
 const DIAGNOSTIC_DETAIL_ROW = {

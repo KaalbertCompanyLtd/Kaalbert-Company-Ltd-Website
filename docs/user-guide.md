@@ -28,13 +28,15 @@ plain-language progress report for the firm; it's updated only at milestone/epic
 or a major change, not every task. See CLAUDE.md's "Firm-Facing Documentation" section and
 `memory/decision-log.md` for the exact update rule for each.
 
-**As of:** 2026-09-12 (session 60) — Milestones 1–8 complete. Enquiry Management now covers
-the full loop: see every enquiry, filter/sort them, open one to see everything about it, edit
-its status/notes/assignment, and delete a person's data on request. Landing Pages is no
-longer create-only — an already-live campaign page can now be edited too. Account/role
-control is now real: Owners can invite new partner logins and manage anyone's account, every
-partner has a working self-service "Account & security" page and a real sign-out, and
-publishing a team profile is a switch you control rather than something computed silently.
+**As of:** 2026-09-12 (session 61) — Milestones 1–8 complete. Enquiry Management now covers
+the full loop: see every enquiry, search by name/email, filter/sort them, open one to see
+everything about it, edit its status/notes/assignment, and delete a person's data on request.
+Assignment is now genuinely visible (an "Assigned to" filter/column, a real "My enquiries"
+toggle), not just settable. Landing Pages is no longer create-only — an already-live campaign
+page can now be edited too. Account/role control is now real: Owners can invite new partner
+logins and manage anyone's account, every partner has a working self-service "Account &
+security" page and a real sign-out, and publishing a team profile is a switch you control
+rather than something computed silently.
 
 ---
 
@@ -128,24 +130,32 @@ badge as the dashboard), **Status**, **Assigned to** (the partner's name, "You" 
 assignments, or "Unassigned"), and **Date**. Triage-flagged rows are surfaced first by
 default, so the most urgent enquiries are always at the top.
 
-1. **Status** dropdown — narrow the list to one status (New/Contacted/Closed/Converted/Not a
+1. **Search name or email** field — type any part of a person's name or email and press
+   Enter to narrow the list to matching rows (case-insensitive, matches either field). Added
+   session 61 specifically so you can actually find the one enquiry a personal-data-deletion
+   request refers to — before this, the only way was paging through the list by eye. A row
+   whose personal data has already been deleted never matches (both fields are cleared by
+   then), which is expected.
+2. **Status** dropdown — narrow the list to one status (New/Contacted/Closed/Converted/Not a
    fit), or leave it on "All statuses."
-2. **Triage** dropdown — "Flagged" or "Not flagged," or "All."
-3. **Source** dropdown — "Business Health Check" or "Contact form," or "All sources."
-4. **Assigned to** dropdown — narrow the list to one partner, "Unassigned," or leave it on
+3. **Triage** dropdown — "Flagged" or "Not flagged," or "All."
+4. **Source** dropdown — "Business Health Check" or "Contact form," or "All sources."
+5. **Assigned to** dropdown — narrow the list to one partner, "Unassigned," or leave it on
    "All partners."
-5. **From**/**To** date fields — narrow the list to enquiries submitted within a date range.
+6. **From**/**To** date fields — narrow the list to enquiries submitted within a date range.
    Either can be left blank (an open-ended range).
-6. **Sort by** dropdown — "Triage priority (default)," "Newest first," or "Oldest first."
-7. **"My enquiries"** button — a one-click shortcut that sets the Assigned to filter to your
+7. **Sort by** dropdown — "Triage priority (default)," "Newest first," or "Oldest first."
+8. **"My enquiries"** button — a one-click shortcut that sets the Assigned to filter to your
    own account, so you can jump straight to what's yours without hunting through the dropdown
    (session 61 — any partner can assign or reassign any enquiry to anyone, including
    themselves, from the detail screen below; this is simply the fastest way back to your own
-   list of them).
-8. Every filter/sort choice updates the page immediately and changes the page's own URL, so a
+   list of them). It's a real toggle: click it again while it's active and it switches back to
+   "All partners" — the button stays visibly pressed the whole time it's on, so you can always
+   tell which state it's in.
+9. Every filter/sort choice updates the page immediately and changes the page's own URL, so a
    filtered view can be bookmarked or shared with another partner.
-9. Click **Open** on any row to see everything about that enquiry — see "Enquiry detail"
-   below.
+10. Click **Open** on any row to see everything about that enquiry — see "Enquiry detail"
+    below.
 
 **Watch for:** this list is genuinely paginated (20 per page) so it stays fast no matter how
 many enquiries accumulate over the years, unlike every other admin list in this project
@@ -778,6 +788,7 @@ depends on:
 
 | Date       | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-12 | Enquiries list improvements (session 61): assignment is now genuinely visible, not just settable — a new **Assigned to** filter/column and the **"My enquiries"** shortcut (previously write-only, with no way to ever find "my assigned enquiries" again). Added a **Search name or email** field, so the one enquiry a personal-data-deletion request refers to can actually be found instead of paging through the list by eye. Fixed a real UX bug: **"My enquiries"** looked like a pressed toggle but clicking it again did nothing — it now genuinely switches back to "All partners" — see "Enquiries list" above.                                                                                                                                                                                                                                                                                                                                                        |
 | 2026-09-12 | Real account control went live (session 60) — Owners and Partners are now genuinely different roles, not just a label: an Owner can invite a brand-new partner login (`/admin/team` → **Add partner** — no more waiting on the developer for this), edit anyone's profile and manage their login, and promote/demote roles; a Partner manages only their own login and profile, seeing everyone else's read-only. Every signed-in partner now has a real, working self-service **Account & security** page (`/admin/account`) — change your own password, set up a new 2FA device, or regenerate backup codes, none of which existed before. The sidebar shows your real name/role and a working **Sign out**, replacing the placeholder text that was always there. Publishing a team profile is now a real switch you control (still can't be turned on with required fields blank), not something the system silently decided for you — see "Editing your team profile" above. |
 | 2026-09-12 | Landing Pages admin (T7.5 follow-up) is no longer create-only — click **Edit** on any row in the list to change every field of an already-live campaign page (headline, opening paragraph, body content, CTA, download file, campaign reference, meta tags), re-confirming 10.05 compliance on each save. The page's URL is still fixed once created, shown as a reference rather than an editable field — see "Editing a landing page" above.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2026-09-12 | Small fix: the admin sidebar now stays highlighted on a section's own detail/editor screens (e.g. an article or team member's edit page) — previously it only lit up on that section's own list page, going dark the moment you opened an individual item.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |

@@ -37,6 +37,7 @@ interface EnquiriesPageProps {
     triage?: string | string[];
     source?: string | string[];
     assignedTo?: string | string[];
+    search?: string | string[];
     sort?: string | string[];
     from?: string | string[];
     to?: string | string[];
@@ -65,21 +66,23 @@ function buildEnquiriesHref(params: {
   triage: string;
   source: string;
   assignedTo: string;
+  search: string;
   sort: string;
   from: string;
   to: string;
   page: number;
 }): string {
-  const search = new URLSearchParams();
-  if (params.status !== "all") search.set("status", params.status);
-  if (params.triage !== "all") search.set("triage", params.triage);
-  if (params.source !== "all") search.set("source", params.source);
-  if (params.assignedTo !== ASSIGNMENT_FILTER_ALL) search.set("assignedTo", params.assignedTo);
-  if (params.sort !== "triage") search.set("sort", params.sort);
-  if (params.from) search.set("from", params.from);
-  if (params.to) search.set("to", params.to);
-  if (params.page > 1) search.set("page", String(params.page));
-  const query = search.toString();
+  const qs = new URLSearchParams();
+  if (params.status !== "all") qs.set("status", params.status);
+  if (params.triage !== "all") qs.set("triage", params.triage);
+  if (params.source !== "all") qs.set("source", params.source);
+  if (params.assignedTo !== ASSIGNMENT_FILTER_ALL) qs.set("assignedTo", params.assignedTo);
+  if (params.search) qs.set("search", params.search);
+  if (params.sort !== "triage") qs.set("sort", params.sort);
+  if (params.from) qs.set("from", params.from);
+  if (params.to) qs.set("to", params.to);
+  if (params.page > 1) qs.set("page", String(params.page));
+  const query = qs.toString();
   return query ? `/admin/enquiries?${query}` : "/admin/enquiries";
 }
 
@@ -91,6 +94,7 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
   const sortParam = firstValue(params.sort) as EnquirySortValue | undefined;
   const from = firstValue(params.from) ?? "";
   const to = firstValue(params.to) ?? "";
+  const search = (firstValue(params.search) ?? "").trim();
   const requestedPage = Number.parseInt(firstValue(params.page) ?? "1", 10);
 
   const status = isEnquiryStatus(statusParam) ? statusParam : "all";
@@ -105,6 +109,7 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
       triage,
       source,
       assignedTo,
+      search: search || undefined,
       sort,
       dateFrom: from || undefined,
       dateTo: to || undefined,
@@ -115,9 +120,15 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
   ]);
 
   const hasActiveFilters =
-    status !== "all" || triage !== "all" || source !== "all" || assignedTo !== "all" || from || to;
+    status !== "all" ||
+    triage !== "all" ||
+    source !== "all" ||
+    assignedTo !== "all" ||
+    !!search ||
+    from ||
+    to;
   const hrefFor = (page: number) =>
-    buildEnquiriesHref({ status, triage, source, assignedTo, sort, from, to, page });
+    buildEnquiriesHref({ status, triage, source, assignedTo, search, sort, from, to, page });
 
   return (
     <div>
@@ -131,7 +142,7 @@ export default async function EnquiriesListPage({ searchParams }: EnquiriesPageP
       </div>
 
       <EnquiriesFilters
-        value={{ status, triage, source, assignedTo, sort, dateFrom: from, dateTo: to }}
+        value={{ status, triage, source, assignedTo, search, sort, dateFrom: from, dateTo: to }}
         partners={partners}
         currentUserId={currentUser?.id ?? null}
       />

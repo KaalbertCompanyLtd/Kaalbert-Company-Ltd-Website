@@ -35,6 +35,14 @@ export interface EnquiryListQuery {
   source?: EnquirySourceFilterValue;
   /** `"all"` (default), `"unassigned"`, or a real `admin_user.id` as a string — session 61. */
   assignedTo?: EnquiryAssignmentFilterValue;
+  /**
+   * Case-insensitive substring match against `name` OR `email` — added session 61 after the
+   * user pointed out there was no way to actually find the one enquiry a personal-data-
+   * deletion request refers to, short of paging through the list by eye. A row whose personal
+   * data has already been deleted never matches (both fields are `null` by then), which is the
+   * correct behavior, not a gap — nothing sensitive to find once it's gone.
+   */
+  search?: string;
   /** Inclusive, `YYYY-MM-DD`. Invalid/unparsable values are ignored, never thrown. */
   dateFrom?: string;
   /** Inclusive, `YYYY-MM-DD` — the whole day is included (23:59:59.999 local). */
@@ -104,6 +112,15 @@ function buildWhere(query: EnquiryListQuery): Prisma.EnquiryRecordWhereInput {
     if (Number.isInteger(partnerId)) {
       AND.push({ assignedPartnerId: partnerId });
     }
+  }
+  const searchTerm = query.search?.trim();
+  if (searchTerm) {
+    AND.push({
+      OR: [
+        { name: { contains: searchTerm, mode: "insensitive" } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+      ],
+    });
   }
   const from = parseDateBoundary(query.dateFrom, false);
   if (from) {
