@@ -1,15 +1,23 @@
 import Image from "next/image";
 
+import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { AdminAccountMenu } from "@/components/admin-account-menu";
 import { AdminMobileSidebar } from "@/components/admin-mobile-sidebar";
 import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
 
 /**
  * The sidebar-plus-content-area shell every *authenticated* admin screen inherits
  * (ui/screen-inventory.md #25, inferred from ui/mockups/g-admin-content/admin-dashboard.html
- * — there is no dedicated shell mockup). Frame only, no real content beyond this task's
- * placeholder page — but every route this layout wraps is now genuinely session-gated by
- * `proxy.ts` (T6.3, project root, not `app/proxy.ts` — see CLAUDE.md's Next.js 16 note for
- * why that distinction is a real, previously-hit bug, not a style preference).
+ * — there is no dedicated shell mockup). Every route this layout wraps is genuinely
+ * session-gated by `proxy.ts` (T6.3, project root, not `app/proxy.ts` — see CLAUDE.md's
+ * Next.js 16 note for why that distinction is a real, previously-hit bug, not a style
+ * preference).
+ *
+ * Now `async` (session 60) to resolve the real signed-in identity once via
+ * `getCurrentAdminUser()` and pass it to `AdminAccountMenu`, replacing this file's own former
+ * hardcoded "Signed-in partner / Role" placeholder — that placeholder outlived the auth
+ * system it was waiting on by several milestones, never revisited until the user pointed out
+ * directly that nothing in the account/profile area actually worked yet.
  *
  * Moved into this `(shell)` route group at T6.2 — a plain `app/admin/layout.tsx` would wrap
  * *every* route under `/admin/*`, including auth-flow screens like `/admin/setup-2fa` (this
@@ -24,10 +32,12 @@ import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
  * (`lg:flex`); below that it's replaced by AdminMobileSidebar's topbar + left-sliding
  * off-canvas drawer, since the mockup itself never addresses a narrower viewport.
  */
-export default function AdminLayout({ children }: LayoutProps<"/admin">) {
+export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+  const currentUser = await getCurrentAdminUser();
+
   return (
     <div className="flex h-screen flex-col overflow-hidden lg:flex-row">
-      <AdminMobileSidebar />
+      <AdminMobileSidebar currentUser={currentUser} />
 
       <aside className="bg-primary text-primary-foreground hidden h-full w-60 shrink-0 flex-col py-6 lg:flex">
         <div className="border-pine-500 shrink-0 border-b px-6 pb-1.5">
@@ -40,15 +50,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
           />
         </div>
         <AdminSidebarNav />
-        {/* Account block placeholder — no admin session exists until Milestone 6 wires
-            real auth (docs/tasks/06-admin-auth.md); these two lines are structural
-            placeholders, not a fabricated signed-in identity. */}
-        <div className="border-pine-500 text-caption text-primary-foreground/80 shrink-0 border-t px-6 py-4">
-          <strong className="text-primary-foreground block text-[0.875rem]">
-            Signed-in partner
-          </strong>
-          Role
-        </div>
+        {currentUser && <AdminAccountMenu currentUser={currentUser} />}
       </aside>
 
       <div className="bg-background min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10 lg:py-8">

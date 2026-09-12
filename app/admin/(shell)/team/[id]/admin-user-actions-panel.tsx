@@ -3,8 +3,16 @@
 import { useState } from "react";
 
 import type { LinkedAdminUser } from "@/lib/admin-authors";
+import type { AdminRoleValue } from "@/lib/admin-role-options";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,14 +32,46 @@ import {
  * reactivate an account, reset an existing partner's 2FA enrolment, or reset an existing
  * partner's password"). Only rendered when this author has a linked login at all — nothing
  * to act on otherwise (every one of the 5 seeded partners, today).
+ *
+ * Owner-only, enforced by the caller (`page.tsx`) never rendering this for a Partner viewing
+ * their own entry — self-deactivation/self-2FA-reset isn't a sensible action for someone to
+ * take on themselves; those stay served by `/admin/account` and `/admin/forgot-password`
+ * instead. Session 60 also added the Role control here (`setAdminUserRole`'s last-owner
+ * guard is enforced server-side, this just surfaces the 400 it returns on failure).
  */
 export function AdminUserActionsPanel({ adminUser }: { adminUser: LinkedAdminUser }) {
   const [active, setActive] = useState(adminUser.active);
+  const [role, setRole] = useState(adminUser.role);
+  const [roleBusy, setRoleBusy] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetLink, setResetLink] = useState<{ kind: "2fa" | "password"; url: string } | null>(
     null,
   );
+
+  async function changeRole(nextRole: AdminRoleValue) {
+    if (nextRole === role) return;
+    setRoleBusy(true);
+    setRoleError(null);
+    try {
+      const response = await fetch(`/api/admin/admin-users/${adminUser.id}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: nextRole }),
+      });
+      const data: { status: string; message?: string } = await response.json();
+      if (!response.ok) {
+        setRoleError(data.message ?? "Something went wrong — please try again.");
+        return;
+      }
+      setRole(nextRole);
+    } catch {
+      setRoleError("Something went wrong — check your connection and try again.");
+    } finally {
+      setRoleBusy(false);
+    }
+  }
 
   async function toggleActive() {
     setBusy(true);
@@ -89,6 +129,35 @@ export function AdminUserActionsPanel({ adminUser }: { adminUser: LinkedAdminUse
           )}
         </p>
       </div>
+
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium">Role</span>
+        <Select
+          value={role}
+          onValueChange={(value) => changeRole(value as AdminRoleValue)}
+          items={[
+            { value: "OWNER", label: "Owner" },
+            { value: "PARTNER", label: "Partner" },
+          ]}
+        >
+          <SelectTrigger id="adminUserRole" disabled={roleBusy} className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="OWNER">Owner</SelectItem>
+            <SelectItem value="PARTNER">Partner</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {roleError && (
+        <p
+          role="alert"
+          className="border-destructive/30 bg-destructive/10 text-destructive rounded-sm border p-3 text-sm"
+        >
+          {roleError}
+        </p>
+      )}
 
       {error && (
         <p

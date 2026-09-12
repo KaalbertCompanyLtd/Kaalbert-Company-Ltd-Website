@@ -335,6 +335,13 @@ firm to say a specific partner is ready to be onboarded with real login credenti
 build; the remaining backfill step has no task to sequence into since it's a one-off
 operator action, not engineering work, whenever the firm is ready for it.
 
+**Update (session 60, 2026-09-12):** A real in-app path for this backfill now exists —
+`/admin/team/new`'s "Link an existing profile" mode (Owner-only), which sets `adminUserId` on
+one of the 5 real seeded `Author` rows the moment an Owner invites that partner with their
+real email address. Actually sending an invite to each of the 5 real partners is still the
+firm's own call (needs their real email addresses, an action only the user can take, same as
+this entry's own standing `Trigger type`) — not attempted in this session either.
+
 ---
 
 ## Attribution's 90-day retention job has no real schedule triggering it

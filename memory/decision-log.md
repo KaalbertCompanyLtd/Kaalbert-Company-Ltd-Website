@@ -2,6 +2,132 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-12 (session 60) — Real Owner/Partner roles, an invite/link flow, sidebar identity + sign-out, and a manual publish toggle — reversing two prior "proportionate for five partners" scope calls after the user found the whole user system unreachable in practice
+
+**Status:** Standing
+
+**Summary:** The user escalated directly after testing the live app: "there's no control, no
+actual admin holding power, no account management... The whole user system currently is
+crap." Three earlier, individually-reasoned decisions (T6.6: a CLI script instead of an
+invite UI; T7.6: no role gate on editing/account-actions since no role vocabulary existed) had
+compounded into a real, hit-for-real problem, confirmed by direct database query before
+writing any code: **zero of the 5 real seeded partners had ever had a login, and the
+deactivate/reset-2FA/reset-password panel T7.6 built had literally never rendered for
+anyone** — `Author.adminUserId` was `null` on every real row and both existing `AdminUser`
+rows. This wasn't a logic bug; the code was correct and simply had no data making it
+reachable — the same "looks done, never reachable in practice" failure class this session's
+own reachability audit (below) found three more instances of.
+
+Three design decisions confirmed directly with the user (via `AskUserQuestion`) before
+building:
+
+1. **Two-tier role model — Owner vs. Partner**, not a richer hierarchy. Owner can invite/
+   create logins, deactivate/reactivate any account, reset another partner's 2FA/password,
+   edit any profile, and toggle publish state; Partner manages only their own login and
+   profile. The developer/vendor account and the Lead Partner start as Owner (promoted
+   directly in the same migration that added the enum); every other account starts Partner.
+2. **Invite delivery is an automatic email** via the existing Brevo transactional-email path
+   (`lib/email.ts`), not a link shown on-screen for manual relay — chosen over the
+   manual-relay option specifically so a real invite doesn't depend on the Owner remembering
+   to copy/paste and send it themselves. A delivery failure still surfaces the password/setup
+   link once, as a fallback, rather than leaving the new account unreachable.
+3. **Publish state is a computed guard plus a manual override toggle**, not either extreme —
+   `published: true` is still rejected while required fields are blank, but once complete, an
+   Owner (or the partner editing their own profile) gets an explicit switch, and unpublishing
+   someone who already has articles is now a normal, intentional action rather than blocked
+   (supersedes T7.6's original "refuses to leave an author unpublished if they already have
+   articles" rule below — `lib/insights.ts`'s byline rendering has safely fallen back to
+   crediting the firm itself for an unpublished author since T7.11, so nothing breaks).
+
+The plan went through three rejection/revision rounds before approval, each one surfacing a
+real gap the previous pass had missed by inference rather than verification:
+
+- First rejection: "I see no where that 2fa service by a partner exist, or the activation and
+  deactivation" — added `/admin/account`, a self-service page with in-session password
+  change, voluntary 2FA device re-enrollment, and backup-code regeneration; none of this
+  existed anywhere before (confirmed via `grep`, not assumed).
+- Second rejection: "that token /admin/setup-2fa that someone sends you can't be seen
+  anywhere... make sure every necessary route has a way to reach it" — this is what surfaced
+  the `AdminUserActionsPanel`-never-rendered finding above via direct DB query, which became
+  the central justification for the whole invite/link flow.
+- Third rejection: "make a full check of all the other admin capabilities" — a full
+  reachability audit (2 parallel Explore agents + direct DB queries) across every other admin
+  screen, which found three more real issues, all fixed in this same session:
+  - **`resetAdminUserTotp` (the Owner's "Reset 2FA enrolment" action) never actually
+    worked for its one real use case.** It called `issueSetupToken` directly, which never
+    clears `totp_enabled`/`totp_secret` — but `resolvePendingTotpSetup`/`confirmTotpSetup`
+    both reject any setup token for an account where `totp_enabled` is still `true`. Since
+    this function only ever gets used on an account that already has 2FA enabled (the whole
+    reason a reset is being requested), the link it handed out was dead on arrival every
+    time. Never caught before because the only existing test mocked `issueSetupToken`
+    directly rather than exercising the real gate. Fixed by extracting a `reissueSetupToken`
+    helper (`lib/auth/totp-setup.ts`) that resets both fields before reissuing, mirroring the
+    reset `lib/auth/login.ts`'s backup-code recovery flow already performs for the same
+    reason — now shared by the Owner-triggered reset and the new self-service "Set up a new
+    device" action.
+  - **The dashboard's "Manage my account & 2FA" quick action pointed at
+    `/admin/setup-2fa`** with no `?token=`, a page with no session-based path at all — every
+    partner clicking it landed on a dead "this link is no longer valid" state. Its own
+    doc-comment claimed "every href below now resolves to a real, built page," which was
+    false even before this session. Fixed to point at the new `/admin/account`.
+  - **A live Turbopack compile failure found and fixed mid-session**: three new client
+    components imported the `AdminRole` value directly from `@/generated/prisma/client`
+    (for a role `<Select>`), which broke `/admin`'s entire compile with Turbopack's own
+    generic "the chunking context (unknown) does not support external modules (request:
+    node:module)" panic — no error naming `AdminRole` or any of the three files, discovered
+    only by loading `/admin` in a real browser after the code passed lint/typecheck/tests
+    cleanly. Same underlying mechanism as CLAUDE.md's already-documented `@/lib/prisma`
+    client-bundle pitfall, just via a different import path (Prisma's generated client
+    directly, rather than a `lib/` file that itself imports `@/lib/prisma`) — CLAUDE.md's
+    existing rule didn't anticipate this specific route into the same failure. Fixed by
+    adding `lib/admin-role-options.ts` (a plain string-literal type + label map, zero import
+    of either `@/lib/prisma` or `@/generated/prisma/client`), mirroring
+    `lib/enquiry-list-options.ts`'s already-established precedent for this exact class of
+    problem.
+  - Two more small, no-design-decision fixes bundled in: the sidebar's "Performance" nav link
+    (pointed at a Milestone-9 screen that doesn't exist yet — removed until that milestone
+    ships) and Diagnostic Configuration's High/Medium threshold lookup (keyed by the
+    free-text `triagePriorityLevel` label, the same fragile shape as the Team bug — now keyed
+    by `dimensionId: null` + the fixed seed ids 1/2 instead).
+- A fourth piece of user feedback, separate from the plan rejections, also got fixed in this
+  pass: the Diagnostic Questions reorder ▲/▼ buttons "don't make any sense" — verified via
+  direct DOM state extraction that the logic was 100% correct per-dimension the whole time;
+  the real problem was that the table gave no visual indication of where one dimension's
+  questions ended and the next began, so a correctly-disabled boundary button looked
+  arbitrary. Fixed by adding a visible per-dimension header row to the table.
+
+Implementation: `AdminRole` is now a real Prisma enum (`OWNER`/`PARTNER`), replacing the
+plain, never-enforced string column via a hand-written migration (`prisma migrate dev`'s
+interactive data-loss prompt hangs non-interactively; used `migrate deploy` against a
+manually-written migration instead, verified via direct `pg` queries that every existing
+`'partner'` string converted losslessly). `lib/auth/current-user.ts` (`getCurrentAdminUser`/
+`isOwner`/`canEditAuthorProfile`) is the one canonical "who's logged in" helper every
+permission check now uses, replacing a cookie+`verifySession` pattern previously duplicated
+per-call-site. Every `admin-users/[id]/*` route and `PATCH /api/admin/authors/[id]` now
+checks caller identity for the first time (previously zero check beyond "a session exists at
+all"). `lib/admin-team.ts`'s `createPartnerAccount` handles both invite modes in one
+transaction, falling back to exposing the password/setup link only when the invite email
+itself fails to send. Verified for real via Playwright against the live dev server, not just
+unit tests: created a real disposable test account (never one of the 5 real named partners,
+since dev and prod share one database) through the create-new-partner path, confirmed the
+previously-unreachable `AdminUserActionsPanel` rendered for the first time, exercised role
+promotion/demotion, publish toggle (including the still-enforced blank-required-field
+rejection), deactivate/reactivate, the full change-password round-trip (forced re-login with
+the new password), 2FA reissue and backup-code regeneration, sign-out, the Owner-only
+`/admin/team/new` redirect for a Partner-role account, and read-only rendering of another
+partner's profile for that same Partner account — then left the test account deactivated and
+unpublished (not hard-deleted, to avoid a raw DB mutation against the shared database outside
+the app's own tooling) as its final, clearly-labeled state.
+
+**Related Documents:** `docs/features/admin-authentication.md`, `docs/features/content-
+management-admin.md`, `memory/technical-debt.md`, `memory/known-bugs.md`, `docs/user-guide.md`,
+`prisma/schema.prisma`, `lib/auth/current-user.ts`, `lib/admin-team.ts`,
+`lib/admin-authors.ts`, `lib/auth/backup-codes.ts`, `lib/auth/change-password.ts`,
+`lib/admin-role-options.ts`, `components/admin-account-menu.tsx`, the T6.6 and T7.6 entries
+elsewhere in this file (both now Superseded).
+
+---
+
 ## 2026-09-12 (T7.5 follow-up, session 60) — Landing Pages admin: editing an already-live instance is now built; the URL slug stays fixed
 
 **Status:** Standing
@@ -561,7 +687,15 @@ Dev_Workspace/01 - Hasty Notes/PROJECT_PLANNING_FRAMEWORK.md`.
 
 ## 2026-09-11 (T7.6, session 49) — Team editor: no role gate on editing another partner's entry, `bio` corrected as non-publish-gating, the article-byline gap sequenced into a new task rather than fixed unscoped, `Author.adminUserId` finally a real relation
 
-**Status:** Standing
+**Status:** Superseded (session 60, 2026-09-12) — the "no role gate" call below was a
+deliberate, reasoned decision at the time (no role vocabulary existed to enforce), but the
+user directly overrode it after testing the live app and finding it let any partner
+deactivate/edit/reset-2FA on any other partner's account with zero control. Session 60 built
+a real `AdminRole` enum (`OWNER`/`PARTNER`), gated every admin-user action and the Team
+editor by it, and built the invite/create-partner flow that finally links a login to an
+`Author` row for the first time — see that session's own entry below. The `bio`-non-
+publish-gating and `Author.adminUserId`-as-a-real-relation decisions below are unaffected and
+remain standing.
 
 **Summary:** T7.6 (Team / author profile editor) built `/admin/team` (list) and `/admin/
 team/[id]` (editor), plus the three admin-facing account actions (deactivate/reactivate,
@@ -1069,7 +1203,15 @@ decisions made building T6.7:
 
 ## 2026-09-10 (T6.6, session 42) — Account provisioning is a CLI script, not an invite-flow UI; discovered a related, distinct gap (no UI for deactivate/reactivate or 2FA reset) while documenting, sequenced rather than built
 
-**Status:** Standing
+**Status:** Superseded (session 60, 2026-09-12) — the "a script is proportionate, an
+invite-UI is more process than this firm's scale justifies" reasoning below was overridden
+directly by the user after real testing surfaced how much this assumption was quietly
+blocking (zero of the 5 real partners had ever gotten a login, since the script was never
+actually run for any of them, and there was no in-app way to fix that). Session 60 built a
+real `/admin/team/new` invite flow (link-an-existing-profile or create-brand-new, Owner-only,
+auto-emailed via Brevo) as the new normal path — `scripts/create-admin-user.ts` still works
+as a fallback but is no longer the only way an account gets created. The deactivate/
+reactivate/2FA-reset gap this entry also names below was separately closed at T7.6.
 
 **Summary:** T6.6 closed the gap `memory/technical-debt.md` logged at T6.2: nothing yet
 created a real `admin_user` row for a partner's very first login. Resolved as

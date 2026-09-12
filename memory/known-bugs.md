@@ -16,6 +16,68 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## Three client components importing the `AdminRole` enum value from `@/generated/prisma/client` broke `/admin`'s entire Turbopack compile
+
+**Status:** Fixed
+**Severity:** High — took down every `/admin` route, not just the screens that used the enum
+**Date found:** 2026-09-12 (session 60)
+**Date fixed:** 2026-09-12 (session 60)
+**Description:** While building the Role `<Select>` control for `admin-user-actions-panel.tsx`,
+`add-partner-form.tsx`, and `admin-account-menu.tsx` (all `"use client"`), each imported
+`AdminRole` as a value directly from `@/generated/prisma/client` to reference
+`AdminRole.OWNER`/`AdminRole.PARTNER`. Code compiled, linted, and typechecked cleanly, and
+Vitest's mocked-module tests all passed — the failure only surfaced loading `/admin` in a real
+browser, where Turbopack panicked with a generic `FATAL: An unexpected Turbopack error
+occurred... the chunking context (unknown) does not support external modules (request:
+node:module)`, naming neither `AdminRole` nor any of the three files. Same underlying cause as
+CLAUDE.md's already-documented `@/lib/prisma`-chain client-bundle pitfall (a client component
+pulling server-only, Node-built-in-dependent code into its bundle) — just via a different
+import path (Prisma's generated client package directly, rather than a `lib/` file that
+itself imports `@/lib/prisma`) that the existing documented rule didn't name. Caught only by
+the Task Completion Checklist's own "exercised for real via Playwright MCP" requirement —
+static analysis and mocked tests gave zero signal.
+**Workaround:** N/A — fixed the same session before this reached the user.
+**Planned Fix:** Added `lib/admin-role-options.ts` (a plain `"OWNER" | "PARTNER"` string type +
+label map, zero import of either `@/lib/prisma` or `@/generated/prisma/client`), mirroring
+`lib/enquiry-list-options.ts`'s already-established precedent for this exact class of problem.
+All three client components now import the value from there instead; `CLAUDE.md`'s
+client-bundle rule should be broadened next time it's touched to name this second route into
+the same failure explicitly, not just the `lib/prisma`-chain one.
+**Sequenced into:** None — already fixed this session, no future task needed. (CLAUDE.md's own
+rule text update, if done, would be a `process`-type commit whenever next touched.)
+
+---
+
+## Owner's "Reset 2FA enrolment" action issued a setup link that could never actually be completed for its one real use case
+
+**Status:** Fixed
+**Severity:** Medium — the button appeared to work (returned a real-looking link) but the link
+itself was always dead for the only account state it's ever used against
+**Date found:** 2026-09-12 (session 60)
+**Date fixed:** 2026-09-12 (session 60)
+**Description:** `lib/admin-authors.ts`'s `resetAdminUserTotp` (built at T7.6, behind
+`AdminUserActionsPanel`'s "Reset 2FA enrolment" button) called `issueSetupToken` directly,
+which only ever writes `setup_token`/`setup_token_expires_at` — it never clears
+`totp_enabled`/`totp_secret`. But `lib/auth/totp-setup.ts`'s `resolvePendingTotpSetup` and
+`confirmTotpSetup` both reject any setup token for an account where `totp_enabled` is still
+`true`. This function's only real caller scenario is a partner who **already has** 2FA
+enabled and lost their device — so the link it handed the Owner to relay was dead on arrival
+every single time; only an account with no 2FA yet (never this function's actual target)
+would have worked. Never caught before because the only existing unit test mocked
+`issueSetupToken` directly rather than exercising the real `totpEnabled` gate — confirmed live
+this session by reading the exact gate condition and cross-checking `resetAdminUserTotp`'s own
+call site, the same "looks done, never reachable in practice" pattern this whole session's
+plan is about.
+**Workaround:** N/A — fixed the same session before this reached the user.
+**Planned Fix:** Added `lib/auth/totp-setup.ts`'s `reissueSetupToken` (resets
+`totp_enabled: false, totp_secret: null` before calling `issueSetupToken`), mirroring the
+reset `lib/auth/login.ts`'s backup-code recovery flow already performs before its own call to
+`issueSetupToken`. `resetAdminUserTotp` now calls this instead; `/admin/account`'s new
+self-service "Set up a new device" action uses the same helper.
+**Sequenced into:** None — already fixed this session, no future task needed.
+
+---
+
 ## Production `kaalbert-web` Railway service was missing `ADMIN_CHALLENGE_TOKEN_SECRET`/`ADMIN_TOTP_ENCRYPTION_KEY` entirely — every real admin login attempt hard-errored
 
 **Status:** Fixed

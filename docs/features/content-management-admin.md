@@ -47,8 +47,19 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
 7. **Maintain a profile**: a partner opens their own entry under Team and edits their
    photograph, title (their rank — "Lead Partner"/"Partner"), practice area, credentials, and
    personal statement — the `author` record used by both `about-and-partners-page.md` and
-   `insights-engine.md` (FR-3.3). A partner with the right role may also edit another
-   partner's entry (e.g. onboarding a new co-founder), but the normal path is self-service.
+   `insights-engine.md` (FR-3.3), plus an explicit Published/Unpublished toggle (session 60 —
+   see "Publish control" below). Opening another partner's entry always works, but only an
+   Owner can actually edit it or act on its login (Partner viewers see it read-only) — the
+   normal path stays self-service either way. An Owner also invites a brand-new partner from
+   this same screen (the Team list's "Add partner" button, `/admin/team/new`) — either linking
+   a real profile that has no login yet, or creating a brand-new one, plus its login email and
+   role (Owner/Partner). The system generates a password, sends an invite email (temporary
+   password + a 2FA setup link) via the same transactional-email path as the
+   forgotten-password flow, and creates the account and `author` link in one step —
+   superseding the developer-run CLI script as the normal path for creating a partner's login
+   (`memory/decision-log.md` supersedes T6.6's original call). If the email fails to send, the
+   account is still created and the Owner sees the password/setup link once to relay
+   manually.
 8. **Adjust the diagnostic**: a partner with the right role edits question text, order, and
    active flag, dimension weights, and triage thresholds — the exact configuration data named
    in `business-health-check-diagnostic.md` (FR-2.2). The underlying scoring algorithm stays
@@ -105,6 +116,15 @@ elsewhere in this doc or in `enquiry-management.md`, not a new entity:
   designation to state simply shows no credentials line, rather than an entry sitting hidden
   for either reason. Professional designations are stored exactly as the partner supplies
   them; the admin does not alter or abbreviate a credential string.
+- **Publish control** (session 60 — supersedes the fully-computed rule the bullet above
+  originally described): the required-fields check above still gates turning `published` on
+  — a save that would set `published: true` while name/practice area/personal statement isn't
+  all filled is rejected outright. Beyond that, `published` is a real, explicit toggle an
+  Owner (or the partner editing their own profile) controls directly, not something the system
+  silently flips back off the moment a field goes blank, and unpublishing a partner who
+  already has bylined articles is a normal, intentional action, not blocked — `insights-
+engine.md`'s byline rendering already falls back to crediting the firm itself for an
+  unpublished author's existing articles (T7.11), so nothing breaks when this happens.
 - Diagnostic Configuration edits values (question text, order, active flag, dimension
   weights, triage thresholds), never the scoring algorithm itself — restructuring how a score
   is computed is a developer change, per FR-8's scope and `business-health-check-diagnostic.md`
@@ -150,7 +170,9 @@ never touch authentication data. `site_settings`
 singleton record: phone_primary, phone_secondary (nullable), email, whatsapp_number, address,
 response_time_commitment, social_profile_urls (list, nullable —
 `seo-and-search-foundation.md`'s Organization schema `sameAs` source). Additionally:
-`admin_user` — id, name, email, role, TOTP secret (encrypted), created_at, last_login.
+`admin_user` — id, name, email, role (`AdminRole` enum: `OWNER` | `PARTNER`, real and
+enforced since session 60 — see `admin-authentication.md`'s Roles section), TOTP secret
+(encrypted), created_at, last_login.
 
 ## Interfaces
 
@@ -171,6 +193,12 @@ response_time_commitment, social_profile_urls (list, nullable —
   authenticated session with the appropriate role. Photo upload reuses the same media
   pipeline as an article's required preview image (Cloudflare R2, per ADR 0004) — no separate
   upload mechanism.
+- `POST /api/admin/team` (session 60, Owner-only) — creates a partner login, either linking an
+  existing `author` or creating a new one; see `admin-authentication.md`'s Interfaces section
+  for the full request/response shape. `PATCH /api/admin/admin-users/[id]/role` (session 60,
+  Owner-only) — promotes/demotes between Owner and Partner. `POST /api/admin/admin-users/[id]/
+{deactivate,reactivate,reset-2fa,reset-password}` (Owner-only since session 60 — previously
+  no caller-identity check at all).
 
 ## Edge cases
 

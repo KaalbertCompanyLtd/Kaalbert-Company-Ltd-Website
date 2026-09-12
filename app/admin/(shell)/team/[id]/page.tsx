@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getAuthorForEdit } from "@/lib/admin-authors";
+import { canEditAuthorProfile, getCurrentAdminUser, isOwner } from "@/lib/auth/current-user";
 import { AdminUserActionsPanel } from "./admin-user-actions-panel";
 import { AuthorEditorForm } from "./author-editor-form";
 
@@ -10,11 +11,17 @@ export const dynamic = "force-dynamic";
 export default async function TeamMemberEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
   const id = Number(idParam);
-  const author = Number.isInteger(id) ? await getAuthorForEdit(id) : null;
+  const [author, currentUser] = await Promise.all([
+    Number.isInteger(id) ? getAuthorForEdit(id) : Promise.resolve(null),
+    getCurrentAdminUser(),
+  ]);
 
   if (!author) {
     notFound();
   }
+
+  const canEdit = canEditAuthorProfile(currentUser, author.id);
+  const viewerIsOwner = isOwner(currentUser);
 
   return (
     <div>
@@ -26,8 +33,10 @@ export default async function TeamMemberEditPage({ params }: { params: Promise<{
       </div>
 
       <div className="flex flex-col gap-6">
-        <AuthorEditorForm initial={author} />
-        {author.adminUser && <AdminUserActionsPanel adminUser={author.adminUser} />}
+        <AuthorEditorForm initial={author} readOnly={!canEdit} />
+        {viewerIsOwner && author.adminUser && (
+          <AdminUserActionsPanel adminUser={author.adminUser} />
+        )}
       </div>
     </div>
   );

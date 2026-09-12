@@ -4,7 +4,7 @@ import { generateURI, verify } from "otplib";
 
 import { prisma } from "@/lib/prisma";
 
-import { hashPassword } from "./password";
+import { generateHashedBackupCodes } from "./backup-codes";
 import { assertNotRateLimited, recordAttempt, AdminLoginAttemptKind } from "./rate-limit";
 import { decryptTotpSecret, encryptTotpSecret } from "./totp-encryption";
 import { generateTotpSecret } from "./totp";
@@ -20,7 +20,6 @@ import { generateTotpSecret } from "./totp";
 export class TotpSetupError extends Error {}
 
 const TOTP_ISSUER = "Kaalbert & Company Ltd";
-const BACKUP_CODE_COUNT = 8;
 // A setup link stays valid for a week — long enough to reach a partner through whatever
 // channel issues it (T6.4's re-enrolment redirect, T6.6's provisioning script), short enough
 // that a stale, never-completed link doesn't stay live indefinitely.
@@ -28,9 +27,6 @@ const SETUP_TOKEN_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 // A small, standard clock-drift allowance (admin-authentication.md's edge case: "TOTP's
 // standard time-window tolerance... is respected") — one 30s step each side of now.
 const EPOCH_TOLERANCE: [number, number] = [1, 1];
-// Readable backup-code alphabet — no 0/O/1/I/L, so a partner transcribing one by hand from a
-// screen or printout can't confuse characters.
-const BACKUP_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /**
  * Issues a fresh, single-use `/admin/setup-2fa` link token for an existing `admin_user` row
@@ -53,6 +49,28 @@ export async function issueSetupToken(
     },
   });
   return `${baseUrl}/admin/setup-2fa?token=${setupToken}`;
+}
+
+/**
+ * Resets an account's existing TOTP enrollment and issues a fresh setup token in one step —
+ * new at session 60 for `/admin/account`'s voluntary "Set up a new device" action. Doing the
+ * `totpEnabled: false, totpSecret: null` reset separately from `issueSetupToken` would be a
+ * real bug: `resolvePendingTotpSetup`/`confirmTotpSetup` both treat `totpEnabled: true` as
+ * "this token is stale, this account already finished setup" and reject it outright, so
+ * calling `issueSetupToken` alone on an already-enrolled account would hand out a link that
+ * can never actually be completed — exactly the reset `lib/auth/login.ts`'s backup-code
+ * recovery flow already performs (in its own transaction, alongside marking the backup code
+ * used) before it calls `issueSetupToken` for the same reason.
+ */
+export async function reissueSetupToken(
+  adminUserId: number,
+  options: { baseUrl?: string } = {},
+): Promise<string> {
+  await prisma.adminUser.update({
+    where: { id: adminUserId },
+    data: { totpEnabled: false, totpSecret: null },
+  });
+  return issueSetupToken(adminUserId, options);
 }
 
 export interface PendingTotpSetup {
@@ -155,8 +173,7 @@ export async function confirmTotpSetup(setupToken: string, code: string): Promis
     throw new TotpSetupError("That code didn't match — please try again.");
   }
 
-  const backupCodes = Array.from({ length: BACKUP_CODE_COUNT }, generateBackupCode);
-  const hashedCodes = await Promise.all(backupCodes.map((backupCode) => hashPassword(backupCode)));
+  const { plaintext: backupCodes, hashed: hashedCodes } = await generateHashedBackupCodes();
 
   await prisma.$transaction([
     prisma.adminUser.update({
@@ -174,13 +191,4 @@ export async function confirmTotpSetup(setupToken: string, code: string): Promis
   ]);
 
   return backupCodes;
-}
-
-function generateBackupCode(): string {
-  const bytes = randomBytes(8);
-  const chars = Array.from(
-    bytes,
-    (byte) => BACKUP_CODE_ALPHABET[byte % BACKUP_CODE_ALPHABET.length],
-  ).join("");
-  return `${chars.slice(0, 4)}-${chars.slice(4)}`;
 }

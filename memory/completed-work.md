@@ -14,6 +14,83 @@ Protocol):
 
 ---
 
+## 2026-09-12 (session 60) — Real Owner/Partner roles, invite/link flow, sidebar identity + sign-out, self-service account page, manual publish toggle
+
+**Task:** User-directed overhaul of the whole admin user/account system, superseding T6.6's
+"CLI script is proportionate" and T7.6's "no role gate" scope calls after live testing showed
+zero of the 5 real partners had ever had a login and the account-actions panel had never
+rendered for anyone.
+**Summary:** Full plan (`/home/cosbydeveloper/.claude/plans/serene-weaving-sutton.md`), see
+`memory/decision-log.md`'s own session-60 entry for the complete narrative, the three
+confirmed design decisions, and the reachability-audit findings. In short:
+
+- `AdminRole` is now a real, enforced Prisma enum (`OWNER`/`PARTNER`) — hand-written migration
+  (`prisma migrate dev`'s interactive prompt hangs non-interactively), verified lossless
+  against the live shared DB via direct `pg` queries.
+- `lib/auth/current-user.ts` (`getCurrentAdminUser`/`isOwner`/`canEditAuthorProfile`) is the
+  one canonical identity/permission helper; every admin-user action route, the Team editor,
+  and the Team list are now genuinely gated by it (previously zero caller-identity check
+  beyond "a session exists").
+- `lib/admin-team.ts`'s `createPartnerAccount` powers the new Owner-only `/admin/team/new`
+  invite flow (link-an-existing-Author or create-brand-new), auto-emailing the password + 2FA
+  setup link via Brevo, with a password/link fallback if the email fails to send.
+- `/admin/account` (new, any role): in-session password change (`lib/auth/
+change-password.ts`), voluntary 2FA device re-enrollment, and backup-code regeneration
+  (`lib/auth/backup-codes.ts`, extracted from `confirmTotpSetup` for reuse) — none of this
+  existed before this session.
+- The sidebar's hardcoded "Signed-in partner / Role" placeholder is replaced by
+  `components/admin-account-menu.tsx`, a real dropdown (profile/account-security/sign-out)
+  driven by the actual signed-in identity, on both desktop and the mobile drawer.
+- `Author.published` is now a computed-guard-plus-manual-override toggle (`updateAuthor` no
+  longer auto-computes it, but still rejects `published: true` while a required field is
+  blank), replacing T7.6's fully-computed rule.
+- Three real, previously-shipped bugs found and fixed in the same session (full detail in
+  `memory/known-bugs.md`): `resetAdminUserTotp` issued a 2FA reset link that could never be
+  completed for its one real use case (fixed via a new `reissueSetupToken` helper); the
+  dashboard's "Manage my account & 2FA" quick action pointed at a dead `/admin/setup-2fa`
+  link with no token (now points at `/admin/account`); three new client components importing
+  the `AdminRole` enum value directly from `@/generated/prisma/client` broke `/admin`'s
+  entire Turbopack compile (fixed via a new client-safe `lib/admin-role-options.ts`,
+  CLAUDE.md's client-bundle rule broadened to name this second failure route explicitly).
+- Two more small, no-design-decision fixes from the reachability audit: removed the sidebar's
+  dead "Performance" nav link (Milestone 9 hasn't shipped that screen); hardened Diagnostic
+  Configuration's High/Medium threshold lookup to key on `dimensionId: null` + fixed seed ids
+  instead of the editable `triagePriorityLevel` label.
+- Diagnostic Questions' reorder ▲/▼ buttons (user-reported "doesn't make sense," verified via
+  direct DOM state extraction to be logically correct the whole time) now show a visible
+  per-dimension header row in the table, so the boundary each button enforces is visible, not
+  just technically correct.
+  **Files Changed:** `prisma/schema.prisma` + 2 new migrations, `lib/auth/current-user.ts` (+
+  test, new), `lib/admin-team.ts` (+ test, new), `lib/admin-role-options.ts` (new), `lib/auth/
+backup-codes.ts` (+ test, new, extracted from `lib/auth/totp-setup.ts`), `lib/auth/
+change-password.ts` (+ test, new), `lib/auth/totp-setup.ts` (`reissueSetupToken` added),
+  `lib/admin-authors.ts` (+ test — `setAdminUserRole`, `resetAdminUserTotp` fix,
+  `setAdminUserActive` self-lockout guard, `updateAuthor` publish-toggle rewrite),
+  `app/api/admin/admin-users/[id]/{deactivate,reactivate,reset-2fa,reset-password}/route.ts`
+  (Owner guard added), `app/api/admin/admin-users/[id]/role/route.ts` (new),
+  `app/api/admin/authors/[id]/route.ts` (permission check added), `app/api/admin/team/
+route.ts` (new), `app/api/admin/auth/{logout,change-password,reissue-2fa-setup,
+regenerate-backup-codes}/route.ts` (all new), `app/admin/(shell)/layout.tsx`,
+  `components/admin-mobile-sidebar.tsx`, `components/admin-account-menu.tsx` (new),
+  `components/admin-sidebar-nav.tsx` (Performance link removed), `app/admin/(shell)/account/`
+  (new, page + form), `app/admin/(shell)/team/page.tsx`, `.../team/[id]/page.tsx`, `.../team/
+[id]/author-editor-form.tsx`, `.../team/[id]/admin-user-actions-panel.tsx`, `.../team/new/`
+  (new, page + form), `app/admin/(shell)/page.tsx` (dead quick-action link fixed),
+  `app/admin/(shell)/diagnostic-configuration/configuration-client.tsx` (fixed-id threshold
+  lookup), `app/admin/(shell)/diagnostic-questions/questions-list-client.tsx` (dimension
+  grouping), `docs/features/admin-authentication.md`, `docs/features/content-management-
+admin.md`, `CLAUDE.md` (client-bundle rule broadened), `memory/decision-log.md`,
+  `memory/technical-debt.md`, `memory/known-bugs.md`.
+  **Related Feature:** `docs/features/admin-authentication.md`, `docs/features/content-
+management-admin.md`.
+  **Notes:** Verified via Playwright against the live dev server (real Brevo email sent, real
+  DB writes) using one disposable test account (never a real named partner, since dev/prod
+  share one database) — left deactivated and unpublished afterward rather than hard-deleted, to
+  avoid a raw DB mutation outside the app's own tooling. Full quality gate
+  (lint/format/typecheck/test, 387 tests) passing at completion.
+
+---
+
 ## 2026-09-12 (T07-05 follow-up, session 60)
 
 **Task:** T7.5 follow-up — allow editing an already-live landing page, not just creating one

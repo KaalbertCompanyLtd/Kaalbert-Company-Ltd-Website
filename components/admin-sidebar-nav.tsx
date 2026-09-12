@@ -10,6 +10,12 @@ import { cn } from "@/lib/utils";
  * ui/mockups/g-admin-content/admin-dashboard.html (screen-inventory.md #25) — no feature doc
  * fixes these paths yet, since each section's own admin task (Milestones 7/8) owns its real
  * screen. Only "/admin" (Dashboard) resolves to a real page in this task.
+ *
+ * **Real bug found and fixed at session 60**: the mockup's own "Bonus" section listed
+ * "Performance" pointing at `/admin/performance`, a route Milestone 9 hasn't built yet — every
+ * signed-in partner saw a permanently dead link the whole time. Removed until Milestone 9
+ * actually ships that screen; re-add it as part of that milestone's own first task, not
+ * before.
  */
 const NAV_SECTIONS = [
   {
@@ -34,10 +40,6 @@ const NAV_SECTIONS = [
       { name: "Site Settings", href: "/admin/site-settings" },
       { name: "Subscribers", href: "/admin/subscribers" },
     ],
-  },
-  {
-    label: "Bonus",
-    items: [{ name: "Performance", href: "/admin/performance" }],
   },
 ] as const;
 

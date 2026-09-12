@@ -1,8 +1,8 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 
-import { SESSION_COOKIE_NAME, verifySession } from "@/lib/auth/session";
 import { getAuthorIdForAdminUser, getAuthorList } from "@/lib/admin-authors";
+import { getCurrentAdminUser, isOwner } from "@/lib/auth/current-user";
+import { AdminRole } from "@/generated/prisma/client";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -19,26 +19,36 @@ export const dynamic = "force-dynamic";
  * `ui/screen-inventory.md` #33a ("Team list"), inferred from #26's `AdminDataTable` pattern
  * — 5 rows today, no pagination needed. Resolves the signed-in partner's own `author` row
  * (if any) to mark it "(you)" — `content-management-admin.md`'s "the normal path is
- * self-service" — but every row links to the same editor regardless: no role-based
- * restriction gates opening someone else's entry (a deliberate call, not an oversight — see
- * `memory/decision-log.md`, T7.6).
+ * self-service" — but every row links to the same editor regardless: opening someone else's
+ * entry is always allowed, `[id]/page.tsx` itself decides read-only vs. editable (session 60
+ * — see `memory/decision-log.md`, superseding T7.6's "no role gate at all").
  */
 export default async function TeamListPage() {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
-  const session = token ? await verifySession(token) : null;
+  const currentUser = await getCurrentAdminUser();
   const [authors, ownAuthorId] = await Promise.all([
     getAuthorList(),
-    session ? getAuthorIdForAdminUser(session.adminUserId) : Promise.resolve(null),
+    currentUser ? getAuthorIdForAdminUser(currentUser.id) : Promise.resolve(null),
   ]);
+  const viewerIsOwner = isOwner(currentUser);
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-h2 text-primary font-bold">Team</h1>
-        <p className="text-body text-muted-foreground mt-1">
-          {authors.length} partner{authors.length === 1 ? "" : "s"}. Open your own entry to edit it
-          yourself, or another partner&apos;s with the firm&apos;s own sign-off.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-h2 text-primary font-bold">Team</h1>
+          <p className="text-body text-muted-foreground mt-1">
+            {authors.length} partner{authors.length === 1 ? "" : "s"}. Open your own entry to edit
+            it yourself, or another partner&apos;s to view it.
+          </p>
+        </div>
+        {viewerIsOwner && (
+          <Link
+            href="/admin/team/new"
+            className="bg-primary text-primary-foreground hover:bg-pine-700 inline-flex w-fit shrink-0 items-center justify-center rounded-sm px-5 py-2.5 text-sm font-semibold transition-colors"
+          >
+            Add partner
+          </Link>
+        )}
       </div>
 
       <div className="border-border overflow-x-auto rounded-md border">
@@ -50,6 +60,7 @@ export default async function TeamListPage() {
               <TableHead>Practice area</TableHead>
               <TableHead>Public profile</TableHead>
               <TableHead>Login</TableHead>
+              <TableHead>Role</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -79,6 +90,15 @@ export default async function TeamListPage() {
                     <Badge className="bg-pine-500 text-primary-foreground">Active</Badge>
                   ) : (
                     <Badge variant="outline">Deactivated</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {author.adminUserRole === null ? (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  ) : author.adminUserRole === AdminRole.OWNER ? (
+                    <Badge className="bg-brass-500 text-primary">Owner</Badge>
+                  ) : (
+                    <Badge variant="outline">Partner</Badge>
                   )}
                 </TableCell>
               </TableRow>

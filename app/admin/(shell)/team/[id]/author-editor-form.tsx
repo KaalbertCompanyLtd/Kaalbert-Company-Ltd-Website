@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 /** First-and-second-word initials, matching `lib/about.ts`'s `getInitials` exactly — not
@@ -20,15 +21,25 @@ function getInitials(name: string): string {
 }
 
 /**
- * `published` is never a directly-editable field here — it's a computed, read-only badge
- * (`lib/admin-authors.ts`'s `updateAuthor` computes it from name/practiceArea/
- * personalStatement) — reflects what the *next save* would produce given the fields as
- * currently typed, so a partner sees the consequence of leaving something blank before they
- * save, not only after. Reuses `AdminImageUploadButton` (T7.2) as-is for the photo field —
- * confirmed still the right mechanism at T7.5 (that task needed a genuinely separate
- * non-image pipeline for a PDF download, but a partner photo is a real image).
+ * `published` was a computed, read-only badge until session 60 — now a real `Switch` the
+ * viewer controls directly (`lib/admin-authors.ts`'s `updateAuthor` still rejects turning it
+ * on while a required field is blank, but no longer forces it off just because a field went
+ * blank, and no longer blocks turning it off for a partner who already has articles — see
+ * that function's own doc-comment). Reuses `AdminImageUploadButton` (T7.2) as-is for the
+ * photo field — confirmed still the right mechanism at T7.5.
+ *
+ * `readOnly` added at session 60 — true when the viewer is neither this profile's own
+ * partner nor an Owner (`lib/auth/current-user.ts`'s `canEditAuthorProfile`); the page itself
+ * decides this server-side, this component just renders the disabled state rather than a
+ * dead-end form that would only reject on submit.
  */
-export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
+export function AuthorEditorForm({
+  initial,
+  readOnly = false,
+}: {
+  initial: AuthorEditData;
+  readOnly?: boolean;
+}) {
   const [name, setName] = useState(initial.name);
   const [photoUrl, setPhotoUrl] = useState(initial.photoUrl);
   const [title, setTitle] = useState(initial.title);
@@ -41,7 +52,7 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [published, setPublished] = useState(initial.published);
 
-  const wouldPublish = Boolean(name.trim() && practiceArea.trim() && personalStatement.trim());
+  const canPublish = Boolean(name.trim() && practiceArea.trim() && personalStatement.trim());
 
   async function handleSave() {
     setStatus("saving");
@@ -60,6 +71,7 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
           personalStatement,
           bio,
           order,
+          published,
         }),
       });
       const data: { status: string; message?: string } = await response.json();
@@ -69,7 +81,6 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
         return;
       }
       setStatus("idle");
-      setPublished(wouldPublish);
     } catch {
       setStatus("error");
       setErrorMessage("Something went wrong — check your connection and try again.");
@@ -78,6 +89,12 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
 
   return (
     <div className="border-border bg-card flex flex-col gap-5 rounded-md border p-6">
+      {readOnly && (
+        <p className="border-border bg-muted text-muted-foreground rounded-sm border p-3 text-sm">
+          You can view this profile, but only an Owner or the partner themselves can edit it.
+        </p>
+      )}
+
       {status === "error" && errorMessage && (
         <p
           role="alert"
@@ -87,15 +104,21 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
         </p>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <Switch
+          checked={published}
+          disabled={readOnly || (!published && !canPublish)}
+          onCheckedChange={(checked) => setPublished(checked === true)}
+          aria-label={published ? "Unpublish this profile" : "Publish this profile"}
+        />
         {published ? (
           <Badge className="bg-pine-500 text-primary-foreground">Published</Badge>
         ) : (
           <Badge variant="outline">Not published</Badge>
         )}
-        {wouldPublish !== published && (
+        {!canPublish && (
           <span className="text-muted-foreground text-xs">
-            Saving now would {wouldPublish ? "publish" : "unpublish"} this profile.
+            Name, practice area, and personal statement are all required to publish.
           </span>
         )}
       </div>
@@ -107,29 +130,36 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
             {getInitials(name || "?")}
           </AvatarFallback>
         </Avatar>
-        <div className="flex flex-col gap-1.5">
-          <AdminImageUploadButton
-            onUploaded={setPhotoUrl}
-            label={photoUrl ? "Replace photo" : "Upload a photo"}
-          />
-          {photoUrl && (
-            <button
-              type="button"
-              onClick={() => setPhotoUrl(null)}
-              className="text-muted-foreground w-fit text-xs hover:underline"
-            >
-              Remove photo
-            </button>
-          )}
-          <p className="text-muted-foreground text-xs">
-            No photo yet? An initials avatar shows in its place — never a placeholder image.
-          </p>
-        </div>
+        {!readOnly && (
+          <div className="flex flex-col gap-1.5">
+            <AdminImageUploadButton
+              onUploaded={setPhotoUrl}
+              label={photoUrl ? "Replace photo" : "Upload a photo"}
+            />
+            {photoUrl && (
+              <button
+                type="button"
+                onClick={() => setPhotoUrl(null)}
+                className="text-muted-foreground w-fit text-xs hover:underline"
+              >
+                Remove photo
+              </button>
+            )}
+            <p className="text-muted-foreground text-xs">
+              No photo yet? An initials avatar shows in its place — never a placeholder image.
+            </p>
+          </div>
+        )}
       </div>
 
       <Field>
         <FieldLabel htmlFor="authorName">Name</FieldLabel>
-        <Input id="authorName" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          id="authorName"
+          value={name}
+          disabled={readOnly}
+          onChange={(e) => setName(e.target.value)}
+        />
       </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -137,13 +167,19 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
           <FieldLabel htmlFor="authorTitle">
             Title <span className="text-muted-foreground font-normal">e.g. Lead Partner</span>
           </FieldLabel>
-          <Input id="authorTitle" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input
+            id="authorTitle"
+            value={title}
+            disabled={readOnly}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor="authorPracticeArea">Practice area</FieldLabel>
           <Input
             id="authorPracticeArea"
             value={practiceArea}
+            disabled={readOnly}
             onChange={(e) => setPracticeArea(e.target.value)}
           />
         </Field>
@@ -159,6 +195,7 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
         <Input
           id="authorCredentials"
           value={credentials}
+          disabled={readOnly}
           onChange={(e) => setCredentials(e.target.value)}
         />
       </Field>
@@ -172,13 +209,20 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
           id="authorPersonalStatement"
           rows={4}
           value={personalStatement}
+          disabled={readOnly}
           onChange={(e) => setPersonalStatement(e.target.value)}
         />
       </Field>
 
       <Field>
         <FieldLabel htmlFor="authorBio">Bio</FieldLabel>
-        <Textarea id="authorBio" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
+        <Textarea
+          id="authorBio"
+          rows={3}
+          value={bio}
+          disabled={readOnly}
+          onChange={(e) => setBio(e.target.value)}
+        />
       </Field>
 
       <Field>
@@ -190,14 +234,17 @@ export function AuthorEditorForm({ initial }: { initial: AuthorEditData }) {
           id="authorOrder"
           type="number"
           value={order}
+          disabled={readOnly}
           onChange={(e) => setOrder(Number(e.target.value))}
           className="max-w-[160px]"
         />
       </Field>
 
-      <Button type="button" disabled={status === "saving"} onClick={handleSave} className="w-fit">
-        Save
-      </Button>
+      {!readOnly && (
+        <Button type="button" disabled={status === "saving"} onClick={handleSave} className="w-fit">
+          Save
+        </Button>
+      )}
     </div>
   );
 }

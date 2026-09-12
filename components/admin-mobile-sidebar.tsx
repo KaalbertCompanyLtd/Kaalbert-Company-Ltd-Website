@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Menu, X } from "lucide-react";
 
+import type { CurrentAdminUser } from "@/lib/auth/current-user";
+import { AdminAccountMenu } from "@/components/admin-account-menu";
 import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
 import {
   Dialog,
@@ -21,8 +23,12 @@ import {
  * nav (CLAUDE.md's "Responsive is built in from the first implementation" rule), mirrored to
  * the opposite edge since this panel is standing in for a left-docked sidebar rather than a
  * top nav bar.
+ *
+ * `currentUser` added at session 60 — renders the same real `AdminAccountMenu` the desktop
+ * sidebar uses inside this drawer, replacing this file's own former hardcoded "Signed-in
+ * partner / Role" placeholder, rather than duplicating a second, separate account block.
  */
-export function AdminMobileSidebar() {
+export function AdminMobileSidebar({ currentUser }: { currentUser: CurrentAdminUser | null }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -64,12 +70,7 @@ export function AdminMobileSidebar() {
               </DialogClose>
             </div>
             <AdminSidebarNav onNavigate={() => setOpen(false)} />
-            <div className="border-pine-500 text-caption text-primary-foreground/80 shrink-0 border-t px-6 py-4">
-              <strong className="text-primary-foreground block text-[0.875rem]">
-                Signed-in partner
-              </strong>
-              Role
-            </div>
+            {currentUser && <AdminAccountMenu currentUser={currentUser} />}
           </DialogPrimitive.Popup>
         </DialogPortal>
       </Dialog>

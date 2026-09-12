@@ -43,8 +43,13 @@ export function ConfigurationClient({
   const weightTotal = weights.reduce((sum, w) => sum + (w.weight || 0), 0);
   const balanced = weightTotal === 100;
 
-  const highThreshold = overallThresholds.find((t) => t.triagePriorityLevel === "High");
-  const mediumThreshold = overallThresholds.find((t) => t.triagePriorityLevel === "Medium");
+  // Keyed by `prisma/seed.ts`'s own fixed ids for these two rows (1 = High, 2 = Medium), not
+  // by the free-text `triagePriorityLevel` label those rows currently happen to hold — found
+  // and fixed at session 60: matching on the editable label meant a future save that renamed
+  // either value would silently blank this panel, with nothing to catch it (still keyed by
+  // `dimensionId: null` too, so this can't collide with any per-dimension row).
+  const highThreshold = overallThresholds.find((t) => t.dimensionId === null && t.id === 1);
+  const mediumThreshold = overallThresholds.find((t) => t.dimensionId === null && t.id === 2);
 
   async function handleSaveConfiguration() {
     setConfigStatus("saving");

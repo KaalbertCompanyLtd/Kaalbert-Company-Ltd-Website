@@ -152,17 +152,31 @@ memory/                 # persistent knowledge — see Knowledge Management Resp
   (offers, capabilities, our-method, about, contact, insights, etc.) as it's built, not
   discovered again at each task's own deploy.
 - **Never let a `"use client"` component import a value (not just a type) from a `lib/`
-  file that also imports `@/lib/prisma`.** Doing so silently breaks Turbopack's dev
-  compile — the affected route 500s with a misleading `ENOENT: ...build-manifest.json`
-  error on its first compile attempt (never a real bundling error naming the actual cause),
-  and keeps failing on every later request until the whole dev server restarts (hit for
-  real at T3.4 — see `memory/known-bugs.md`). A `type`-only import from the same file is
-  safe (erased at compile time); any real value import is not, because it pulls the whole
-  module — including its `@/lib/prisma` chain, which builds a real `PrismaClient` at module
-  scope — into the client bundle. When a client component needs option/lookup data that
-  lives near a DB-querying `lib/` module, put that client-safe data in its own file
-  (`lib/<name>-options.ts` or similar) with zero import of `@/lib/prisma`, and have the
-  DB-querying file import/re-export shared types from there instead of the other way round.
+  file that also imports `@/lib/prisma`, or from `@/generated/prisma/client` directly.**
+  Doing so silently breaks Turbopack's dev compile, in one of two ways depending on the route
+  in: importing a `lib/` file that itself imports `@/lib/prisma` 500s the affected route with
+  a misleading `ENOENT: ...build-manifest.json` error on its first compile attempt (never a
+  real bundling error naming the actual cause), and keeps failing on every later request
+  until the whole dev server restarts (hit for real at T3.4 — see `memory/known-bugs.md`);
+  importing a Prisma enum (e.g. `AdminRole`) directly from `@/generated/prisma/client` panics
+  Turbopack with an equally misleading generic error — "the chunking context (unknown) does
+  not support external modules (request: node:module)" — naming neither the enum nor the
+  importing file, and takes down every route sharing that bundle, not just the one screen
+  that used the enum (hit for real at session 60, importing `AdminRole` for a Role `<Select>`
+  in three separate client components — see `memory/known-bugs.md`). Both routes have the
+  same root cause: the import pulls a whole server-only module — Node built-ins and, in the
+  `@/lib/prisma` case, a real `PrismaClient` built at module scope — into the client bundle.
+  A `type`-only import from either source is always safe (erased at compile time); any real
+  value import is not. When a client component needs option/lookup data (a lookup table, an
+  enum's values/labels) that lives near a DB-querying `lib/` module or a Prisma enum, put
+  that client-safe data in its own file (`lib/<name>-options.ts` or similar) with zero import
+  of `@/lib/prisma` or `@/generated/prisma/client`, and have the DB-querying/enum-defining
+  side import/re-export shared types from there instead of the other way round —
+  `lib/enquiry-list-options.ts` and `lib/admin-role-options.ts` are the two existing examples
+  of this pattern to copy. Because neither failure mode surfaces via lint, `tsc`, or a mocked
+  Vitest run — only a real browser load of the affected route does — this is exactly the kind
+  of thing the Task Completion Checklist's Playwright-verification step exists to catch;
+  don't treat a clean quality-gate run as proof this class of bug isn't present.
 - **Never let a `package.json` lifecycle script (`prepare`, `postinstall`, etc.) assume
   `.git` exists.** Railway's build container is populated from an uploaded build context, not
   a git checkout — there is no `.git` directory inside it. A `prepare` script that runs a bare

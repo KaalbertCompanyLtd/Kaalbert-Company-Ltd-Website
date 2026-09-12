@@ -261,12 +261,20 @@ model FirmStatement {
 /// placeholder image standing in for a real one), swapped for the real photo the moment one
 /// is uploaded — no publish-state change required. `credentials` is similarly nullable where
 /// a partner has no formal designation to state yet — never fabricated to fill the field,
-/// rendered only when present. `published` gates on exactly three required fields (name,
-/// practiceArea, personalStatement) per content-management-admin.md's publish-gating rule and
-/// about-and-partners-page.md's own edge case — `bio` is deliberately NOT publish-gating
-/// (corrected at T7.6, session 49: this doc-comment previously named it as a fourth gating
-/// field, which neither feature doc ever did; `bio` has no live public reader yet at all,
-/// per its own note below, so gating publish on it would have blocked every real profile).
+/// rendered only when present. `bio` is deliberately NOT publish-gating (corrected at T7.6,
+/// session 49: an earlier version of this doc-comment named it as a fourth gating field,
+/// which neither feature doc ever did; `bio` has no live public reader yet at all, per its
+/// own note below, so gating publish on it would have blocked every real profile).
+///
+/// `published` was originally fully computed (true the instant name/practiceArea/
+/// personalStatement were all filled, false the instant any went blank) — revised at session
+/// 60 to a **computed guard plus a manual override**: `lib/admin-authors.ts`'s `updateAuthor`
+/// still rejects `published: true` while any of those three required fields is blank (the
+/// original gate survives), but no longer force-sets the value from field completeness on
+/// every save. An Owner (or the partner themselves, for their own profile) now explicitly
+/// toggles it once the guard is satisfied, so a complete profile can be intentionally held
+/// back or taken down without blanking real content — the gap that prompted this: there was
+/// no way to do either before.
 ///
 /// `order` follows `Capability.order`/`MethodStage.order`'s naming precedent (not named in
 /// the feature doc) — needed to render exactly one partner as the page's single featured
@@ -936,12 +944,13 @@ model LandingPage {
 /// doc-comment already describes (not wired to a real relation by this task — a future
 /// content-admin task's job, not this one's).
 ///
-/// `role` is a plain string, not a Prisma enum: neither `admin-authentication.md` nor
-/// `content-management-admin.md` enumerates a fixed, closed set of admin roles ("a partner
-/// with the right role" is used descriptively throughout, never as a literal list) — same
-/// precedent as `DiagnosticThreshold.triagePriorityLevel` above. Defaults to `"partner"`, the
-/// normal case; a richer role vocabulary, if the firm ever needs one, is an admin-editable/
-/// seed-time concern, not a schema one.
+/// `role` is a real `AdminRole` enum (`OWNER`/`PARTNER`) — reversed from this field's
+/// original plain-string reasoning (session 60): that reasoning held only while no feature
+/// doc defined a closed vocabulary to gate on; a real one now exists (`docs/features/
+/// admin-authentication.md`'s Owner/Partner permission split, added session 60 after `role`
+/// was found to be pure unused scaffolding — see `memory/decision-log.md`), and a closed
+/// 2-value set is exactly the case `EnquiryStatus` already sets the enum precedent for.
+/// Defaults to `PARTNER`, the normal case for a newly invited account.
 ///
 /// `passwordHash` is produced by `lib/auth/password.ts` (`bcryptjs` — a vetted, pure-JS
 /// bcrypt implementation, chosen over the native-binding `bcrypt`/`argon2` packages
@@ -1024,7 +1033,7 @@ model AdminUser {
   name                        String
   email                       String            @unique
   passwordHash                String            @map("password_hash")
-  role                        String            @default("partner")
+  role                        AdminRole         @default(PARTNER)
   /// AES-256-GCM ciphertext (iv/authTag/ciphertext, base64-joined) — never the raw secret.
   /// See model doc-comment.
   totpSecret                  String?           @map("totp_secret")
@@ -1165,6 +1174,13 @@ model AdminLoginAttempt {
 /// rule) — so it's throttled by `lib/auth/rate-limit.ts`'s separate `assertNotFlooded` (total
 /// attempts in a window, not failures) instead, guarding against a real account being
 /// flooded with reset emails rather than against credential-guessing.
+///
+/// `change_password_confirm` added at session 60 for `lib/auth/change-password.ts`'s
+/// self-service, in-session "change my password" flow (`changeOwnPassword`) — a real
+/// guessing surface exactly like `password_reset_confirm` (a submitted current-password
+/// value, throttled by `assertNotRateLimited`'s failure-counting logic), distinct from it
+/// because the two flows verify different things (a reset token vs. a live session's own
+/// current password) and can legitimately fail independently of one another.
 enum AdminLoginAttemptKind {
   password
   totp
@@ -1172,6 +1188,19 @@ enum AdminLoginAttemptKind {
   backup_code
   password_reset_request
   password_reset_confirm
+  change_password_confirm
+}
+
+/// `docs/features/admin-authentication.md`'s Owner/Partner permission split, added session
+/// 60 to close a real gap: `AdminUser.role` had existed since T6.1 as a plain string but was
+/// never read by a single authorization check anywhere in the app (see `memory/decision-
+/// log.md`'s T7.6 entry) — any logged-in partner could edit, deactivate, or reset any other
+/// partner's account. OWNER can invite/create partners, manage any login (deactivate/
+/// reactivate/reset 2FA/reset password/change role), edit any partner's public profile, and
+/// toggle any profile's published state. PARTNER can only manage their own login and profile.
+enum AdminRole {
+  OWNER
+  PARTNER
 }
 
 /// docs/features/measurement-and-attribution.md "Data requirements" — T5.4. First-touch

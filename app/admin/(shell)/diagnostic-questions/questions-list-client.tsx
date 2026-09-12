@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 
 import type { DiagnosticQuestionListRow } from "@/lib/admin-diagnostic";
@@ -133,61 +133,81 @@ export function QuestionsListClient({
               const nextSameDim =
                 index < questions.length - 1 &&
                 questions[index + 1].dimensionId === question.dimensionId;
+              // Session 60 fix: the ▲/▼ disabled state was always correct per-dimension
+              // (first-in-dimension has only "up" disabled, last has only "down" disabled),
+              // but nothing in the table showed *why* — five dimensions of different sizes
+              // read as one undifferentiated list, so a correctly-disabled button at a
+              // dimension boundary looked arbitrary. This header row makes each dimension's
+              // own boundary visible, so the reorder limits it explains are the same ones the
+              // buttons above already enforce.
+              const isNewDimensionGroup = !prevSameDim;
               return (
-                <TableRow key={question.id} className={question.active ? "" : "opacity-50"}>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <button
-                        type="button"
-                        disabled={!prevSameDim || busyId === question.id}
-                        onClick={() => move(question, "up")}
-                        aria-label="Move up"
-                        className="border-border bg-card text-muted-foreground h-[18px] w-[22px] rounded-[3px] border text-[0.625rem] leading-none disabled:cursor-not-allowed disabled:opacity-30"
+                <Fragment key={question.id}>
+                  {isNewDimensionGroup && (
+                    <TableRow className="bg-muted/60">
+                      <TableCell
+                        colSpan={6}
+                        className="text-muted-foreground py-1.5 text-xs font-semibold tracking-wide uppercase"
                       >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!nextSameDim || busyId === question.id}
-                        onClick={() => move(question, "down")}
-                        aria-label="Move down"
-                        className="border-border bg-card text-muted-foreground h-[18px] w-[22px] rounded-[3px] border text-[0.625rem] leading-none disabled:cursor-not-allowed disabled:opacity-30"
+                        {question.dimensionName}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow className={question.active ? "" : "opacity-50"}>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          type="button"
+                          disabled={!prevSameDim || busyId === question.id}
+                          onClick={() => move(question, "up")}
+                          aria-label="Move up"
+                          className="border-border bg-card text-muted-foreground h-[18px] w-[22px] rounded-[3px] border text-[0.625rem] leading-none disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!nextSameDim || busyId === question.id}
+                          onClick={() => move(question, "down")}
+                          aria-label="Move down"
+                          className="border-border bg-card text-muted-foreground h-[18px] w-[22px] rounded-[3px] border text-[0.625rem] leading-none disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-[360px] whitespace-normal">
+                      {question.promptText}
+                      {question.isPlaceholder && (
+                        <Badge variant="outline" className="ml-2">
+                          Placeholder
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {question.dimensionName}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs uppercase">
+                      {question.responseType}
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={question.active}
+                        disabled={busyId === question.id}
+                        onCheckedChange={() => toggleActive(question)}
+                        aria-label={`${question.active ? "Deactivate" : "Activate"} question`}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link
+                        href={`/admin/diagnostic-questions/${question.id}`}
+                        className="text-primary text-sm font-semibold hover:underline"
                       >
-                        ▼
-                      </button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-w-[360px] whitespace-normal">
-                    {question.promptText}
-                    {question.isPlaceholder && (
-                      <Badge variant="outline" className="ml-2">
-                        Placeholder
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {question.dimensionName}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs uppercase">
-                    {question.responseType}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={question.active}
-                      disabled={busyId === question.id}
-                      onCheckedChange={() => toggleActive(question)}
-                      aria-label={`${question.active ? "Deactivate" : "Activate"} question`}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Link
-                      href={`/admin/diagnostic-questions/${question.id}`}
-                      className="text-primary text-sm font-semibold hover:underline"
-                    >
-                      Edit
-                    </Link>
-                  </TableCell>
-                </TableRow>
+                        Edit
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
               );
             })}
           </TableBody>

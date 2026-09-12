@@ -28,12 +28,22 @@ const STAT_CARDS = [
   { key: "publishedArticlesCount", label: "Published Articles" },
 ] as const;
 
-/** Every href below now resolves to a real, built page (Milestone 7 and T8.2 both shipped). */
+/**
+ * Every href below now resolves to a real, built page (Milestone 7 and T8.2 both shipped).
+ *
+ * **Real bug found and fixed at session 60**: "Manage my account & 2FA" pointed at
+ * `/admin/setup-2fa` with no `?token=` — that page has no session-based path at all
+ * (`lib/auth/totp-setup.ts`'s `resolvePendingTotpSetup` returns `null`, and the page renders
+ * its generic "this link is no longer valid" state, for any visit without a real, freshly
+ * issued token). A logged-in partner clicking this from the dashboard landed on a dead link,
+ * not a login-recovery flow they could ever complete. Now points at `/admin/account`, the
+ * real self-service page this same session built.
+ */
 const QUICK_ACTIONS = [
   { label: "Publish a new Insights article", href: "/admin/articles" },
   { label: "Update a core offer's fee band", href: "/admin/offers" },
   { label: "Review flagged enquiries", href: "/admin/enquiries" },
-  { label: "Manage my account & 2FA", href: "/admin/setup-2fa" },
+  { label: "Manage my account & 2FA", href: "/admin/account" },
 ] as const;
 
 export default async function AdminDashboardPage() {
