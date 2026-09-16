@@ -13,9 +13,9 @@ protection, not a fix for anything broken) against the real DNS-cutover risk and
 skip it for now; not a gap, a decision (Section 3). **The Brevo sender is now domain-
 authenticated and switched to `info@kaalbert.com`** (deliberately not `no-reply@` — see
 Section 6 for the reasoning), verified end-to-end via a real password-reset send. **A
-nonce-based Content-Security-Policy is now built and verified locally** (Section 4) — built
-and committed, but not live until pushed (see Section 4's own note on why). Update this
-file the same way
+nonce-based Content-Security-Policy and the `www.kaalbert.com` → apex redirect are both live
+and confirmed** (Section 4) — pushed by the user and re-verified directly against
+production. Update this file the same way
 `docs/user-guide.md` is updated — incrementally, the session something changes, never as a
 big end-of-project catch-up (`memory/decision-log.md`'s incremental-docs decision applies to
 this file too, even though it isn't one of the two formal Firm-Facing Documentation
@@ -227,11 +227,11 @@ servers.com` nameservers): change the nameservers to the two Cloudflare assigns 
   genuinely new third-party domain added via GTM later (not just a new trigger/event using
   already-allowed hosts) would still need `connect-src`/`img-src`/`frame-src` updated here,
   since `strict-dynamic` only covers script loading, not the network calls those scripts
-  make. **Not live yet** — built and committed locally, but this session cannot `git push`
-  (CLAUDE.md's own blocked-by-design rule); the developer needs to push for it to actually
-  deploy, then it's worth a quick live re-check the same way (Playwright, console open,
-  same page list) since production is a materially different environment (real GTM/GA4
-  traffic, not a dev-mode React build).
+  make. **Live and confirmed, session 62** — pushed by the user, then re-verified directly
+  against production (not just the local dev pass): `curl` confirms the real CSP header
+  (with the dev-only `'unsafe-eval'` correctly absent), and a real Chrome pass with the
+  console open across home, an Insights article, the diagnostic, and `/admin/login` showed
+  zero console messages of any kind on every page.
 - **`www.kaalbert.com` → apex redirect — built and verified, session 62.** User added
   `www.kaalbert.com` as a second Railway custom domain (`railway domain` shows it `ACTIVE`
   with its own valid Railway-issued Let's Encrypt cert) plus the matching CNAME at the
@@ -242,10 +242,11 @@ servers.com` nameservers): change the nameservers to the two Cloudflare assigns 
   redirect, per RFC 7538. Verified locally via a spoofed `Host` header (`curl -H "Host:
 www.kaalbert.com" ...`): correct `308` status, correct `location` with path/query
   preserved, and confirmed normal requests and the admin-auth redirect are both unaffected.
-  **Not live yet** — same as CSP above, committed locally, needs a push. Once pushed, a
-  real end-to-end check (visit `https://www.kaalbert.com/some-page` in a real browser,
-  confirm it lands on the apex URL with no certificate warning) is worth doing, since a
-  spoofed local `Host` header doesn't exercise the real DNS/TLS path.
+  **Live and confirmed, session 62** — pushed by the user, then re-verified for real:
+  `curl https://www.kaalbert.com/...` returns a `308` with the correct `location`, the live
+  TLS cert on `www.kaalbert.com` is valid (`CN=www.kaalbert.com`), and a real Chrome
+  navigation to `https://www.kaalbert.com/` landed cleanly on `https://kaalbert.com/` with no
+  certificate warning and a fully rendered page.
 
 **Real gaps — still your next scoped piece of work, deliberately not done this session:**
 

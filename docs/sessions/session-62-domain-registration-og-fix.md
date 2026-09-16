@@ -188,16 +188,16 @@ cert. Cloudflare (ADR 0004) is deliberately deferred at the user's request — n
 revisit without a new prompt. Brevo is now domain-authenticated and sending from
 `info@kaalbert.com`, verified end-to-end in production. GA4's Data Stream URL is corrected to
 the real domain, and `docs/user-guide.md` now has real external-tool monitoring
-walkthroughs. Two code changes are built, verified locally, and committed, but **not live**
-— this session cannot `git push` (blocked by design), so the developer needs to push both
-before they take effect: **(1)** a nonce-based Content-Security-Policy, verified end-to-end
-via a real Playwright pass (home/GTM/GA4, an Insights article, the diagnostic, the contact
-form, a full admin login through the 2FA QR-code screen — zero violations); **(2)** the
-`www.kaalbert.com` → apex redirect, verified via a spoofed `Host` header. Once pushed, both
-are worth a quick real-browser re-check (`https://www.kaalbert.com/` should land cleanly on
-apex with no cert warning; the same CSP page list with the console open). This is otherwise a
-complete, closed session — every item the user raised this session has a stated final state,
-nothing left silently open.
+walkthroughs. **The user pushed this session's commits**, and both remaining code changes
+are now confirmed live via direct re-verification against production (not just the earlier
+local passes): **(1)** the nonce-based Content-Security-Policy — `curl` confirms the real
+header (dev-only `'unsafe-eval'` correctly absent), and a real Chrome pass with the console
+open across home, an Insights article, the diagnostic, and `/admin/login` showed zero
+console messages on any page; **(2)** the `www.kaalbert.com` → apex redirect — `curl`
+confirms the `308`/`location`, the live TLS cert on `www.kaalbert.com` is valid, and a real
+Chrome navigation to `https://www.kaalbert.com/` landed cleanly on `https://kaalbert.com/`
+with no certificate warning. This session is fully closed — every item the user raised has a
+confirmed-live final state, nothing left open or unverified.
 
 ## Blockers
 

@@ -37,10 +37,10 @@ the `www` redirect no longer needs to wait for Cloudflare; env-var table note up
 optional, not done" language corrected to reflect this is done).
 **Related Feature:** `memory/decision-log.md`'s session-62 canonical-domain decision (apex,
 not www) — this closes the one open follow-up that decision left.
-**Notes:** **Not live yet** — committed locally, needs a `git push` to deploy (this session
-can't push). Once pushed, worth a real browser check of `https://www.kaalbert.com/` (not
-just the local spoofed-`Host` test) to confirm no certificate warning and a clean landing on
-the apex URL.
+**Notes:** **Live and confirmed** — user pushed, then re-verified for real (not just the
+local spoofed-`Host` test): `curl` shows the correct `308`/`location` against production,
+the live `www.kaalbert.com` TLS cert is valid, and a real Chrome navigation landed cleanly
+on `https://kaalbert.com/` with no certificate warning.
 
 ---
 
@@ -134,11 +134,11 @@ here), `docs/vendor-operations-guide.md` (Section 4 rewritten: CSP moved from "r
 measurement container — the CSP's `strict-dynamic` design exists specifically to not break
 this), `docs/features/admin-authentication.md` (NFR-3 — the auth logic this change had to
 not regress).
-**Notes:** Built and committed locally, but **not live** — this session cannot `git push`
-(CLAUDE.md's blocked-by-design rule); the developer must push for it to deploy. Recommend a
-quick live re-verification the same way (Playwright, console open, same page list) once
-pushed, since production runs a real production React build (no dev-only `eval()` noise to
-account for) and real GTM/GA4 traffic at higher volume than a local dev pass exercises.
+**Notes:** **Live and confirmed** — user pushed, then re-verified directly against
+production: `curl` shows the real CSP header (dev-only `'unsafe-eval'` correctly absent,
+confirming a real production build), and a real Chrome pass with the console open across
+home, an Insights article, the diagnostic, and `/admin/login` showed zero console messages
+of any kind on any page.
 
 ---
 
