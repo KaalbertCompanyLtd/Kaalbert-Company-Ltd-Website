@@ -756,15 +756,89 @@ flow itself.
 ## What to monitor — the short list
 
 A quick-reference roll-up of every external account/dashboard this platform currently
-depends on:
+depends on. **None of this has an in-app dashboard yet** — Milestone 9 (Platform Performance
+Dashboards, see "What's coming next" below) is the not-yet-built bonus milestone that would
+eventually bring GA4/Meta/Google Ads/LinkedIn health into `/admin` itself. Until then, this
+is the whole picture, checked directly on each tool's own site — the walkthroughs below the
+table say exactly where to click.
 
-| System                | What it's for                                                                          | Where                 |
-| --------------------- | -------------------------------------------------------------------------------------- | --------------------- |
-| Google Tag Manager    | Container `GTM-PDGKRKRN` — all measurement tags                                        | tagmanager.google.com |
-| Google Analytics 4    | Property `G-9VX9GS5L0X` — conversion reporting                                         | analytics.google.com  |
-| Brevo                 | Transactional email (diagnostic summary emails)                                        | app.brevo.com         |
-| Railway               | Hosting, database, and the attribution-cleanup cron job                                | railway.app           |
-| Domain (kaalbert.com) | **Live** since 2026-09-16 — Cloudflare (CDN/edge) is a planned upgrade, not yet set up | registrar + Railway   |
+| System                | What it's for                                                                                                            | Where                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------ |
+| Google Tag Manager    | Container `GTM-PDGKRKRN` — all measurement tags                                                                          | tagmanager.google.com    |
+| Google Analytics 4    | Property `G-9VX9GS5L0X` — conversion reporting                                                                           | analytics.google.com     |
+| Brevo                 | Transactional email (diagnostic summaries, password resets, team invites)                                                | app.brevo.com            |
+| Railway               | Hosting, database, and the attribution-cleanup cron job                                                                  | railway.app              |
+| Domain (kaalbert.com) | **Live** since 2026-09-16. Cloudflare (CDN/edge) reviewed and deliberately not set up — the site works fully without it. | your registrar + Railway |
+
+### How to check each one yourself
+
+**Google Tag Manager — is the container actually publishing tags?**
+
+1. Go to tagmanager.google.com, sign in with `kaalbert.company@gmail.com`.
+2. Click into the **Kaalbert & Company Ltd** account, then the **kaalbert.com** container.
+3. The top of the workspace shows the currently published version number and its publish
+   date — if you (or a developer) just made a change and it isn't showing here yet, it isn't
+   live on the site regardless of what's saved in the workspace.
+4. Click **Preview** (top right) to open a live debug session against the real site — this
+   shows every tag that fires as you click around, in real time, and is the most reliable way
+   to confirm a specific tag actually works before trusting it.
+5. **Versions** tab (left sidebar) — a full history of every publish, who made it, and when;
+   useful if something breaks and you need to see what changed recently.
+
+**Google Analytics 4 — is data actually coming in?**
+
+1. Go to analytics.google.com, sign in with `kaalbert.company@gmail.com`.
+2. Select the **Kaalbert & Company Ltd** property (top left, if not already selected).
+3. **Reports → Realtime** (left sidebar) — shows visitors on the site right now and which
+   events they're triggering. The fastest way to confirm the six conversion events
+   (`diagnostic_started`, `diagnostic_completed`, `summary_requested`,
+   `checklist_downloaded`, `enquiry_submitted`, `whatsapp_opened`) are still firing after any
+   change to the site — do the action yourself (e.g. start the diagnostic) and watch it show
+   up here within seconds.
+4. **Admin → Data Streams → kaalbert.com** — a green "Data collection is active in the past
+   48 hours" banner is the simplest all-clear signal; if that banner ever turns into a
+   warning, something upstream (GTM, or the site itself) has stopped sending data.
+5. **Reports → Engagement → Conversions** — the same six events, but as a standing report
+   over any date range you choose, rather than only live traffic.
+
+**Brevo — is transactional email actually sending?**
+
+1. Go to app.brevo.com, sign in.
+2. **Transactional → Logs** (or **Statistics**, depending on Brevo's current menu naming) —
+   a list of every email this platform has sent (diagnostic summaries, password resets, team
+   invites), with delivery status per message (sent / delivered / opened / bounced). This is
+   the place to check first if a partner reports "the summary email never arrived."
+3. **Senders, Domains & Dedicated IPs → Senders** — confirm `info@kaalbert.com` still shows
+   as a verified sender. If it ever shows unverified, every transactional email on the site
+   will start failing silently (the visitor's own action, like requesting a diagnostic
+   summary, still completes — the email just never arrives).
+4. **Senders, Domains & Dedicated IPs → Domains** — confirm `kaalbert.com` still shows
+   Authenticated. Domain authentication can be invalidated by a DNS change elsewhere (e.g. if
+   the SPF/DKIM records ever get edited or removed) — this screen is where you'd see that.
+
+**Railway — is the site actually deployed and healthy?**
+
+1. Go to railway.app, sign in, open the **kaalbert-web** project.
+2. The **kaalbert-web** service's main view shows current status (Online/Building/Crashed)
+   and the live URL. **Deployments** tab — full history of every deploy, which commit it
+   built from, and whether it succeeded; click into any deployment to see its build/runtime
+   logs, the first place to look if the site is behaving unexpectedly after a recent change.
+3. The **attribution-cleanup** service (separate from `kaalbert-web`, same project) — its own
+   Deployments/logs view shows whether the nightly retention job has actually been running;
+   repeated failures here mean old attribution data silently stops being cleaned up (not a
+   visible problem to visitors, but a real one if left unnoticed for months).
+4. **Postgres** service — shows database status and storage usage; not something that needs
+   routine checking, but worth knowing where it lives if a developer ever asks.
+
+**Domain — is it still registered and paid for?**
+
+1. Log into whichever registrar `kaalbert.com` was purchased through (Namecheap, based on
+   its current nameservers).
+2. Check the **expiration date** and whether **auto-renew** is turned on. A lapsed domain
+   registration is the single most disruptive, entirely avoidable failure this platform could
+   have — it would take the live site, all email, and everything else down at once. Worth a
+   calendar reminder ahead of the renewal date even with auto-renew on, in case a payment
+   method on file has expired.
 
 ## What's coming next
 

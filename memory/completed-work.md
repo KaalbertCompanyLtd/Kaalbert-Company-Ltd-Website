@@ -14,6 +14,49 @@ Protocol):
 
 ---
 
+## 2026-09-16 (session 62, continued) — Fixed stale Railway URL in GA4's Data Stream settings; added external-tool "how to monitor" walkthroughs to the user guide
+
+**Task:** User recalled that during the original GTM/GA4 setup session (T5.3, session 35),
+the Railway domain was used somewhere with the intent to replace it once `kaalbert.com` was
+registered, and asked to find and fix it. Also asked for `docs/user-guide.md`'s "What to
+monitor" section to be expanded with real instructions for checking each already-set-up
+external tool on its own dashboard, since Milestone 9 (in-app performance dashboards) isn't
+built yet.
+**Summary:** Searched the whole repo/docs/memory first — confirmed nothing in the codebase
+itself references a Railway domain for GTM/GA4 purposes (correct by design, ADR 0006: GTM/GA4
+configuration is never stored as code). The actual stale value was in Google Analytics's own
+dashboard, not this repo: the GA4 property's Data Stream ("kaalbert.com", ID `15753849407`,
+Measurement ID `G-9VX9GS5L0X`) had its **Stream URL** field still set to
+`https://kaalbert.up.railway.app` from when the stream was first created, before the real
+domain existed. Checked and fixed live via Chrome (logged in as
+`kaalbert.company@gmail.com`, same account session 35 used): Admin → Data Streams →
+kaalbert.com → edit → Website URL changed to `https://kaalbert.com`, saved, confirmed the
+Stream details panel now shows the corrected URL. Also checked GA4's Google tag → Configure
+your domains (cross-domain measurement) — found only auto-suggested entries (both
+`kaalbert.com` and `kaalbert.up.railway.app`, since both domains genuinely still serve live
+traffic), none accepted/saved; left as-is since cross-domain linking isn't a feature this
+single-domain site needs, not a bug to fix.
+
+Separately, rewrote `docs/user-guide.md`'s "What to monitor" section: the existing table was
+just a name/purpose/URL list with no actual instructions. Added a full "How to check each one
+yourself" set of numbered walkthroughs (Google Tag Manager, GA4, Brevo, Railway, the domain
+registrar) — exact menu paths, what a healthy state looks like, and what to check first when
+something's reported broken (e.g. "a partner says the summary email never arrived" → Brevo
+Transactional Logs first). Framed explicitly against Milestone 9's absence: this is the real,
+complete picture until an in-app dashboard exists, not a placeholder list of names.
+**Files Changed:** `docs/user-guide.md` (What to monitor section rewritten), its Artifact
+mirror republished (external, not tracked in git). No code files changed — this was a live
+GA4-dashboard fix plus a documentation addition, not a code change.
+**Related Feature:** ADR 0006 (GTM/GA4 configuration lives outside this codebase, by design),
+`docs/tasks/09-performance-dashboards.md` (Milestone 9, the eventual replacement for this
+manual-check workflow), `memory/decision-log.md` (T5.3/session 35's original GTM/GA4 setup
+entry, where the stream was first created against the Railway domain).
+**Notes:** This GA4 dashboard fix has no corresponding code diff and isn't part of any git
+commit — recorded here since it's still a real, completed piece of production configuration
+work, the same as any other session-62 fix.
+
+---
+
 ## 2026-09-16 (session 62, continued) — Content-Security-Policy built, nonce-based, verified via real Playwright pass across every page type
 
 **Task:** User asked for the Content-Security-Policy (flagged as open, unbuilt work in
