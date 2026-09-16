@@ -33,13 +33,16 @@ itself returns 200 with the real firm asset. Captured the real DNS state for `ka
 (apex CNAME to Railway, 3 Zoho MX records, SPF/Zoho-verification TXT, Zoho DKIM TXT — via
 `dig @1.1.1.1`, since this session's own sandbox resolver returns bogus answers for this
 domain) and used Brevo's own API (read-only) to confirm today's real sender-verification
-state: one single-sender-verified Gmail address, zero authenticated domains. Wrote a full,
-concrete step-by-step guide for the user covering the two things only they can execute:
-putting Cloudflare in front of the domain per ADR 0004 (exact DNS records to re-create,
-in order, so mail doesn't break on cutover), and creating `no-reply@kaalbert.com`/
-`info@kaalbert.com` Zoho aliases plus Brevo domain authentication to replace the Gmail sender.
-Did not change `BREVO_SENDER_EMAIL` or `site_settings.email` — both depend on mailboxes that
-don't exist yet.
+state: one single-sender-verified Gmail address, zero authenticated domains. Presented the
+user the Cloudflare/ADR-0004 tradeoff directly rather than treating it as automatic; user
+chose to defer it — captured the current DNS records for reference in case it's revisited,
+but did not migrate anything. Discussed the Brevo sender choice with the user (`no-reply@`
+vs. `info@` vs. `hello@` — a brand-voice call, since the same send utility carries both
+internal admin mail and the diagnostic's lead-facing summary email) and landed on
+`info@kaalbert.com`, used for both `BREVO_SENDER_EMAIL` and `site_settings.email`. Wrote a
+full, concrete step-by-step guide for the user to execute themselves (Zoho alias creation,
+Brevo domain authentication, DNS records) — not done yet, both depend on mailbox/dashboard
+actions only they can take.
 **Files Changed:** `lib/seo.ts`, `lib/seo.test.ts`, `lib/admin-authors.test.ts`,
 `lib/insights.test.ts`, `lib/auth/password-reset.test.ts`, `lib/email.ts` (comment),
 `app/api/insights/unsubscribe/route.ts` (comment), `next.config.ts` (comment),

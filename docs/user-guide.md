@@ -636,10 +636,9 @@ for the full boundary.
 **What to monitor:**
 
 - Email delivery for the diagnostic's summary-email step depends on the **Brevo account**
-  (sending as `kaalbert.company@gmail.com` today — a `no-reply@kaalbert.com` upgrade is
-  planned but not yet done, see the developer's own `docs/vendor-operations-guide.md`) and
-  its verified sender — if summary emails stop arriving, check Brevo's sender-verification
-  status first.
+  (sending as `kaalbert.company@gmail.com` today — an `info@kaalbert.com` upgrade is in
+  progress, see the developer's own `docs/vendor-operations-guide.md`) and its verified
+  sender — if summary emails stop arriving, check Brevo's sender-verification status first.
 - Several questions and all four score bands are still flagged **Placeholder** — the launch
   mockup's illustrative wording, pending the firm's real review. Nothing stops you from
   publishing over them by simply editing the text and unchecking Placeholder.

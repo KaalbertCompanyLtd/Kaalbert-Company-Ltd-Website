@@ -2,7 +2,7 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
-## 2026-09-16 (session 62) — kaalbert.com registered; canonical domain is apex, not www; Cloudflare/Brevo domain-auth follow-ups identified but not executed (external accounts)
+## 2026-09-16 (session 62) — kaalbert.com registered; canonical domain is apex, not www; Cloudflare deferred by user choice; Brevo sender resolved to info@kaalbert.com
 
 **Status:** Standing
 
@@ -20,29 +20,33 @@ this:
    explicitly everywhere (`.env.local`, `.env.production`, live Railway service). Adding
    `www.kaalbert.com` as a secondary domain that redirects to apex is a recommended, optional,
    not-yet-done follow-up once Cloudflare is set up (a free Redirect Rule).
-2. **ADR 0004 (Cloudflare) is still not implemented** — only the domain-registration half of
-   the old "kaalbert.com not registered" blocker is resolved; DNS is still on the registrar
-   (Namecheap default nameservers), not Cloudflare. Real current DNS records were captured
-   this session (via `dig @1.1.1.1` — this sandbox's default resolver gives bogus answers for
-   `kaalbert.com`, a real finding worth remembering for any future session doing DNS work
-   here) and handed to the user as the exact records to re-create in Cloudflare: apex CNAME-
-   flattened to `qrulko1j.up.railway.app`, three Zoho MX records, the SPF/Zoho-verification
-   TXT, and the Zoho DKIM TXT. See `memory/technical-debt.md`'s "Cloudflare not yet fronting
-   kaalbert.com" entry for the full record values and the step-by-step guide given to the
-   user (Cloudflare account creation and registrar nameserver changes are both external
-   actions only the user can take — not attempted here).
-3. **Brevo sender email upgrade identified, not executed.** Verified via Brevo's own API
-   (read-only `GET /v3/senders` and `/v3/senders/domains` calls, using the already-configured
-   `BREVO_API_KEY`) that exactly one sender is verified today (`kaalbert.company@gmail.com`,
-   single-sender verification) and zero domains are authenticated. Recommended alias plan,
-   given directly to the user since it requires creating mailboxes at Zoho (the firm's mail
-   host, where `albert@kaalbert.com` already exists) and clicking through Brevo's own domain-
-   authentication flow: `no-reply@kaalbert.com` for `BREVO_SENDER_EMAIL` (automated mail
-   only), `info@kaalbert.com` for `site_settings.email` (the public contact address — edited
-   via `/admin/site-settings` once it exists and is confirmed working, not hand-edited in the
-   database). Neither alias exists yet; nothing was changed in Brevo or `site_settings` this
-   session. See `memory/technical-debt.md`'s "Brevo sender still single-sender-verified"
-   entry.
+2. **ADR 0004 (Cloudflare) deliberately deferred, not implemented.** Real current DNS records
+   were captured this session (via `dig @1.1.1.1` — this sandbox's default resolver gives
+   bogus answers for `kaalbert.com`, a real finding worth remembering for any future session
+   doing DNS work here): apex CNAME-flattened to `qrulko1j.up.railway.app`, three Zoho MX
+   records, the SPF/Zoho-verification TXT, and the Zoho DKIM TXT — kept in
+   `memory/technical-debt.md` and `docs/vendor-operations-guide.md` Section 3 for reference.
+   Presented the user with the actual tradeoff (edge caching relevant to `docs/vision.md`'s
+   Ghana/3G audience, free DDoS/WAF, vs. real DNS-cutover risk to mail) rather than treating
+   it as an automatic next step; the site works correctly today without it. **User's explicit
+   call: "Let's skip it for now, just mark it as deferred."** Not revisited proactively.
+3. **Brevo sender resolved to `info@kaalbert.com` — used for both `BREVO_SENDER_EMAIL` and
+   `site_settings.email`.** Verified via Brevo's own API (read-only `GET /v3/senders` and
+   `/v3/senders/domains` calls) that exactly one sender is verified today
+   (`kaalbert.company@gmail.com`, single-sender verification) and zero domains are
+   authenticated. First pass recommended `no-reply@kaalbert.com` for the Brevo sender and a
+   separate `info@kaalbert.com` for the public contact address — the user pushed back,
+   correctly: `sendTransactionalEmail` (`lib/email.ts`) is one shared utility used for both
+   internal admin mail (password resets, team invites) _and_ the diagnostic's lead-facing
+   "email me the full summary" send, and a `no-reply@` sender undercuts the site's own
+   conversion goal on exactly that email. Discussed the real tradeoff (`no-reply@` vs.
+   `info@` vs. `hello@` — a brand-voice call, not a technical one, since domain
+   authentication doesn't care what the local part is) and the user chose `info@kaalbert.com`
+   for both purposes — one alias, one inbox already watched, no second thing to monitor.
+   Full step-by-step Zoho/Brevo/DNS guide given directly to the user (both are external
+   account actions only they can take — not attempted here) and written into
+   `docs/vendor-operations-guide.md` Section 6. See `memory/technical-debt.md`'s "Brevo
+   sender still single-sender-verified" entry for the complete reasoning.
 
 **Related Documents:** `memory/known-bugs.md` (OG-image bug, now Fixed), `memory/technical-
 debt.md` (two new/updated entries above), `lib/seo.ts`, `docs/vendor-operations-guide.md`

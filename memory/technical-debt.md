@@ -37,33 +37,41 @@ verification. Purely a deliverability/trust quality gap, and a branding mismatch
 emails visibly come from a `@gmail.com` address, not the firm's own domain).
 **Priority:** Medium — real user-facing polish (diagnostic summary emails, admin invite/
 password-reset emails all carry this sender), not a launch blocker.
-**Possible Fix/Fixes:** Recommended aliases at Zoho (the firm's registered mail host for
-`kaalbert.com`) and where each is used, decided this session and given to the user directly:
-`no-reply@kaalbert.com` for `BREVO_SENDER_EMAIL` (automated/transactional mail only — never a
-monitored inbox, so a recipient replying to a password-reset or diagnostic-summary email
-doesn't land somewhere nobody reads it); `info@kaalbert.com` for `site_settings.email` (the
-public-facing address on `/contact`, the footer, and the Organization JSON-LD — a role
-address, not `albert@kaalbert.com`'s personal inbox, so enquiry email isn't tied to one
-person); `albert@kaalbert.com` stays as-is, not displayed site-wide (no `author.email` field
-exists to display it — confirmed via `prisma/schema.prisma` — and it isn't used as the site's
-public contact address). Once `no-reply@kaalbert.com` exists at Zoho: in Brevo, Senders,
-Domains & Dedicated IPs → Domains → Authenticate a domain → `kaalbert.com`, add the DNS
-records Brevo generates (typically an SPF `include:` addition merged into the existing SPF
-TXT record — never a second standalone SPF TXT record, DNS only allows one — plus 2–3 DKIM
-CNAME/TXT records) via whichever DNS provider is authoritative at the time (today: the
-registrar; after Cloudflare cutover, the "Cloudflare not yet fronting kaalbert.com" entry
-above's DNS provider), then add `no-reply@kaalbert.com` as a sender in Brevo (auto-verified
-once the domain shows Authenticated) and set it as `BREVO_SENDER_EMAIL` (`.env.local`,
-`.env.production`, and `railway variable set` on the live service — already `preserve()`d in
-`.railway/railway.ts`, no IaC change needed for a value change). Separately, once
-`info@kaalbert.com` exists and actually receives mail, update `site_settings.email` via
-`/admin/site-settings` (never by hand-editing the database — `docs/user-guide.md`'s
-documented path) — not done this session since the address doesn't exist yet to verify it
-actually works.
-**Trigger type:** User-triggered — creating Zoho mailbox aliases and clicking through Brevo's
-domain-authentication flow are both real external-account actions only the user can take. Do
-not create Brevo senders/domains via its API, or edit `site_settings.email`, until the user
-confirms the Zoho aliases exist and are receiving mail.
+**Possible Fix/Fixes:** Revised recommendation (same session, after the user pushed back on
+the first pass's `no-reply@` suggestion — correctly: `sendTransactionalEmail` in
+`lib/email.ts` is one shared utility with one sender used for _both_ internal admin mail
+(password resets, team invites) _and_ the diagnostic's "email me the full summary" send,
+which is a lead-nurturing touchpoint for a business-development site, not pure system
+plumbing. A `no-reply@` sender on the exact email meant to keep a qualified lead engaged
+actively works against `docs/vision.md`'s own conversion goal — it signals "don't talk to
+us" at the moment a prospect might want to reply with a question). **Single alias,
+recommended: `info@kaalbert.com`**, used as both `BREVO_SENDER_EMAIL` and
+`site_settings.email` — one mailbox to create at Zoho, replies from either a diagnostic
+recipient or (in the unlikely event of a reply to a password-reset/invite email) an admin
+land in the same inbox the firm already watches for general enquiries, no second alias or
+extra monitoring burden. `albert@kaalbert.com` stays as-is, not displayed site-wide (no
+`author.email` field exists to display it — confirmed via `prisma/schema.prisma`). Domain
+authentication doesn't care about the local part chosen (`info` vs `no-reply` scores
+identically for deliverability — SPF/DKIM alignment is what matters, not the address name),
+so this is a pure business-fit call, not a technical constraint. Once `info@kaalbert.com`
+exists at Zoho: in Brevo, Senders, Domains & Dedicated IPs → Domains → Authenticate a domain
+→ `kaalbert.com`, add the DNS records Brevo generates (typically an SPF `include:` addition
+merged into the existing SPF TXT record — never a second standalone SPF TXT record, DNS only
+allows one — plus 2–3 DKIM CNAME/TXT records) via whichever DNS provider is authoritative at
+the time (today: the registrar — Cloudflare-fronting is deferred by user choice, see the
+entry below), then add `info@kaalbert.com` as a sender in Brevo (auto-verified once the
+domain shows Authenticated), set it as `BREVO_SENDER_EMAIL` (`.env.local`, `.env.production`,
+and `railway variable set` on the live service — already `preserve()`d in
+`.railway/railway.ts`), and update `site_settings.email` via `/admin/site-settings` (never by
+hand-editing the database — `docs/user-guide.md`'s documented path). If the firm later wants
+a stricter split (a genuine `no-reply@` for admin-only mail, a warmer address for
+lead-facing mail), that needs a real code change first — `sendTransactionalEmail` would need
+a per-call-site sender override, not just an env-var swap — bigger scope than this entry
+covers; note it here if it comes up again rather than doing it speculatively.
+**Trigger type:** User-triggered — creating the Zoho mailbox alias and clicking through
+Brevo's domain-authentication flow are both real external-account actions only the user can
+take. Do not create Brevo senders/domains via its API, or edit `site_settings.email`, until
+the user confirms the alias exists and is receiving mail.
 **Sequenced into:** No task — this is ongoing production-hardening/polish work in the same
 category as the Content-Security-Policy entry in `docs/vendor-operations-guide.md` Section 4,
 not tied to a specific not-yet-shipped milestone task. Re-check the next time any session
@@ -1253,12 +1261,19 @@ than deleted) as a record that this was verified, not assumed.
 **Sequenced into:** T1.1 (already complete — this closes its last open acceptance criterion
 alongside the Cloudflare item below, which remains open)
 
-## Cloudflare not yet fronting kaalbert.com (ADR 0004) — DNS still on the registrar
+## Cloudflare not yet fronting kaalbert.com (ADR 0004) — deferred by user choice
 
-**Status:** Open
+**Status:** Open — deliberately deferred, not an oversight
 **Date raised:** 2026-09-16 (session 62) — split out from the now-Resolved "kaalbert.com not
 registered" entry below once the domain part of that entry was resolved but the
 Cloudflare-fronting part of ADR 0004 still wasn't.
+**Deferred:** 2026-09-16 (same session) — presented the user with what Cloudflare actually
+buys here (edge caching for `docs/vision.md`'s Ghana/3G/mid-range-Android audience, free
+DDoS/WAF, one-click HSTS/Always-Use-HTTPS) versus the real migration risk (DKIM/SPF/MX
+records must survive the nameserver cutover exactly, or email breaks) and the fact that the
+site works correctly today without it. User chose to skip it for now: "Let's skip it for
+now, just mark it as deferred." Revisit only if Ghana-based visitors actually report slow
+load times, or the user raises it again — not proactively.
 **Reason:** `kaalbert.com` is registered and already added/`ACTIVE` as a Railway custom
 domain (`railway domain`), serving real traffic with a valid Railway-issued Let's Encrypt
 cert — but its nameservers are still the registrar's default (`dns1/dns2.registrar-
