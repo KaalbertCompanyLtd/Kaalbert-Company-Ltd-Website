@@ -1336,14 +1336,18 @@ no DNS record. See `memory/known-bugs.md`.
 **Priority:** N/A — resolved.
 **Possible Fix/Fixes:** Domain registration is done. The fallback URL itself also needed a
 fix, done the same session: it hardcoded `https://www.kaalbert.com` (`www`), but only apex
-`kaalbert.com` was ever added as a Railway custom domain — `www.kaalbert.com` still has no
-DNS record today. `lib/seo.ts`'s fallback (and the 4 test files asserting against it) were
-updated to apex `kaalbert.com`, and `NEXT_PUBLIC_SITE_URL=https://kaalbert.com` was set
-explicitly everywhere (`.env.local`, `.env.production`, the live Railway service) so
-production behavior never depends on the fallback matching reality again. Adding
-`www.kaalbert.com` as a secondary domain (redirecting to apex) is optional, low-priority
-follow-up — see the Cloudflare entry above, since that's the natural point to add it (a
-Cloudflare Redirect Rule, free tier).
+`kaalbert.com` was ever added as a Railway custom domain at the time. `lib/seo.ts`'s fallback
+(and the 4 test files asserting against it) were updated to apex `kaalbert.com`, and
+`NEXT_PUBLIC_SITE_URL=https://kaalbert.com` was set explicitly everywhere (`.env.local`,
+`.env.production`, the live Railway service) so production behavior never depends on the
+fallback matching reality again. **`www.kaalbert.com` → apex redirect: done, later the same
+session** — user added `www.kaalbert.com` as a second Railway custom domain (`railway
+domain` shows it `ACTIVE` with its own valid Let's Encrypt cert) and the matching CNAME at
+the registrar; `proxy.ts` now checks the request's `Host` header and issues a 308 to the
+same path on `https://kaalbert.com` for any `www.kaalbert.com` request, verified locally via
+a spoofed `Host` header (confirmed correct `location`, path/query preserved, normal
+requests/the admin-auth redirect both unaffected). Not live until pushed, same as this
+session's other code changes.
 **Trigger type:** N/A — resolved.
 **Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum updated session 62,
 2026-09-16, closing the domain-registration half; the Cloudflare-fronting half is tracked

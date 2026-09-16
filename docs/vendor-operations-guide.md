@@ -135,8 +135,10 @@ nameservers change:**
 | `kaalbert.com`                  | TXT                     | `zoho-verification=zb33664172.zmverify.zoho.com`                                                                                                             |
 | `zmail._domainkey.kaalbert.com` | TXT                     | Zoho's DKIM public key (fetch fresh from Zoho Mail Admin → Email Configuration → DKIM if it's changed since this was captured — don't retype it from memory) |
 
-No `www.kaalbert.com` record and no `_dmarc.kaalbert.com` record exist today — both optional
-additions, not required for the migration itself (see the step list below).
+No `_dmarc.kaalbert.com` record exists today — optional, not required for the migration
+itself (see the step list below). **`www.kaalbert.com` → apex redirect is already done**,
+independently of Cloudflare — see Section 4's own note below; it didn't need
+to wait for Cloudflare after all.
 
 **What to actually do, in order, once you're ready to set this up (all of it your own
 account/dashboard actions — not something to hand back to an agent session mid-way):**
@@ -151,11 +153,10 @@ account/dashboard actions — not something to hand back to an agent session mid
    never proxies mail records regardless, but double-check the MX priorities (10/20/50)
    survived the import correctly, since a wrong priority silently reroutes mail delivery
    order rather than erroring.
-3. Optional, recommended: add a `www` CNAME record pointing at `kaalbert.com`, then a
-   Cloudflare Redirect Rule (free tier) sending `www.kaalbert.com/*` → `https://kaalbert.com/
-$1` (301) — so a visitor who types `www` doesn't hit a dead end. Apex stays canonical;
-   no code change needed for this (`NEXT_PUBLIC_SITE_URL` already governs every URL the app
-   generates).
+3. ~~Add a `www` CNAME + Cloudflare Redirect Rule~~ — **already done a different way**
+   (session 62): `www.kaalbert.com` is a second Railway custom domain with its own Railway-
+   issued cert, and `proxy.ts` itself 308-redirects any `www.kaalbert.com` request to the
+   same path on apex — see Section 4. No Cloudflare dependency after all.
 4. Optional, recommended: add a `_dmarc.kaalbert.com` TXT record, e.g.
    `v=DMARC1; p=none; rua=mailto:albert@kaalbert.com` — a monitoring-only DMARC policy (not
    enforcing/rejecting), standard practice alongside SPF+DKIM, and low-risk to add.
@@ -231,6 +232,20 @@ servers.com` nameservers): change the nameservers to the two Cloudflare assigns 
   deploy, then it's worth a quick live re-check the same way (Playwright, console open,
   same page list) since production is a materially different environment (real GTM/GA4
   traffic, not a dev-mode React build).
+- **`www.kaalbert.com` → apex redirect — built and verified, session 62.** User added
+  `www.kaalbert.com` as a second Railway custom domain (`railway domain` shows it `ACTIVE`
+  with its own valid Railway-issued Let's Encrypt cert) plus the matching CNAME at the
+  registrar. `proxy.ts` checks the request's `Host` header first, before any CSP/auth logic
+  runs, and issues a `308 Permanent Redirect` to the same path + query string on
+  `https://kaalbert.com` for anything hitting `www.kaalbert.com` — 308, not 301, so a non-GET
+  request (a form POST, an API call) that somehow hit `www` keeps its method across the
+  redirect, per RFC 7538. Verified locally via a spoofed `Host` header (`curl -H "Host:
+www.kaalbert.com" ...`): correct `308` status, correct `location` with path/query
+  preserved, and confirmed normal requests and the admin-auth redirect are both unaffected.
+  **Not live yet** — same as CSP above, committed locally, needs a push. Once pushed, a
+  real end-to-end check (visit `https://www.kaalbert.com/some-page` in a real browser,
+  confirm it lands on the apex URL with no certificate warning) is worth doing, since a
+  spoofed local `Host` header doesn't exercise the real DNS/TLS path.
 
 **Real gaps — still your next scoped piece of work, deliberately not done this session:**
 
@@ -305,7 +320,7 @@ your own local notes on these live.
 | `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference)    | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                                                                                                                                                       |
 | `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set and confirmed live — see Section 9          | Was missing entirely until session 54 (2026-09-11), which hard-blocked every real admin login. Confirmed live and working session 60 (a real account was created end-to-end, and the redeploy that picked up the fix was confirmed) — `memory/known-bugs.md`'s entry is closed.                                                                                                                                 |
 | `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set and confirmed live — same as above          | Same incident, same fix, now confirmed.                                                                                                                                                                                                                                                                                                                                                                         |
-| `NEXT_PUBLIC_SITE_URL`                                                                           | ✅ Set (`https://kaalbert.com`)                    | Set 2026-09-16 (session 62). Apex, not `www` — `www.kaalbert.com` has no DNS record. Code fallback in `lib/seo.ts` now matches this too, so a future preview/staging environment that forgets to set it still gets the right production URLs.                                                                                                                                                                   |
+| `NEXT_PUBLIC_SITE_URL`                                                                           | ✅ Set (`https://kaalbert.com`)                    | Set 2026-09-16 (session 62). Apex is canonical, not `www` — `www.kaalbert.com` exists as a Railway custom domain too, but `proxy.ts` redirects it to apex (Section 4). Code fallback in `lib/seo.ts` matches this too, so a future preview/staging environment that forgets to set it still gets the right production URLs.                                                                                     |
 | `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                            | Real container, live.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                                | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                                                                                                                                                               |
 | `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | ✅ Set (`info@kaalbert.com`, domain-authenticated) | Switched from `kaalbert.company@gmail.com` 2026-09-16 (session 62). `kaalbert.com` is now Brevo-authenticated (Brevo-code TXT, 2 DKIM CNAMEs, DMARC TXT, plus branded-link CNAMEs). Verified end-to-end via a real password-reset send: Brevo's own event log shows `requests` → `delivered` → `opened`, `from: info@kaalbert.com`. The old Gmail sender is left in Brevo, unused, as a fallback — not deleted. |

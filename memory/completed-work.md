@@ -14,6 +14,36 @@ Protocol):
 
 ---
 
+## 2026-09-16 (session 62, continued) — www.kaalbert.com → apex redirect, built and verified
+
+**Task:** User added `www.kaalbert.com` as a second Railway custom domain plus its DNS
+record themselves, then asked for the actual redirect to apex to be built.
+**Summary:** Confirmed both prerequisite steps live before writing any code: `railway
+domain` shows `www.kaalbert.com` `ACTIVE` with its own valid Railway-issued Let's Encrypt
+cert (`notAfter=2026-12-15`), and `dig @1.1.1.1` confirms its CNAME resolves. Added the
+redirect to `proxy.ts` — checked first, before the CSP nonce or admin session logic runs
+(a redirect needs neither): if the request's `Host` header is `www.kaalbert.com`, issue a
+`308 Permanent Redirect` to the same path + query string on `https://kaalbert.com`. 308
+(not 301) specifically so a non-GET request that somehow hit `www` keeps its method across
+the redirect, per RFC 7538. Verified locally via a spoofed `Host` header
+(`curl -H "Host: www.kaalbert.com" ...`): correct `308`, correct `location` with path/query
+preserved; also confirmed normal requests and the admin-auth redirect are both unaffected.
+Full quality gate (lint/format/typecheck/393 tests) clean after.
+**Files Changed:** `proxy.ts` (the redirect check, plus its own doc-comment updated to
+describe all three jobs the file now does), `docs/vendor-operations-guide.md` (Section 4 —
+new record of what was built and verified; Section 3's Cloudflare guide corrected to note
+the `www` redirect no longer needs to wait for Cloudflare; env-var table note updated),
+`memory/technical-debt.md` and `memory/decision-log.md` (stale "www has no DNS record /
+optional, not done" language corrected to reflect this is done).
+**Related Feature:** `memory/decision-log.md`'s session-62 canonical-domain decision (apex,
+not www) — this closes the one open follow-up that decision left.
+**Notes:** **Not live yet** — committed locally, needs a `git push` to deploy (this session
+can't push). Once pushed, worth a real browser check of `https://www.kaalbert.com/` (not
+just the local spoofed-`Host` test) to confirm no certificate warning and a clean landing on
+the apex URL.
+
+---
+
 ## 2026-09-16 (session 62, continued) — Fixed stale Railway URL in GA4's Data Stream settings; added external-tool "how to monitor" walkthroughs to the user guide
 
 **Task:** User recalled that during the original GTM/GA4 setup session (T5.3, session 35),

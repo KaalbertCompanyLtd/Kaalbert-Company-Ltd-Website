@@ -55,12 +55,15 @@ this:
 
 1. **Canonical domain is apex `kaalbert.com`, not `www.kaalbert.com`.** The codebase's
    fallback (`lib/seo.ts`) and `docs/vendor-operations-guide.md` Section 3 both previously
-   assumed `www` would be canonical, but only the apex domain was ever actually registered as
-   a Railway custom domain — `www.kaalbert.com` has no DNS record. Changed the code fallback
-   and its 4 dependent test files to apex, and set `NEXT_PUBLIC_SITE_URL=https://kaalbert.com`
-   explicitly everywhere (`.env.local`, `.env.production`, live Railway service). Adding
-   `www.kaalbert.com` as a secondary domain that redirects to apex is a recommended, optional,
-   not-yet-done follow-up once Cloudflare is set up (a free Redirect Rule).
+   assumed `www` would be canonical, but only the apex domain was registered as a Railway
+   custom domain at first. Changed the code fallback and its 4 dependent test files to apex,
+   and set `NEXT_PUBLIC_SITE_URL=https://kaalbert.com` explicitly everywhere (`.env.local`,
+   `.env.production`, live Railway service). **`www.kaalbert.com` → apex redirect: added
+   later the same session** — user added `www.kaalbert.com` as a second Railway custom
+   domain and its DNS record; `proxy.ts` now issues a 308 redirect to the same path on
+   `https://kaalbert.com` for any request whose `Host` header is `www.kaalbert.com`, checked
+   before any other logic in the file (no DB call, no CSP header needed for a redirect).
+   Verified locally via a spoofed `Host` header; not live until pushed.
 2. **ADR 0004 (Cloudflare) deliberately deferred, not implemented.** Real current DNS records
    were captured this session (via `dig @1.1.1.1` — this sandbox's default resolver gives
    bogus answers for `kaalbert.com`, a real finding worth remembering for any future session

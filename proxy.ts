@@ -6,13 +6,17 @@ import type { NextRequest } from "next/server";
 import { SESSION_COOKIE_NAME, verifySession } from "@/lib/auth/session";
 
 /**
- * Two independent jobs live in this one file, because Next.js only runs a single
+ * Three independent jobs live in this one file, because Next.js only runs a single
  * proxy/middleware function per app: (1) `admin-authentication.md`'s NFR-3 ("no admin route
  * reachable without a valid TOTP-verified session") — T6.1's `admin_user`/`admin_session`
  * tables and T6.2's `/admin/setup-2fa` existed before this, but nothing actually checked a
- * session until now; and (2) issuing a per-request CSP nonce and the `Content-Security-
+ * session until now; (2) issuing a per-request CSP nonce and the `Content-Security-
  * Policy` header itself (added session 62, once `kaalbert.com` was live to test against —
- * see `memory/technical-debt.md`'s now-resolved CSP entry), site-wide, not just on `/admin`.
+ * see `memory/technical-debt.md`'s now-resolved CSP entry), site-wide, not just on `/admin`;
+ * and (3) redirecting `www.kaalbert.com` → apex `kaalbert.com` (added session 62, once
+ * `www.kaalbert.com` was added as a second Railway custom domain) — apex is canonical
+ * (`memory/decision-log.md`, session 62), `www` exists only so a visitor who types it doesn't
+ * hit a dead end.
  *
  * Next.js 16 renamed `middleware.ts` to `proxy.ts` (CLAUDE.md's Auth Pattern section) — a
  * stray `middleware.ts` here would be silently ignored at build time with no error, which
@@ -55,6 +59,9 @@ const PUBLIC_ADMIN_PAGE_PATHS = new Set([
   "/admin/forgot-password",
   "/admin/reset-password",
 ]);
+
+const WWW_HOST = "www.kaalbert.com";
+const APEX_HOST = "kaalbert.com";
 
 /**
  * `sendTransactionalEmail`/GTM's own bootstrap script is the project's one genuinely inline
@@ -117,7 +124,16 @@ function buildContentSecurityPolicy(nonce: string): string {
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+
+  // www.kaalbert.com -> kaalbert.com (apex is canonical, session 62). Checked before
+  // anything else — a redirect carries no content, so it doesn't need a CSP header, and
+  // there's no reason to touch the database (verifySession) for a request that's about to
+  // be redirected anyway. 308 (not 301), so a non-GET request that somehow hit www — a form
+  // POST, an API call — keeps its method across the redirect, per RFC 7538.
+  if (request.headers.get("host") === WWW_HOST) {
+    return NextResponse.redirect(new URL(`https://${APEX_HOST}${pathname}${search}`), 308);
+  }
 
   const nonce = randomBytes(16).toString("base64");
   const csp = buildContentSecurityPolicy(nonce);
