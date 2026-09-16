@@ -20,8 +20,25 @@ sequencing requirement:
 
 ## Brevo sender still single-sender-verified against a Gmail address, not domain-authenticated
 
-**Status:** Open
+**Status:** Resolved
 **Date raised:** 2026-09-16 (session 62)
+**Date resolved:** 2026-09-16 (same session) — user created the `info@kaalbert.com` alias at
+Zoho (aliased to `albert@kaalbert.com`'s existing mailbox, not a separate mailbox — "Set as
+Mailbox" left unchecked), authenticated `kaalbert.com` as a domain in Brevo (Brevo-code TXT,
+2 DKIM CNAMEs, DMARC TXT, plus the optional branded-link/image CNAMEs, all added manually at
+Namecheap — the one close call: Namecheap's "automatic" DNS tool tried to also touch/
+"replace" the unrelated apex `kaalbert.com` CNAME pointing at Railway; caught before
+confirming and worked around via manual record entry instead, see the session's own chat log
+for the full sequence), added `info@kaalbert.com` as a Brevo sender (auto-verified), and set
+`BREVO_SENDER_EMAIL=info@kaalbert.com` live (`.env.local`, `.env.production`, and
+`railway variable set` — already `preserve()`d in `.railway/railway.ts`, no IaC change
+needed). The old `kaalbert.company@gmail.com` sender deliberately left in place in Brevo (not
+deleted) as a fallback until a real send from the new sender is confirmed working end-to-end.
+**One small separate step still pending, not itself technical debt:** `site_settings.email`
+still shows the old placeholder — update it via `/admin/site-settings` to `info@kaalbert.com`
+(a 30-second admin UI action, not done by this session since it needs a live TOTP code this
+session doesn't have for the production admin account, and burning a backup code to save the
+user 30 seconds isn't a good trade).
 **Reason:** `BREVO_SENDER_EMAIL` (`kaalbert.company@gmail.com`) was chosen at T3.7 specifically
 because Brevo's single-sender verification (a 6-digit code to that inbox) needs no registered
 domain — true at the time, since `kaalbert.com` wasn't registered. Confirmed live this
@@ -68,14 +85,9 @@ a stricter split (a genuine `no-reply@` for admin-only mail, a warmer address fo
 lead-facing mail), that needs a real code change first — `sendTransactionalEmail` would need
 a per-call-site sender override, not just an env-var swap — bigger scope than this entry
 covers; note it here if it comes up again rather than doing it speculatively.
-**Trigger type:** User-triggered — creating the Zoho mailbox alias and clicking through
-Brevo's domain-authentication flow are both real external-account actions only the user can
-take. Do not create Brevo senders/domains via its API, or edit `site_settings.email`, until
-the user confirms the alias exists and is receiving mail.
-**Sequenced into:** No task — this is ongoing production-hardening/polish work in the same
-category as the Content-Security-Policy entry in `docs/vendor-operations-guide.md` Section 4,
-not tied to a specific not-yet-shipped milestone task. Re-check the next time any session
-touches `lib/email.ts`, `.env.example`, or `docs/vendor-operations-guide.md`'s env-var table.
+**Trigger type:** N/A — resolved.
+**Sequenced into:** N/A — resolved. The one remaining `site_settings.email` UI update is a
+firm/admin action, not a code fix, so it isn't sequenced into any task.
 
 ---
 

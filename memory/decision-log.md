@@ -30,27 +30,39 @@ this:
    Ghana/3G audience, free DDoS/WAF, vs. real DNS-cutover risk to mail) rather than treating
    it as an automatic next step; the site works correctly today without it. **User's explicit
    call: "Let's skip it for now, just mark it as deferred."** Not revisited proactively.
-3. **Brevo sender resolved to `info@kaalbert.com` — used for both `BREVO_SENDER_EMAIL` and
-   `site_settings.email`.** Verified via Brevo's own API (read-only `GET /v3/senders` and
-   `/v3/senders/domains` calls) that exactly one sender is verified today
-   (`kaalbert.company@gmail.com`, single-sender verification) and zero domains are
-   authenticated. First pass recommended `no-reply@kaalbert.com` for the Brevo sender and a
-   separate `info@kaalbert.com` for the public contact address — the user pushed back,
-   correctly: `sendTransactionalEmail` (`lib/email.ts`) is one shared utility used for both
-   internal admin mail (password resets, team invites) _and_ the diagnostic's lead-facing
-   "email me the full summary" send, and a `no-reply@` sender undercuts the site's own
-   conversion goal on exactly that email. Discussed the real tradeoff (`no-reply@` vs.
-   `info@` vs. `hello@` — a brand-voice call, not a technical one, since domain
-   authentication doesn't care what the local part is) and the user chose `info@kaalbert.com`
-   for both purposes — one alias, one inbox already watched, no second thing to monitor.
-   Full step-by-step Zoho/Brevo/DNS guide given directly to the user (both are external
-   account actions only they can take — not attempted here) and written into
-   `docs/vendor-operations-guide.md` Section 6. See `memory/technical-debt.md`'s "Brevo
-   sender still single-sender-verified" entry for the complete reasoning.
+3. **Brevo sender resolved to `info@kaalbert.com` and fully executed, same session.**
+   Verified via Brevo's own API (read-only `GET /v3/senders` and `/v3/senders/domains` calls)
+   that exactly one sender was verified (`kaalbert.company@gmail.com`, single-sender
+   verification) and zero domains were authenticated. First pass recommended `no-reply@
+kaalbert.com` for the Brevo sender and a separate `info@kaalbert.com` for the public
+   contact address — the user pushed back, correctly: `sendTransactionalEmail`
+   (`lib/email.ts`) is one shared utility used for both internal admin mail (password resets,
+   team invites) _and_ the diagnostic's lead-facing "email me the full summary" send, and a
+   `no-reply@` sender undercuts the site's own conversion goal on exactly that email.
+   Discussed the real tradeoff (`no-reply@` vs. `info@` vs. `hello@` — a brand-voice call, not
+   a technical one, since domain authentication doesn't care what the local part is) and the
+   user chose `info@kaalbert.com` for both purposes. Gave the user the full step-by-step Zoho/
+   Brevo/DNS guide (both are external account actions only they can take); **the user then
+   executed all of it in the same session**: created the `info` alias at Zoho (aliased to
+   `albert@kaalbert.com`'s mailbox), authenticated `kaalbert.com` in Brevo, and added every
+   DNS record manually at Namecheap. **A real near-miss during that step**: Namecheap's own
+   "automatic" DNS-sync tool tried to "replace" the unrelated apex `kaalbert.com` CNAME
+   (pointing at Railway) as a side effect — caught before confirming, worked around by adding
+   every record manually instead. Once Brevo showed the domain Authenticated,
+   `BREVO_SENDER_EMAIL=info@kaalbert.com` was set live (`railway variable set`, already
+   `preserve()`d) and **verified end-to-end**: triggered a real password-reset email via the
+   live API, confirmed via Brevo's own event log (`requests` → `delivered` → `opened`,
+   `from: info@kaalbert.com`). The old Gmail sender is left in Brevo, unused, as a fallback.
+   **Only remaining step: `site_settings.email` still needs updating to `info@kaalbert.com`
+   via `/admin/site-settings`** — a firm/admin UI action, not done this session (no live TOTP
+   code available for the production admin account; not worth burning a backup code to save
+   30 seconds). See `memory/technical-debt.md`'s "Brevo sender still single-sender-verified"
+   entry (now Resolved) for the complete reasoning and record.
 
 **Related Documents:** `memory/known-bugs.md` (OG-image bug, now Fixed), `memory/technical-
-debt.md` (two new/updated entries above), `lib/seo.ts`, `docs/vendor-operations-guide.md`
-(Sections 1/3/6 updated), `docs/tasks/01-foundation.md` (T1.1 addendum updated), ADR 0004.
+debt.md` (Cloudflare-deferred entry and the now-Resolved Brevo entry), `lib/seo.ts`,
+`docs/vendor-operations-guide.md` (Sections 1/3/6 updated), `docs/tasks/01-foundation.md`
+(T1.1 addendum updated), ADR 0004.
 
 ## 2026-09-12 (session 61 follow-up) — Personal-data-deletion requests stay a manual, out-of-band process; only the "find the enquiry" step gets a fix (name/email search), not a tracked request queue
 

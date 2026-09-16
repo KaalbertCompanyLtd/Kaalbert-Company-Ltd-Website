@@ -10,10 +10,11 @@ what to keep doing on an ongoing basis after launch.
 custom domain; Sections 1, 3, 5, and 6 updated to reflect this. **Cloudflare (ADR 0004) is
 deliberately deferred** — the user reviewed what it actually buys (edge caching/DDoS
 protection, not a fix for anything broken) against the real DNS-cutover risk and chose to
-skip it for now; not a gap, a decision (Section 3). The Brevo sender is still
-single-sender-verified against a Gmail address rather than domain-authenticated — the user is
-resolving this now, with `info@kaalbert.com` as the chosen sender (deliberately not
-`no-reply@` — see Section 6 for the reasoning). Update this file the same way
+skip it for now; not a gap, a decision (Section 3). **The Brevo sender is now domain-
+authenticated and switched to `info@kaalbert.com`** (deliberately not `no-reply@` — see
+Section 6 for the reasoning), verified end-to-end via a real password-reset send. Only
+`site_settings.email` still needs a quick `/admin/site-settings` update to match. Update this
+file the same way
 `docs/user-guide.md` is updated — incrementally, the session something changes, never as a
 big end-of-project catch-up (`memory/decision-log.md`'s incremental-docs decision applies to
 this file too, even though it isn't one of the two formal Firm-Facing Documentation
@@ -110,9 +111,9 @@ is revisited later** — not a to-do list to act on now. Until/unless it's taken
   of T5.5 and of "full SEO") still can't be completed — not because the domain isn't
   registered anymore, but because they're gated on real ad-platform accounts that don't exist
   yet (Section 5).
-- Brevo's transactional sender is still single-sender-verified against a Gmail address —
-  domain authentication doesn't require Cloudflare either way, it just needs DNS records
-  added wherever the zone is authoritative today (the registrar); see Section 6.
+- Brevo's transactional sender is now domain-authenticated and switched to
+  `info@kaalbert.com` — this never needed Cloudflare either way, it just needed DNS records
+  added wherever the zone was authoritative (the registrar); see Section 6 for what was done.
 
 **The real DNS records live at `kaalbert.com` today** (captured 2026-09-16 via `dig
 kaalbert.com @1.1.1.1` — **querying a real external resolver directly matters**: this
@@ -278,51 +279,71 @@ Set on the live `kaalbert-web` Railway service unless noted otherwise. Never put
 in this file, `CLAUDE.md`, or anywhere committed — `CLAUDE.local.md` (gitignored) is where
 your own local notes on these live.
 
-| Variable                                                                                         | Status on live service                          | Notes                                                                                                                                                                                                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference) | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                        |
-| `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set and confirmed live — see Section 9       | Was missing entirely until session 54 (2026-09-11), which hard-blocked every real admin login. Confirmed live and working session 60 (a real account was created end-to-end, and the redeploy that picked up the fix was confirmed) — `memory/known-bugs.md`'s entry is closed.  |
-| `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set and confirmed live — same as above       | Same incident, same fix, now confirmed.                                                                                                                                                                                                                                          |
-| `NEXT_PUBLIC_SITE_URL`                                                                           | ✅ Set (`https://kaalbert.com`)                 | Set 2026-09-16 (session 62). Apex, not `www` — `www.kaalbert.com` has no DNS record. Code fallback in `lib/seo.ts` now matches this too, so a future preview/staging environment that forgets to set it still gets the right production URLs.                                    |
-| `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                         | Real container, live.                                                                                                                                                                                                                                                            |
-| `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                             | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                                |
-| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | 🔄 In progress                                  | Real account, live, but `BREVO_SENDER_EMAIL` is still `kaalbert.company@gmail.com` via single-sender verification (confirmed via Brevo's own API, session 62 — zero domains authenticated). User is resolving this now — see the step-by-step guide immediately below the table. |
-| `CLOUDFLARE_R2_ACCOUNT_ID` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` / `_BUCKET` / `_PUBLIC_URL` | ✅ Set                                          | Provisioned session 54; now also correctly `preserve()`d in `.railway/railway.ts` (this session's fix).                                                                                                                                                                          |
-| `PAYSTACK_SECRET_KEY`                                                                            | Not needed yet                                  | Milestone 13 (Phase 2, gated) — do not add until that trigger is met.                                                                                                                                                                                                            |
-| Calendar-sync credentials                                                                        | Not needed yet                                  | Milestone 10 (Phase 2, gated).                                                                                                                                                                                                                                                   |
-| CRM webhook target + auth                                                                        | Not needed yet                                  | Milestone 15 (Phase 2, gated).                                                                                                                                                                                                                                                   |
+| Variable                                                                                         | Status on live service                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference)    | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                                                                                                                                                       |
+| `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set and confirmed live — see Section 9          | Was missing entirely until session 54 (2026-09-11), which hard-blocked every real admin login. Confirmed live and working session 60 (a real account was created end-to-end, and the redeploy that picked up the fix was confirmed) — `memory/known-bugs.md`'s entry is closed.                                                                                                                                 |
+| `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set and confirmed live — same as above          | Same incident, same fix, now confirmed.                                                                                                                                                                                                                                                                                                                                                                         |
+| `NEXT_PUBLIC_SITE_URL`                                                                           | ✅ Set (`https://kaalbert.com`)                    | Set 2026-09-16 (session 62). Apex, not `www` — `www.kaalbert.com` has no DNS record. Code fallback in `lib/seo.ts` now matches this too, so a future preview/staging environment that forgets to set it still gets the right production URLs.                                                                                                                                                                   |
+| `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                            | Real container, live.                                                                                                                                                                                                                                                                                                                                                                                           |
+| `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                                | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                                                                                                                                                               |
+| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | ✅ Set (`info@kaalbert.com`, domain-authenticated) | Switched from `kaalbert.company@gmail.com` 2026-09-16 (session 62). `kaalbert.com` is now Brevo-authenticated (Brevo-code TXT, 2 DKIM CNAMEs, DMARC TXT, plus branded-link CNAMEs). Verified end-to-end via a real password-reset send: Brevo's own event log shows `requests` → `delivered` → `opened`, `from: info@kaalbert.com`. The old Gmail sender is left in Brevo, unused, as a fallback — not deleted. |
+| `CLOUDFLARE_R2_ACCOUNT_ID` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` / `_BUCKET` / `_PUBLIC_URL` | ✅ Set                                             | Provisioned session 54; now also correctly `preserve()`d in `.railway/railway.ts` (this session's fix).                                                                                                                                                                                                                                                                                                         |
+| `PAYSTACK_SECRET_KEY`                                                                            | Not needed yet                                     | Milestone 13 (Phase 2, gated) — do not add until that trigger is met.                                                                                                                                                                                                                                                                                                                                           |
+| Calendar-sync credentials                                                                        | Not needed yet                                     | Milestone 10 (Phase 2, gated).                                                                                                                                                                                                                                                                                                                                                                                  |
+| CRM webhook target + auth                                                                        | Not needed yet                                     | Milestone 15 (Phase 2, gated).                                                                                                                                                                                                                                                                                                                                                                                  |
 
-**Brevo domain authentication — the chosen sender, and why (session 62):** the firm has
-Zoho mail hosting for `kaalbert.com` (`albert@kaalbert.com` already exists). Considered
-`no-reply@kaalbert.com` (the usual convention for automated mail) versus `info@kaalbert.com`,
-and chose **`info@kaalbert.com`** — deliberately, after discussion: `sendTransactionalEmail`
-in `lib/email.ts` is one shared utility used for _both_ internal admin mail (password resets,
+**Brevo domain authentication — done, session 62.** The firm has Zoho mail hosting for
+`kaalbert.com` (`albert@kaalbert.com` already existed). Considered `no-reply@kaalbert.com`
+(the usual convention for automated mail) versus `info@kaalbert.com`, and chose
+**`info@kaalbert.com`** — deliberately, after discussion: `sendTransactionalEmail` in
+`lib/email.ts` is one shared utility used for _both_ internal admin mail (password resets,
 team invites) _and_ the diagnostic's "email me the full summary" send, which is a
 lead-nurturing touchpoint for a business-development site, not pure system plumbing. A
 `no-reply@` sender on the exact email meant to keep an engaged prospect talking works against
 the site's own conversion goal. `info@kaalbert.com` is used as **both** `BREVO_SENDER_EMAIL`
-**and** `site_settings.email` — one alias, one inbox, no second thing to monitor.
+**and** (pending, see below) `site_settings.email` — one alias, one inbox, no second thing to
+monitor.
 
-Steps, in order:
+What was actually done:
 
-1. **Zoho** (mailadmin.zoho.com) → Users → open the user replies should land with (e.g.
-   `albert@kaalbert.com`) → Email Aliases → add `info` → save. (Or Users → Add User for a
-   fully separate mailbox, only if a dedicated login is actually wanted.)
-2. **Brevo** (app.brevo.com) → Senders, Domains & Dedicated IPs → Domains → Add a domain →
-   `kaalbert.com`. Brevo generates DKIM records (and an SPF instruction) — copy them exactly
-   as shown, don't retype from memory.
-3. **DNS** (today: the registrar, Namecheap — Cloudflare is deferred, see Section 3): add
-   Brevo's DKIM records. **For SPF, edit the existing `v=spf1 include:zohomail.com ~all`
-   record to add Brevo's `include:`** — never add a second SPF TXT record, DNS only allows
-   one and a second one breaks both Zoho's and Brevo's delivery.
-4. Back in Brevo: click Authenticate/Verify on the domain. Once it shows Authenticated, go to
-   Senders → Add a sender → `info@kaalbert.com` — auto-verifies since the domain is
-   authenticated, no 6-digit code needed.
-5. Once verified: set `BREVO_SENDER_EMAIL=info@kaalbert.com` in `.env.local`,
-   `.env.production`, and `railway variable set` on the live service (already `preserve()`d
-   in `.railway/railway.ts` — no IaC change needed for a value change), and update
-   `site_settings.email` to `info@kaalbert.com` via `/admin/site-settings` (never by
-   hand-editing the database).
+1. **Zoho**: added `info` as an alias on `albert@kaalbert.com`'s mailbox (Users → Email
+   Aliases → add `info`), **not** a separate mailbox ("Set as Mailbox" left unchecked) — mail
+   to `info@kaalbert.com` lands directly in the inbox already being watched.
+2. **Brevo**: Senders, Domains & Dedicated IPs → Domains → Add a domain → `kaalbert.com`.
+   Brevo's own flow generated: a Brevo-verification TXT code, 2 DKIM CNAME records, a DMARC
+   TXT record, and (opted into) 3 branded-link/image CNAMEs under a chosen `email.kaalbert.com`
+   subdomain.
+3. **DNS**, added manually at Namecheap (the registrar — Cloudflare is deferred, see Section
+   3): all of the above, one record at a time via Namecheap's **manual** "Add New Record"
+   flow.
+   <br>**A real near-miss worth recording**: Namecheap's own "automatic" DNS-sync tool (a
+   different, separate flow from manually adding records) surfaced a screen mid-setup showing
+   it was about to "replace" the apex `kaalbert.com` CNAME record (the one pointing at
+   Railway, `qrulko1j.up.railway.app`) — completely unrelated to anything Brevo actually
+   needed. Caught before confirming, cancelled, and every record was instead added manually,
+   one at a time, leaving the apex record and all existing Zoho records untouched. **Lesson:
+   never use a registrar's "automatic"/"sync" DNS tool for a third-party integration setup —
+   add each record manually, and scrutinize any screen claiming it will "replace" or
+   "overwrite" an existing record before confirming**, especially one you didn't expect it to
+   touch.
+4. Brevo showed the domain **Authenticated**; added `info@kaalbert.com` as a sender
+   (auto-verified, no 6-digit code needed since the domain was already authenticated).
+5. Set `BREVO_SENDER_EMAIL=info@kaalbert.com` live (`.env.local`, `.env.production`,
+   `railway variable set` — already `preserve()`d in `.railway/railway.ts`, no IaC change
+   needed for a value change), which triggered a redeploy (confirmed completed).
+6. **Verified end-to-end**, not just assumed: triggered a real password-reset email via
+   `POST /api/admin/auth/request-password-reset` against the live site, then confirmed via
+   Brevo's own `GET /v3/smtp/statistics/events` API that it shows `requests` → `delivered` →
+   `opened`, `from: info@kaalbert.com`. The old `kaalbert.company@gmail.com` sender is left in
+   Brevo, unused, as a fallback — not deleted, since there's no real cost to keeping an
+   unused verified sender around.
+
+**Still pending, a firm/admin action, not a code task:** update `site_settings.email` to
+`info@kaalbert.com` via `/admin/site-settings` — not done from this session, since it needs a
+live TOTP code for the production admin account that this session doesn't have (and
+burning one of a limited set of backup codes just to save the user a 30-second task isn't a
+good trade).
 
 **Adding a new variable safely, going forward:** set it live with `railway variable set
 KEY=value --service kaalbert-web`, **then immediately add a matching `preserve()` entry to

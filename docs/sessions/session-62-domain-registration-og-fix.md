@@ -32,9 +32,13 @@ diagnostic's lead-facing summary email, not just internal admin mail, so a `no-r
 undercuts the site's own conversion goal. Discussed the real options (`no-reply@` / `info@` /
 `hello@` — a brand-voice call, not technical) and the user chose **`info@kaalbert.com`**, used
 for both `BREVO_SENDER_EMAIL` and `site_settings.email`. Gave the user the exact step-by-step
-Zoho/Brevo/DNS instructions to execute themselves right now. Did not change
-`BREVO_SENDER_EMAIL` or `site_settings.email` in code/DB yet — waiting on the user to confirm
-the alias exists and Brevo shows it verified.
+Zoho/Brevo/DNS instructions, and **they executed all of it in the same session**: created the
+alias, authenticated the domain in Brevo, added every DNS record manually (catching a real
+near-miss where Namecheap's own "automatic" tool tried to touch the unrelated apex CNAME
+pointing at Railway). Set `BREVO_SENDER_EMAIL=info@kaalbert.com` live and **verified it
+end-to-end for real** — triggered a live password-reset email, confirmed delivery via Brevo's
+own event-log API (`requests` → `delivered` → `opened`, `from: info@kaalbert.com`). Only
+`site_settings.email` remains, a quick admin UI action left for the user/firm.
 
 ## Files Changed
 
@@ -45,7 +49,8 @@ the alias exists and Brevo shows it verified.
 - `lib/email.ts`, `app/api/insights/unsubscribe/route.ts`, `next.config.ts` — stale
   "domain not registered yet" comments updated to reflect current reality.
 - `.env.example` — `NEXT_PUBLIC_SITE_URL` and Brevo comments updated.
-- `.env.local`, `.env.production` (gitignored, not committed) — `NEXT_PUBLIC_SITE_URL` set.
+- `.env.local`, `.env.production` (gitignored, not committed) — `NEXT_PUBLIC_SITE_URL` set,
+  then later in the session `BREVO_SENDER_EMAIL` switched to `info@kaalbert.com`.
 - `.railway/railway.ts` — added `NEXT_PUBLIC_SITE_URL: preserve()`.
 - `CLAUDE.local.md` (gitignored, not committed) — domain-registration and Brevo-upgrade notes
   added to the Credentials section.
@@ -60,9 +65,9 @@ the alias exists and Brevo shows it verified.
   to the Site Settings walkthrough, referencing `info@kaalbert.com`.
 - `memory/technical-debt.md` — "kaalbert.com not registered" flipped to Resolved; new
   "Cloudflare not yet fronting kaalbert.com — deferred by user choice" entry (with the real
-  DNS record table, kept for reference) split out; new "Brevo sender still single-sender-
-  verified" entry, revised in-session to recommend `info@kaalbert.com` (not `no-reply@`) with
-  the full reasoning for the change.
+  DNS record table, kept for reference) split out; "Brevo sender still single-sender-
+  verified" entry also flipped to Resolved by end of session, with the full execution record
+  (Zoho alias, Brevo authentication, the Namecheap near-miss, and the live verification).
 - `memory/known-bugs.md` — new entry for the OG-image bug, `Fixed`.
 - `memory/decision-log.md` — new entry recording the canonical-domain decision (apex, not
   www), the Cloudflare deferral, and the Brevo `info@kaalbert.com` decision with the
@@ -92,24 +97,30 @@ the alias exists and Brevo shows it verified.
   carries the diagnostic's lead-facing summary email, where a `no-reply@` sender works
   against the site's own conversion goal. `info@kaalbert.com` used for both
   `BREVO_SENDER_EMAIL` and `site_settings.email` — one alias, one already-watched inbox.
-- **Did not attempt Cloudflare setup or Brevo domain authentication this session** — both
-  require external account actions (registrar nameserver change; Zoho mailbox creation +
-  Brevo dashboard clicks) that only the user can take. Gave the user the exact step-by-step
-  Zoho/Brevo/DNS instructions to execute themselves right now, for the Brevo/`info@` path.
 - **Did not build a Content-Security-Policy**, even though the domain no longer blocks it —
   real, scoped work of its own (allowlisting GTM/R2/etc., verified per page type), out of
   scope for this session's focus. Left as an already-tracked open item.
+- **The user executed the Zoho/Brevo/DNS setup themselves, same session** — gave them the
+  exact step-by-step guide, they created the `info` alias at Zoho, authenticated
+  `kaalbert.com` in Brevo, and added every DNS record manually at Namecheap. Caught a real
+  near-miss along the way: Namecheap's own "automatic" DNS-sync tool tried to "replace" the
+  unrelated apex `kaalbert.com` CNAME (pointing at Railway) — cancelled before confirming,
+  worked around via manual record entry instead. Once Brevo showed the domain Authenticated,
+  set `BREVO_SENDER_EMAIL=info@kaalbert.com` live (`railway variable set`, confirmed
+  redeploy) and **verified it end-to-end for real**: triggered a live password-reset email,
+  then confirmed via Brevo's own event-log API that it shows `requests` → `delivered` →
+  `opened`, `from: info@kaalbert.com`. Left the old Gmail sender in Brevo, unused, as a
+  fallback (not deleted, per the user's own call).
 
 ## Current State
 
 `kaalbert.com` is live, serving the real site with correct OG/canonical tags and a valid TLS
 cert. Cloudflare (ADR 0004) is deliberately deferred at the user's request — not something to
-revisit without a new prompt. Brevo is still sending from a Gmail address via single-sender
-verification; the user is executing the `info@kaalbert.com` setup (Zoho alias + Brevo domain
-authentication) right now, following the step-by-step guide given directly to them and
-written into `docs/vendor-operations-guide.md` Section 6. Once they confirm it's verified,
-still need to: set `BREVO_SENDER_EMAIL=info@kaalbert.com` (`.env.local`, `.env.production`,
-`railway variable set`) and update `site_settings.email` via `/admin/site-settings`.
+revisit without a new prompt. **Brevo is now domain-authenticated and sending from
+`info@kaalbert.com`**, verified end-to-end in production. **One step remains**: update
+`site_settings.email` to `info@kaalbert.com` via `/admin/site-settings` — a firm/admin UI
+action, not done this session (no live TOTP code available for the production admin account;
+not worth burning a backup code to save 30 seconds).
 
 ## Blockers
 

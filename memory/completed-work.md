@@ -14,6 +14,38 @@ Protocol):
 
 ---
 
+## 2026-09-16 (session 62, continued) — Brevo sender switched to info@kaalbert.com, domain-authenticated and verified end-to-end; Cloudflare formally marked deferred
+
+**Task:** Continuation of the same session's domain-registration follow-through — the user
+executed the Zoho/Brevo/DNS setup themselves and asked for the app switched over.
+**Summary:** User created the `info@kaalbert.com` Zoho alias, authenticated `kaalbert.com` in
+Brevo (Brevo-code TXT, 2 DKIM CNAMEs, DMARC TXT, branded-link CNAMEs), added `info@kaalbert.com`
+as a Brevo sender, and confirmed it verified — all done manually at Namecheap after catching
+a near-miss where Namecheap's "automatic" DNS tool tried to touch the unrelated apex
+`kaalbert.com` CNAME. Set `BREVO_SENDER_EMAIL=info@kaalbert.com` live via `railway variable
+set` (triggered and confirmed a redeploy) and in `.env.local`/`.env.production`. Verified the
+new sender works in production for real, not just assumed: triggered a live password-reset
+email via `POST /api/admin/auth/request-password-reset`, then confirmed via Brevo's own
+`GET /v3/smtp/statistics/events` API that it shows `requests` → `delivered` → `opened`,
+`from: info@kaalbert.com`. Left the old Gmail sender in Brevo as an unused fallback, per the
+user's own call (not deleted). Also formalized the Cloudflare decision from earlier in this
+session as an explicit user-confirmed deferral ("Let's skip it for now, just mark it as
+deferred") rather than an open gap.
+**Files Changed:** `.env.local`, `.env.production` (gitignored, not committed) —
+`BREVO_SENDER_EMAIL` updated. `memory/technical-debt.md` (Brevo entry flipped to Resolved,
+Cloudflare entry's deferral language tightened), `memory/decision-log.md` (session 62 entry
+updated in place with the full execution record), `docs/vendor-operations-guide.md` (Sections
+1, 3, 6 updated to reflect resolution), `docs/user-guide.md` (Diagnostic Configuration
+monitoring note updated). Both Artifacts (Vendor Operations Guide, Platform User Guide)
+republished.
+**Related Feature:** `docs/tasks/03-diagnostic.md` T3.7 (Brevo), `docs/features/
+content-management-admin.md` (Site Settings), ADR 0004.
+**Notes:** One step remains, a firm/admin action not a code task: `site_settings.email` still
+needs updating to `info@kaalbert.com` via `/admin/site-settings` — not done this session
+(no live TOTP code available for the production admin account).
+
+---
+
 ## 2026-09-16 (session 62) — kaalbert.com domain registration follow-through: fixed the OG-image bug, set NEXT_PUBLIC_SITE_URL live, corrected canonical domain to apex
 
 **Task:** User-directed production-hardening — user reported the OG/share image didn't render
