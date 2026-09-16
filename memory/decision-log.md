@@ -2,6 +2,47 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-16 (session 62, continued) — Content-Security-Policy: nonce-based via proxy.ts, not a static host-allowlist; scoped strict-dynamic to protect GTM's documented "add a tag yourself" workflow
+
+**Status:** Standing
+
+**Summary:** User asked for the previously-deferred CSP to be built and closed this session.
+Two real design decisions made, not just an implementation:
+
+1. **Nonce-based CSP set in `proxy.ts`, not a static header in `next.config.ts`.** A static
+   host-allowlist CSP (`next.config.ts`'s existing pattern for the other 5 security headers)
+   can't work here because GTM's bootstrap script (`components/google-tag-manager.tsx`) is
+   genuinely inline, and a hash-based alternative (`'sha256-<hash>'`) was considered and
+   rejected — it would only cover that one script, not Next.js's own framework-injected
+   inline hydration-payload scripts (`self.__next_f.push(...)`), which are dynamic per
+   request and can't be hashed. A nonce, generated per request in `proxy.ts` and forwarded to
+   Next.js's own renderer via a documented request-header mechanism, covers both.
+2. **`'strict-dynamic'` chosen over a rigid per-host `script-src` allowlist**, specifically
+   because `docs/user-guide.md` already documents a partner's ability to add a brand-new GTM
+   tag via GTM's own UI without a developer, "as long as it listens to one of the six
+   existing conversion events" — a rigid allowlist would silently break that already-promised
+   capability the moment a partner used it. `'strict-dynamic'` lets GTM's own nonce'd script
+   load further scripts (GA4's `gtag.js` today, anything added via GTM's UI later) without
+   needing a code change per new tag. Documented, inherent limitation this doesn't solve:
+   `connect-src`/`img-src`/`frame-src` aren't covered by `strict-dynamic` (it only governs
+   script loading) — a genuinely new third-party _domain_ (not just a new event on an
+   already-allowed host) would still need a real CSP edit.
+   Broadening `proxy.ts`'s matcher from `/admin`-only to every route (needed so the CSP header
+   reaches public pages too) was the highest-risk part of this change — proxy.ts is the sole
+   enforcement point for NFR-3 ("no admin route reachable without a valid TOTP-verified
+   session"), and this project has hit real, subtle bugs in this exact file twice before (the
+   `app/proxy.ts` vs `proxy.ts` location bug at T6.3, the missing `PUBLIC_ADMIN_PAGE_PATHS`
+   entries at T6.7). Mitigated by re-scoping the existing auth logic inside an explicit
+   `isAdminPath` check (broadening the matcher was never allowed to broaden which paths get
+   auth-checked) and by running a full real login (password → TOTP with a computed live code,
+   not skipped) via Playwright before considering this done — see `memory/completed-work.md`
+   for the full verification record.
+   **Related Documents:** `proxy.ts` (its own extensive doc-comment has the full mechanism),
+   `memory/completed-work.md` (verification record), `docs/vendor-operations-guide.md` Section
+   4, `docs/user-guide.md` (the GTM "add a tag yourself" workflow this decision protects),
+   `docs/features/admin-authentication.md` (NFR-3, the auth logic this change had to not
+   regress).
+
 ## 2026-09-16 (session 62) — kaalbert.com registered; canonical domain is apex, not www; Cloudflare deferred by user choice; Brevo sender resolved to info@kaalbert.com
 
 **Status:** Standing
@@ -34,30 +75,25 @@ this:
    Verified via Brevo's own API (read-only `GET /v3/senders` and `/v3/senders/domains` calls)
    that exactly one sender was verified (`kaalbert.company@gmail.com`, single-sender
    verification) and zero domains were authenticated. First pass recommended `no-reply@
-kaalbert.com` for the Brevo sender and a separate `info@kaalbert.com` for the public
-   contact address — the user pushed back, correctly: `sendTransactionalEmail`
+kaalbert.com` for the Brevo sender — the user pushed back, correctly: `sendTransactionalEmail`
    (`lib/email.ts`) is one shared utility used for both internal admin mail (password resets,
    team invites) _and_ the diagnostic's lead-facing "email me the full summary" send, and a
    `no-reply@` sender undercuts the site's own conversion goal on exactly that email.
    Discussed the real tradeoff (`no-reply@` vs. `info@` vs. `hello@` — a brand-voice call, not
    a technical one, since domain authentication doesn't care what the local part is) and the
-   user chose `info@kaalbert.com` for both purposes. Gave the user the full step-by-step Zoho/
-   Brevo/DNS guide (both are external account actions only they can take); **the user then
-   executed all of it in the same session**: created the `info` alias at Zoho (aliased to
-   `albert@kaalbert.com`'s mailbox), authenticated `kaalbert.com` in Brevo, and added every
-   DNS record manually at Namecheap. **A real near-miss during that step**: Namecheap's own
-   "automatic" DNS-sync tool tried to "replace" the unrelated apex `kaalbert.com` CNAME
-   (pointing at Railway) as a side effect — caught before confirming, worked around by adding
-   every record manually instead. Once Brevo showed the domain Authenticated,
-   `BREVO_SENDER_EMAIL=info@kaalbert.com` was set live (`railway variable set`, already
-   `preserve()`d) and **verified end-to-end**: triggered a real password-reset email via the
-   live API, confirmed via Brevo's own event log (`requests` → `delivered` → `opened`,
-   `from: info@kaalbert.com`). The old Gmail sender is left in Brevo, unused, as a fallback.
-   **Only remaining step: `site_settings.email` still needs updating to `info@kaalbert.com`
-   via `/admin/site-settings`** — a firm/admin UI action, not done this session (no live TOTP
-   code available for the production admin account; not worth burning a backup code to save
-   30 seconds). See `memory/technical-debt.md`'s "Brevo sender still single-sender-verified"
-   entry (now Resolved) for the complete reasoning and record.
+   user chose `info@kaalbert.com`. Gave the user the full step-by-step Zoho/Brevo/DNS guide
+   (both are external account actions only they can take); **the user then executed all of it
+   in the same session**: created the `info` alias at Zoho (aliased to `albert@kaalbert.com`'s
+   mailbox), authenticated `kaalbert.com` in Brevo, and added every DNS record manually at
+   Namecheap. **A real near-miss during that step**: Namecheap's own "automatic" DNS-sync tool
+   tried to "replace" the unrelated apex `kaalbert.com` CNAME (pointing at Railway) as a side
+   effect — caught before confirming, worked around by adding every record manually instead.
+   Once Brevo showed the domain Authenticated, `BREVO_SENDER_EMAIL=info@kaalbert.com` was set
+   live (`railway variable set`, already `preserve()`d) and **verified end-to-end**: triggered
+   a real password-reset email via the live API, confirmed via Brevo's own event log
+   (`requests` → `delivered` → `opened`, `from: info@kaalbert.com`). The old Gmail sender is
+   left in Brevo, unused, as a fallback. See `memory/technical-debt.md`'s "Brevo sender still
+   single-sender-verified" entry (now Resolved) for the complete reasoning and record.
 
 **Related Documents:** `memory/known-bugs.md` (OG-image bug, now Fixed), `memory/technical-
 debt.md` (Cloudflare-deferred entry and the now-Resolved Brevo entry), `lib/seo.ts`,

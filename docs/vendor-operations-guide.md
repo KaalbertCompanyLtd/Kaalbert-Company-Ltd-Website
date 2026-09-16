@@ -7,13 +7,14 @@ developer can run (creating partner accounts, managing secrets, Railway infrastr
 what to keep doing on an ongoing basis after launch.
 
 **Last updated:** 2026-09-16 (session 62) — `kaalbert.com` registered and added as a Railway
-custom domain; Sections 1, 3, 5, and 6 updated to reflect this. **Cloudflare (ADR 0004) is
+custom domain; Sections 1, 3, 4, 5, and 6 updated to reflect this. **Cloudflare (ADR 0004) is
 deliberately deferred** — the user reviewed what it actually buys (edge caching/DDoS
 protection, not a fix for anything broken) against the real DNS-cutover risk and chose to
 skip it for now; not a gap, a decision (Section 3). **The Brevo sender is now domain-
 authenticated and switched to `info@kaalbert.com`** (deliberately not `no-reply@` — see
-Section 6 for the reasoning), verified end-to-end via a real password-reset send. Only
-`site_settings.email` still needs a quick `/admin/site-settings` update to match. Update this
+Section 6 for the reasoning), verified end-to-end via a real password-reset send. **A
+nonce-based Content-Security-Policy is now built and verified locally** (Section 4) — built
+and committed, but not live until pushed (see Section 4's own note on why). Update this
 file the same way
 `docs/user-guide.md` is updated — incrementally, the session something changes, never as a
 big end-of-project catch-up (`memory/decision-log.md`'s incremental-docs decision applies to
@@ -79,9 +80,10 @@ artifacts).
    this, caught by your own attempt failing with `Can't reach database server at
 postgres.railway.internal`).
 
-**Still deliberately left open — see §4/§5 for why:** Content-Security-Policy and persistent
-rate-limit storage. Both need either a live domain to test against safely or a scoped
-decision that's genuinely yours to make, not a same-session mechanical fix.
+**Still deliberately left open at the time — see §4/§5 for why:** Content-Security-Policy
+(now built, session 62 — see §4) and persistent rate-limit storage (still open). Both needed
+either a live domain to test against safely or a scoped decision that's genuinely yours to
+make, not a same-session mechanical fix.
 
 ---
 
@@ -202,24 +204,43 @@ servers.com` nameservers): change the nameservers to the two Cloudflare assigns 
   serves.
 - **`app/robots.ts`** (added session 60) — allows everything except `/admin`, points at the
   dynamic sitemap. Verified live at `/robots.txt`.
+- **Content-Security-Policy — built and verified, session 62.** Nonce-based, set in
+  `proxy.ts` (not `next.config.ts` — CSP needs a fresh nonce per request, which a static
+  header config can't generate), on every route site-wide, not just `/admin`. `script-src`
+  uses `'nonce-<random>' 'strict-dynamic'` — the nonce is passed to GTM's bootstrap script
+  (this project's one genuinely inline `<script>`) via `app/layout.tsx` reading an `x-nonce`
+  request header, and Next.js's own framework-injected inline scripts (the hydration-payload
+  `self.__next_f.push(...)` tags) pick up the same nonce automatically via Next's documented
+  CSP-nonce mechanism (setting the header on both the outgoing request and the response —
+  see `proxy.ts`'s own doc-comment). `'strict-dynamic'` is what lets GTM's nonce'd script load
+  further scripts (GA4's `gtag.js`, and any future tag a partner adds via GTM's own UI,
+  per `docs/user-guide.md`'s documented workflow) without each needing an explicit host
+  entry. `img-src` includes `data:` (the admin 2FA setup screen's QR code renders as a
+  data: URI) and the real `CLOUDFLARE_R2_PUBLIC_URL` origin (article/team images). Verified
+  via a real local dev server with Playwright and the browser console open: home (GTM/GA4
+  loaded, GA4's beacon sent, `strict-dynamic` confirmed working end-to-end), an Insights
+  article, the diagnostic flow (including its inline-`style` progress bar), the contact form,
+  full admin login (password → TOTP → session, using a computed real TOTP code, not
+  skipped), the admin dashboard, Account & Security, and the 2FA setup screen's QR code —
+  zero CSP violations on any of them. One inherent, documented limitation, not a bug: a
+  genuinely new third-party domain added via GTM later (not just a new trigger/event using
+  already-allowed hosts) would still need `connect-src`/`img-src`/`frame-src` updated here,
+  since `strict-dynamic` only covers script loading, not the network calls those scripts
+  make. **Not live yet** — built and committed locally, but this session cannot `git push`
+  (CLAUDE.md's own blocked-by-design rule); the developer needs to push for it to actually
+  deploy, then it's worth a quick live re-check the same way (Playwright, console open,
+  same page list) since production is a materially different environment (real GTM/GA4
+  traffic, not a dev-mode React build).
 
 **Real gaps — still your next scoped piece of work, deliberately not done this session:**
 
-1. **Content-Security-Policy — deliberately not drafted.** A CSP has to allowlist GTM's
-   script host, Google Fonts (if used), the Cloudflare R2 public URL for images
-   (`CLOUDFLARE_R2_PUBLIC_URL`), and Brevo/whatever else fires client-side — get any of that
-   wrong and pages silently break (blocked scripts/images, no error surfaced to a visitor).
-   Do this as its own task once the real domain exists, and verify every page type
-   (home, an article with an R2 image, the diagnostic, `/admin`) via Playwright MCP with the
-   browser console open before calling it done.
-
-2. **Rate-limit state is in-memory** (flagged during T6.x build,
+1. **Rate-limit state is in-memory** (flagged during T6.x build,
    `docs/sessions/session-38-admin-2fa-setup-flow.md`) — it resets on every Railway
    redeploy/restart and wouldn't be shared across multiple instances if the service ever
    scales beyond one. Fine at current traffic/instance-count; revisit if the service is ever
    scaled horizontally (move the counter to Postgres or a shared store).
 
-3. **Dependency advisories**: `npm audit` shows 4 high-severity advisories, all inside
+2. **Dependency advisories**: `npm audit` shows 4 high-severity advisories, all inside
    Prisma CLI's **dev-only** dependency tree (`mysql2`, unrelated to this project's Postgres
    usage) — already tracked in `memory/technical-debt.md`, not a production runtime risk, no
    action needed beyond periodically checking whether a non-breaking Prisma CLI update
@@ -301,9 +322,7 @@ your own local notes on these live.
 team invites) _and_ the diagnostic's "email me the full summary" send, which is a
 lead-nurturing touchpoint for a business-development site, not pure system plumbing. A
 `no-reply@` sender on the exact email meant to keep an engaged prospect talking works against
-the site's own conversion goal. `info@kaalbert.com` is used as **both** `BREVO_SENDER_EMAIL`
-**and** (pending, see below) `site_settings.email` — one alias, one inbox, no second thing to
-monitor.
+the site's own conversion goal. `info@kaalbert.com` is used as `BREVO_SENDER_EMAIL`.
 
 What was actually done:
 
@@ -338,12 +357,6 @@ What was actually done:
    `opened`, `from: info@kaalbert.com`. The old `kaalbert.company@gmail.com` sender is left in
    Brevo, unused, as a fallback — not deleted, since there's no real cost to keeping an
    unused verified sender around.
-
-**Still pending, a firm/admin action, not a code task:** update `site_settings.email` to
-`info@kaalbert.com` via `/admin/site-settings` — not done from this session, since it needs a
-live TOTP code for the production admin account that this session doesn't have (and
-burning one of a limited set of backup codes just to save the user a 30-second task isn't a
-good trade).
 
 **Adding a new variable safely, going forward:** set it live with `railway variable set
 KEY=value --service kaalbert-web`, **then immediately add a matching `preserve()` entry to

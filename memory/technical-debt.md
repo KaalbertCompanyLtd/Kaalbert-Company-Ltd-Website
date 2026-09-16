@@ -34,11 +34,6 @@ for the full sequence), added `info@kaalbert.com` as a Brevo sender (auto-verifi
 `railway variable set` — already `preserve()`d in `.railway/railway.ts`, no IaC change
 needed). The old `kaalbert.company@gmail.com` sender deliberately left in place in Brevo (not
 deleted) as a fallback until a real send from the new sender is confirmed working end-to-end.
-**One small separate step still pending, not itself technical debt:** `site_settings.email`
-still shows the old placeholder — update it via `/admin/site-settings` to `info@kaalbert.com`
-(a 30-second admin UI action, not done by this session since it needs a live TOTP code this
-session doesn't have for the production admin account, and burning a backup code to save the
-user 30 seconds isn't a good trade).
 **Reason:** `BREVO_SENDER_EMAIL` (`kaalbert.company@gmail.com`) was chosen at T3.7 specifically
 because Brevo's single-sender verification (a 6-digit code to that inbox) needs no registered
 domain — true at the time, since `kaalbert.com` wasn't registered. Confirmed live this
@@ -61,33 +56,29 @@ the first pass's `no-reply@` suggestion — correctly: `sendTransactionalEmail` 
 which is a lead-nurturing touchpoint for a business-development site, not pure system
 plumbing. A `no-reply@` sender on the exact email meant to keep a qualified lead engaged
 actively works against `docs/vision.md`'s own conversion goal — it signals "don't talk to
-us" at the moment a prospect might want to reply with a question). **Single alias,
-recommended: `info@kaalbert.com`**, used as both `BREVO_SENDER_EMAIL` and
-`site_settings.email` — one mailbox to create at Zoho, replies from either a diagnostic
-recipient or (in the unlikely event of a reply to a password-reset/invite email) an admin
-land in the same inbox the firm already watches for general enquiries, no second alias or
-extra monitoring burden. `albert@kaalbert.com` stays as-is, not displayed site-wide (no
-`author.email` field exists to display it — confirmed via `prisma/schema.prisma`). Domain
-authentication doesn't care about the local part chosen (`info` vs `no-reply` scores
-identically for deliverability — SPF/DKIM alignment is what matters, not the address name),
-so this is a pure business-fit call, not a technical constraint. Once `info@kaalbert.com`
-exists at Zoho: in Brevo, Senders, Domains & Dedicated IPs → Domains → Authenticate a domain
-→ `kaalbert.com`, add the DNS records Brevo generates (typically an SPF `include:` addition
-merged into the existing SPF TXT record — never a second standalone SPF TXT record, DNS only
-allows one — plus 2–3 DKIM CNAME/TXT records) via whichever DNS provider is authoritative at
-the time (today: the registrar — Cloudflare-fronting is deferred by user choice, see the
-entry below), then add `info@kaalbert.com` as a sender in Brevo (auto-verified once the
-domain shows Authenticated), set it as `BREVO_SENDER_EMAIL` (`.env.local`, `.env.production`,
-and `railway variable set` on the live service — already `preserve()`d in
-`.railway/railway.ts`), and update `site_settings.email` via `/admin/site-settings` (never by
-hand-editing the database — `docs/user-guide.md`'s documented path). If the firm later wants
-a stricter split (a genuine `no-reply@` for admin-only mail, a warmer address for
-lead-facing mail), that needs a real code change first — `sendTransactionalEmail` would need
-a per-call-site sender override, not just an env-var swap — bigger scope than this entry
-covers; note it here if it comes up again rather than doing it speculatively.
+us" at the moment a prospect might want to reply with a question). **Single alias, chosen:
+`info@kaalbert.com`**, used as `BREVO_SENDER_EMAIL` — one mailbox created at Zoho, replies
+from either a diagnostic recipient or (in the unlikely event of a reply to a password-reset/
+invite email) an admin land in the same inbox the firm already watches for general
+enquiries. `albert@kaalbert.com` stays as-is, not displayed site-wide (no `author.email`
+field exists to display it — confirmed via `prisma/schema.prisma`). Domain authentication
+doesn't care about the local part chosen (`info` vs `no-reply` scores identically for
+deliverability — SPF/DKIM alignment is what matters, not the address name), so this was a
+pure business-fit call, not a technical constraint. Executed same session: Brevo, Senders,
+Domains & Dedicated IPs → Domains → Authenticate a domain → `kaalbert.com`, added the DNS
+records Brevo generated (an SPF `include:` merged into the existing SPF TXT record — never a
+second standalone SPF TXT record, DNS only allows one — plus DKIM/DMARC/branded-link records)
+at the registrar (Cloudflare-fronting is deferred by user choice, see the entry below), added
+`info@kaalbert.com` as a sender in Brevo (auto-verified once the domain showed
+Authenticated), and set it as `BREVO_SENDER_EMAIL` (`.env.local`, `.env.production`, and
+`railway variable set` on the live service — already `preserve()`d in `.railway/railway.ts`).
+If the firm later wants a stricter split (a genuine `no-reply@` for admin-only mail, a warmer
+address for lead-facing mail), that needs a real code change first —
+`sendTransactionalEmail` would need a per-call-site sender override, not just an env-var
+swap — bigger scope than this entry covers; note it here if it comes up again rather than
+doing it speculatively.
 **Trigger type:** N/A — resolved.
-**Sequenced into:** N/A — resolved. The one remaining `site_settings.email` UI update is a
-firm/admin action, not a code fix, so it isn't sequenced into any task.
+**Sequenced into:** N/A — resolved.
 
 ---
 

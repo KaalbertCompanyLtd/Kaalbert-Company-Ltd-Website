@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 
 import { AttributionCapture } from "@/components/attribution-capture";
 import { ConsentBanner } from "@/components/consent-banner";
@@ -29,10 +30,18 @@ export const metadata: Metadata = {
 // (kept for local/CI environments without a real ID), consistent with the original T1.6 design.
 const gtmContainerId = process.env.GTM_CONTAINER_ID;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// Read by `proxy.ts` (session 62's CSP nonce) so the GTM bootstrap script — this project's
+// one genuinely inline <script> — can carry the exact nonce the CSP header allows; see
+// proxy.ts's own doc-comment for why Next.js's own framework-injected inline scripts don't
+// need this passed explicitly.
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="en">
-      {gtmContainerId ? <GoogleTagManagerHeadScript containerId={gtmContainerId} /> : null}
+      {gtmContainerId ? (
+        <GoogleTagManagerHeadScript containerId={gtmContainerId} nonce={nonce} />
+      ) : null}
       <body>
         {gtmContainerId ? <GoogleTagManagerBodyFrame containerId={gtmContainerId} /> : null}
         <AttributionCapture />

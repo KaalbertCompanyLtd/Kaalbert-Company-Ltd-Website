@@ -14,6 +14,61 @@ Protocol):
 
 ---
 
+## 2026-09-16 (session 62, continued) — Content-Security-Policy built, nonce-based, verified via real Playwright pass across every page type
+
+**Task:** User asked for the Content-Security-Policy (flagged as open, unbuilt work in
+`docs/vendor-operations-guide.md` since session 60) to be actually built and closed this
+session, not deferred again.
+**Summary:** Researched every actual source of client-side content this project loads before
+writing a single directive (CLAUDE.md's own warning that a CSP "risks silently breaking a
+page if drafted without" real verification) — GTM's bootstrap script is this project's one
+genuinely inline `<script>`; images are real R2 URLs via plain `<img>` tags (not `data:` —
+that debt was already resolved at T7.2→R2 migration) except the admin 2FA setup screen's QR
+code, which does render as a `data:` URI; no Google Fonts/`next/font`; 3 legitimate inline
+`style={{}}` attributes (progress bars); one iframe (GTM's `<noscript>` fallback). Built a
+nonce-based CSP (not a static host-allowlist) specifically because GTM's own bootstrap script
+is inline and because `docs/user-guide.md` already documents a partner's ability to add new
+GTM tags via its own UI without a developer — a rigid CSP would silently break that promised
+workflow. Implementation: `proxy.ts`'s matcher broadened from `/admin`-only to every route
+(excluding Next's static/image-optimization internals), generating a random nonce per
+request and setting the `Content-Security-Policy` header on both the outgoing request (so
+Next.js's own framework-injected inline scripts pick up the same nonce automatically, a
+documented Next.js mechanism) and the response; the existing admin session-check logic is
+untouched in behavior, just re-scoped inside an `isAdminPath` check so broadening the
+matcher never broadened which paths get auth-checked. `app/layout.tsx` reads the nonce via
+`headers()` and passes it to `components/google-tag-manager.tsx`'s `<Script nonce={nonce}>`.
+`script-src` uses `'nonce-<random>' 'strict-dynamic'` (lets GTM's nonce'd script load GA4's
+`gtag.js` and any future GTM-added tag without a host-by-host allowlist) plus `'unsafe-
+inline' https:` as CSP2/older-browser fallbacks (ignored by any browser that honors
+`strict-dynamic`), and a dev-only `'unsafe-eval'` (React's dev-mode debug tooling calls
+`eval()`; its own console message confirms "React will never use eval() in production
+mode" — scoped via `NODE_ENV`, never present in the policy real visitors get).
+**Verified for real**, not just written: ran a local dev server, used Playwright MCP with the
+browser console open across home (confirmed GTM → GA4 → an actual `google-analytics.com`
+collect beacon, 204, all under the new policy — `strict-dynamic` genuinely proven working,
+not just theorized), an Insights article, the diagnostic flow (including the inline-style
+progress bar), the contact form, a full admin login (password → TOTP, using a real computed
+RFC 6238 code via `otplib`, not skipped) → dashboard → Account & Security → the 2FA setup
+screen's QR code (the one screen genuinely needing `img-src data:`) — zero CSP violations on
+any of them. Ran the full quality gate (lint/format/typecheck/393 tests) after.
+**Files Changed:** `proxy.ts` (broadened matcher, added nonce generation + CSP header
+construction, re-scoped existing auth logic inside `isAdminPath`), `app/layout.tsx` (reads
+`x-nonce` header, made `async`), `components/google-tag-manager.tsx` (accepts/forwards
+`nonce` prop), `next.config.ts` (comment only — clarifies why CSP lives in `proxy.ts`, not
+here), `docs/vendor-operations-guide.md` (Section 4 rewritten: CSP moved from "real gap" to
+"already built and solid", with the full implementation/verification record).
+**Related Feature:** `docs/vendor-operations-guide.md` Section 4 (Security), ADR 0006 (GTM
+measurement container — the CSP's `strict-dynamic` design exists specifically to not break
+this), `docs/features/admin-authentication.md` (NFR-3 — the auth logic this change had to
+not regress).
+**Notes:** Built and committed locally, but **not live** — this session cannot `git push`
+(CLAUDE.md's blocked-by-design rule); the developer must push for it to deploy. Recommend a
+quick live re-verification the same way (Playwright, console open, same page list) once
+pushed, since production runs a real production React build (no dev-only `eval()` noise to
+account for) and real GTM/GA4 traffic at higher volume than a local dev pass exercises.
+
+---
+
 ## 2026-09-16 (session 62, continued) — Brevo sender switched to info@kaalbert.com, domain-authenticated and verified end-to-end; Cloudflare formally marked deferred
 
 **Task:** Continuation of the same session's domain-registration follow-through — the user
@@ -38,11 +93,8 @@ updated in place with the full execution record), `docs/vendor-operations-guide.
 1, 3, 6 updated to reflect resolution), `docs/user-guide.md` (Diagnostic Configuration
 monitoring note updated). Both Artifacts (Vendor Operations Guide, Platform User Guide)
 republished.
-**Related Feature:** `docs/tasks/03-diagnostic.md` T3.7 (Brevo), `docs/features/
-content-management-admin.md` (Site Settings), ADR 0004.
-**Notes:** One step remains, a firm/admin action not a code task: `site_settings.email` still
-needs updating to `info@kaalbert.com` via `/admin/site-settings` — not done this session
-(no live TOTP code available for the production admin account).
+**Related Feature:** `docs/tasks/03-diagnostic.md` T3.7 (Brevo), ADR 0004.
+**Notes:** None.
 
 ---
 
@@ -71,10 +123,10 @@ chose to defer it — captured the current DNS records for reference in case it'
 but did not migrate anything. Discussed the Brevo sender choice with the user (`no-reply@`
 vs. `info@` vs. `hello@` — a brand-voice call, since the same send utility carries both
 internal admin mail and the diagnostic's lead-facing summary email) and landed on
-`info@kaalbert.com`, used for both `BREVO_SENDER_EMAIL` and `site_settings.email`. Wrote a
-full, concrete step-by-step guide for the user to execute themselves (Zoho alias creation,
-Brevo domain authentication, DNS records) — not done yet, both depend on mailbox/dashboard
-actions only they can take.
+`info@kaalbert.com` for `BREVO_SENDER_EMAIL`. Wrote a full, concrete step-by-step guide for
+the user to execute themselves (Zoho alias creation, Brevo domain authentication, DNS
+records) — both depend on mailbox/dashboard actions only they can take; see the later entry
+above for the completed execution.
 **Files Changed:** `lib/seo.ts`, `lib/seo.test.ts`, `lib/admin-authors.test.ts`,
 `lib/insights.test.ts`, `lib/auth/password-reset.test.ts`, `lib/email.ts` (comment),
 `app/api/insights/unsubscribe/route.ts` (comment), `next.config.ts` (comment),

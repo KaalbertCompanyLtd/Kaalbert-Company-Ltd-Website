@@ -1,4 +1,4 @@
-# Session 62 — Domain registration follow-through: OG-image bug fix, NEXT_PUBLIC_SITE_URL, Cloudflare deferred, Brevo sender resolved
+# Session 62 — Domain registration follow-through, Brevo sender resolved, Content-Security-Policy built
 
 # Date: 2026-09-16
 
@@ -30,15 +30,29 @@ skip it, mark it deferred.** First pass also recommended `no-reply@kaalbert.com`
 Brevo sender — the user pushed back (rightly): the same shared send utility carries the
 diagnostic's lead-facing summary email, not just internal admin mail, so a `no-reply@`
 undercuts the site's own conversion goal. Discussed the real options (`no-reply@` / `info@` /
-`hello@` — a brand-voice call, not technical) and the user chose **`info@kaalbert.com`**, used
-for both `BREVO_SENDER_EMAIL` and `site_settings.email`. Gave the user the exact step-by-step
-Zoho/Brevo/DNS instructions, and **they executed all of it in the same session**: created the
-alias, authenticated the domain in Brevo, added every DNS record manually (catching a real
-near-miss where Namecheap's own "automatic" tool tried to touch the unrelated apex CNAME
-pointing at Railway). Set `BREVO_SENDER_EMAIL=info@kaalbert.com` live and **verified it
-end-to-end for real** — triggered a live password-reset email, confirmed delivery via Brevo's
-own event-log API (`requests` → `delivered` → `opened`, `from: info@kaalbert.com`). Only
-`site_settings.email` remains, a quick admin UI action left for the user/firm.
+`hello@` — a brand-voice call, not technical) and the user chose **`info@kaalbert.com`**.
+Gave the user the exact step-by-step Zoho/Brevo/DNS instructions, and **they executed all of
+it in the same session**: created the alias, authenticated the domain in Brevo, added every
+DNS record manually (catching a real near-miss where Namecheap's own "automatic" tool tried
+to touch the unrelated apex CNAME pointing at Railway). Set
+`BREVO_SENDER_EMAIL=info@kaalbert.com` live and **verified it end-to-end for real** —
+triggered a live password-reset email, confirmed delivery via Brevo's own event-log API
+(`requests` → `delivered` → `opened`, `from: info@kaalbert.com`).
+
+Finally, built the Content-Security-Policy the user asked for, built and closed rather than
+deferred again. Researched every real source of client-side content first (GTM's one inline
+script, real R2 image URLs, the admin 2FA screen's `data:`-URI QR code, 3 inline `style`
+attributes, no Google Fonts). Implemented a nonce-based CSP in `proxy.ts` — broadened its
+matcher from `/admin`-only to every route (the highest-risk part of this change, given
+`proxy.ts`'s history of subtle bugs at T6.3/T6.7), while re-scoping the existing admin
+session-check logic inside an explicit `isAdminPath` check so the auth-check surface itself
+never changed. `script-src` uses a per-request nonce plus `'strict-dynamic'`, chosen
+specifically to not break `docs/user-guide.md`'s documented "a partner can add a new GTM tag
+themselves" workflow. Verified for real: local dev server, Playwright with the console open,
+across home (confirmed GTM → GA4 → a real analytics beacon under the new policy), an
+Insights article, the diagnostic flow, the contact form, and a full admin login (real
+computed TOTP code, not skipped) through the dashboard, Account & Security, and the 2FA
+QR-code screen — zero violations. Full quality gate re-run clean after.
 
 ## Files Changed
 
@@ -73,9 +87,15 @@ own event-log API (`requests` → `delivered` → `opened`, `from: info@kaalbert
   www), the Cloudflare deferral, and the Brevo `info@kaalbert.com` decision with the
   reasoning behind the switch from the first-pass `no-reply@` recommendation.
 - `memory/completed-work.md` — new entry for this session, updated in place to reflect the
-  final decisions.
+  final decisions, plus a dedicated entry for the CSP work.
 - `CLAUDE.local.md` (gitignored) — Brevo/Cloudflare notes updated to match.
 - `.env.example` — Brevo comment updated to `info@kaalbert.com`.
+- `proxy.ts` — matcher broadened to every route; added nonce generation and CSP header
+  construction; existing admin auth logic re-scoped inside `isAdminPath`, behavior unchanged.
+- `app/layout.tsx` — reads the CSP nonce via `headers()`, made `async`; passes it to the GTM
+  script component.
+- `components/google-tag-manager.tsx` — accepts and forwards a `nonce` prop.
+- `next.config.ts` — comment updated to explain why CSP lives in `proxy.ts`, not here.
 - Two Artifacts republished: **Vendor Operations Guide**
   (<https://claude.ai/code/artifact/1b533df6-e704-49e1-a532-8dfb441ca813>) and **Platform
   User Guide** (<https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc>).
@@ -95,11 +115,16 @@ own event-log API (`requests` → `delivered` → `opened`, `from: info@kaalbert
 - **Brevo sender: `info@kaalbert.com`, not `no-reply@kaalbert.com`** — reversed the first
   pass's recommendation after the user correctly pointed out the shared send utility also
   carries the diagnostic's lead-facing summary email, where a `no-reply@` sender works
-  against the site's own conversion goal. `info@kaalbert.com` used for both
-  `BREVO_SENDER_EMAIL` and `site_settings.email` — one alias, one already-watched inbox.
-- **Did not build a Content-Security-Policy**, even though the domain no longer blocks it —
-  real, scoped work of its own (allowlisting GTM/R2/etc., verified per page type), out of
-  scope for this session's focus. Left as an already-tracked open item.
+  against the site's own conversion goal.
+- **Content-Security-Policy: nonce-based via `proxy.ts`, not a static host-allowlist.** The
+  user asked for it built and closed, not deferred again. A hash-based approach for GTM's one
+  inline script was considered and rejected — Next.js's own framework-injected hydration
+  scripts are dynamic and can't be hashed, so a nonce (forwarded to Next's renderer via its
+  documented request-header mechanism) was the only approach covering both. `'strict-
+dynamic'` chosen over a rigid host allowlist specifically to protect `docs/user-guide.md`'s
+  already-documented "a partner can add a new GTM tag via its own UI, no developer needed"
+  workflow, which a rigid allowlist would silently break. Full reasoning in
+  `memory/decision-log.md`.
 - **The user executed the Zoho/Brevo/DNS setup themselves, same session** — gave them the
   exact step-by-step guide, they created the `info` alias at Zoho, authenticated
   `kaalbert.com` in Brevo, and added every DNS record manually at Namecheap. Caught a real
@@ -116,11 +141,12 @@ own event-log API (`requests` → `delivered` → `opened`, `from: info@kaalbert
 
 `kaalbert.com` is live, serving the real site with correct OG/canonical tags and a valid TLS
 cert. Cloudflare (ADR 0004) is deliberately deferred at the user's request — not something to
-revisit without a new prompt. **Brevo is now domain-authenticated and sending from
-`info@kaalbert.com`**, verified end-to-end in production. **One step remains**: update
-`site_settings.email` to `info@kaalbert.com` via `/admin/site-settings` — a firm/admin UI
-action, not done this session (no live TOTP code available for the production admin account;
-not worth burning a backup code to save 30 seconds).
+revisit without a new prompt. Brevo is now domain-authenticated and sending from
+`info@kaalbert.com`, verified end-to-end in production. A nonce-based Content-Security-
+Policy is built, verified locally end-to-end via a real Playwright pass, and committed — but
+**not live**, since this session cannot `git push` (blocked by design); the developer needs
+to push it, and a quick live re-check (same page list, console open) afterward is worthwhile
+since production runs a real build under real traffic, not a local dev pass.
 
 ## Blockers
 

@@ -679,12 +679,6 @@ record, edited on the Legal Pages & Footer screen (`/admin/pages/legal`, see abo
 here — but both records feed the same footer, so a change to either one is live everywhere
 immediately.
 
-**Pending, once your own `@kaalbert.com` mailbox is set up:** the Email field here currently
-shows a placeholder address. Once `info@kaalbert.com` exists and is actually receiving mail
-(see your developer's own operations guide for the exact setup steps), come back here and
-update it — that one save changes the address shown on `/contact`, the footer, and the
-search-engine listing everywhere at once.
-
 ---
 
 ## Managing Subscribers

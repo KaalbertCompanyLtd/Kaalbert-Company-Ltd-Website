@@ -1,14 +1,12 @@
 import type { NextConfig } from "next";
 
 /**
- * Baseline HTTP security headers (`docs/vendor-operations-guide.md`, "Security" section) —
- * none of these need a live `kaalbert.com` domain to be safe, unlike a Content-Security-
- * Policy, which has to allowlist GTM/R2/etc. and risks silently breaking a page if drafted
- * without a live domain to test against. HSTS is inert until served over HTTPS, which
- * Railway's own domain already does today. `kaalbert.com` is now registered and live
- * (session 62) — the CSP is unblocked but still deliberately not built here; it's real,
- * scoped follow-up work of its own (see `memory/technical-debt.md`), not something to bolt
- * on as part of an unrelated change.
+ * Baseline HTTP security headers (`docs/vendor-operations-guide.md`, "Security" section).
+ * HSTS is inert until served over HTTPS, which Railway's own domain already does today.
+ * Content-Security-Policy is deliberately NOT here — it needs a fresh nonce per request
+ * (for the one genuinely inline script this project ships, GTM's bootstrap), which a static
+ * `next.config.ts` header can't generate; it's set in `proxy.ts` instead (session 62), on
+ * every route, not just `/admin`.
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
