@@ -5,7 +5,10 @@ import type { NextConfig } from "next";
  * none of these need a live `kaalbert.com` domain to be safe, unlike a Content-Security-
  * Policy, which has to allowlist GTM/R2/etc. and risks silently breaking a page if drafted
  * without a live domain to test against. HSTS is inert until served over HTTPS, which
- * Railway's own domain already does today.
+ * Railway's own domain already does today. `kaalbert.com` is now registered and live
+ * (session 62) — the CSP is unblocked but still deliberately not built here; it's real,
+ * scoped follow-up work of its own (see `memory/technical-debt.md`), not something to bolt
+ * on as part of an unrelated change.
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },

@@ -26,6 +26,10 @@ export default defineRailway(() => {
       BREVO_SENDER_EMAIL: preserve(),
       BREVO_SENDER_NAME: preserve(),
       GTM_CONTAINER_ID: preserve(),
+      // Set via `railway variable set` (session 62, 2026-09-16) once `kaalbert.com` was
+      // registered and added as a Railway custom domain — preserve it here the same way
+      // every other manually-set var above already is.
+      NEXT_PUBLIC_SITE_URL: preserve(),
       // Set directly on the live service via `railway variable set` (session 54,
       // 2026-09-11) — never declared here, so a `railway config apply` would have deleted
       // both on the very next run (CLAUDE.md's own documented hazard for this exact

@@ -6,14 +6,15 @@ what's left before this can be called properly launched, how to run the operatio
 developer can run (creating partner accounts, managing secrets, Railway infrastructure), and
 what to keep doing on an ongoing basis after launch.
 
-**Last updated:** 2026-09-12 (session 61) — Section 8 rewritten after session 60's later
-passes replaced the CLI-script-only account creation model with a real in-app invite flow
-(`/admin/team/new`) and a genuine Owner/Partner role system; session 61 additionally made
-enquiry assignment visible on the list (no vendor-facing change from that one, noted here
-only for the record). Update this file the same way `docs/user-guide.md` is updated —
-incrementally, the session something changes, never as a big end-of-project catch-up
-(`memory/decision-log.md`'s incremental-docs decision applies to this file too, even though
-it isn't one of the two formal Firm-Facing Documentation artifacts).
+**Last updated:** 2026-09-16 (session 62) — `kaalbert.com` registered and added as a Railway
+custom domain; Sections 1, 3, 5, and 6 updated to reflect this. Cloudflare (ADR 0004) is
+still not fronting the domain (Section 3), and the Brevo sender is still single-sender-
+verified against a Gmail address rather than domain-authenticated (Section 6) — both real,
+identified, not-yet-executed follow-ups, not oversights. Update this file the same way
+`docs/user-guide.md` is updated — incrementally, the session something changes, never as a
+big end-of-project catch-up (`memory/decision-log.md`'s incremental-docs decision applies to
+this file too, even though it isn't one of the two formal Firm-Facing Documentation
+artifacts).
 
 ---
 
@@ -34,10 +35,11 @@ it isn't one of the two formal Firm-Facing Documentation artifacts).
     CRM, Paid Diagnostic Suite, Brevo Campaigns) — fully planned, gated on real evidence
     triggers in `docs/scope.md`. **Do not start any of these** until the trigger is met and
     the user explicitly says to proceed.
-- **The live app today** is reachable only at `https://kaalbert.up.railway.app` — **the real
-  `kaalbert.com` domain has never been registered** (confirmed via WHOIS, `memory/
-technical-debt.md`). This is the single biggest thing blocking a "real" production launch;
-  see Section 3.
+- **The live app is now reachable at the real domain, `https://kaalbert.com`** (registered
+  and added as a Railway custom domain 2026-09-16, session 62 — `railway domain` shows it
+  `ACTIVE` with a valid Railway-issued TLS cert). The old Railway raw domain
+  (`kaalbert.up.railway.app`) still works too. **Cloudflare (ADR 0004) is not yet in front of
+  it** — DNS is still on the registrar's default nameservers — see Section 3.
 
 ---
 
@@ -79,43 +81,86 @@ decision that's genuinely yours to make, not a same-session mechanical fix.
 
 ---
 
-## 3. The one blocker that gates almost everything else: register the domain
+## 3. Domain registered; the remaining blocker is putting Cloudflare in front of it (ADR 0004)
 
-`kaalbert.com` is not registered (`memory/technical-debt.md`, raised 2026-09-04, still Open,
-**User-triggered** — an agent cannot register a domain). Until it is:
+`kaalbert.com` is registered and already added as a Railway custom domain (2026-09-16,
+session 62 — `railway domain` shows it `ACTIVE`, serving real traffic over a valid
+Railway-issued Let's Encrypt cert). `NEXT_PUBLIC_SITE_URL=https://kaalbert.com` is set live.
+**What's still open: Cloudflare isn't fronting the domain yet** (`memory/technical-debt.md` →
+"Cloudflare not yet fronting kaalbert.com", **User-triggered** — creating a Cloudflare
+account and changing nameservers at the registrar are both real external actions only you can
+take, not something an agent session can do). Until it is:
 
-- Cloudflare (ADR 0004) has no zone to front the site with — no CDN, no edge-level security
-  headers/WAF, no free TLS-at-the-edge beyond what Railway's own raw domain already gives you.
+- No CDN edge-caching, no edge-level WAF/security headers, no free TLS-at-the-edge beyond
+  what Railway's own domain already gives you (which is real and working today — this is a
+  performance/hardening gap, not a functional one).
 - Meta Business Manager domain verification and Google Search Console verification (both part
-  of T5.5 and of "full SEO") cannot be completed — they verify ownership of a real domain.
-- The canonical URLs, sitemap, Organization JSON-LD, and OG tags already correctly point at
-  `https://www.kaalbert.com` (`lib/seo.ts`'s `getSiteUrl()` fallback) — but that domain isn't
-  actually serving anything yet, so every one of those is describing a site that doesn't
-  resolve.
-- Brevo's transactional email sender is presumably still verified against whatever interim
-  domain/email was used when it was set up (T3.7 chose Brevo specifically because it doesn't
-  require a registered domain) — worth re-checking once `kaalbert.com` exists, in case the
-  firm wants mail sent from a `@kaalbert.com` address for deliverability/trust reasons.
+  of T5.5 and of "full SEO") still can't be completed — not because the domain isn't
+  registered anymore, but because they're gated on real ad-platform accounts that don't exist
+  yet (Section 5).
+- Brevo's transactional sender is still single-sender-verified against a Gmail address, not
+  domain-authenticated against `kaalbert.com` — see the note under Section 6's env-var table.
 
-**What to actually do, once you/the firm decide to register it:**
+**The real DNS records live at `kaalbert.com` today** (captured 2026-09-16 via `dig
+kaalbert.com @1.1.1.1` — **querying a real external resolver directly matters**: this
+project's own agent-session sandbox has been observed returning bogus answers for
+`kaalbert.com`'s DNS from its default resolver, so don't trust a plain `dig`/`nslookup` run
+from inside an agent session without pinning `@1.1.1.1` or similar). **Every one of these
+must be re-created in Cloudflare before cutting over DNS, or mail breaks the moment
+nameservers change:**
 
-1. Register `kaalbert.com` through a registrar of your choice.
-2. Add the domain to Cloudflare, point its DNS at the Railway service (ADR 0004).
-3. Add it as a custom domain on Railway: `railway domain kaalbert.com` (or via the dashboard).
-4. Set `NEXT_PUBLIC_SITE_URL=https://www.kaalbert.com` on the live `kaalbert-web` service (it
-   currently falls back to the right value anyway, but set it explicitly once the domain is
-   live rather than relying on the fallback silently doing the right thing).
-5. Re-check Section 6's full env-var table once the domain exists — a couple of rows (Brevo's
-   sender address, in particular) are worth revisiting once a real `@kaalbert.com` address is
-   possible.
-6. Then, and only then, do T5.5 (Meta/Google/LinkedIn domain verification) — see
-   `docs/tasks/05-landing-and-measurement.md`.
-7. In Cloudflare's dashboard once the zone exists: turn on "Always Use HTTPS" and enable HSTS
-   — this is the free, no-code way to get several of Section 4's security wins at the edge
-   instead of (or in addition to) in `next.config.ts`.
+| Record                          | Type                    | Value                                                                                                                                                        |
+| ------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `kaalbert.com` (apex)           | CNAME/ALIAS (flattened) | `qrulko1j.up.railway.app` (resolves to `69.46.46.50`)                                                                                                        |
+| `kaalbert.com`                  | MX, priority 10         | `mx.zoho.com`                                                                                                                                                |
+| `kaalbert.com`                  | MX, priority 20         | `mx2.zoho.com`                                                                                                                                               |
+| `kaalbert.com`                  | MX, priority 50         | `mx3.zoho.com`                                                                                                                                               |
+| `kaalbert.com`                  | TXT                     | `v=spf1 include:zohomail.com ~all`                                                                                                                           |
+| `kaalbert.com`                  | TXT                     | `zoho-verification=zb33664172.zmverify.zoho.com`                                                                                                             |
+| `zmail._domainkey.kaalbert.com` | TXT                     | Zoho's DKIM public key (fetch fresh from Zoho Mail Admin → Email Configuration → DKIM if it's changed since this was captured — don't retype it from memory) |
 
-Until this happens, treat the Railway URL as a working staging environment, not the live
-public site — which, practically, is exactly what it is right now.
+No `www.kaalbert.com` record and no `_dmarc.kaalbert.com` record exist today — both optional
+additions, not required for the migration itself (see the step list below).
+
+**What to actually do, in order, once you're ready to set this up (all of it your own
+account/dashboard actions — not something to hand back to an agent session mid-way):**
+
+1. Create a free Cloudflare account, add `kaalbert.com` as a site. Cloudflare will scan and
+   import the existing DNS records automatically — **before continuing, compare what it
+   imported against the table above** and fix anything it missed or got wrong (its auto-scan
+   is usually good but not guaranteed complete, especially for MX priority order).
+2. In Cloudflare's DNS tab: the apex `kaalbert.com` record should be proxied (orange cloud) —
+   Cloudflare CNAME-flattens automatically at the apex, this is normal and expected. **All
+   three MX records, and both TXT records, must stay "DNS only" (grey cloud)** — Cloudflare
+   never proxies mail records regardless, but double-check the MX priorities (10/20/50)
+   survived the import correctly, since a wrong priority silently reroutes mail delivery
+   order rather than erroring.
+3. Optional, recommended: add a `www` CNAME record pointing at `kaalbert.com`, then a
+   Cloudflare Redirect Rule (free tier) sending `www.kaalbert.com/*` → `https://kaalbert.com/
+$1` (301) — so a visitor who types `www` doesn't hit a dead end. Apex stays canonical;
+   no code change needed for this (`NEXT_PUBLIC_SITE_URL` already governs every URL the app
+   generates).
+4. Optional, recommended: add a `_dmarc.kaalbert.com` TXT record, e.g.
+   `v=DMARC1; p=none; rua=mailto:albert@kaalbert.com` — a monitoring-only DMARC policy (not
+   enforcing/rejecting), standard practice alongside SPF+DKIM, and low-risk to add.
+5. At your domain registrar (Namecheap, based on the current `dns1/dns2.registrar-
+servers.com` nameservers): change the nameservers to the two Cloudflare assigns you during
+   setup. This is the actual cutover — expect it to take anywhere from a few minutes to
+   ~24 hours to propagate.
+6. Once Cloudflare shows the zone "Active": confirm `railway domain` still shows `kaalbert.com`
+   `ACTIVE` (it should — Railway doesn't care which DNS provider points at it), then re-run
+   `dig` against every record type above (again pinning a real resolver, e.g. `@1.1.1.1`) to
+   confirm nothing silently dropped in the cutover — MX and the two TXT records especially,
+   since a missed one breaks inbound mail or SPF/domain-verification, not the website.
+7. In Cloudflare's dashboard: turn on "Always Use HTTPS" and enable HSTS (SSL/TLS →
+   Edge Certificates) — the free, no-code way to get several of Section 4's security wins at
+   the edge in addition to what `next.config.ts` already sets at the app layer.
+8. Send a fresh WhatsApp/Facebook share of `https://kaalbert.com` afterward to confirm the OG
+   preview still renders through the new edge — if a stale cached preview shows from before
+   the cutover, force a re-scrape via Facebook's Sharing Debugger
+   (developers.facebook.com/tools/debug/, the same crawler/cache WhatsApp uses).
+9. Then, and only then, revisit T5.5 (Meta/Google/LinkedIn domain verification) — still also
+   needs the real ad-platform accounts themselves (Section 5), not just the domain.
 
 ---
 
@@ -184,8 +229,11 @@ public site — which, practically, is exactly what it is right now.
 
 **Still open:**
 
-1. **Domain verification (Google Search Console + Meta Business Manager)** — blocked on
-   domain registration (Section 3), then part of T5.5.
+1. **Domain verification (Google Search Console + Meta Business Manager)** — the domain
+   itself is registered now (Section 3), so this is only blocked on the real ad-platform
+   accounts (item 3 below) plus part of T5.5. Once those exist, Search Console verification
+   can happen any time — it doesn't need Cloudflare in place first, just a DNS TXT record or
+   the existing sitemap.
 2. **Placeholder content still live** — this is the part of "full SEO" that isn't a code
    problem: indexing pages with clearly-marked draft/placeholder text is a real quality
    signal search engines and visitors both notice.
@@ -204,9 +252,9 @@ public site — which, practically, is exactly what it is right now.
      `isPlaceholder` to `false` there; don't re-run `prisma/seed.ts` for this (seeding is
      idempotent but is the _initial_ content source, not the ongoing edit path once `/admin`
      exists).
-3. **T5.5's Meta/Google Ads/LinkedIn pieces** — see Section 3, needs the domain plus real ad
-   accounts (Meta Business Manager + Pixel + CAPI token, Google Ads account, LinkedIn
-   Campaign Manager access) that don't exist yet. Not a launch blocker per
+3. **T5.5's Meta/Google Ads/LinkedIn pieces** — the domain precondition (Section 3) is now
+   met; still needs real ad accounts (Meta Business Manager + Pixel + CAPI token, Google Ads
+   account, LinkedIn Campaign Manager access) that don't exist yet. Not a launch blocker per
    `docs/roadmap.md` — only needed once the firm is ready to run paid campaigns.
 
 ---
@@ -217,19 +265,19 @@ Set on the live `kaalbert-web` Railway service unless noted otherwise. Never put
 in this file, `CLAUDE.md`, or anywhere committed — `CLAUDE.local.md` (gitignored) is where
 your own local notes on these live.
 
-| Variable                                                                                         | Status on live service                          | Notes                                                                                                                                                                                                                                                                           |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference) | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                       |
-| `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set and confirmed live — see Section 9       | Was missing entirely until session 54 (2026-09-11), which hard-blocked every real admin login. Confirmed live and working session 60 (a real account was created end-to-end, and the redeploy that picked up the fix was confirmed) — `memory/known-bugs.md`'s entry is closed. |
-| `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set and confirmed live — same as above       | Same incident, same fix, now confirmed.                                                                                                                                                                                                                                         |
-| `NEXT_PUBLIC_SITE_URL`                                                                           | ❌ Not set                                      | Falls back to `https://www.kaalbert.com` in code (`lib/seo.ts`), which is correct once that domain is live — but set it explicitly once it is, per Section 3.                                                                                                                   |
-| `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                         | Real container, live.                                                                                                                                                                                                                                                           |
-| `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                             | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                               |
-| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | ✅ Set                                          | Real account, verified sender, live. Re-check the sender address once `kaalbert.com` exists (Section 3).                                                                                                                                                                        |
-| `CLOUDFLARE_R2_ACCOUNT_ID` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` / `_BUCKET` / `_PUBLIC_URL` | ✅ Set                                          | Provisioned session 54; now also correctly `preserve()`d in `.railway/railway.ts` (this session's fix).                                                                                                                                                                         |
-| `PAYSTACK_SECRET_KEY`                                                                            | Not needed yet                                  | Milestone 13 (Phase 2, gated) — do not add until that trigger is met.                                                                                                                                                                                                           |
-| Calendar-sync credentials                                                                        | Not needed yet                                  | Milestone 10 (Phase 2, gated).                                                                                                                                                                                                                                                  |
-| CRM webhook target + auth                                                                        | Not needed yet                                  | Milestone 15 (Phase 2, gated).                                                                                                                                                                                                                                                  |
+| Variable                                                                                         | Status on live service                          | Notes                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`                                                                                   | ✅ Set (`${{Postgres.DATABASE_URL}}` reference) | Railway's private network — see Section 7 on why there's only one database, not a separate "production" one to switch to.                                                                                                                                                                                                                                                      |
+| `ADMIN_CHALLENGE_TOKEN_SECRET`                                                                   | ✅ Set and confirmed live — see Section 9       | Was missing entirely until session 54 (2026-09-11), which hard-blocked every real admin login. Confirmed live and working session 60 (a real account was created end-to-end, and the redeploy that picked up the fix was confirmed) — `memory/known-bugs.md`'s entry is closed.                                                                                                |
+| `ADMIN_TOTP_ENCRYPTION_KEY`                                                                      | ✅ Set and confirmed live — same as above       | Same incident, same fix, now confirmed.                                                                                                                                                                                                                                                                                                                                        |
+| `NEXT_PUBLIC_SITE_URL`                                                                           | ✅ Set (`https://kaalbert.com`)                 | Set 2026-09-16 (session 62). Apex, not `www` — `www.kaalbert.com` has no DNS record. Code fallback in `lib/seo.ts` now matches this too, so a future preview/staging environment that forgets to set it still gets the right production URLs.                                                                                                                                  |
+| `GTM_CONTAINER_ID`                                                                               | ✅ Set (`GTM-PDGKRKRN`)                         | Real container, live.                                                                                                                                                                                                                                                                                                                                                          |
+| `META_CAPI_ACCESS_TOKEN`                                                                         | ❌ Blank everywhere                             | Genuinely blocked on a real Meta ad account existing — not a gap to fill speculatively (T5.5's own precondition).                                                                                                                                                                                                                                                              |
+| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`                                     | ✅ Set                                          | Real account, live, but `BREVO_SENDER_EMAIL` is still `kaalbert.company@gmail.com` via single-sender verification (confirmed via Brevo's own API, session 62 — zero domains authenticated). Recommended upgrade to `no-reply@kaalbert.com` via Brevo domain authentication — see `memory/technical-debt.md`'s "Brevo sender still single-sender-verified" entry; not done yet. |
+| `CLOUDFLARE_R2_ACCOUNT_ID` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` / `_BUCKET` / `_PUBLIC_URL` | ✅ Set                                          | Provisioned session 54; now also correctly `preserve()`d in `.railway/railway.ts` (this session's fix).                                                                                                                                                                                                                                                                        |
+| `PAYSTACK_SECRET_KEY`                                                                            | Not needed yet                                  | Milestone 13 (Phase 2, gated) — do not add until that trigger is met.                                                                                                                                                                                                                                                                                                          |
+| Calendar-sync credentials                                                                        | Not needed yet                                  | Milestone 10 (Phase 2, gated).                                                                                                                                                                                                                                                                                                                                                 |
+| CRM webhook target + auth                                                                        | Not needed yet                                  | Milestone 15 (Phase 2, gated).                                                                                                                                                                                                                                                                                                                                                 |
 
 **Adding a new variable safely, going forward:** set it live with `railway variable set
 KEY=value --service kaalbert-web`, **then immediately add a matching `preserve()` entry to
@@ -335,8 +383,7 @@ hits.
 **What actually works — run it locally, no `railway run` wrapper:**
 
 ```bash
-NEXT_PUBLIC_SITE_URL="https://kaalbert.up.railway.app" \
-  npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
+npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
 ```
 
 This works because of something §7 already establishes: there is only **one** Postgres
@@ -345,10 +392,13 @@ public TCP proxy, reachable from your own machine, pointed at the exact same dat
 live app reads from `postgres.railway.internal`. Running the script bare (letting `dotenv`
 load `.env.local` normally) reaches that same database directly.
 
-The `NEXT_PUBLIC_SITE_URL` override matters **only until `kaalbert.com` is registered and
-that variable is set on the live service (§3)** — without it, `getSiteUrl()`'s fallback would
-print a setup link pointing at a domain that doesn't resolve yet. Once the domain is live,
-drop the override.
+**No `NEXT_PUBLIC_SITE_URL` override needed anymore (updated session 62)** — `.env.local`
+now sets it to the real, live, resolvable `https://kaalbert.com`, so the script's printed
+setup link is already correct without any override. (Before the domain was registered, an
+override to `https://kaalbert.up.railway.app` was required here — without it, `getSiteUrl()`'s
+fallback printed a setup link pointing at a domain that didn't resolve. If you ever need to
+generate a link against a different environment, e.g. a Railway preview, override
+`NEXT_PUBLIC_SITE_URL` for that one run instead of relying on `.env.local`'s default.)
 
 The script prints the generated password and a one-time setup link to your terminal — never
 anywhere else. Relay both to the partner over a secure channel, same as the invite flow's own
@@ -447,9 +497,9 @@ These don't stop once the domain is live — they're the recurring part of the j
 # for when no Owner account exists to invite from.
 
 # Fallback: create a new admin account via the CLI script (reaches the one shared database
-# via .env.local's public proxy connection — see §8 for why `railway run` does NOT work)
-NEXT_PUBLIC_SITE_URL="https://kaalbert.up.railway.app" \
-  npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
+# via .env.local's public proxy connection — see §8 for why `railway run` does NOT work).
+# No NEXT_PUBLIC_SITE_URL override needed — .env.local sets the real, live kaalbert.com.
+npm run admin:create-user -- --name "Full Name" --email "partner@kaalbert.com"
 
 # Same, but executed inside the live container over Railway's own network instead
 # (needs `railway ssh keys add` done once first)

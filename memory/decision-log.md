@@ -2,6 +2,52 @@
 
 Newest entry at the top — see CLAUDE.md's "Memory file format and ordering" section.
 
+## 2026-09-16 (session 62) — kaalbert.com registered; canonical domain is apex, not www; Cloudflare/Brevo domain-auth follow-ups identified but not executed (external accounts)
+
+**Status:** Standing
+
+**Summary:** User reported the OG/share image didn't render on a WhatsApp share, and
+separately reported `kaalbert.com` is now registered and already added as a Railway custom
+domain (confirmed via `railway domain`: `kaalbert.com` custom, port 8080, `ACTIVE`). Root
+cause of the OG bug and the fix are in `memory/known-bugs.md`. Three decisions made resolving
+this:
+
+1. **Canonical domain is apex `kaalbert.com`, not `www.kaalbert.com`.** The codebase's
+   fallback (`lib/seo.ts`) and `docs/vendor-operations-guide.md` Section 3 both previously
+   assumed `www` would be canonical, but only the apex domain was ever actually registered as
+   a Railway custom domain — `www.kaalbert.com` has no DNS record. Changed the code fallback
+   and its 4 dependent test files to apex, and set `NEXT_PUBLIC_SITE_URL=https://kaalbert.com`
+   explicitly everywhere (`.env.local`, `.env.production`, live Railway service). Adding
+   `www.kaalbert.com` as a secondary domain that redirects to apex is a recommended, optional,
+   not-yet-done follow-up once Cloudflare is set up (a free Redirect Rule).
+2. **ADR 0004 (Cloudflare) is still not implemented** — only the domain-registration half of
+   the old "kaalbert.com not registered" blocker is resolved; DNS is still on the registrar
+   (Namecheap default nameservers), not Cloudflare. Real current DNS records were captured
+   this session (via `dig @1.1.1.1` — this sandbox's default resolver gives bogus answers for
+   `kaalbert.com`, a real finding worth remembering for any future session doing DNS work
+   here) and handed to the user as the exact records to re-create in Cloudflare: apex CNAME-
+   flattened to `qrulko1j.up.railway.app`, three Zoho MX records, the SPF/Zoho-verification
+   TXT, and the Zoho DKIM TXT. See `memory/technical-debt.md`'s "Cloudflare not yet fronting
+   kaalbert.com" entry for the full record values and the step-by-step guide given to the
+   user (Cloudflare account creation and registrar nameserver changes are both external
+   actions only the user can take — not attempted here).
+3. **Brevo sender email upgrade identified, not executed.** Verified via Brevo's own API
+   (read-only `GET /v3/senders` and `/v3/senders/domains` calls, using the already-configured
+   `BREVO_API_KEY`) that exactly one sender is verified today (`kaalbert.company@gmail.com`,
+   single-sender verification) and zero domains are authenticated. Recommended alias plan,
+   given directly to the user since it requires creating mailboxes at Zoho (the firm's mail
+   host, where `albert@kaalbert.com` already exists) and clicking through Brevo's own domain-
+   authentication flow: `no-reply@kaalbert.com` for `BREVO_SENDER_EMAIL` (automated mail
+   only), `info@kaalbert.com` for `site_settings.email` (the public contact address — edited
+   via `/admin/site-settings` once it exists and is confirmed working, not hand-edited in the
+   database). Neither alias exists yet; nothing was changed in Brevo or `site_settings` this
+   session. See `memory/technical-debt.md`'s "Brevo sender still single-sender-verified"
+   entry.
+
+**Related Documents:** `memory/known-bugs.md` (OG-image bug, now Fixed), `memory/technical-
+debt.md` (two new/updated entries above), `lib/seo.ts`, `docs/vendor-operations-guide.md`
+(Sections 1/3/6 updated), `docs/tasks/01-foundation.md` (T1.1 addendum updated), ADR 0004.
+
 ## 2026-09-12 (session 61 follow-up) — Personal-data-deletion requests stay a manual, out-of-band process; only the "find the enquiry" step gets a fix (name/email search), not a tracked request queue
 
 **Status:** Standing

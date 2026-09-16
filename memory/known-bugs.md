@@ -16,6 +16,43 @@ format and ordering" section for the exact field rules and the sequencing requir
 
 ---
 
+## OG/share image didn't render when the site link was shared on WhatsApp
+
+**Status:** Fixed
+**Severity:** Medium — no functional break to the site itself, but every shared link
+(WhatsApp, and any other link-preview crawler) showed no image, undermining the "qualification
+-and-authority" first impression `docs/vision.md` is built around.
+**Date found:** 2026-09-16 (session 62), reported directly by the user: "I tested the og image
+by sending the main link on whatsapp but the image did not show."
+**Description:** Root cause was two stacked issues in `lib/seo.ts`'s `getSiteUrl()` fallback
+(used whenever `NEXT_PUBLIC_SITE_URL` is unset, which was every environment until this
+session): (1) `kaalbert.com` wasn't registered at all until this session, so the fallback
+domain resolved nowhere and WhatsApp's crawler couldn't fetch the `og:image` URL it was given;
+(2) independently, the fallback itself was wrong even once the domain existed — it hardcoded
+`https://www.kaalbert.com` (`www`), but only apex `kaalbert.com` was ever registered/added as
+a Railway custom domain; `www.kaalbert.com` has no DNS record today and still doesn't. Either
+issue alone was enough to break every OG/canonical/sitemap URL sitewide, not just the image.
+**Workaround:** None needed once fixed — see Planned Fix.
+**Planned Fix:** Fixed this session. `lib/seo.ts`'s fallback changed from
+`https://www.kaalbert.com` to `https://kaalbert.com` (apex, matching the actual live Railway
+custom domain), and `NEXT_PUBLIC_SITE_URL=https://kaalbert.com` was set explicitly in
+`.env.local`, `.env.production`, and the live Railway service (`.railway/railway.ts` updated
+with a matching `preserve()` entry) so production behavior never again depends on the
+fallback alone matching reality. Verified live after the resulting redeploy: `curl https://
+kaalbert.com/` returns the real page with `<meta property="og:image" content="https://
+kaalbert.com/brand/og-default.png"/>`, and that URL itself returns `200 image/png` (211691
+bytes, the real firm-supplied OG image). **Not independently verified against WhatsApp's own
+preview cache** — WhatsApp/Facebook's crawler may have cached the old, broken result against
+whatever URL was originally shared; if a re-share still shows no image, force a re-scrape via
+Facebook's Sharing Debugger (developers.facebook.com/tools/debug/, same crawler/cache
+WhatsApp uses) with the exact `https://kaalbert.com/...` URL, or share the link to a brand-new
+chat rather than one it was already shared into.
+**Sequenced into:** No task — a same-session fix (`lib/seo.ts`, 4 test files, env vars), not
+a future task's job. See `memory/technical-debt.md`'s "kaalbert.com registration — Resolved"
+entry for the full domain-registration context this was tangled up with.
+
+---
+
 ## "My enquiries" button looked like a toggle but had no way to switch back
 
 **Status:** Fixed

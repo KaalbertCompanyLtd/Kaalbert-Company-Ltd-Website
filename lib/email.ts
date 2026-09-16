@@ -36,8 +36,11 @@ export interface SendEmailInput {
  * and Milestone 8's enquiry notifications reuse it rather than each re-implementing their own
  * send mechanism). Brevo (`@getbrevo/brevo`) chosen over Resend/Postmark/SES specifically
  * because it supports single-sender verification (a 6-digit code to the sender's own inbox)
- * without a registered domain — `kaalbert.com` isn't registered yet
- * (`memory/technical-debt.md`).
+ * without a registered domain — true when this was chosen (`kaalbert.com` wasn't registered
+ * yet). The domain is now registered and live (session 62, `memory/decision-log.md`); moving
+ * `BREVO_SENDER_EMAIL` from single-sender verification to full domain authentication (SPF/
+ * DKIM against `kaalbert.com`) is a pending follow-up, not yet done — see
+ * `memory/technical-debt.md`.
  */
 export async function sendTransactionalEmail({
   to,

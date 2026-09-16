@@ -45,8 +45,7 @@ rather than something computed silently.
 Every screen below lives under `/admin`, and every one of them requires being logged in
 first.
 
-1. Go to `kaalbert.com/admin/login` (or wherever the site is currently hosted, if the
-   domain isn't live yet).
+1. Go to `kaalbert.com/admin/login` — the real domain, live since 2026-09-16.
 2. Enter your **email** and **password**, click **Continue**.
 3. Enter the current **6-digit code from your authenticator app**, click **Continue**. This
    step is never skippable — there is no admin action reachable with just a password.
@@ -637,8 +636,10 @@ for the full boundary.
 **What to monitor:**
 
 - Email delivery for the diagnostic's summary-email step depends on the **Brevo account**
-  (`kaalbert.company@gmail.com`) and its verified sender — if summary emails stop arriving,
-  check Brevo's sender-verification status first.
+  (sending as `kaalbert.company@gmail.com` today — a `no-reply@kaalbert.com` upgrade is
+  planned but not yet done, see the developer's own `docs/vendor-operations-guide.md`) and
+  its verified sender — if summary emails stop arriving, check Brevo's sender-verification
+  status first.
 - Several questions and all four score bands are still flagged **Placeholder** — the launch
   mockup's illustrative wording, pending the firm's real review. Nothing stops you from
   publishing over them by simply editing the text and unchecking Placeholder.
@@ -679,6 +680,12 @@ The footer's scope-of-practice statement and company registration details are a 
 record, edited on the Legal Pages & Footer screen (`/admin/pages/legal`, see above) — not
 here — but both records feed the same footer, so a change to either one is live everywhere
 immediately.
+
+**Pending, once your own `@kaalbert.com` mailbox is set up:** the Email field here currently
+shows a placeholder address. Once `info@kaalbert.com` exists and is actually receiving mail
+(see your developer's own operations guide for the exact setup steps), come back here and
+update it — that one save changes the address shown on `/contact`, the footer, and the
+search-engine listing everywhere at once.
 
 ---
 
@@ -759,13 +766,13 @@ flow itself.
 A quick-reference roll-up of every external account/dashboard this platform currently
 depends on:
 
-| System              | What it's for                                           | Where                 |
-| ------------------- | ------------------------------------------------------- | --------------------- |
-| Google Tag Manager  | Container `GTM-PDGKRKRN` — all measurement tags         | tagmanager.google.com |
-| Google Analytics 4  | Property `G-9VX9GS5L0X` — conversion reporting          | analytics.google.com  |
-| Brevo               | Transactional email (diagnostic summary emails)         | app.brevo.com         |
-| Railway             | Hosting, database, and the attribution-cleanup cron job | railway.app           |
-| Domain registration | **Not yet done** — kaalbert.com isn't registered        | —                     |
+| System                | What it's for                                                                          | Where                 |
+| --------------------- | -------------------------------------------------------------------------------------- | --------------------- |
+| Google Tag Manager    | Container `GTM-PDGKRKRN` — all measurement tags                                        | tagmanager.google.com |
+| Google Analytics 4    | Property `G-9VX9GS5L0X` — conversion reporting                                         | analytics.google.com  |
+| Brevo                 | Transactional email (diagnostic summary emails)                                        | app.brevo.com         |
+| Railway               | Hosting, database, and the attribution-cleanup cron job                                | railway.app           |
+| Domain (kaalbert.com) | **Live** since 2026-09-16 — Cloudflare (CDN/edge) is a planned upgrade, not yet set up | registrar + Railway   |
 
 ## What's coming next
 
@@ -780,8 +787,9 @@ depends on:
   deletion on request, applied the same way regardless of status (see the Change log above).
 - **Milestone 9 — Platform Performance Dashboards (Bonus)**: connection health + metrics for
   GA4, Meta, Google Ads, and LinkedIn. Begins with T5.5 (Meta CAPI, Google Ads import,
-  LinkedIn Insight Tag, domain verification) — itself still waiting on real ad-platform
-  accounts and the kaalbert.com domain, none of which exist yet — then proceeds to the
+  LinkedIn Insight Tag, domain verification) — the domain now exists (kaalbert.com, live
+  2026-09-16), but T5.5 is still waiting on real ad-platform accounts (Meta Business Manager,
+  Google Ads, LinkedIn Campaign Manager), none of which exist yet — then proceeds to the
   dashboards themselves.
 
 ## Ongoing work, at a glance
@@ -791,21 +799,21 @@ becomes recurring partner work — today (Phase 1, live) and everything Phase 2 
 capability's own trigger is met and the firm decides to build it (none of these are built
 yet; see `docs/scope.md` for each trigger's exact wording).
 
-| What                                                      | Frequency once live                                                              | Status                                                                      |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Enquiries — triage, assign, respond, close out            | Ongoing, daily                                                                   | **Live** — `/admin/enquiries`                                               |
-| Insights articles                                         | Ongoing, ~2/month (the firm's own stated cadence)                                | **Live** — `/admin/articles`                                                |
-| Landing pages                                             | Per marketing campaign, occasional                                               | **Live** — `/admin/landing-pages`                                           |
-| Offers / Pages / Team / Site Settings / Diagnostic Config | As-needed only (a price changes, a partner joins) — not routine                  | **Live**                                                                    |
-| Performance monitoring (GA4, Meta, Google Ads, LinkedIn)  | Ongoing, once live                                                               | **Planned** — Milestone 9, blocked on T5.5's real ad accounts + domain      |
-| P2-1 Online Booking                                       | Mostly automatic; occasional slot/capacity reconfiguration                       | Gated — sustained enquiry volume                                            |
-| P2-2 Named Case Studies                                   | Occasional — one per consented, completed engagement                             | Gated — 3+ engagements with written consent on file                         |
-| P2-3 Client Portal                                        | **Continuous, per active engagement** — the largest ongoing surface Phase 2 adds | Gated — enough concurrent engagements + a documented confidentiality review |
-| P2-4 Online Payment                                       | Occasional — reconciling payments/invoices                                       | Gated — a fixed-fee productised offer exists                                |
-| P2-5 Training Registration                                | Per scheduled programme                                                          | Gated — a programme with real dates/capacity exists                         |
-| P2-6 CRM Integration                                      | Mostly passive one-way sync; occasional manual dedup                             | Gated — the firm operates a CRM it actually maintains                       |
-| P2-7 Full Diagnostic Suite (paid)                         | Ongoing — a report plus a partner follow-up call, per sale                       | Gated — evidence the free diagnostic converts                               |
-| P2-8 Subscriber Outreach via Brevo                        | ~Twice/month, composed and sent **inside Brevo's own dashboard, not this admin** | Gated — the subscriber list reaches a size worth mailing                    |
+| What                                                      | Frequency once live                                                              | Status                                                                                |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Enquiries — triage, assign, respond, close out            | Ongoing, daily                                                                   | **Live** — `/admin/enquiries`                                                         |
+| Insights articles                                         | Ongoing, ~2/month (the firm's own stated cadence)                                | **Live** — `/admin/articles`                                                          |
+| Landing pages                                             | Per marketing campaign, occasional                                               | **Live** — `/admin/landing-pages`                                                     |
+| Offers / Pages / Team / Site Settings / Diagnostic Config | As-needed only (a price changes, a partner joins) — not routine                  | **Live**                                                                              |
+| Performance monitoring (GA4, Meta, Google Ads, LinkedIn)  | Ongoing, once live                                                               | **Planned** — Milestone 9, blocked on T5.5's real ad accounts (domain itself is live) |
+| P2-1 Online Booking                                       | Mostly automatic; occasional slot/capacity reconfiguration                       | Gated — sustained enquiry volume                                                      |
+| P2-2 Named Case Studies                                   | Occasional — one per consented, completed engagement                             | Gated — 3+ engagements with written consent on file                                   |
+| P2-3 Client Portal                                        | **Continuous, per active engagement** — the largest ongoing surface Phase 2 adds | Gated — enough concurrent engagements + a documented confidentiality review           |
+| P2-4 Online Payment                                       | Occasional — reconciling payments/invoices                                       | Gated — a fixed-fee productised offer exists                                          |
+| P2-5 Training Registration                                | Per scheduled programme                                                          | Gated — a programme with real dates/capacity exists                                   |
+| P2-6 CRM Integration                                      | Mostly passive one-way sync; occasional manual dedup                             | Gated — the firm operates a CRM it actually maintains                                 |
+| P2-7 Full Diagnostic Suite (paid)                         | Ongoing — a report plus a partner follow-up call, per sale                       | Gated — evidence the free diagnostic converts                                         |
+| P2-8 Subscriber Outreach via Brevo                        | ~Twice/month, composed and sent **inside Brevo's own dashboard, not this admin** | Gated — the subscriber list reaches a size worth mailing                              |
 
 ## Change log
 

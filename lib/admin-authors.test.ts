@@ -259,9 +259,7 @@ describe("setAdminUserActive / resetAdminUserTotp / resetAdminUserPassword", () 
 
   it("resetAdminUserTotp returns the fresh setup link", async () => {
     adminUserFindUniqueMock.mockResolvedValueOnce({ id: 5 } as never);
-    reissueSetupTokenMock.mockResolvedValueOnce(
-      "https://www.kaalbert.com/admin/setup-2fa?token=abc",
-    );
+    reissueSetupTokenMock.mockResolvedValueOnce("https://kaalbert.com/admin/setup-2fa?token=abc");
     const url = await resetAdminUserTotp(5);
     expect(url).toContain("/admin/setup-2fa");
   });
@@ -269,7 +267,7 @@ describe("setAdminUserActive / resetAdminUserTotp / resetAdminUserPassword", () 
   it("resetAdminUserPassword returns the fresh reset link", async () => {
     adminUserFindUniqueMock.mockResolvedValueOnce({ id: 5 } as never);
     issuePasswordResetTokenMock.mockResolvedValueOnce(
-      "https://www.kaalbert.com/admin/reset-password?token=abc",
+      "https://kaalbert.com/admin/reset-password?token=abc",
     );
     const url = await resetAdminUserPassword(5);
     expect(url).toContain("/admin/reset-password");

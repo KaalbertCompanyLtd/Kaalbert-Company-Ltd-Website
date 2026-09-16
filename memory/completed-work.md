@@ -14,6 +14,54 @@ Protocol):
 
 ---
 
+## 2026-09-16 (session 62) — kaalbert.com domain registration follow-through: fixed the OG-image bug, set NEXT_PUBLIC_SITE_URL live, corrected canonical domain to apex
+
+**Task:** User-directed production-hardening — user reported the OG/share image didn't render
+on WhatsApp and separately reported `kaalbert.com` is now registered and added as a Railway
+custom domain; asked for everything that follows from that (domain, Cloudflare per ADR 0004,
+Brevo sender/Zoho aliases, env vars, docs/artifacts) to be handled.
+**Summary:** Diagnosed the OG bug to its root cause: `lib/seo.ts`'s `getSiteUrl()` fallback
+(`https://www.kaalbert.com`) never resolved, both because `kaalbert.com` wasn't registered
+until this session and, independently, because the fallback used `www` while only the apex
+domain was ever added as a Railway custom domain. Fixed both: changed the fallback (and 4
+dependent test files) to apex `kaalbert.com`, and set `NEXT_PUBLIC_SITE_URL=https://
+kaalbert.com` explicitly in `.env.local`, `.env.production`, and the live Railway service
+(`railway variable set`, with a matching `preserve()` added to `.railway/railway.ts`, no IaC
+drift confirmed via `railway config plan`). Verified live after the resulting auto-redeploy:
+`https://kaalbert.com/` returns 200 with correct `og:image`/canonical tags, and the image URL
+itself returns 200 with the real firm asset. Captured the real DNS state for `kaalbert.com`
+(apex CNAME to Railway, 3 Zoho MX records, SPF/Zoho-verification TXT, Zoho DKIM TXT — via
+`dig @1.1.1.1`, since this session's own sandbox resolver returns bogus answers for this
+domain) and used Brevo's own API (read-only) to confirm today's real sender-verification
+state: one single-sender-verified Gmail address, zero authenticated domains. Wrote a full,
+concrete step-by-step guide for the user covering the two things only they can execute:
+putting Cloudflare in front of the domain per ADR 0004 (exact DNS records to re-create,
+in order, so mail doesn't break on cutover), and creating `no-reply@kaalbert.com`/
+`info@kaalbert.com` Zoho aliases plus Brevo domain authentication to replace the Gmail sender.
+Did not change `BREVO_SENDER_EMAIL` or `site_settings.email` — both depend on mailboxes that
+don't exist yet.
+**Files Changed:** `lib/seo.ts`, `lib/seo.test.ts`, `lib/admin-authors.test.ts`,
+`lib/insights.test.ts`, `lib/auth/password-reset.test.ts`, `lib/email.ts` (comment),
+`app/api/insights/unsubscribe/route.ts` (comment), `next.config.ts` (comment),
+`.env.example`, `.env.local`, `.env.production`, `.railway/railway.ts`, `CLAUDE.local.md`,
+`docs/tasks/01-foundation.md` (T1.1 addendum), `docs/vendor-operations-guide.md` (Sections 1,
+3, 5, 6, 8, 11 — substantially rewritten), `docs/user-guide.md`, `memory/technical-debt.md`
+(2 entries: domain registration flipped Resolved, split Cloudflare-fronting into its own
+entry; new Brevo/alias entry), `memory/known-bugs.md` (new entry, Fixed), `memory/
+decision-log.md` (new entry).
+**Related Feature:** ADR 0004 (Cloudflare CDN/proxy), `docs/features/seo-and-search-
+foundation.md`, `docs/tasks/01-foundation.md` T1.1, `docs/tasks/05-landing-and-measurement.md`
+T5.5, `docs/tasks/03-diagnostic.md` T3.7 (Brevo).
+**Notes:** Vendor Operations Guide and Platform User Guide Artifacts both republished this
+session (see the tool-call log) — mirrors now match the repo files. Website Build Status
+Artifact not touched — this wasn't a milestone/epic completion, just infra follow-through on
+an already-shipped phase. Two real external-action items remain entirely with the user:
+Cloudflare account + registrar nameserver change, and Zoho alias creation + clicking through
+Brevo's domain-authentication flow — both written up in full in the chat response and in
+`docs/vendor-operations-guide.md` Section 3 / `memory/technical-debt.md`.
+
+---
+
 ## 2026-09-12 (session 61 follow-up) — Added "Ongoing work, at a glance" table (Phase 1 + Phase 2) to the user guide and its Artifact
 
 **Task:** User-directed documentation addition — after being walked through what recurring

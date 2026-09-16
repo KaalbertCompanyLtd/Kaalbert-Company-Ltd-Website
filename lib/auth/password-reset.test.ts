@@ -73,7 +73,7 @@ beforeEach(() => {
 
 describe("issuePasswordResetToken", () => {
   it("writes a fresh token/expiry and returns the full reset URL", async () => {
-    const url = await issuePasswordResetToken(7, { baseUrl: "https://www.kaalbert.com" });
+    const url = await issuePasswordResetToken(7, { baseUrl: "https://kaalbert.com" });
 
     expect(updateMock).toHaveBeenCalledWith({
       where: { id: 7 },
@@ -82,7 +82,7 @@ describe("issuePasswordResetToken", () => {
         passwordResetTokenExpiresAt: expect.any(Date),
       },
     });
-    expect(url).toMatch(/^https:\/\/www\.kaalbert\.com\/admin\/reset-password\?token=/);
+    expect(url).toMatch(/^https:\/\/kaalbert\.com\/admin\/reset-password\?token=/);
   });
 });
 
@@ -90,7 +90,7 @@ describe("requestPasswordReset", () => {
   it("sends a reset email when the account exists and is active", async () => {
     findUniqueMock.mockResolvedValue(BASE_USER as never);
 
-    await requestPasswordReset("ama@example.invalid", { baseUrl: "https://www.kaalbert.com" });
+    await requestPasswordReset("ama@example.invalid", { baseUrl: "https://kaalbert.com" });
 
     expect(assertNotFloodedMock).toHaveBeenCalledWith(
       "ama@example.invalid",
@@ -106,7 +106,7 @@ describe("requestPasswordReset", () => {
     findUniqueMock.mockResolvedValue(null);
 
     await expect(
-      requestPasswordReset("nobody@example.invalid", { baseUrl: "https://www.kaalbert.com" }),
+      requestPasswordReset("nobody@example.invalid", { baseUrl: "https://kaalbert.com" }),
     ).resolves.toBeUndefined();
 
     expect(sendEmailMock).not.toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe("requestPasswordReset", () => {
   it("silently no-ops for a deactivated account", async () => {
     findUniqueMock.mockResolvedValue({ ...BASE_USER, active: false } as never);
 
-    await requestPasswordReset("ama@example.invalid", { baseUrl: "https://www.kaalbert.com" });
+    await requestPasswordReset("ama@example.invalid", { baseUrl: "https://kaalbert.com" });
 
     expect(sendEmailMock).not.toHaveBeenCalled();
   });

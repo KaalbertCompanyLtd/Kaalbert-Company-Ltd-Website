@@ -24,14 +24,23 @@ the live URL currently resolves through Railway's raw domain
 (`https://kaalbert.up.railway.app`). See `memory/technical-debt.md` → "kaalbert.com not
 registered."
 
+**Addendum (session 62, 2026-09-16) — domain half done, Cloudflare half still open:**
+`kaalbert.com` is registered and already added as a Railway custom domain (`railway domain`
+shows it `ACTIVE`, serving real traffic over a valid Railway-issued TLS cert at
+`https://kaalbert.com`). `NEXT_PUBLIC_SITE_URL` is set live to match. The Cloudflare-fronting
+half of this acceptance criterion is **still open** — DNS is still on the registrar's default
+nameservers, not Cloudflare's — see `memory/technical-debt.md` → "Cloudflare not yet fronting
+kaalbert.com" for the exact current DNS records and the step-by-step guide given to the user.
+
 **User-triggered, not task-sequenced** — this is not a "whichever session reaches this task
-picks it up" item. Domain registration is a real-world purchase the user has to make
-themselves (an agent can't initiate it — same class of action as the Railway/GitHub account
-creation earlier in session 01). **Do not attempt to register a domain, or treat reaching
-this task as a cue to act.** Wait for the user to say the domain is registered and ask for
-this explicitly; only then: add it to Cloudflare, point DNS at the Railway service, add it as
-a custom domain via `railway domain kaalbert.com`. Small enough to finish in one sitting once
-triggered; does not need its own task ID.
+picks it up" item. Domain registration was a real-world purchase the user had to make
+themselves (an agent can't initiate it), and the remaining Cloudflare setup (account creation,
+registrar nameserver change) is the same category of external action. **Do not attempt to
+create a Cloudflare account or change nameservers, or treat reaching this task as a cue to
+act.** Wait for the user to say the Cloudflare zone is set up and DNS has cut over; only then:
+confirm `railway domain` still shows `kaalbert.com` `ACTIVE`, and turn on "Always Use HTTPS"/
+HSTS in Cloudflare's dashboard. Small enough to finish in one sitting once triggered; does not
+need its own task ID.
 
 ### T1.2 — Postgres schema baseline + migration tooling
 

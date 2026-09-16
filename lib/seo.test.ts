@@ -30,9 +30,9 @@ describe("buildPageMetadata", () => {
 
     expect(openGraphType(metadata)).toBe("website");
     expect(metadata.openGraph?.images).toEqual([
-      { url: "https://www.kaalbert.com/brand/og-default.png" },
+      { url: "https://kaalbert.com/brand/og-default.png" },
     ]);
-    expect(metadata.twitter?.images).toEqual(["https://www.kaalbert.com/brand/og-default.png"]);
+    expect(metadata.twitter?.images).toEqual(["https://kaalbert.com/brand/og-default.png"]);
   });
 
   it("uses an article's own previewImage and type: article when given", () => {
@@ -46,7 +46,7 @@ describe("buildPageMetadata", () => {
 
     expect(openGraphType(metadata)).toBe("article");
     expect(metadata.openGraph?.images).toEqual([
-      { url: "https://www.kaalbert.com/uploads/owner-drawings.jpg" },
+      { url: "https://kaalbert.com/uploads/owner-drawings.jpg" },
     ]);
   });
 });
@@ -89,7 +89,7 @@ describe("getArticleJsonLd", () => {
   it("includes image only when previewImage is set — never a placeholder/broken URL", () => {
     const data = getArticleJsonLd({ ...BASE_ARTICLE, previewImage: "/uploads/owner-drawings.jpg" });
 
-    expect(data.image).toBe("https://www.kaalbert.com/uploads/owner-drawings.jpg");
+    expect(data.image).toBe("https://kaalbert.com/uploads/owner-drawings.jpg");
   });
 
   it("describes the author as an Organization, not a Person with a blank job title, once the byline has fallen back to the firm (T7.11)", () => {

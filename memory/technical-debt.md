@@ -18,6 +18,59 @@ sequencing requirement:
 
 ---
 
+## Brevo sender still single-sender-verified against a Gmail address, not domain-authenticated
+
+**Status:** Open
+**Date raised:** 2026-09-16 (session 62)
+**Reason:** `BREVO_SENDER_EMAIL` (`kaalbert.company@gmail.com`) was chosen at T3.7 specifically
+because Brevo's single-sender verification (a 6-digit code to that inbox) needs no registered
+domain — true at the time, since `kaalbert.com` wasn't registered. Confirmed live this
+session via Brevo's own API (`GET /v3/senders`, `GET /v3/senders/domains`): exactly one
+verified sender exists (`kaalbert.company@gmail.com`), zero authenticated domains. Now that
+`kaalbert.com` is registered and the firm has real `@kaalbert.com` mailboxes at Zoho
+(`albert@kaalbert.com` already exists), domain authentication is both possible and a real
+deliverability upgrade — DKIM/SPF-aligned mail from a `@kaalbert.com` address scores
+meaningfully better with recipient spam filters than an unrelated Gmail sender, and it
+authorizes every address at the domain at once rather than one at a time.
+**Impact:** No functional break — the current Gmail sender works and passes Brevo's own
+verification. Purely a deliverability/trust quality gap, and a branding mismatch (system
+emails visibly come from a `@gmail.com` address, not the firm's own domain).
+**Priority:** Medium — real user-facing polish (diagnostic summary emails, admin invite/
+password-reset emails all carry this sender), not a launch blocker.
+**Possible Fix/Fixes:** Recommended aliases at Zoho (the firm's registered mail host for
+`kaalbert.com`) and where each is used, decided this session and given to the user directly:
+`no-reply@kaalbert.com` for `BREVO_SENDER_EMAIL` (automated/transactional mail only — never a
+monitored inbox, so a recipient replying to a password-reset or diagnostic-summary email
+doesn't land somewhere nobody reads it); `info@kaalbert.com` for `site_settings.email` (the
+public-facing address on `/contact`, the footer, and the Organization JSON-LD — a role
+address, not `albert@kaalbert.com`'s personal inbox, so enquiry email isn't tied to one
+person); `albert@kaalbert.com` stays as-is, not displayed site-wide (no `author.email` field
+exists to display it — confirmed via `prisma/schema.prisma` — and it isn't used as the site's
+public contact address). Once `no-reply@kaalbert.com` exists at Zoho: in Brevo, Senders,
+Domains & Dedicated IPs → Domains → Authenticate a domain → `kaalbert.com`, add the DNS
+records Brevo generates (typically an SPF `include:` addition merged into the existing SPF
+TXT record — never a second standalone SPF TXT record, DNS only allows one — plus 2–3 DKIM
+CNAME/TXT records) via whichever DNS provider is authoritative at the time (today: the
+registrar; after Cloudflare cutover, the "Cloudflare not yet fronting kaalbert.com" entry
+above's DNS provider), then add `no-reply@kaalbert.com` as a sender in Brevo (auto-verified
+once the domain shows Authenticated) and set it as `BREVO_SENDER_EMAIL` (`.env.local`,
+`.env.production`, and `railway variable set` on the live service — already `preserve()`d in
+`.railway/railway.ts`, no IaC change needed for a value change). Separately, once
+`info@kaalbert.com` exists and actually receives mail, update `site_settings.email` via
+`/admin/site-settings` (never by hand-editing the database — `docs/user-guide.md`'s
+documented path) — not done this session since the address doesn't exist yet to verify it
+actually works.
+**Trigger type:** User-triggered — creating Zoho mailbox aliases and clicking through Brevo's
+domain-authentication flow are both real external-account actions only the user can take. Do
+not create Brevo senders/domains via its API, or edit `site_settings.email`, until the user
+confirms the Zoho aliases exist and are receiving mail.
+**Sequenced into:** No task — this is ongoing production-hardening/polish work in the same
+category as the Content-Security-Policy entry in `docs/vendor-operations-guide.md` Section 4,
+not tied to a specific not-yet-shipped milestone task. Re-check the next time any session
+touches `lib/email.ts`, `.env.example`, or `docs/vendor-operations-guide.md`'s env-var table.
+
+---
+
 ## Article/author image uploads use an interim base64 data-URI store, not real Cloudflare R2
 
 **Status:** Resolved
@@ -1200,24 +1253,80 @@ than deleted) as a record that this was verified, not assumed.
 **Sequenced into:** T1.1 (already complete — this closes its last open acceptance criterion
 alongside the Cloudflare item below, which remains open)
 
-## kaalbert.com not registered — Cloudflare-fronted domain not yet in place (ADR 0004)
+## Cloudflare not yet fronting kaalbert.com (ADR 0004) — DNS still on the registrar
 
 **Status:** Open
+**Date raised:** 2026-09-16 (session 62) — split out from the now-Resolved "kaalbert.com not
+registered" entry below once the domain part of that entry was resolved but the
+Cloudflare-fronting part of ADR 0004 still wasn't.
+**Reason:** `kaalbert.com` is registered and already added/`ACTIVE` as a Railway custom
+domain (`railway domain`), serving real traffic with a valid Railway-issued Let's Encrypt
+cert — but its nameservers are still the registrar's default (`dns1/dns2.registrar-
+servers.com`, i.e. Namecheap), not Cloudflare's. ADR 0004's actual decision — Cloudflare in
+front of Railway as CDN/edge — is not yet in place. Real DNS captured this session (via
+`dig @1.1.1.1`, since this sandbox's own default resolver returns bogus answers for
+non-allowlisted hosts — don't trust plain `dig`/`curl` DNS lookups run from an agent session
+without pinning a real resolver): apex `kaalbert.com` → ALIAS/CNAME-flattened to
+`qrulko1j.up.railway.app` (A `69.46.46.50`); MX `10 mx.zoho.com` / `20 mx2.zoho.com` /
+`50 mx3.zoho.com`; TXT `v=spf1 include:zohomail.com ~all` and
+`zoho-verification=zb33664172.zmverify.zoho.com`; DKIM TXT at
+`zmail._domainkey.kaalbert.com`. No `www.kaalbert.com` record and no DMARC record exist yet.
+**Impact:** No CDN edge-caching, WAF, or edge-level "Always Use HTTPS"/HSTS toggle — the site
+works correctly today (TLS via Railway is real and valid), this is a performance/hardening
+gap, not a functional one. `docs/tasks/01-foundation.md` T1.1's Cloudflare acceptance
+criterion remains open until this is done.
+**Priority:** Medium — the ADR 0004 decision this project already made is simply not
+implemented yet; no other task depends on it.
+**Possible Fix/Fixes:** User-executed (a Cloudflare account + registrar nameserver change,
+neither doable from this session) — see the guide given directly to the user in session 62
+for the exact steps and the exact DNS records above to re-create in Cloudflare (apex
+CNAME-flattened to Railway, all three Zoho MX records, the SPF/Zoho-verification TXT, and
+the DKIM TXT — email breaks the moment nameservers cut over if any of these are missed).
+Once the Cloudflare zone is active: confirm `railway domain` still shows the custom domain
+`ACTIVE` (it should — Railway doesn't care which DNS provider points at it), turn on "Always
+Use HTTPS" and HSTS in Cloudflare's dashboard (Section 3, step 7 of
+`docs/vendor-operations-guide.md`), and re-run `dig @1.1.1.1` against every record type above
+to confirm nothing silently dropped in the cutover.
+**Trigger type:** User-triggered — do not treat reaching T1.1 (or any task) as a cue to sign
+up for Cloudflare or change nameservers; wait for the user to say the Cloudflare zone is set
+up and DNS has cut over.
+**Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum updated session 62,
+2026-09-16)
+
+---
+
+## kaalbert.com registration — Resolved (Cloudflare-fronting split into its own entry above)
+
+**Status:** Resolved
 **Date raised:** 2026-09-04
+**Date resolved:** 2026-09-16 (session 62) — user registered `kaalbert.com` and added it as
+a Railway custom domain (`railway domain` shows it `ACTIVE`, port 8080, alongside the
+original `kaalbert.up.railway.app`). Verified live end-to-end this session: `https://
+kaalbert.com/` returns 200 with a valid Railway-issued Let's Encrypt cert
+(`notAfter=2026-12-14`), and `NEXT_PUBLIC_SITE_URL=https://kaalbert.com` was set on the live
+service and confirmed in the rendered page's own `og:image`/canonical tags after the
+resulting redeploy completed.
 **Reason:** T1.1's acceptance criterion "the live URL resolves through Cloudflare, not
-Railway's raw domain" can't be met — WHOIS confirms `kaalbert.com` isn't registered, and
-Cloudflare has no zone to front without a real domain. User chose to finish the rest of T1.1
-and defer this rather than register a placeholder domain.
-**Impact:** T1.1's Cloudflare acceptance criterion is not satisfied. No functional impact
-yet — purely a domain-registration/DNS step, not a code change. Live app is currently only
-reachable at `https://kaalbert.up.railway.app` (Railway's raw domain).
-**Priority:** Medium — blocks a T1.1 acceptance criterion but not any other task's start.
-**Possible Fix/Fixes:** Once `kaalbert.com` (or a decided interim domain) is registered: add
-it to Cloudflare, point DNS at the Railway service, add it as a custom domain via `railway
-domain kaalbert.com`.
-**Trigger type:** User-triggered, not task-sequenced — domain registration is a real-world
-purchase only the user can make (an agent can't initiate it). Do not treat reaching T1.1 (or
-any task) as a cue to act; wait for the user to say the domain is registered and ask for this
-explicitly.
-**Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum added session 01,
-2026-09-04, explicitly marked user-triggered)
+Railway's raw domain" couldn't be met — WHOIS confirmed `kaalbert.com` wasn't registered.
+User chose to finish the rest of T1.1 and defer this rather than register a placeholder
+domain.
+**Impact:** Was blocking T1.1's Cloudflare criterion and meant every canonical/OG/sitemap URL
+(`lib/seo.ts`'s `getSiteUrl()` fallback, then `https://www.kaalbert.com`) described a domain
+that resolved nowhere — the direct cause of a real bug: a WhatsApp share of the site showed
+no preview image, since WhatsApp's crawler couldn't fetch an `og:image` URL on a domain with
+no DNS record. See `memory/known-bugs.md`.
+**Priority:** N/A — resolved.
+**Possible Fix/Fixes:** Domain registration is done. The fallback URL itself also needed a
+fix, done the same session: it hardcoded `https://www.kaalbert.com` (`www`), but only apex
+`kaalbert.com` was ever added as a Railway custom domain — `www.kaalbert.com` still has no
+DNS record today. `lib/seo.ts`'s fallback (and the 4 test files asserting against it) were
+updated to apex `kaalbert.com`, and `NEXT_PUBLIC_SITE_URL=https://kaalbert.com` was set
+explicitly everywhere (`.env.local`, `.env.production`, the live Railway service) so
+production behavior never depends on the fallback matching reality again. Adding
+`www.kaalbert.com` as a secondary domain (redirecting to apex) is optional, low-priority
+follow-up — see the Cloudflare entry above, since that's the natural point to add it (a
+Cloudflare Redirect Rule, free tier).
+**Trigger type:** N/A — resolved.
+**Sequenced into:** T1.1 (docs/tasks/01-foundation.md — addendum updated session 62,
+2026-09-16, closing the domain-registration half; the Cloudflare-fronting half is tracked
+separately above since it's still open)

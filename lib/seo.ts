@@ -18,14 +18,20 @@ export const FIRM_NAME = "Kaalbert & Company Ltd";
 const META_DESCRIPTION_MAX_LENGTH = 160;
 
 /**
- * `NEXT_PUBLIC_SITE_URL` isn't provisioned yet (see `.env.example`) — falls back to the
- * production domain named throughout `docs/vision.md`/ADR 0004. Sitemap/canonical/OG URLs
- * are meant to describe the live site regardless of which host actually served the request
- * (a request from a Railway preview or local dev should still produce production URLs), so a
- * fixed fallback here is correct, not a placeholder to fix later.
+ * `NEXT_PUBLIC_SITE_URL` is set explicitly on the live Railway service (session 62,
+ * 2026-09-16 — `kaalbert.com` registered and added as a Railway custom domain; see
+ * `memory/decision-log.md`) — this fallback exists only for local dev/CI, where the var is
+ * typically unset. Apex `kaalbert.com`, not `www.kaalbert.com` (an earlier version of this
+ * fallback used `www`, which never actually resolved — `www.kaalbert.com` has no DNS record
+ * and isn't a registered Railway custom domain; that mismatch is the root cause of the
+ * "OG image doesn't render in WhatsApp" bug reported the same session, see
+ * `memory/known-bugs.md`). Sitemap/canonical/OG URLs are meant to describe the live site
+ * regardless of which host actually served the request (a request from a Railway preview or
+ * local dev should still produce production URLs), so a fixed fallback here is correct, not
+ * a placeholder to fix later — it just has to actually resolve.
  */
 export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kaalbert.com";
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://kaalbert.com";
 }
 
 /**

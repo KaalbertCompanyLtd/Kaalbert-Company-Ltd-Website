@@ -21,9 +21,10 @@ export async function GET(request: Request) {
   // `request.url` (this request's own origin), never `getSiteUrl()`'s hardcoded production
   // fallback — a redirect after following a link must land back on whichever host actually
   // served the request (dev, a Railway preview, or production), not unconditionally on
-  // `kaalbert.com`. That domain isn't registered yet (CLAUDE.local.md), so redirecting there
-  // from any non-production environment resolves to nothing (caught for real in session 28's
-  // own Playwright verification — the browser couldn't resolve the redirect target at all).
+  // `kaalbert.com`. Still correct now that the domain is registered and live (session 62):
+  // a dev/preview environment must still redirect to itself, not to production (caught for
+  // real in session 28's own Playwright verification — the browser couldn't resolve the
+  // redirect target at all, back when the domain didn't resolve anywhere).
   return NextResponse.redirect(new URL("/insights?unsubscribed=1", request.url));
 }
 

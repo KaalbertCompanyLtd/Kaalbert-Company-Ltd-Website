@@ -289,22 +289,22 @@ describe("buildArticleShareLinks", () => {
   it("builds a wa.me share link (no target number) with the title and url URL-encoded", () => {
     const links = buildArticleShareLinks({
       title: "Owner Drawings",
-      url: "https://www.kaalbert.com/insights/owner-drawings",
+      url: "https://kaalbert.com/insights/owner-drawings",
     });
 
     expect(links.whatsapp).toBe(
       "https://wa.me/?text=" +
         encodeURIComponent(
-          "Owner Drawings — a Kaalbert & Company Insight https://www.kaalbert.com/insights/owner-drawings",
+          "Owner Drawings — a Kaalbert & Company Insight https://kaalbert.com/insights/owner-drawings",
         ),
     );
     expect(links.linkedin).toBe(
       "https://www.linkedin.com/sharing/share-offsite/?url=" +
-        encodeURIComponent("https://www.kaalbert.com/insights/owner-drawings"),
+        encodeURIComponent("https://kaalbert.com/insights/owner-drawings"),
     );
     expect(links.facebook).toBe(
       "https://www.facebook.com/sharer/sharer.php?u=" +
-        encodeURIComponent("https://www.kaalbert.com/insights/owner-drawings"),
+        encodeURIComponent("https://kaalbert.com/insights/owner-drawings"),
     );
   });
 });
