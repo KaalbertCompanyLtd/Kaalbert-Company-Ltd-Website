@@ -1,4 +1,4 @@
-# Session 62 — Domain registration follow-through, Brevo sender resolved, Content-Security-Policy built
+# Session 62 — Domain registration follow-through: OG fix, Brevo/Zoho, CSP, www redirect, GA4 cleanup, monitoring guide
 
 # Date: 2026-09-16
 
@@ -54,6 +54,35 @@ Insights article, the diagnostic flow, the contact form, and a full admin login 
 computed TOTP code, not skipped) through the dashboard, Account & Security, and the 2FA
 QR-code screen — zero violations. Full quality gate re-run clean after.
 
+At the user's request, removed every "`site_settings.email` still pending" mention from
+docs, memory, and both Artifacts — it was never technical debt, just a quick admin UI step,
+and tracking it as an open item wasn't wanted.
+
+User then recalled that the original GTM/GA4 setup session (T5.3, session 35) used the
+Railway domain somewhere with the intent to swap it once `kaalbert.com` was registered, and
+asked to find and fix it. Confirmed nothing in the repo itself references a Railway domain
+for GTM/GA4 (correct by design — ADR 0006, that config lives outside this codebase). Checked
+directly in GA4's own dashboard via Chrome (logged in as `kaalbert.company@gmail.com`, same
+account session 35 used): the Data Stream's **Stream URL** field was still
+`https://kaalbert.up.railway.app`. Fixed it live — Admin → Data Streams → kaalbert.com →
+edit → `https://kaalbert.com`, saved, confirmed. Also checked GA4's cross-domain measurement
+suggestions (found only auto-detected entries, none saved/accepted — left alone, not a bug,
+not a feature this single-domain site needs).
+
+Also rewrote `docs/user-guide.md`'s "What to monitor" section — previously just a bare
+name/URL table — into real step-by-step "how to check it yourself" walkthroughs for GTM,
+GA4, Brevo, Railway, and the domain registrar, framed explicitly against Milestone 9's
+absence (this is the real, complete monitoring picture until an in-app dashboard exists).
+
+Finally, built the `www.kaalbert.com` → apex redirect the user asked to be guided on, then
+executed themselves (added `www.kaalbert.com` as a second Railway custom domain + its DNS
+record) before asking for the actual redirect. Added a `Host`-header check to the very top
+of `proxy.ts` — before the CSP nonce or admin session logic runs, since a redirect needs
+neither — issuing a `308 Permanent Redirect` (method-preserving, RFC 7538) to the same path
+and query string on `https://kaalbert.com`. Verified locally via a spoofed `Host` header:
+correct status, correct `location`, normal requests and the admin-auth redirect both
+unaffected. Full quality gate clean after.
+
 ## Files Changed
 
 - `lib/seo.ts` — `getSiteUrl()` fallback changed from `https://www.kaalbert.com` to
@@ -96,7 +125,12 @@ QR-code screen — zero violations. Full quality gate re-run clean after.
   script component.
 - `components/google-tag-manager.tsx` — accepts and forwards a `nonce` prop.
 - `next.config.ts` — comment updated to explain why CSP lives in `proxy.ts`, not here.
-- Two Artifacts republished: **Vendor Operations Guide**
+- `proxy.ts` — `Host`-header check added at the top of `proxy()` for the `www` → apex
+  redirect; doc-comment updated to describe all three jobs the file now does.
+- GA4 dashboard (external, not a repo file): Data Stream Stream URL corrected from the
+  Railway domain to `https://kaalbert.com`.
+- Both Artifacts republished multiple times through the session as each piece landed —
+  final state covers all of the above: **Vendor Operations Guide**
   (<https://claude.ai/code/artifact/1b533df6-e704-49e1-a532-8dfb441ca813>) and **Platform
   User Guide** (<https://claude.ai/code/artifact/ef11ad80-3285-4243-bd32-ab4124b1f8dc>).
   **Website Build Status** artifact not touched — this wasn't a milestone/epic completion.
@@ -105,9 +139,10 @@ QR-code screen — zero violations. Full quality gate re-run clean after.
 
 - **Canonical domain is apex `kaalbert.com`, not `www.kaalbert.com`** — the codebase and
   `docs/vendor-operations-guide.md` previously assumed `www` would be canonical, but only the
-  apex domain was ever registered as a Railway custom domain. Chose apex to match reality
-  rather than also registering `www` as a Railway domain; `www` can be added later as a
-  Cloudflare redirect to apex (optional, not yet done).
+  apex domain was registered as a Railway custom domain at first. Chose apex to match
+  reality. **`www` → apex redirect: done later the same session**, without Cloudflare —
+  `www.kaalbert.com` is now its own Railway custom domain, and `proxy.ts` 308-redirects it to
+  apex (see below).
 - **Cloudflare (ADR 0004): deferred by explicit user choice**, not left open by default — the
   user reviewed the actual tradeoff and said "let's skip it for now, just mark it as
   deferred." Not something to revisit proactively; only if Ghana-based visitors report slow
@@ -136,17 +171,33 @@ dynamic'` chosen over a rigid host allowlist specifically to protect `docs/user-
   then confirmed via Brevo's own event-log API that it shows `requests` → `delivered` →
   `opened`, `from: info@kaalbert.com`. Left the old Gmail sender in Brevo, unused, as a
   fallback (not deleted, per the user's own call).
+- **`www` → apex redirect: a code redirect in `proxy.ts`, not a registrar-level "URL
+  Redirect Record."** Considered and rejected Namecheap's own forwarding feature — it
+  doesn't reliably provision a matching TLS cert for the redirected subdomain, risking a
+  certificate warning on `https://www.kaalbert.com` before the redirect can even happen.
+  Instead: `www.kaalbert.com` as its own Railway custom domain (real Railway-issued cert)
+  plus an application-level 308 redirect, checked first in `proxy.ts` before any other logic
+  runs.
+- **Removed the "`site_settings.email` still pending" tracking everywhere**, per explicit
+  user instruction — not technical debt, just noise.
 
 ## Current State
 
 `kaalbert.com` is live, serving the real site with correct OG/canonical tags and a valid TLS
 cert. Cloudflare (ADR 0004) is deliberately deferred at the user's request — not something to
 revisit without a new prompt. Brevo is now domain-authenticated and sending from
-`info@kaalbert.com`, verified end-to-end in production. A nonce-based Content-Security-
-Policy is built, verified locally end-to-end via a real Playwright pass, and committed — but
-**not live**, since this session cannot `git push` (blocked by design); the developer needs
-to push it, and a quick live re-check (same page list, console open) afterward is worthwhile
-since production runs a real build under real traffic, not a local dev pass.
+`info@kaalbert.com`, verified end-to-end in production. GA4's Data Stream URL is corrected to
+the real domain, and `docs/user-guide.md` now has real external-tool monitoring
+walkthroughs. Two code changes are built, verified locally, and committed, but **not live**
+— this session cannot `git push` (blocked by design), so the developer needs to push both
+before they take effect: **(1)** a nonce-based Content-Security-Policy, verified end-to-end
+via a real Playwright pass (home/GTM/GA4, an Insights article, the diagnostic, the contact
+form, a full admin login through the 2FA QR-code screen — zero violations); **(2)** the
+`www.kaalbert.com` → apex redirect, verified via a spoofed `Host` header. Once pushed, both
+are worth a quick real-browser re-check (`https://www.kaalbert.com/` should land cleanly on
+apex with no cert warning; the same CSP page list with the console open). This is otherwise a
+complete, closed session — every item the user raised this session has a stated final state,
+nothing left silently open.
 
 ## Blockers
 
